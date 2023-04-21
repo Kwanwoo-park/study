@@ -26,13 +26,15 @@ public class Member extends BasetimeEntity implements UserDetails {
     private Long id;
     private String email;
     private String pwd;
+    public String name;
     private LocalDateTime lastLoginTime;
 
     @Builder
-    public Member(Long id, String email, String pwd, LocalDateTime lastLoginTime) {
+    public Member(Long id, String email, String pwd, String name, LocalDateTime lastLoginTime) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;
+        this.name = name;
         this.lastLoginTime = lastLoginTime;
     }
 
@@ -83,6 +85,14 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPwd() {

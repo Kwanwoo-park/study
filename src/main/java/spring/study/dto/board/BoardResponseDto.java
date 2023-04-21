@@ -25,7 +25,7 @@ public class BoardResponseDto {
 
     @Override
     public String toString() {
-        return "BoardListDto [id=" + id + ", title=" + title + "content=" + content
+        return "BoardListDto [id=" + id + ", title=" + title + ", content=" + content
                 + ", readCnt=" + readCnt + ", registerId=" + registerId + ", registerTime="
                 + registerTime +"]";
     }
