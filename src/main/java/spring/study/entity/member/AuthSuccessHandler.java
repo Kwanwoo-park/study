@@ -1,4 +1,4 @@
-package spring.study.entity.board.member;
+package spring.study.entity.member;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

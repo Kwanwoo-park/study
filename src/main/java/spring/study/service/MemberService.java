@@ -3,7 +3,6 @@ package spring.study.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.repository.query.Param;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,8 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.member.MemberRequestDto;
-import spring.study.entity.board.member.Member;
-import spring.study.entity.board.member.MemberRepository;
+import spring.study.entity.member.Member;
+import spring.study.entity.member.MemberRepository;
 
 import java.time.LocalDateTime;
 
@@ -29,6 +28,10 @@ public class MemberService implements UserDetailsService {
     public int updateMemberLastLogin(@Param("email") String email,
                                      @Param("lastLoginTime") LocalDateTime lastLoginTime) {
         return memberRepository.updateMemberLastLogin(email, lastLoginTime);
+    }
+
+    public int updateMemberPassword(@Param("email") String email, @Param("password") String password) {
+        return memberRepository.updateMemberPassword(email, password);
     }
 
     @Bean

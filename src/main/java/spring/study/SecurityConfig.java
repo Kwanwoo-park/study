@@ -2,20 +2,14 @@ package spring.study;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import spring.study.entity.board.member.AuthFailureHandler;
-import spring.study.entity.board.member.AuthSuccessHandler;
+import spring.study.entity.member.AuthFailureHandler;
+import spring.study.entity.member.AuthSuccessHandler;
 import spring.study.service.MemberService;
 
 @RequiredArgsConstructor
@@ -33,6 +27,7 @@ public class SecurityConfig{
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
                 .csrf().disable()
                 .authorizeHttpRequests()
@@ -44,8 +39,6 @@ public class SecurityConfig{
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login/action")
-                .successHandler(authSuccessHandler)
-                .failureHandler(authFailureHandler)
                 .and()
                 .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
@@ -57,12 +50,7 @@ public class SecurityConfig{
                 .sessionManagement()
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(false)
-                .expiredUrl("/login?error-true&exception=Hava been attempted to login form a new place. or session expired")
-                .and()
-                .and().rememberMe()
-                .alwaysRemember(false)
-                .tokenValiditySeconds(43200)
-                .rememberMeParameter("remember-me");
+                .expiredUrl("/login?error-true&exception=Hava been attempted to login form a new place. or session expired");
 
         return http.build();
     }

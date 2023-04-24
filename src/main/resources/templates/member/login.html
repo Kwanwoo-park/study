@@ -25,18 +25,15 @@
                 <p th:text="${exception}" class="alert alert-danger"></p>
               </div>
               <div class="form-floating mb-3">
-                <input class="form-control" id="username" name="username" type="email" placeholder="name@example.com" required />
+                <input class="form-control" id="email" name="email" type="email" placeholder="name@example.com" required />
               </div>
               <div class="form-floating mb-3">
                 <input class="form-control" id="password" name="password" type="password" placeholder="Password" required />
               </div>
-              <div class="form-check mb-3">
-                <input class="form-check-input" id="remember-me" name="remember-me" type="checkbox" />
-                <label class="form-check-label" for="remember-me">Remember Password</label>
-              </div>
               <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
                 <!-- <a class="small" href="javascript:">Forgot Password?</a> -->
                 <a class="btn btn-primary" href="javascript:fnSubmit();">Login</a>
+                <a class="btn btn-primary" href="/find">비밀번호 재설정</a>
                 <a class="btn btn-primary" href="/register">회원가입</a>
               </div>
             </form>

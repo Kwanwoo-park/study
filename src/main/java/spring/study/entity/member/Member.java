@@ -1,4 +1,4 @@
-package spring.study.entity.board.member;
+package spring.study.entity.member;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,7 +26,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     private Long id;
     private String email;
     private String pwd;
-    public String name;
+    private String name;
     private LocalDateTime lastLoginTime;
 
     @Builder

@@ -9,7 +9,7 @@
 </head>
 <body>
 	<div class="container">
-		<h1>Board View.</h1>
+		<h1>Board View</h1>
 		<form id="frm" action="/board/view/action" method="post">
 			<input type="hidden" name="id" th:value="${info.id}">
 			<div class="mb-3">
@@ -22,10 +22,10 @@
 			</div>
 			<div class="mb-3">
 			    <label class="form-label">Writer.</label>
-			    <input type="text" class="form-control" name="registerId" th:value="${info.registerId}">
+			    <input type="disabled" class="form-control" name="registerId" th:value="${info.registerId}" disabled>
 			</div>
 			<div class="float-left">
-				<button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
+				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
 				<button type="submit" class="btn btn-primary">Edit</button>
 			</div>
 			<div class="float-right">

@@ -1,7 +1,7 @@
 package spring.study.dto.member;
 
 import lombok.Getter;
-import spring.study.entity.board.member.Member;
+import spring.study.entity.member.Member;
 
 import java.time.LocalDateTime;
 

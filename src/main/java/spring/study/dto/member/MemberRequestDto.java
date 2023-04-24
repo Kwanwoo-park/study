@@ -3,9 +3,7 @@ package spring.study.dto.member;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import spring.study.entity.board.member.Member;
-
-import java.time.LocalDateTime;
+import spring.study.entity.member.Member;
 
 @Getter
 @Setter
