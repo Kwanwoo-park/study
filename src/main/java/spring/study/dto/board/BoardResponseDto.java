@@ -12,6 +12,7 @@ public class BoardResponseDto {
     private String content;
     private int readCnt;
     private String registerId;
+    private String registerEmail;
     private LocalDateTime registerTime;
 
     public BoardResponseDto(Board entity) {
@@ -20,13 +21,14 @@ public class BoardResponseDto {
         content = entity.getContent();
         this.readCnt = entity.getReadCnt();
         this.registerId = entity.getRegisterId();
+        this.registerEmail = entity.getRegisterEmail();
         this.registerTime = entity.getRegisterTime();
     }
 
     @Override
     public String toString() {
         return "BoardListDto [id=" + id + ", title=" + title + ", content=" + content
-                + ", readCnt=" + readCnt + ", registerId=" + registerId + ", registerTime="
-                + registerTime +"]";
+                + ", readCnt=" + readCnt + ", registerId=" + registerId + ", registerEmail=" + registerEmail +
+                ", registerTime=" + registerTime +"]";
     }
 }

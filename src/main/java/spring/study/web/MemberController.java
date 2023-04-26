@@ -1,11 +1,15 @@
 package spring.study.web;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpRequest;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import spring.study.SecurityConfig;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.member.Member;
@@ -63,26 +67,16 @@ public class MemberController {
         return "/member/updatePassword";
     }
 
-    @GetMapping("/board/write")
-    public String getBoardWritePage(Model model) throws Exception {
-        try {
-            model.addAttribute("name", member.getName());
-        }
-        catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-        return "/board/write";
-    }
-
     @PostMapping("/login/action")
     public String loginAction(MemberRequestDto dto) throws Exception {
         try {
             member = memberService.loadUserByUsername(dto.getEmail());
-            memberService.updateMemberLastLogin(member.getEmail(), LocalDateTime.now());
+            if (member.getPassword().equals(dto.getPassword())) {memberService.updateMemberLastLogin(member.getEmail(), LocalDateTime.now());}
+            else return "redirect:/login?error=true&exception=Not_Found_account";
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
-        return "redirect:/board/list";
+        return "redirect:/board/list/" + member.getId().toString();
     }
 
     @PostMapping("/register/action")
@@ -126,21 +120,5 @@ public class MemberController {
         }
 
         return "redirect:/login";
-    }
-
-    @PostMapping("/board/write/action")
-    public String boardWriteAction(BoardRequestDto boardRequestDto) throws Exception {
-        try {
-            boardRequestDto.setRegisterId(member.getName());
-            Long result = boardService.save(boardRequestDto);
-
-            if (result < 0) {
-                throw new Exception("#Exception boardWriteAction!");
-            }
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-
-        return "redirect:/board/list";
     }
 }

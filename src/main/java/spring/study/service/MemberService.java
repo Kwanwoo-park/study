@@ -14,6 +14,7 @@ import spring.study.entity.member.Member;
 import spring.study.entity.member.MemberRepository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -25,6 +26,10 @@ public class MemberService implements UserDetailsService {
         return memberRepository.save(memberSaveDto.toEntity()).getId();
     }
 
+    public Optional<Member> findById(Long id) {
+        return memberRepository.findById(id);
+    }
+
     public int updateMemberLastLogin(@Param("email") String email,
                                      @Param("lastLoginTime") LocalDateTime lastLoginTime) {
         return memberRepository.updateMemberLastLogin(email, lastLoginTime);
@@ -34,20 +39,11 @@ public class MemberService implements UserDetailsService {
         return memberRepository.updateMemberPassword(email, password);
     }
 
-    @Bean
-    private PasswordEncoder passwordEncoder() {
-        PasswordEncoder encoder = new BCryptPasswordEncoder();
-        return encoder;
-    }
-
     @Override
     public Member loadUserByUsername(String email) throws UsernameNotFoundException {
         Member member = memberRepository.findByEmail(email);
 
         if (member == null) throw new UsernameNotFoundException("Not Found account.");
-        else {
-            member.setPwd(passwordEncoder().encode(""));
-        }
 
         return member;
     }

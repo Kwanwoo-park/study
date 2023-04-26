@@ -20,13 +20,15 @@ public class Board extends BasetimeEntity {
     private String content;
     private int readCnt;
     private String registerId;
+    private String registerEmail;
 
     @Builder
-    public Board(Long id, String title, String content, int readCnt, String registerId) {
+    public Board(Long id, String title, String content, int readCnt, String registerId, String registerEmail) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.readCnt = readCnt;
         this.registerId = registerId;
+        this.registerEmail = registerEmail;
     }
 }

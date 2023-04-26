@@ -6,6 +6,7 @@ create table board
     content text not null,
     read_cnt int not null default 0,
     register_id varchar(100) not null,
+    register_email varchar(200) not null,
     register_time datetime null default null,
     update_time datetime null default null,
     primary key(id)

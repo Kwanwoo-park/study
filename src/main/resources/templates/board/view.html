@@ -14,11 +14,11 @@
 			<input type="hidden" name="id" th:value="${info.id}">
 			<div class="mb-3">
 			    <label class="form-label">Title.</label>
-			    <input type="text" class="form-control" name="title" th:value="${info.title}">
+			    <input type="text" class="form-control" id="title" name="title" th:value="${info.title}">
 			</div>
 			<div class="mb-3">
 		    	<label class="form-label">Content</label>
-		    	<textarea class="form-control" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
+		    	<textarea class="form-control" id="content" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
 			</div>
 			<div class="mb-3">
 			    <label class="form-label">Writer.</label>
@@ -37,6 +37,17 @@
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
     <script th:inline="javascript">
+    /*<![CDATA[*/
+    	const member = /*[[${member.email}]]*/;
+    	const board = /*[[${info.registerEmail}]]*/;
+
+    	if (member != board) {
+    		document.getElementById('title').disabled = true;
+    		document.getElementById('content').disabled = true;
+    	}
+
+    	console.log(member + " " + board);
+
 		function fnViewDelete() {
 			if (confirm("Do you want to delete it?")) {
 				let frm = $("#frm");
@@ -44,6 +55,7 @@
 				frm.submit();
 			}
 		}
+		/*]]>*/
 	</script>
 </body>
 </html>
