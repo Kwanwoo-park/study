@@ -41,13 +41,11 @@ public class MemberController {
     }
 
     @GetMapping("/detail")
-    public String detail(Model model) throws Exception{
-        try {
-            model.addAttribute("member", member);
-        }
-        catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
+    public String detail(Model model){
+        if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+
+        model.addAttribute("member", member);
+
         return "/member/detail";
     }
 
@@ -71,8 +69,10 @@ public class MemberController {
     public String loginAction(MemberRequestDto dto) throws Exception {
         try {
             member = memberService.loadUserByUsername(dto.getEmail());
+            if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+
             if (member.getPassword().equals(dto.getPassword())) {memberService.updateMemberLastLogin(member.getEmail(), LocalDateTime.now());}
-            else return "redirect:/login?error=true&exception=Not_Found_account";
+            else return "redirect:/login?error=true&exception=Invalid Email or Password";
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
@@ -96,13 +96,13 @@ public class MemberController {
 
     @PostMapping("/detail/action")
     public String detailAction() {
-
         return "redirect:/updatePassword";
     }
 
     @PostMapping("/find/action")
     public String findAction(MemberRequestDto memberRequestDto) {
         member = memberService.loadUserByUsername(memberRequestDto.getEmail());
+        if (member == null) return "redirect:/find?error=true&exception=Not Found account";
 
         return "redirect:/updatePassword";
     }

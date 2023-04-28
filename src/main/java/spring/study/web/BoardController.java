@@ -37,19 +37,18 @@ public class BoardController {
     }
 
     @GetMapping("/board/write")
-    public String getBoardWritePage(Model model) throws Exception {
-        try {
-            model.addAttribute("name", member.getName());
-        }
-        catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
+    public String getBoardWritePage(Model model){
+        if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+
+        model.addAttribute("name", member.getName());
         return "/board/write";
     }
 
     @GetMapping("/board/view")
     public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto) throws Exception {
         try {
+            if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+
             if (boardRequestDto.getId() != null) {
                 model.addAttribute("info", boardService.findById(boardRequestDto.getId()));
                 model.addAttribute("member", memberService.loadUserByUsername(member.getEmail()));
