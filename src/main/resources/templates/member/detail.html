@@ -24,6 +24,7 @@
       <input type="text" class="form-control" id="last_login" name="last_login" th:value="${member.lastLoginTime}" disabled>
     </div>
     <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+    <button type="button" class="btn btn-danger" onclick="javascript:location.href='/logout'">Logout</button>
     <button type="submit" class="btn btn-primary">Password Update</button>
   </form>
 </div>

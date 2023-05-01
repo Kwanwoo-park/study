@@ -26,6 +26,7 @@ public class BoardController {
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
         member = memberService.findById(Long.parseLong(memberId)).get();
+
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));
             model.addAttribute("member", member);

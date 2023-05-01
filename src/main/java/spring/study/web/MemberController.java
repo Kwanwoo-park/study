@@ -26,13 +26,23 @@ public class MemberController {
     private Member member;
 
     @GetMapping("/login")
-    public String getLoginPage(Model model,
+    public String login(Model model,
                                @RequestParam(value = "error", required = false) String error,
                                @RequestParam(value = "exception", required = false) String exception) {
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
 
         return "/member/login";
+    }
+
+    @GetMapping("/logout")
+    public String logout(Model model){
+        if (member != null)
+            model.addAttribute("member", member);
+        else
+            return "redirect:/login";
+
+        return "/member/logout";
     }
 
     @GetMapping("/register")
@@ -77,6 +87,13 @@ public class MemberController {
             throw new Exception(e.getMessage());
         }
         return "redirect:/board/list/" + member.getId().toString();
+    }
+
+    @PostMapping("/logout/action")
+    public String logoutAction() {
+        member = null;
+
+        return "redirect:/login";
     }
 
     @PostMapping("/register/action")
