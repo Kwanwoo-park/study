@@ -29,7 +29,7 @@
 				<button type="submit" class="btn btn-primary">Edit</button>
 			</div>
 			<div class="float-right">
-				<button type="button" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
+				<button type="button" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
 			</div>
 		</form>
 	</div>
@@ -44,6 +44,7 @@
     	if (member != board) {
     		document.getElementById('title').disabled = true;
     		document.getElementById('content').disabled = true;
+    		document.getElementById('delete').style.display = 'none';
     	}
 
     	console.log(member + " " + board);

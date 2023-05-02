@@ -3,6 +3,7 @@ package spring.study.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.board.BoardRequestDto;
@@ -28,7 +29,7 @@ public class BoardService {
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
 
-        Page<Board> list = boardRepository.findAll(PageRequest.of(page, size));
+        Page<Board> list = boardRepository.findAll(PageRequest.of(page, size, Sort.by("id").descending()));
 
         resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
         resultMap.put("paging", list.getPageable());

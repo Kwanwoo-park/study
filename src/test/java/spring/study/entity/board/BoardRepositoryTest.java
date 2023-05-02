@@ -1,4 +1,4 @@
-package spring.study;
+package spring.study.entity.board;
 
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -40,11 +40,15 @@ class BoardRepositoryTest {
         }
     }
 
+    @Test
     void findAll() {
         Map<String, Object> result = boardService.findAll(0, 5);
 
         if (result != null) {
             System.out.println("# Success findAll() : " + result.toString());
+            for (String s : result.keySet()) {
+                System.out.println(result.get(s));
+            }
         }
         else {
             System.out.println("# Fail findAll() ~");
