@@ -3,6 +3,8 @@ package spring.study.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -36,13 +38,15 @@ public class MemberService implements UserDetailsService {
     }
 
     public int updateMemberPassword(@Param("email") String email, @Param("password") String password) {
-        return memberRepository.updateMemberPassword(email, password);
+        return memberRepository.updateMemberPassword(email, new BCryptPasswordEncoder().encode(password));
     }
 
     @Override
-    public Member loadUserByUsername(String email) {
-        Member member = memberRepository.findByEmail(email);
-
-        return member;
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return Optional
+                .ofNullable(memberRepository.findByEmail(email))
+                .orElseThrow(() -> new BadCredentialsException(
+                        "이메일이나 비밀번호를 확인해주세요"
+                ));
     }
 }

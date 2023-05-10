@@ -49,7 +49,7 @@ public class MemberRepositoryTest {
         Member member = new Member();
         member.setName("박관우");
 
-        Member member2 = memberService.loadUserByUsername("akakslslzz@naver.com");
+        Member member2 = (Member) memberService.loadUserByUsername("akakslslzz@naver.com");
 
         assertThat(member.getName()).isEqualTo(member2.getName());
     }

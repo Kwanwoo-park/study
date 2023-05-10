@@ -6,12 +6,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import spring.study.entity.BasetimeEntity;
+import spring.study.entity.role.Role;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
@@ -27,26 +31,24 @@ public class Member extends BasetimeEntity implements UserDetails {
     private String email;
     private String pwd;
     private String name;
+    private Role role;
     private LocalDateTime lastLoginTime;
 
     @Builder
-    public Member(Long id, String email, String pwd, String name, LocalDateTime lastLoginTime) {
+    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;
         this.name = name;
+        this.role = role;
         this.lastLoginTime = lastLoginTime;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Collection<GrantedAuthority> collectors = new ArrayList<>();
-
-        collectors.add(() -> {
-            return "계정별 등록할 권한";
-        });
-
-        return collectors;
+        Set<GrantedAuthority> roles = new HashSet<>();
+        roles.add(new SimpleGrantedAuthority(role.getValue()));
+        return roles;
     }
 
     @Override

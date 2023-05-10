@@ -18,6 +18,7 @@ create table member (
     email varchar(200) not null,
     pwd varchar(200) not null,
     name varchar(100) not null,
+    role varchar(20) not null,
     last_login_time datetime null default null,
     register_time datetime null default null,
     update_time datetime null default null,

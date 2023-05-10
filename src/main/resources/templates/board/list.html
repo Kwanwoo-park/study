@@ -35,7 +35,7 @@
 									<span th:text="${(resultMap.totalCnt - index.index) - (paging.pageNumber * paging.pageSize)}"></span>
 								</td>
 								<td>
-									<a th:href="@{../view(id=${list.id})}"><span th:text="${list.title}"></span></a>
+									<a th:href="@{./view(id=${list.id})}"><span th:text="${list.title}"></span></a>
 								</td>
 								<td>
 									<span th:text="${list.registerId}"></span>
@@ -53,7 +53,7 @@
 						<div class="col">
 							<ul class="pagination">
 								<li class="page-item" th:each="index : ${#numbers.sequence(1, resultMap.totalPage)}" th:with="paging=${resultMap.paging}">
-									<a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{(${member.id})(page=${index - 1},page=${paging.pageSize})}">
+									<a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./list(page=${index - 1},page=${paging.pageSize})}">
 										<span class="text-white" th:text="${index}"></span>
 									</a>
 								</li>

@@ -20,6 +20,7 @@ public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
         memberRepository.updateMemberLastLogin(authentication.getName(), LocalDateTime.now());
+        System.out.println(authentication.getName());
         setDefaultTargetUrl("/board/list");
 
         super.onAuthenticationSuccess(request, response, chain, authentication);

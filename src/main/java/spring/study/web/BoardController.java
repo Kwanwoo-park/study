@@ -1,12 +1,11 @@
 package spring.study.web;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.member.Member;
 import spring.study.service.BoardService;
@@ -20,12 +19,13 @@ public class BoardController {
     private Member member;
     private final MemberService memberService;
 
-    @GetMapping("/board/list/{memberId}")
+    @RequestMapping(value = "/board/list", method = {RequestMethod.GET, RequestMethod.POST})
     public String getBoardListPage(Model model,
-                                   @PathVariable String memberId,
+                                   HttpServletRequest request,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
-        member = memberService.findById(Long.parseLong(memberId)).get();
+        HttpSession session = request.getSession();
+        member = (Member) session.getAttribute("member");
 
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));
@@ -76,7 +76,7 @@ public class BoardController {
             throw new Exception(e.getMessage());
         }
 
-        return "redirect:/board/list/" + member.getId();
+        return "redirect:/board/list";
     }
 
     @PostMapping("/board/view/action")
@@ -87,7 +87,7 @@ public class BoardController {
             throw new Exception(e.getMessage());
         }
 
-        return "redirect:/board/list/"+member.getId();
+        return "redirect:/board/list";
     }
 
     @PostMapping("/board/view/delete")
@@ -98,7 +98,7 @@ public class BoardController {
             throw new Exception(e.getMessage());
         }
 
-        return "redirect:/board/list/"+member.getId();
+        return "redirect:/board/list";
     }
 
     @PostMapping("/board/delete")
@@ -109,6 +109,6 @@ public class BoardController {
             throw new Exception(e.getMessage());
         }
 
-        return "redirect:/board/list/"+member.getId();
+        return "redirect:/board/list";
     }
 }
