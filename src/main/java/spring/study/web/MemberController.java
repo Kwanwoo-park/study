@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -86,9 +87,14 @@ public class MemberController {
         try {
             member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
-            memberService.updateMemberLastLogin(member.getEmail(), LocalDateTime.now());
-            HttpSession session = request.getSession();
-            session.setAttribute("member", member);
+            if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())){
+                memberService.updateMemberLastLogin(member.getEmail(), LocalDateTime.now());
+                HttpSession session = request.getSession();
+                session.setAttribute("member", member);
+            }
+            else {
+                return "redirect:/login?error=true&exception=Invalid Email or Password";
+            }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
