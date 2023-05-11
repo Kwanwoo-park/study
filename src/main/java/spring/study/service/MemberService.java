@@ -32,6 +32,8 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findById(id);
     }
 
+    public void deleteById(Long id) { memberRepository.deleteById(id); }
+
     public int updateMemberLastLogin(@Param("email") String email,
                                      @Param("lastLoginTime") LocalDateTime lastLoginTime) {
         return memberRepository.updateMemberLastLogin(email, lastLoginTime);

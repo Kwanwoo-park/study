@@ -4,16 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpRequest;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import spring.study.SecurityConfig;
-import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.member.Member;
@@ -72,7 +68,7 @@ public class MemberController {
     }
 
     @GetMapping("/updatePassword")
-    public String updatePassword(Model model) throws Exception{
+    public String updatePassword(Model model) throws Exception {
         try {
             model.addAttribute("email", member.getEmail());
         }
@@ -80,6 +76,15 @@ public class MemberController {
             throw new Exception(e.getMessage());
         }
         return "/member/updatePassword";
+    }
+
+    @GetMapping("/withdrawal")
+    public String withdrawal(Model model) {
+        if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+
+        model.addAttribute("member", member);
+
+        return "/member/withdrawal";
     }
 
     @PostMapping("/login/action")
@@ -147,6 +152,15 @@ public class MemberController {
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
+
+        return "redirect:/login";
+    }
+
+    @PostMapping("/withdrawal/action")
+    public String withdrawalAction() {
+        memberService.deleteById(member.getId());
+
+        member = null;
 
         return "redirect:/login";
     }
