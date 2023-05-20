@@ -26,7 +26,7 @@
 			</div>
 			<div class="float-left">
 				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-				<button type="submit" class="btn btn-primary">Edit</button>
+				<button type="submit" id="edit" class="btn btn-primary">Edit</button>
 			</div>
 			<div class="float-right">
 				<button type="button" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
@@ -44,6 +44,7 @@
     	if (member != board) {
     		document.getElementById('title').disabled = true;
     		document.getElementById('content').disabled = true;
+    		document.getElementById('edit').style.display = 'none';
     		document.getElementById('delete').style.display = 'none';
     	}
 
