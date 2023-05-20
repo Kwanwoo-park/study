@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.member.MemberRequestDto;
+import spring.study.entity.role.Role;
 import spring.study.service.MemberService;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class MemberRepositoryTest {
         memberSaveDto.setEmail("akakslsl@naver.com");
         memberSaveDto.setPassword("zzqqwoo1310!");
         memberSaveDto.setName("박관우");
+        memberSaveDto.setRole(Role.USER);
 
         Long result = memberService.save(memberSaveDto);
 
