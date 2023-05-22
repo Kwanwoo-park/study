@@ -16,6 +16,9 @@ import spring.study.entity.member.Member;
 import spring.study.entity.member.MemberRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -26,6 +29,17 @@ public class MemberService implements UserDetailsService {
     @Transactional
     public Long save(MemberRequestDto memberSaveDto) {
         return memberRepository.save(memberSaveDto.toEntity()).getId();
+    }
+
+    @Transactional(readOnly = true)
+    public HashMap<String, Object> findAll() {
+        HashMap<String, Object> member = new HashMap<>();
+
+        List<Member> list = memberRepository.findAll();
+
+        member.put("list", list);
+
+        return member;
     }
 
     public Optional<Member> findById(Long id) {

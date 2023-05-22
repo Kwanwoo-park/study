@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.member.Member;
+import spring.study.entity.role.Role;
 import spring.study.service.BoardService;
 import spring.study.service.MemberService;
 import spring.study.service.UserService;
@@ -103,7 +104,9 @@ public class MemberController {
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
-        return "redirect:/board/list";
+
+        if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
+        else return "redirect:/board/list";
     }
 
     @PostMapping("/logout/action")

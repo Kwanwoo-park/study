@@ -39,13 +39,16 @@
     <script th:inline="javascript">
     /*<![CDATA[*/
     	const member = /*[[${member.email}]]*/;
+    	const role = /*[[${member.role}]]*/;
     	const board = /*[[${info.registerEmail}]]*/;
 
-    	if (member != board) {
-    		document.getElementById('title').disabled = true;
-    		document.getElementById('content').disabled = true;
-    		document.getElementById('edit').style.display = 'none';
-    		document.getElementById('delete').style.display = 'none';
+    	if (role != "ADMIN") {
+			if (member != board) {
+				document.getElementById('title').disabled = true;
+				document.getElementById('content').disabled = true;
+				document.getElementById('edit').style.display = 'none';
+				document.getElementById('delete').style.display = 'none';
+			}
     	}
 
     	console.log(member + " " + board);
