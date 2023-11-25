@@ -19,7 +19,9 @@ public class AdminController {
     @GetMapping("/admin/administrator")
     public String admin(HttpServletRequest request){
         HttpSession session = request.getSession();
+        session.setMaxInactiveInterval(60);
         member = (Member) session.getAttribute("member");
+
 
         return "/admin/administrator";
     }
