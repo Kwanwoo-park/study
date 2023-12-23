@@ -54,7 +54,7 @@
     	console.log(member + " " + board);
 
 		function fnViewDelete() {
-			if (confirm("Do you want to delete it?")) {
+			if (confirm("게시글을 삭제하시겠습니까?")) {
 				let frm = $("#frm");
 				frm.attr("action","/board/view/delete");
 				frm.submit();

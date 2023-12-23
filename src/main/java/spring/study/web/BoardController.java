@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import spring.study.alert.AlertMessage;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.member.Member;
 import spring.study.service.BoardService;
@@ -18,13 +19,14 @@ public class BoardController {
 
     private Member member;
     private final MemberService memberService;
+    HttpSession session;
 
     @RequestMapping(value = "/board/list", method = {RequestMethod.GET, RequestMethod.POST})
     public String getBoardListPage(Model model,
                                    HttpServletRequest request,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
-        HttpSession session = request.getSession();
+        session = request.getSession();
         session.setMaxInactiveInterval(60);
         member = (Member) session.getAttribute("member");
 
@@ -40,7 +42,10 @@ public class BoardController {
 
     @GetMapping("/board/write")
     public String getBoardWritePage(Model model){
-        if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+        if (member == null) {
+            session.invalidate();
+            return "redirect:/login?error=true&exception=Login Please";
+        }
 
         model.addAttribute("name", member.getName());
         return "/board/write";
@@ -49,12 +54,18 @@ public class BoardController {
     @GetMapping("/board/view")
     public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto) throws Exception {
         try {
-            if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+            if (member == null) {
+                session.invalidate();
+                return "redirect:/login?error=true&exception=Login Please";
+            }
 
             if (boardRequestDto.getId() != null) {
                 model.addAttribute("info", boardService.findById(boardRequestDto.getId()));
                 model.addAttribute("member", memberService.loadUserByUsername(member.getEmail()));
                 boardService.updateBoardReadCntInc(boardRequestDto.getId());
+            }
+            else {
+
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
@@ -64,7 +75,7 @@ public class BoardController {
     }
 
     @PostMapping("/board/write/action")
-    public String boardWriteAction(BoardRequestDto boardRequestDto) throws Exception {
+    public String boardWriteAction(BoardRequestDto boardRequestDto, Model model) throws Exception {
         try {
             boardRequestDto.setRegisterId(member.getName());
             boardRequestDto.setRegisterEmail(member.getEmail());
@@ -77,7 +88,8 @@ public class BoardController {
             throw new Exception(e.getMessage());
         }
 
-        return "redirect:/board/list";
+        AlertMessage message = new AlertMessage("게시글 생성이 완료되었습니다.", "/board/list", RequestMethod.GET, null);
+        return showMessageAndRedirect(message, model);
     }
 
     @PostMapping("/board/view/action")
@@ -92,14 +104,15 @@ public class BoardController {
     }
 
     @PostMapping("/board/view/delete")
-    public String boardViewDeleteAction(@RequestParam() Long id) throws Exception {
+    public String boardViewDeleteAction(@RequestParam() Long id, Model model) throws Exception {
         try {
             boardService.deleteById(id);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
 
-        return "redirect:/board/list";
+        AlertMessage message = new AlertMessage("게시글 삭제가 완료되었습니다.", "/board/list", RequestMethod.GET, null);
+        return showMessageAndRedirect(message, model);
     }
 
     @PostMapping("/board/delete")
@@ -111,5 +124,11 @@ public class BoardController {
         }
 
         return "redirect:/board/list";
+    }
+
+    private String showMessageAndRedirect(final AlertMessage params, Model model) {
+        model.addAttribute("params", params);
+
+        return "alert/message";
     }
 }
