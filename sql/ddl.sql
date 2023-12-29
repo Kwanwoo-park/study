@@ -46,16 +46,13 @@ create table member (
     update_time datetime null default null);
 create unique index email on member (email);
 
-create table spring_session (
-    primary_id char(36) primary key,
-    session_id char(36),
-    creation_time bigint,
-    last_access_time bigint,
-    max_inactive_interval int,
-    expiry_time bigint default 60,
-    principal_name varchar(100));
-
-create table spring_session_attributes (
-    session_primary_id char(36) primary key,
-    attribute_name varchar(200),
-    attribute_bytes varbinary);
+create table book (
+    bnum varchar(20) not null primary key,
+    title varchar(20) not null,
+    author varchar(10) not null,
+    publisher varchar(20) not null,
+    bsort varchar(10) not null,
+    ssort varchar(10) not null,
+    cond int default 0,
+    borw int default 0
+);

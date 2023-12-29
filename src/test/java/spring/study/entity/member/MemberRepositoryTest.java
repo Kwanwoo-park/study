@@ -10,6 +10,7 @@ import spring.study.entity.role.Role;
 import spring.study.service.MemberService;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -54,6 +55,22 @@ public class MemberRepositoryTest {
         Member member2 = (Member) memberService.loadUserByUsername("akakslslzz@naver.com");
 
         assertThat(member.getName()).isEqualTo(member2.getName());
+    }
+
+    @Transactional
+    @Test
+    void findAll() {
+        Map<String, Object> result = memberService.findAll();
+
+        if (result != null) {
+            System.out.println("# Success findAll() : " + result.toString());
+
+            for (String s : result.keySet()) {
+                System.out.println(result.get(s));
+            }
+        }
+        else
+            System.out.println("# Fail findAll() ~");
     }
 
     @Transactional

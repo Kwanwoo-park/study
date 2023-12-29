@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.member.MemberRequestDto;
+import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.member.Member;
 import spring.study.entity.member.MemberRepository;
 
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -37,7 +39,7 @@ public class MemberService implements UserDetailsService {
 
         List<Member> list = memberRepository.findAll();
 
-        member.put("list", list);
+        member.put("list", list.stream().map(MemberResponseDto::new).collect(Collectors.toList()));
 
         return member;
     }
