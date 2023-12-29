@@ -4,8 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import spring.study.dto.book.BookRequestDto;
+import spring.study.dto.book.BookResponseDto;
 import spring.study.entity.book.Book;
 import spring.study.service.BookService;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -14,15 +24,40 @@ public class BookController {
 
     private Book book;
 
-    @GetMapping("/book/list")
+    @RequestMapping(value = "/book/list", method = {RequestMethod.GET, RequestMethod.POST})
     public String list(Model model) throws Exception {
         try {
-            model.addAttribute("book", bookService.findAll());
+            if (book == null)
+                model.addAttribute("book", bookService.findAll());
+            else {
+                List<Book> list = new ArrayList<>();
+                list.add(book);
+
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("list", list.stream().map(BookResponseDto::new).collect(Collectors.toList()));
+                model.addAttribute("book", map);
+            }
         }
         catch (Exception e) {
             throw new Exception(e.getMessage());
         }
 
         return "/book/list";
+    }
+
+    @PostMapping("/book/list/action")
+    public String bookFindAction(BookRequestDto bookRequestDto, Model model) throws Exception {
+        try {
+            book = bookService.findBook(bookRequestDto.getTitle());
+
+            if (book == null) {
+                throw new Exception("Not Found");
+            }
+        }
+        catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+
+        return "redirect:/book/list";
     }
 }

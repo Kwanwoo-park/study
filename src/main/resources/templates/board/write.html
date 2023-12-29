@@ -12,7 +12,7 @@
 		<h1>Board Write</h1>
 		<form action="/board/write/action" method="post">
 			<div class="mb-3">
-			    <label for="title" class="form-label">Title.</label>
+			    <label for="title" class="form-label">Title</label>
 			    <input type="text" class="form-control" id="title" name="title">
 			</div>
 			<div class="mb-3">
@@ -20,7 +20,7 @@
 		    	<textarea class="form-control" rows="5" cols="" id="content" name="content"></textarea>
 			</div>
 			<div class="mb-3">
-			    <label for="writer" class="form-label">Writer.</label>
+			    <label for="writer" class="form-label">Writer</label>
 			    <input type="text" class="form-control" id="writer" name="writer" th:name="name" th:value="${name}" disabled>
 			</div>
 			<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
