@@ -7,9 +7,5 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.book.BookRequestDto;
 
 public interface BookRepository extends JpaRepository<Book, String> {
-    static final String find_book = "select * from Book where title = :#{#bookRequestDto.title}";
-
-    @Transactional
-    @Query(value = find_book, nativeQuery = true)
-    public int findBook(@Param("bookRequestDto")BookRequestDto bookRequestDto);
+    public Book findByTitle(String title);
 }

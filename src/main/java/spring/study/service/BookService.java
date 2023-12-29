@@ -33,5 +33,7 @@ public class BookService {
         return book;
     }
 
-    public int findBook(BookRequestDto bookRequestDto) {return bookRepository.findBook(bookRequestDto); }
+    public Book findBook(String title) {
+        return bookRepository.findByTitle(title);
+    }
 }

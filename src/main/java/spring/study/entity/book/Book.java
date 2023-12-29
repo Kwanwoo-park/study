@@ -9,6 +9,7 @@ import spring.study.entity.BasetimeEntity;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Setter
 @Entity
 public class Book {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
