@@ -27,7 +27,7 @@ public class BoardController {
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
         session = request.getSession();
-        session.setMaxInactiveInterval(60);
+        session.setMaxInactiveInterval(1800);
         member = (Member) session.getAttribute("member");
 
         try {

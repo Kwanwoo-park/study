@@ -10,9 +10,15 @@
 <div class="container">
     <h1>Book List</h1>
     <form action="/book/list/action" method="post">
-    <input type="text" class="form-control" id="title" name="title" required>
-    <table class="table table-striped table-horizontal table-bordered mt-3">
-        <thead class="thead-strong">
+        <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+        <div class="float-right">
+            <a class="btn btn-primary" href="/clear">Clear</a>
+        </div>
+        <div >
+            <input type="text" class="form-control" id="title" name="title" placeholder="Search Book">
+        </div>
+        <table class="table table-striped table-horizontal table-bordered mt-3">
+            <thead class="thead-strong">
             <tr>
                 <th width="">책번호</th>
                 <th width="">도서명</th>
@@ -21,8 +27,8 @@
                 <th width="">대분류</th>
                 <th width="">소분류</th>
             </tr>
-        </thead>
-        <tbody id="tbody">
+            </thead>
+            <tbody id="tbody">
             <tr th:each="list,index : ${book.list}">
                 <td>
                     <span th:text="${list.bnum}"></span>
@@ -43,10 +49,8 @@
                     <span th:text="${list.ssort}"></span>
                 </td>
             </tr>
-        </tbody>
-    </table>
-
-    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+            </tbody>
+        </table>
     </form>
 </div>
 <script src="/js/lib/jquery.min.js"></script>

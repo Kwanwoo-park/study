@@ -19,7 +19,7 @@ public class AdminController {
     @GetMapping("/admin/administrator")
     public String admin(HttpServletRequest request){
         HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(60);
+        session.setMaxInactiveInterval(1800);
         member = (Member) session.getAttribute("member");
 
 
