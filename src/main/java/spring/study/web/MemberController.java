@@ -9,7 +9,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import spring.study.alert.AlertMessage;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.member.Member;
@@ -89,7 +91,7 @@ public class MemberController {
     }
 
     @PostMapping("/login/action")
-    public String loginAction(MemberRequestDto dto, HttpServletRequest request) throws Exception {
+    public String loginAction(MemberRequestDto dto, HttpServletRequest request, Model model) throws Exception {
         try {
             member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
@@ -105,8 +107,16 @@ public class MemberController {
             throw new Exception(e.getMessage());
         }
 
-        if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
-        else return "redirect:/board/list";
+        AlertMessage message;
+
+        if (member.getRole() == Role.ADMIN) {
+            message = new AlertMessage(member.getName() + " 관리자님 환영합니다.", "/admin/administrator", RequestMethod.GET, null);
+        }
+        else {
+            message = new AlertMessage(member.getName() + "님 환영합니다.", "/book/list", RequestMethod.GET, null);
+        }
+
+        return message.showMessageAndRedirect(model);
     }
 
     @PostMapping("/logout/action")
@@ -117,18 +127,21 @@ public class MemberController {
     }
 
     @PostMapping("/register/action")
-    public String registerAction(MemberRequestDto memberRequestDto) throws Exception {
+    public String registerAction(MemberRequestDto memberRequestDto, Model model) throws Exception {
+        AlertMessage message;
         try {
             MemberResponseDto memberResponseDto = userService.createUser(memberRequestDto);
 
             if (memberResponseDto == null) {
-                throw new Exception("#이미 존재 하는 이메일 입니다.");
+                message = new AlertMessage("이미 존재하는 이메일입니다.", "/register", RequestMethod.GET, null);
+                return message.showMessageAndRedirect(model);
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
 
-        return "redirect:/login";
+        message = new AlertMessage(memberRequestDto.getName() + "님 회원가입이 완료되었습니다.", "/login", RequestMethod.GET, null);
+        return message.showMessageAndRedirect(model);
     }
 
     @PostMapping("/detail/action")
@@ -145,18 +158,21 @@ public class MemberController {
     }
 
     @PostMapping("/updatePassword/action")
-    public String updatePasswordAction(MemberRequestDto memberUpdateDto) throws Exception {
+    public String updatePasswordAction(MemberRequestDto memberUpdateDto, Model model) throws Exception {
+        AlertMessage message;
         try {
             int result = memberService.updateMemberPassword(member.getEmail(), memberUpdateDto.getPassword());
 
             if (result < 0) {
-                throw new Exception("#Exception memberRegisterAction");
+                message = new AlertMessage("변경에 실패했습니다.\n다시 한 번 시도해주세요", "/updatePassword", RequestMethod.GET, null);
+                return message.showMessageAndRedirect(model);
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
 
-        return "redirect:/login";
+        message = new AlertMessage(member.getName() + "님 비밀번호 변경에 성공했습니다.", "/login", RequestMethod.GET, null);
+        return message.showMessageAndRedirect(model);
     }
 
     @PostMapping("/withdrawal/action")

@@ -13,7 +13,7 @@
 		<form id="frm" action="/board/view/action" method="post">
 			<input type="hidden" name="id" th:value="${info.id}">
 			<div class="mb-3">
-			    <label class="form-label">Title.</label>
+			    <label class="form-label">Title</label>
 			    <input type="text" class="form-control" id="title" name="title" th:value="${info.title}">
 			</div>
 			<div class="mb-3">
@@ -21,7 +21,7 @@
 		    	<textarea class="form-control" id="content" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
 			</div>
 			<div class="mb-3">
-			    <label class="form-label">Writer.</label>
+			    <label class="form-label">Writer</label>
 			    <input type="disabled" class="form-control" name="registerId" th:value="${info.registerId}" disabled>
 			</div>
 			<div class="float-left">

@@ -27,7 +27,6 @@ public class BoardController {
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
         session = request.getSession();
-        session.setMaxInactiveInterval(1800);
         member = (Member) session.getAttribute("member");
 
         try {
@@ -89,7 +88,7 @@ public class BoardController {
         }
 
         AlertMessage message = new AlertMessage("게시글 생성이 완료되었습니다.", "/board/list", RequestMethod.GET, null);
-        return showMessageAndRedirect(message, model);
+        return message.showMessageAndRedirect(model);
     }
 
     @PostMapping("/board/view/action")
@@ -112,7 +111,7 @@ public class BoardController {
         }
 
         AlertMessage message = new AlertMessage("게시글 삭제가 완료되었습니다.", "/board/list", RequestMethod.GET, null);
-        return showMessageAndRedirect(message, model);
+        return message.showMessageAndRedirect(model);
     }
 
     @PostMapping("/board/delete")
@@ -124,11 +123,5 @@ public class BoardController {
         }
 
         return "redirect:/board/list";
-    }
-
-    private String showMessageAndRedirect(final AlertMessage params, Model model) {
-        model.addAttribute("params", params);
-
-        return "alert/message";
     }
 }
