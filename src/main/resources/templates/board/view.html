@@ -10,8 +10,12 @@
 <body>
 	<div class="container">
 		<h1>Board View</h1>
-		<form id="frm" action="/board/view/action" method="post">
+		<form id="frm" method="post">
 			<input type="hidden" name="id" th:value="${info.id}">
+			<div class="float-right">
+				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+				<button type="button" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
+			</div>
 			<div class="mb-3">
 			    <label class="form-label">Title</label>
 			    <input type="text" class="form-control" id="title" name="title" th:value="${info.title}">
@@ -24,12 +28,17 @@
 			    <label class="form-label">Writer</label>
 			    <input type="disabled" class="form-control" name="registerId" th:value="${info.registerId}" disabled>
 			</div>
-			<div class="float-left">
-				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-				<button type="submit" id="edit" class="btn btn-primary">Edit</button>
+			<button type="submit" id="edit" class="btn btn-primary" formaction="/board/view/action">Edit</button>
+
+			<br>
+			<br>
+			<hr>
+			<div class="mb-3">
+				<label class="form-label">Comment</label>
+				<textarea class="form-control" id="comment" rows="5" cols="" name="Comment"></textarea>
 			</div>
-			<div class="float-right">
-				<button type="button" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
+			<div class="float-left">
+				<button type="submit" id="submit" class="btn btn-primary" formaction="/comment/action">Submit</button>
 			</div>
 		</form>
 	</div>

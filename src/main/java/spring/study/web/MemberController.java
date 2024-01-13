@@ -113,7 +113,7 @@ public class MemberController {
             message = new AlertMessage(member.getName() + " 관리자님 환영합니다.", "/admin/administrator", RequestMethod.GET, null);
         }
         else {
-            message = new AlertMessage(member.getName() + "님 환영합니다.", "/book/list", RequestMethod.GET, null);
+            message = new AlertMessage(member.getName() + "님 환영합니다.", "/board/list", RequestMethod.GET, null);
         }
 
         return message.showMessageAndRedirect(model);

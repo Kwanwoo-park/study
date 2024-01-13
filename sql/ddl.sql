@@ -56,3 +56,13 @@ create table book (
     cond int default 0,
     borw int default 0
 );
+
+create table comment (
+    id bigint auto_increment primary key,
+    comment text not null,
+    mid bigint not null,
+    mname varchar(100) not null,
+    bid bigint not null,
+    register_time datetime null default null,
+    update_time datetime null default null
+);

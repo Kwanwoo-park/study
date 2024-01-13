@@ -8,8 +8,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.alert.AlertMessage;
 import spring.study.dto.board.BoardRequestDto;
+import spring.study.dto.comment.CommentRequestDto;
 import spring.study.entity.member.Member;
 import spring.study.service.BoardService;
+import spring.study.service.CommentService;
 import spring.study.service.MemberService;
 
 @RequiredArgsConstructor
@@ -19,6 +21,8 @@ public class BoardController {
 
     private Member member;
     private final MemberService memberService;
+
+    private final CommentService commentService;
     HttpSession session;
 
     @RequestMapping(value = "/board/list", method = {RequestMethod.GET, RequestMethod.POST})
@@ -63,9 +67,6 @@ public class BoardController {
                 model.addAttribute("member", memberService.loadUserByUsername(member.getEmail()));
                 boardService.updateBoardReadCntInc(boardRequestDto.getId());
             }
-            else {
-
-            }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
@@ -100,6 +101,21 @@ public class BoardController {
         }
 
         return "redirect:/board/list";
+    }
+
+    @PostMapping("/comment/action")
+    public String commentAction(CommentRequestDto commentRequestDto, BoardRequestDto boardRequestDto) throws Exception {
+        try {
+            commentRequestDto.setBid(boardRequestDto.getId());
+            commentRequestDto.setMid(member.getId());
+            commentRequestDto.setMname(member.getName());
+
+            commentService.save(commentRequestDto);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+
+        return "refresh:";
     }
 
     @PostMapping("/board/view/delete")
