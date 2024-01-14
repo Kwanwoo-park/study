@@ -15,20 +15,27 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class CommentService {
+    private HashMap<String, Object> comment = new HashMap<>();
+
+    private List<Comment> list;
     private final CommentRepository commentRepository;
 
     @Transactional
     public Long save(CommentRequestDto commentRequestDto) {return commentRepository.save(commentRequestDto.toEntity()).getId(); }
 
     public HashMap<String, Object> findAll() {
-        HashMap<String, Object> comment = new HashMap<>();
-
-        List<Comment> list = commentRepository.findAll();
+        list = commentRepository.findAll();
 
         comment.put("list", list.stream().map(CommentResponseDto::new).collect(Collectors.toList()));
 
         return comment;
     }
 
-    public Comment findComment(Long bid) {return commentRepository.findByBid(bid);}
+    public HashMap<String, Object> findComment(Long bid) {
+        list = commentRepository.findByBid(bid);
+
+        comment.put("list", list.stream().map(CommentResponseDto::new).collect(Collectors.toList()));
+
+        return comment;
+    }
 }

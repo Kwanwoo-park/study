@@ -9,10 +9,17 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.alert.AlertMessage;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.comment.CommentRequestDto;
+import spring.study.dto.comment.CommentResponseDto;
+import spring.study.entity.comment.Comment;
 import spring.study.entity.member.Member;
 import spring.study.service.BoardService;
 import spring.study.service.CommentService;
 import spring.study.service.MemberService;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -54,7 +61,7 @@ public class BoardController {
         return "/board/write";
     }
 
-    @GetMapping("/board/view")
+    @RequestMapping(value = "/board/view", method = {RequestMethod.GET, RequestMethod.POST})
     public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto) throws Exception {
         try {
             if (member == null) {
@@ -65,6 +72,7 @@ public class BoardController {
             if (boardRequestDto.getId() != null) {
                 model.addAttribute("info", boardService.findById(boardRequestDto.getId()));
                 model.addAttribute("member", memberService.loadUserByUsername(member.getEmail()));
+                model.addAttribute("comment", commentService.findComment(boardRequestDto.getId()));
                 boardService.updateBoardReadCntInc(boardRequestDto.getId());
             }
         } catch (Exception e) {
@@ -104,7 +112,9 @@ public class BoardController {
     }
 
     @PostMapping("/comment/action")
-    public String commentAction(CommentRequestDto commentRequestDto, BoardRequestDto boardRequestDto) throws Exception {
+    public String commentAction(HttpServletRequest request,
+                                CommentRequestDto commentRequestDto,
+                                BoardRequestDto boardRequestDto) throws Exception {
         try {
             commentRequestDto.setBid(boardRequestDto.getId());
             commentRequestDto.setMid(member.getId());
@@ -115,7 +125,7 @@ public class BoardController {
             throw new Exception(e.getMessage());
         }
 
-        return "refresh:";
+        return "redirect:" + request.getHeader("Referer");
     }
 
     @PostMapping("/board/view/delete")

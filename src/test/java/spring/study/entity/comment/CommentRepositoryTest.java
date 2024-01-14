@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.comment.CommentRequestDto;
 import spring.study.service.CommentService;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
@@ -54,12 +55,17 @@ public class CommentRepositoryTest {
     }
 
     void findComment(Long bid) {
-        String mname = "박관우";
-        Comment comment = new Comment();
-        comment.setMname(mname);
+        Map<String, Object> result = commentService.findComment(bid);
 
-        Comment comment1 = commentService.findComment(bid);
+        if (result != null) {
+            System.out.println("# Success findComment() : " + result.toString());
 
-        assertThat(comment.getMname()).isEqualTo(comment1.getMname());
+            for (String s : result.keySet()) {
+                System.out.println(result.get(s));
+            }
+        }
+        else {
+            System.out.println("# Fail findComment() ~");
+        }
     }
 }

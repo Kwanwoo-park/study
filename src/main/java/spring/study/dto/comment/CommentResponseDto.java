@@ -20,9 +20,9 @@ public class CommentResponseDto {
     @Override
     public String toString() {
         return "CommentResponseDto{" +
-                "comment='" + comment +
+                "comment=" + comment +
                 ", mid=" + mid +
-                ", mname='" + mname +
+                ", mname=" + mname +
                 ", bid=" + bid +
                 '}';
     }
