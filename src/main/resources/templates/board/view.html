@@ -45,8 +45,9 @@
 				<ul class="list-group-flush">
 					<li class="list-group-item" th:each="list,index : ${comment.list}">
 						<span>
-							<span th:value="${list?.mname}"></span>
-							<span th:value="${list?.comment}"></span>
+							<span th:text="${index.index+1}"></span>
+							<span th:text="${list.mname}"></span>
+							<span th:text="${list.comment}"></span>
 						</span>
 					</li>
 				</ul>

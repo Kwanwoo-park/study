@@ -2,6 +2,7 @@ package spring.study.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import spring.study.dto.comment.CommentRequestDto;
 import spring.study.dto.comment.CommentResponseDto;
@@ -32,9 +33,9 @@ public class CommentService {
     }
 
     public HashMap<String, Object> findComment(Long bid) {
-        list = commentRepository.findByBid(bid);
+        list = commentRepository.findByBid(bid, Sort.by("id").descending());
 
-        comment.put("list", list.stream().map(CommentResponseDto::new).collect(Collectors.toList()));
+        comment.put("list", list.stream().map(CommentResponseDto::new).toList());
 
         return comment;
     }
