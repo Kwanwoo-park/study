@@ -85,12 +85,18 @@ public class BoardController {
     @PostMapping("/board/write/action")
     public String boardWriteAction(BoardRequestDto boardRequestDto, Model model) throws Exception {
         try {
-            boardRequestDto.setRegisterId(member.getName());
-            boardRequestDto.setRegisterEmail(member.getEmail());
-            Long result = boardService.save(boardRequestDto);
+            if (boardRequestDto.getContent() != null){
+                boardRequestDto.setRegisterId(member.getName());
+                boardRequestDto.setRegisterEmail(member.getEmail());
+                Long result = boardService.save(boardRequestDto);
 
-            if (result < 0) {
-                throw new Exception("#Exception boardWriteAction!");
+                if (result < 0) {
+                    throw new Exception("#Exception boardWriteAction!");
+                }
+            }
+            else {
+                AlertMessage message = new AlertMessage("게시글을 다시 작성해주실 바랍니다.", "/board/list", RequestMethod.GET, null);
+                return message.showMessageAndRedirect(model);
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
@@ -116,11 +122,13 @@ public class BoardController {
                                 CommentRequestDto commentRequestDto,
                                 BoardRequestDto boardRequestDto) throws Exception {
         try {
-            commentRequestDto.setBid(boardRequestDto.getId());
-            commentRequestDto.setMid(member.getId());
-            commentRequestDto.setMname(member.getName());
+            if (commentRequestDto.getComment() != null){
+                commentRequestDto.setBid(boardRequestDto.getId());
+                commentRequestDto.setMid(member.getId());
+                commentRequestDto.setMname(member.getName());
 
-            commentService.save(commentRequestDto);
+                commentService.save(commentRequestDto);
+            }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
