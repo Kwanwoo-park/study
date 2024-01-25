@@ -10,7 +10,7 @@ import spring.study.entity.BasetimeEntity;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
-@Entity
+@Entity(name = "book")
 public class Book {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String bnum;

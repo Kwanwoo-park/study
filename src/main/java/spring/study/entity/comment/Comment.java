@@ -11,7 +11,7 @@ import spring.study.entity.BasetimeEntity;
 @NoArgsConstructor
 @Getter
 @Setter
-@Entity
+@Entity(name = "comment")
 public class Comment extends BasetimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

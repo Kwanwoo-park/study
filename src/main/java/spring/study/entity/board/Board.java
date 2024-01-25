@@ -12,7 +12,7 @@ import spring.study.entity.BasetimeEntity;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Entity
+@Entity(name = "board")
 public class Board extends BasetimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

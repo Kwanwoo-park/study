@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.board.BoardRequestDto;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    static final String update_board = "update Board " +
+    static final String update_board = "update board " +
             "set title = :#{#boardRequestDto.title}, " +
             "content = :#{#boardRequestDto.content}, " +
             "update_time = NOW() " +

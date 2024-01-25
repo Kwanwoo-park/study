@@ -21,7 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Setter
-@Entity
+@Entity(name = "member")
 public class Member extends BasetimeEntity implements UserDetails {
     private static final long serialVersionUID = 1L;
 
