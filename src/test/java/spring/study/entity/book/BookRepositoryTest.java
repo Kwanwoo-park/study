@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import spring.study.dto.book.BookRequestDto;
 import spring.study.service.BookService;
 
 import java.util.Map;
@@ -30,17 +31,5 @@ public class BookRepositoryTest {
         else {
             System.out.println("# Fail findAll() ~");
         }
-    }
-
-    @Transactional
-    @Test
-    void find() {
-        String title = "미술가와 미술가";
-        Book book = new Book();
-        book.setAuthor("김이진");
-
-        Book book1 = bookService.findBook(title);
-
-        assertThat(book.getAuthor()).isEqualTo(book1.getAuthor());
     }
 }

@@ -11,8 +11,8 @@ import spring.study.dto.member.MemberResponseDto;
 import java.time.LocalDateTime;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    static final String update_member_last_login = "update Member set last_login_time = :lastLoginTime where email = :email";
-    static final String update_member_password = "update Member set pwd = :password where email = :email";
+    static final String update_member_last_login = "update member set last_login_time = :lastLoginTime where email = :email";
+    static final String update_member_password = "update member set pwd = :password where email = :email";
 
     @Transactional
     @Modifying

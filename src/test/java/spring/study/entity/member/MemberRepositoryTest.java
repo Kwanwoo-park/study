@@ -24,7 +24,7 @@ public class MemberRepositoryTest {
     void save() {
         MemberRequestDto memberSaveDto = new MemberRequestDto();
 
-        memberSaveDto.setEmail("akakslsl@naver.com");
+        memberSaveDto.setEmail("akakslslzz@naver.com");
         memberSaveDto.setPassword("zzqqwoo1310!");
         memberSaveDto.setName("박관우");
         memberSaveDto.setRole(Role.USER);
@@ -33,6 +33,7 @@ public class MemberRepositoryTest {
 
         if (result > 0) {
             assertThat("#Success Save");
+            find();
         }
     }
 
@@ -46,8 +47,6 @@ public class MemberRepositoryTest {
         }
     }
 
-    @Transactional
-    @Test
     void find() {
         Member member = new Member();
         member.setName("박관우");
