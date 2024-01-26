@@ -24,7 +24,7 @@ public class MemberRepositoryTest {
     void save() {
         MemberRequestDto memberSaveDto = new MemberRequestDto();
 
-        memberSaveDto.setEmail("akakslslzz@naver.com");
+        memberSaveDto.setEmail("akakslsl@naver.com");
         memberSaveDto.setPassword("zzqqwoo1310!");
         memberSaveDto.setName("박관우");
         memberSaveDto.setRole(Role.USER);
