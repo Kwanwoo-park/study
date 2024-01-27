@@ -39,4 +39,8 @@ public class CommentService {
 
         return comment;
     }
+
+    public void deleteComment(Long bid) {
+        commentRepository.deleteByBid(bid);
+    }
 }

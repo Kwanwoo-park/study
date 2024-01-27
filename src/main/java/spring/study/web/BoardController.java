@@ -140,6 +140,7 @@ public class BoardController {
     public String boardViewDeleteAction(@RequestParam() Long id, Model model) throws Exception {
         try {
             boardService.deleteById(id);
+            commentService.deleteComment(id);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

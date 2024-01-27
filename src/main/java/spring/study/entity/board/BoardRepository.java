@@ -14,11 +14,11 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
             "update_time = NOW() " +
             "where id = :#{#boardRequestDto.id}";
 
-    static final String update_board_read_cnt_inc = "update Board "
+    static final String update_board_read_cnt_inc = "update board "
             + "set read_cnt = read_cnt + 1 "
             + "where id = :id";
 
-    static final String delete_board = "delete from Board "
+    static final String delete_board = "delete from board "
             + "where id in (:deleteList)";
 
     @Transactional

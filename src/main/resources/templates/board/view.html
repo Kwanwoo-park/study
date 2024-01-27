@@ -14,7 +14,7 @@
 			<input type="hidden" name="id" th:value="${info.id}">
 			<div class="float-right">
 				<button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
-				<button type="button" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
+				<button type="submit" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
 			</div>
 			<div class="mb-3">
 			    <label class="form-label">Title</label>
