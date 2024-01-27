@@ -1,7 +1,6 @@
 package spring.study.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.book.BookRequestDto;
@@ -11,7 +10,6 @@ import spring.study.entity.book.BookRepository;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor

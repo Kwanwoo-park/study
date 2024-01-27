@@ -10,9 +10,7 @@ import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.board.BoardResponseDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.board.BoardRepository;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor

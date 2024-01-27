@@ -1,14 +1,12 @@
 package spring.study.entity.member;
 
 import jakarta.transaction.Transactional;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.role.Role;
 import spring.study.service.MemberService;
-
 import java.time.LocalDateTime;
 import java.util.Map;
 

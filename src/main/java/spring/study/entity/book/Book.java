@@ -5,7 +5,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
-import spring.study.entity.BasetimeEntity;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter

@@ -7,8 +7,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.board.BoardResponseDto;
 import spring.study.service.BoardService;
-
-import java.util.List;
 import java.util.Map;
 
 @SpringBootTest

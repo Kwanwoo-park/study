@@ -9,17 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.alert.AlertMessage;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.comment.CommentRequestDto;
-import spring.study.dto.comment.CommentResponseDto;
-import spring.study.entity.comment.Comment;
 import spring.study.entity.member.Member;
 import spring.study.service.BoardService;
 import spring.study.service.CommentService;
 import spring.study.service.MemberService;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller

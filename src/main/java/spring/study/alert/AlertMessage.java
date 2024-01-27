@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMethod;
-
-import java.util.HashMap;
 import java.util.Map;
 
 @Getter
