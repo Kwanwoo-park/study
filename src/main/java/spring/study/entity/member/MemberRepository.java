@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
     static final String update_member_last_login = "update member set last_login_time = :lastLoginTime where email = :email";
@@ -25,4 +26,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
                                     @Param("password") String password);
 
     public Member findByEmail(String emfail);
+
+    public List<Member> findByName(String name);
 }

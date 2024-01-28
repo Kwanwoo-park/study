@@ -45,6 +45,16 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findById(id);
     }
 
+    public HashMap<String, Object> findName(String name) {
+        HashMap<String, Object> member = new HashMap<>();
+
+        List<Member> list = memberRepository.findByName(name);
+
+        member.put("list", list.stream().map(MemberResponseDto::new).collect(Collectors.toList()));
+
+        return member;
+    }
+
     public void deleteById(Long id) { memberRepository.deleteById(id); }
 
     public int updateMemberLastLogin(@Param("email") String email,

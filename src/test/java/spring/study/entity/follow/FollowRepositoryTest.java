@@ -25,6 +25,8 @@ public class FollowRepositoryTest {
         Long result = followService.save(followSaveDto);
 
         if (result > 0) {
+            countFollower(1L);
+            countFollowing(2L);
             deleteFollowing(followSaveDto.getFollowing());
         }
     }
@@ -44,9 +46,65 @@ public class FollowRepositoryTest {
         }
     }
 
+    void findByFollower(Long follower) {
+        HashMap<String, Object> result = followService.findFollower(follower);
+
+        if (result != null) {
+            System.out.println("# Success findByFollower() : " + result.toString());
+
+            for (String s : result.keySet()) {
+                System.out.println(result.get(s));
+            }
+        }
+
+        else {
+            System.out.println("# Fail findByFollower() ~");
+        }
+    }
+
+    void findByFollowing(Long following) {
+        HashMap<String, Object> result = followService.findFollowing(following);
+
+        if (result != null) {
+            System.out.println("# Success findByFollowing() : " + result.toString());
+
+            for (String s : result.keySet()) {
+                System.out.println(result.get(s));
+            }
+        }
+
+        else {
+            System.out.println("# Fail findByFollowing() ~");
+        }
+    }
+
     void deleteFollowing(Long following) {
         findAll();
         followService.deleteFollow(following);
         findAll();
+    }
+
+    void countFollower(Long follower) {
+        findByFollower(follower);
+        Long result = followService.countFollower(follower);
+
+        if (result > 0) {
+            System.out.println("# Success countFollower() : "  + result);
+        }
+        else {
+            System.out.println("# Fail countFollower() ~");
+        }
+    }
+
+    void countFollowing(Long following) {
+        findByFollowing(following);
+        Long result = followService.countFollowing(following);
+
+        if (result > 0) {
+            System.out.println("# Success countFollowing() : " + result);
+        }
+        else {
+            System.out.println("# Fail countFollowing() ~");
+        }
     }
 }

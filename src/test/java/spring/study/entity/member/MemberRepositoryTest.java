@@ -32,6 +32,7 @@ public class MemberRepositoryTest {
         if (result > 0) {
             assertThat("#Success Save");
             find();
+            findName();
         }
     }
 
@@ -52,6 +53,20 @@ public class MemberRepositoryTest {
         Member member2 = (Member) memberService.loadUserByUsername("akakslslzz@naver.com");
 
         assertThat(member.getName()).isEqualTo(member2.getName());
+    }
+
+    void findName() {
+        Map<String, Object> result = memberService.findName("박관우");
+
+        if (result != null) {
+            System.out.println("# Success findName() : " + result.toString());
+
+            for (String s : result.keySet()) {
+                System.out.println(result.get(s));
+            }
+        }
+        else
+            System.out.println("# Fail findAll() ~");
     }
 
     @Transactional

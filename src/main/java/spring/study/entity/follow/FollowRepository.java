@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface FollowRepository extends JpaRepository<Follow, Long> {
     static final String unfollow = "delete from follow "
             + "where following = :following";
@@ -14,4 +16,12 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     @Modifying
     @Query(value = unfollow, nativeQuery = true)
     public void unfollowing(@Param("following") Long following);
+
+    public Long countByFollower(Long follower);
+
+    public List<Follow> findByFollower(Long follower);
+
+    public Long countByFollowing(Long following);
+
+    public List<Follow> findByFollowing(Long following);
 }
