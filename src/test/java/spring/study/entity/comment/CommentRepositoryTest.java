@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.comment.CommentRequestDto;
 import spring.study.service.CommentService;
 import java.util.Map;
+
 @SpringBootTest
 public class CommentRepositoryTest {
     @Autowired

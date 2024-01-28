@@ -39,3 +39,10 @@ create table comment (
     register_time datetime null default null,
     update_time datetime null default null
 );
+
+create table follow (
+    id bigint auto_increment primary key,
+    follower bigint not null,
+    name varchar(100) not null,
+    following bigint not null
+);
