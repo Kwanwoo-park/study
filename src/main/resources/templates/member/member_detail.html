@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>개인 정보</title>
+  <title>Member Detail</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!--부트스트랩 css 추가-->
@@ -10,7 +10,7 @@
 <body>
 <div class="container">
   <h1>Member Detail</h1>
-  <form action="/detail/action" method="post">
+  <form method="post">
     <div class="mb-3">
       <label class="form-label">Email: </label>
       <label class="form-label" th:text="${member.email}"></label>
@@ -20,15 +20,17 @@
       <label class="form-label" th:text="${member.name}"></label>
     </div>
     <div class="mb-3">
+      <label class="form-label">Last Login time: </label>
+      <label class="form-label" th:text="${member.lastLoginTime}"></label>
+    </div>
+    <div class="mb-3">
       <label class="form-label">Follower: </label>
       <label class="form-label" th:text="${follower}"></label>
       <label class="form-label">&nbsp;Following: </label>
       <label class="form-label" th:text="${following}"></label>
     </div>
-    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-    <button type="button" class="btn btn-danger" onclick="javascript:location.href='/logout'">Logout</button>
-    <button type="button" class="btn btn-danger" onclick="javascript:location.href='/withdrawal'">회원 탈퇴</button>
-    <button type="submit" class="btn btn-primary">Password Update</button>
+    <button type="button" class="btn btn-success" onclick="javascript:location.href='/member_find'">Previous</button>
+    <button type="submit" class="btn btn-success" formaction="/member_detail/action">Follow</button>
   </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->

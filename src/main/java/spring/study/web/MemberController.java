@@ -12,15 +12,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import spring.study.alert.AlertMessage;
+import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.member.Member;
 import spring.study.entity.role.Role;
-import spring.study.service.BoardService;
+import spring.study.service.FollowService;
 import spring.study.service.MemberService;
 import spring.study.service.UserService;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 @RequiredArgsConstructor
 @Controller
@@ -28,15 +30,26 @@ import java.time.LocalDateTime;
 public class MemberController {
     private final MemberService memberService;
     private final UserService userService;
-    private final BoardService boardService;
+    private final FollowService followService;
     private Member member;
+    private Member search_member;
+
+    private HashMap<String, Object> member_search;
 
     @GetMapping("/login")
     public String login(Model model,
-                               @RequestParam(value = "error", required = false) String error,
-                               @RequestParam(value = "exception", required = false) String exception) {
+                        @RequestParam(value = "error", required = false) String error,
+                        @RequestParam(value = "exception", required = false) String exception,
+                        HttpServletRequest request) {
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
+
+        HttpSession session = request.getSession(false);
+
+        if (session != null) {
+            member = (Member) session.getAttribute("member");
+            return "redirect:/board/list";
+        }
 
         return "/member/login";
     }
@@ -57,10 +70,22 @@ public class MemberController {
     }
 
     @GetMapping("/detail")
-    public String detail(Model model){
-        if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+    public String detail(Model model, HttpServletRequest request){
+        HttpSession session = request.getSession(false);
 
-        model.addAttribute("member", member);
+        if (session != null) {
+            member = (Member) session.getAttribute("member");
+
+            Long follower = followService.countFollower(member.getId());
+            Long following = followService.countFollowing(member.getId());
+
+            model.addAttribute("member", member);
+            model.addAttribute("follower", follower);
+            model.addAttribute("following", following);
+        }
+        else {
+            return "redirect:/login?error=true&exception=Not Found account";
+        }
 
         return "/member/detail";
     }
@@ -88,6 +113,24 @@ public class MemberController {
         model.addAttribute("member", member);
 
         return "/member/withdrawal";
+    }
+
+    @GetMapping("/member_find")
+    public String memberFind(Model model) {
+        model.addAttribute("member", member_search);
+
+        return "/member/member_find";
+    }
+
+    @GetMapping("/member_detail")
+    public String memberDetail(Model model, MemberRequestDto memberRequestDto) {
+        search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
+
+        model.addAttribute("member", search_member);
+        model.addAttribute("follower", followService.countFollower(search_member.getId()));
+        model.addAttribute("following", followService.countFollowing(search_member.getId()));
+
+        return "/member/member_detail";
     }
 
     @PostMapping("/login/action")
@@ -120,8 +163,11 @@ public class MemberController {
     }
 
     @PostMapping("/logout/action")
-    public String logoutAction() {
+    public String logoutAction(HttpServletRequest request) {
         member = null;
+
+        HttpSession session = request.getSession();
+        session.invalidate();
 
         return "redirect:/login";
     }
@@ -182,5 +228,25 @@ public class MemberController {
         member = null;
 
         return "redirect:/login";
+    }
+
+    @PostMapping("/member_find/action")
+    public String memberFindAction(MemberRequestDto memberRequestDto) {
+        member_search = memberService.findName(memberRequestDto.getName());
+
+        return "redirect:/member_find";
+    }
+
+    @PostMapping("/member_detail/action")
+    public String memberDetailAction(HttpServletRequest request) {
+        FollowRequestDto followRequestDto = new FollowRequestDto();
+
+        followRequestDto.setFollowing(search_member.getId());
+        followRequestDto.setFollower(member.getId());
+        followRequestDto.setName(member.getName());
+
+        followService.save(followRequestDto);
+
+        return "redirect:/member_detail?email="+search_member.getEmail();
     }
 }

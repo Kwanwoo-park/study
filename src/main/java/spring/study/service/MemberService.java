@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import spring.study.dto.board.BoardResponseDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.member.Member;
@@ -39,10 +40,6 @@ public class MemberService implements UserDetailsService {
         member.put("list", list.stream().map(MemberResponseDto::new).collect(Collectors.toList()));
 
         return member;
-    }
-
-    public Optional<Member> findById(Long id) {
-        return memberRepository.findById(id);
     }
 
     public HashMap<String, Object> findName(String name) {
