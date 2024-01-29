@@ -76,12 +76,9 @@ public class MemberController {
         if (session != null) {
             member = (Member) session.getAttribute("member");
 
-            Long follower = followService.countFollower(member.getId());
-            Long following = followService.countFollowing(member.getId());
-
             model.addAttribute("member", member);
-            model.addAttribute("follower", follower);
-            model.addAttribute("following", following);
+            model.addAttribute("follower", followService.countFollowing(member.getId()));
+            model.addAttribute("following", followService.countFollower(member.getId()));
         }
         else {
             return "redirect:/login?error=true&exception=Not Found account";
@@ -127,8 +124,8 @@ public class MemberController {
         search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
 
         model.addAttribute("member", search_member);
-        model.addAttribute("follower", followService.countFollower(search_member.getId()));
-        model.addAttribute("following", followService.countFollowing(search_member.getId()));
+        model.addAttribute("follower", followService.countFollowing(search_member.getId()));
+        model.addAttribute("following", followService.countFollower(search_member.getId()));
 
         return "/member/member_detail";
     }
