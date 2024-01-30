@@ -33,25 +33,17 @@ public class FollowService {
 
     public Long countFollowing(Long following) { return followRepository.countByFollowing(following); }
 
-    public HashMap<String, Object> findFollowing(Long following) {
-        list = followRepository.findByFollowing(following);
-
-        map.put("list", list.stream().map(FollowResponseDto::new).toList());
-
-        return map;
+    public List<Follow> findFollowing(Long following) {
+        return followRepository.findByFollowing(following);
     }
 
     public Long countFollower(Long follower) { return followRepository.countByFollower(follower); }
 
-    public HashMap<String, Object> findFollower(Long follower) {
-        list = followRepository.findByFollower(follower);
-
-        map.put("list", list.stream().map(FollowResponseDto::new).toList());
-
-        return map;
+    public List<Follow> findFollower(Long follower) {
+        return followRepository.findByFollower(follower);
     }
 
-    public void deleteFollow(Long following) {
-        followRepository.unfollowing(following);
+    public void deleteFollow(Long follower) {
+        followRepository.unfollowing(follower);
     }
 }

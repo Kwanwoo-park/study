@@ -15,6 +15,7 @@ import spring.study.alert.AlertMessage;
 import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
+import spring.study.entity.follow.Follow;
 import spring.study.entity.member.Member;
 import spring.study.entity.role.Role;
 import spring.study.service.FollowService;
@@ -23,6 +24,7 @@ import spring.study.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
@@ -33,7 +35,7 @@ public class MemberController {
     private final FollowService followService;
     private Member member;
     private Member search_member;
-
+    private boolean status;
     private HashMap<String, Object> member_search;
 
     @GetMapping("/login")
@@ -121,11 +123,25 @@ public class MemberController {
 
     @GetMapping("/member_detail")
     public String memberDetail(Model model, MemberRequestDto memberRequestDto) {
+        status = false;
         search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
+
+        List<Follow> follower = followService.findFollower(member.getId());
 
         model.addAttribute("member", search_member);
         model.addAttribute("follower", followService.countFollowing(search_member.getId()));
         model.addAttribute("following", followService.countFollower(search_member.getId()));
+
+        for (Follow f : follower) {
+            if (f.getFollowing().equals(search_member.getId())) {
+                status = true;
+                model.addAttribute("status", true);
+                break;
+            }
+        }
+
+        if (!status)
+            model.addAttribute("status", false);
 
         return "/member/member_detail";
     }
@@ -236,13 +252,17 @@ public class MemberController {
 
     @PostMapping("/member_detail/action")
     public String memberDetailAction(HttpServletRequest request) {
-        FollowRequestDto followRequestDto = new FollowRequestDto();
+        if (!status) {
+            FollowRequestDto followRequestDto = new FollowRequestDto();
 
-        followRequestDto.setFollowing(search_member.getId());
-        followRequestDto.setFollower(member.getId());
-        followRequestDto.setName(member.getName());
+            followRequestDto.setFollowing(search_member.getId());
+            followRequestDto.setFollower(member.getId());
+            followRequestDto.setName(member.getName());
 
-        followService.save(followRequestDto);
+            followService.save(followRequestDto);
+        }
+        else
+            followService.deleteFollow(member.getId());
 
         return "redirect:/member_detail?email="+search_member.getEmail();
     }

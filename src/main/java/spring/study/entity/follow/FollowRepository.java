@@ -10,12 +10,12 @@ import java.util.List;
 
 public interface FollowRepository extends JpaRepository<Follow, Long> {
     static final String unfollow = "delete from follow "
-            + "where following = :following";
+            + "where follower = :follower";
 
     @Transactional
     @Modifying
     @Query(value = unfollow, nativeQuery = true)
-    public void unfollowing(@Param("following") Long following);
+    public void unfollowing(@Param("follower") Long follower);
 
     public Long countByFollower(Long follower);
 

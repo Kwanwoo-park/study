@@ -30,11 +30,22 @@
       <label class="form-label" th:text="${following}"></label>
     </div>
     <button type="button" class="btn btn-success" onclick="javascript:location.href='/member_find'">Previous</button>
-    <button type="submit" class="btn btn-success" formaction="/member_detail/action">Follow</button>
+    <button type="submit" id="follow" class="btn btn-success" formaction="/member_detail/action"></button>
   </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    	const status = /*[[${status}]]*/;
+
+    	if (status)
+    	  document.querySelector("#follow").innerText = "Unfollow";
+    	else
+    	  document.querySelector("#follow").innerText = "Follow";
+
+		/*]]>*/
+	</script>
 </body>
 </html>
