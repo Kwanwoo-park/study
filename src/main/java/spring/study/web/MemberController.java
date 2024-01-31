@@ -262,7 +262,7 @@ public class MemberController {
             followService.save(followRequestDto);
         }
         else
-            followService.deleteFollow(member.getId());
+            followService.deleteFollow(member.getId(), search_member.getId());
 
         return "redirect:/member_detail?email="+search_member.getEmail();
     }

@@ -43,7 +43,7 @@ public class FollowService {
         return followRepository.findByFollower(follower);
     }
 
-    public void deleteFollow(Long follower) {
-        followRepository.unfollowing(follower);
+    public void deleteFollow(Long follower, Long following) {
+        followRepository.unfollowing(follower, following);
     }
 }

@@ -28,7 +28,7 @@ public class FollowRepositoryTest {
         if (result > 0) {
             countFollower(1L);
             countFollowing(2L);
-            deleteFollowing(followSaveDto.getFollower());
+            deleteFollowing(followSaveDto.getFollower(), followSaveDto.getFollowing());
         }
     }
 
@@ -77,9 +77,9 @@ public class FollowRepositoryTest {
         }
     }
 
-    void deleteFollowing(Long follower) {
+    void deleteFollowing(Long follower, Long following) {
         findAll();
-        followService.deleteFollow(follower);
+        followService.deleteFollow(follower, following);
         findAll();
     }
 
