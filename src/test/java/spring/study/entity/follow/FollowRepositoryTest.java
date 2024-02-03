@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.follow.FollowRequestDto;
 import spring.study.service.FollowService;
-
 import java.util.HashMap;
 import java.util.List;
 

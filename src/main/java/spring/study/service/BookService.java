@@ -7,7 +7,6 @@ import spring.study.dto.book.BookRequestDto;
 import spring.study.dto.book.BookResponseDto;
 import spring.study.entity.book.Book;
 import spring.study.entity.book.BookRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;

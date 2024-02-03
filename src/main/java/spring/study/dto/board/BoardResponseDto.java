@@ -2,7 +2,6 @@ package spring.study.dto.board;
 
 import lombok.Getter;
 import spring.study.entity.board.Board;
-
 import java.time.LocalDateTime;
 
 @Getter

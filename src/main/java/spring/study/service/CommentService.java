@@ -8,7 +8,6 @@ import spring.study.dto.comment.CommentRequestDto;
 import spring.study.dto.comment.CommentResponseDto;
 import spring.study.entity.comment.Comment;
 import spring.study.entity.comment.CommentRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;

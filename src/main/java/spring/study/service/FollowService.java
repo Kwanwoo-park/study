@@ -7,7 +7,6 @@ import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.follow.FollowResponseDto;
 import spring.study.entity.follow.Follow;
 import spring.study.entity.follow.FollowRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
