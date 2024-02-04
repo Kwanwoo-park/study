@@ -44,6 +44,8 @@ create table follow (
     id bigint auto_increment primary key,
     follower bigint not null,
     follower_name varchar(100) not null,
+    follower_email varchar(200) not null,
     following bigint not null,
-    following_name varchar(100) not null
+    following_name varchar(100) not null,
+    following_email varchar(200) not null
 );

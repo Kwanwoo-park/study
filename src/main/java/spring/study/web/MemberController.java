@@ -259,10 +259,12 @@ public class MemberController {
         if (!status) {
             FollowRequestDto followRequestDto = new FollowRequestDto();
 
-            followRequestDto.setFollowing(search_member.getId());
             followRequestDto.setFollower(member.getId());
             followRequestDto.setFollower_name(member.getName());
+            followRequestDto.setFollower_email(member.getEmail());
+            followRequestDto.setFollowing(search_member.getId());
             followRequestDto.setFollowing_name(search_member.getName());
+            followRequestDto.setFollowing_email(search_member.getEmail());
 
             followService.save(followRequestDto);
         }

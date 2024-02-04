@@ -19,15 +19,20 @@ public class Follow {
     private Long id;
     private Long follower;
     private String follower_name;
+    private String follower_email;
     private Long following;
     private String following_name;
+    private String following_email;
 
     @Builder
-    public Follow(Long id, Long follower, String follower_name, Long following, String following_name) {
+    public Follow(Long id, Long follower, String follower_name, String follower_email,
+                  Long following, String following_name, String following_email) {
         this.id = id;
         this.follower = follower;
         this.follower_name = follower_name;
+        this.follower_email = follower_email;
         this.following = following;
         this.following_name = following_name;
+        this.following_email = following_email;
     }
 }

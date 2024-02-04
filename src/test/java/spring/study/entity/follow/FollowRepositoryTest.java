@@ -20,8 +20,10 @@ public class FollowRepositoryTest {
     void save() {
         followSaveDto.setFollower(1L);
         followSaveDto.setFollower_name("박관우");
+        followSaveDto.setFollower_email("akakslslzz@naver.com");
         followSaveDto.setFollowing(2L);
         followSaveDto.setFollowing_name("박현우");
+        followSaveDto.setFollowing_email("akakslsl1310@naver.com");
 
         Long result = followService.save(followSaveDto);
 
@@ -54,7 +56,7 @@ public class FollowRepositoryTest {
             System.out.println("# Success findByFollower() : " + result.toString());
 
             for (Follow f : result)
-                System.out.println(f.getFollower() + " " + f.getFollower_name());
+                System.out.println(f.getFollower() + " " + f.getFollower_name() + " " + f.getFollower_email());
         }
 
         else {
@@ -69,7 +71,7 @@ public class FollowRepositoryTest {
             System.out.println("# Success findByFollowing() : " + result.toString());
 
             for (Follow f : result)
-                System.out.println(f.getFollowing() + " " + f.getFollowing_name());
+                System.out.println(f.getFollowing() + " " + f.getFollowing_name() + " " + f.getFollowing_email());
         }
 
         else {
