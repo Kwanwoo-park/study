@@ -13,11 +13,13 @@
         <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
         <div class="card">
             <ul class="list-group-flush">
-                <li class="list-group-item" th:each="list,index : ${member?.list}">
+                <li class="list-group-item" th:each="list,index : ${following}">
                   <span>
-                    <span th:text="${index?.index+1}"></span>
-                    <a th:href="@{./member_detail(email=${list?.email})}"><span th:text="${list?.name}"></span></a>
-                    <span th:text="${list?.email}"></span>
+                    <span th:text="${index.index+1}"></span>
+                    <a th:href="@{/member_detail(email=${list.following_email})}">
+                        <span th:text="${list.following_name}"></span>
+                    </a>
+                    <span th:text="${list.following_email}"></span>
                   </span>
                 </li>
             </ul>

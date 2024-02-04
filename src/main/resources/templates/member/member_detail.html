@@ -24,12 +24,16 @@
       <label class="form-label" th:text="${member.lastLoginTime}"></label>
     </div>
     <div class="mb-3">
-      <label class="form-label">Follower: </label>
-      <label class="form-label" th:text="${follower}"></label>
-      <label class="form-label">&nbsp;Following: </label>
-      <label class="form-label" th:text="${following}"></label>
+      <a th:href="@{/follow/follower(id=${member.id})}" id="follower">
+        <label class="form-label">Follower: </label>
+        <label class="form-label" th:text="${follower}"></label>
+      </a>
+      <a th:href="@{/follow/following(id=${member.id})}" id="following">
+        <label class="form-label">&nbsp;Following: </label>
+        <label class="form-label" th:text="${following}"></label>
+      </a>
     </div>
-    <button type="button" class="btn btn-success" onclick="javascript:location.href='/member_find'">Previous</button>
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
     <button type="submit" id="follow" class="btn btn-success" formaction="/member_detail/action"></button>
   </form>
 </div>
@@ -39,13 +43,21 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     	const status = /*[[${status}]]*/;
+    	const follower = /*[[${follower}]]*/;
+    	const following = /*[[${following}]]*/;
 
     	if (status)
     	  document.querySelector("#follow").innerText = "Unfollow";
     	else
     	  document.querySelector("#follow").innerText = "Follow";
 
-		/*]]>*/
+    	if (follower == 0)
+    	  document.querySelector("#follower").removeAttribute('href');
+
+    	if (following == 0)
+    	  document.querySelector("#following").removeAttribute('href');
+
+	/*]]>*/
 </script>
 </body>
 </html>
