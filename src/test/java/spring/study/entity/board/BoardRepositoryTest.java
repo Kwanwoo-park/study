@@ -7,6 +7,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.board.BoardResponseDto;
 import spring.study.service.BoardService;
+
+import java.util.List;
 import java.util.Map;
 
 @SpringBootTest
@@ -31,6 +33,7 @@ class BoardRepositoryTest {
             System.out.println("# Success save() ~");
             findAll();
             findById(result);
+            findByName(boardSaveDto.getRegisterId());
             updateBoard(boardSaveDto.getId());
         }
         else {
@@ -61,6 +64,20 @@ class BoardRepositoryTest {
         }
         else {
             System.out.println("# Fail findById() ~");
+        }
+    }
+
+    void findByName(String name) {
+        List<Board> result = boardService.findName(name);
+
+        if (result.size() > 0) {
+            System.out.println("# Success findByName() ~");
+            for (Board b : result) {
+                System.out.println(b.getTitle() + " " + b.getRegisterId() + " " + b.getContent());
+            }
+        }
+        else {
+            System.out.println("# Fail findByName() ~");
         }
     }
 

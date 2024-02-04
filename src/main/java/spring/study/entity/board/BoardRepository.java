@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.board.BoardRequestDto;
+import java.util.List;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
     static final String update_board = "update board " +
@@ -35,4 +36,6 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @Modifying
     @Query(value = delete_board, nativeQuery = true)
     public int deleteBoard(@Param("deleteList") Long[] deleteList);
+
+    public List<Board> findByRegisterId(String name);
 }

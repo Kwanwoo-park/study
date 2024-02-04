@@ -15,9 +15,11 @@ import spring.study.alert.AlertMessage;
 import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
+import spring.study.entity.board.Board;
 import spring.study.entity.follow.Follow;
 import spring.study.entity.member.Member;
 import spring.study.entity.role.Role;
+import spring.study.service.BoardService;
 import spring.study.service.FollowService;
 import spring.study.service.MemberService;
 import spring.study.service.UserService;
@@ -32,6 +34,7 @@ public class MemberController {
     private final MemberService memberService;
     private final UserService userService;
     private final FollowService followService;
+    private final BoardService boardService;
     private Member member;
     private Member search_member;
     private boolean status;
@@ -76,10 +79,12 @@ public class MemberController {
 
         if (session != null) {
             member = (Member) session.getAttribute("member");
+            List<Board> list = boardService.findName(member.getName());
 
             model.addAttribute("member", member);
             model.addAttribute("follower", followService.countFollowing(member.getId()));
             model.addAttribute("following", followService.countFollower(member.getId()));
+            model.addAttribute("list", list);
         }
         else {
             return "redirect:/login?error=true&exception=Not Found account";

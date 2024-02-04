@@ -11,6 +11,7 @@ import spring.study.dto.board.BoardResponseDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.board.BoardRepository;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -40,6 +41,8 @@ public class BoardService {
     public BoardResponseDto findById(Long id) {
         return new BoardResponseDto(boardRepository.findById(id).get());
     }
+
+    public List<Board> findName(String name) { return boardRepository.findByRegisterId(name); }
 
     public int updateBoard(BoardRequestDto boardRequestDto) {
         return boardRepository.updateBoard(boardRequestDto);
