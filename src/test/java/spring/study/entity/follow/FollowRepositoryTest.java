@@ -19,14 +19,15 @@ public class FollowRepositoryTest {
     @Test
     void save() {
         followSaveDto.setFollower(1L);
-        followSaveDto.setName("박관우");
+        followSaveDto.setFollower_name("박관우");
         followSaveDto.setFollowing(2L);
+        followSaveDto.setFollowing_name("박현우");
 
         Long result = followService.save(followSaveDto);
 
         if (result > 0) {
             countFollower(1L);
-            countFollowing(2L);
+            countFollowing(1L);
             deleteFollowing(followSaveDto.getFollower(), followSaveDto.getFollowing());
         }
     }
@@ -47,13 +48,13 @@ public class FollowRepositoryTest {
     }
 
     void findByFollower(Long follower) {
-        List<Follow> result = followService.findFollower(follower);
+        List<Follow> result = followService.findFollowing(follower);
 
         if (result != null) {
             System.out.println("# Success findByFollower() : " + result.toString());
 
             for (Follow f : result)
-                System.out.println(f.getFollower() + " " + f.getName());
+                System.out.println(f.getFollower() + " " + f.getFollower_name());
         }
 
         else {
@@ -62,13 +63,13 @@ public class FollowRepositoryTest {
     }
 
     void findByFollowing(Long following) {
-        List<Follow> result = followService.findFollowing(following);
+        List<Follow> result = followService.findFollower(following);
 
         if (result != null) {
             System.out.println("# Success findByFollowing() : " + result.toString());
 
             for (Follow f : result)
-                System.out.println(f.getFollowing());
+                System.out.println(f.getFollowing() + " " + f.getFollowing_name());
         }
 
         else {
@@ -84,7 +85,7 @@ public class FollowRepositoryTest {
 
     void countFollower(Long follower) {
         findByFollower(follower);
-        Long result = followService.countFollower(follower);
+        Long result = followService.countFollowing(follower);
 
         if (result > 0) {
             System.out.println("# Success countFollower() : "  + result);
@@ -96,7 +97,7 @@ public class FollowRepositoryTest {
 
     void countFollowing(Long following) {
         findByFollowing(following);
-        Long result = followService.countFollowing(following);
+        Long result = followService.countFollower(following);
 
         if (result > 0) {
             System.out.println("# Success countFollowing() : " + result);

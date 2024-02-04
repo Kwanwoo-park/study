@@ -43,6 +43,7 @@ create table comment (
 create table follow (
     id bigint auto_increment primary key,
     follower bigint not null,
-    name varchar(100) not null,
-    following bigint not null
+    follower_name varchar(100) not null,
+    following bigint not null,
+    following_name varchar(100) not null
 );

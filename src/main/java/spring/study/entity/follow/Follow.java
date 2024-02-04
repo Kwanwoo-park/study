@@ -18,14 +18,16 @@ public class Follow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long follower;
-    private String name;
+    private String follower_name;
     private Long following;
+    private String following_name;
 
     @Builder
-    public Follow(Long id, Long follower, String name, Long following) {
+    public Follow(Long id, Long follower, String follower_name, Long following, String following_name) {
         this.id = id;
         this.follower = follower;
-        this.name = name;
+        this.follower_name = follower_name;
         this.following = following;
+        this.following_name = following_name;
     }
 }

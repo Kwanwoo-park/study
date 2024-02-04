@@ -261,7 +261,8 @@ public class MemberController {
 
             followRequestDto.setFollowing(search_member.getId());
             followRequestDto.setFollower(member.getId());
-            followRequestDto.setName(member.getName());
+            followRequestDto.setFollower_name(member.getName());
+            followRequestDto.setFollowing_name(search_member.getName());
 
             followService.save(followRequestDto);
         }

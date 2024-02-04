@@ -11,14 +11,16 @@ import spring.study.entity.follow.Follow;
 public class FollowRequestDto {
     private Long id;
     private Long follower;
-    private String name;
+    private String follower_name;
     private Long following;
+    private String following_name;
 
     public Follow toEntity() {
         return Follow.builder()
                 .follower(follower)
-                .name(name)
+                .follower_name(follower_name)
                 .following(following)
+                .following_name(following_name)
                 .build();
     }
 }
