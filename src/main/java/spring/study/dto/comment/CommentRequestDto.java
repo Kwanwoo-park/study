@@ -14,6 +14,7 @@ public class CommentRequestDto {
     private Long mid;
     private String mname;
     private Long bid;
+    private String email;
 
     public Comment toEntity() {
         return Comment.builder()
@@ -21,6 +22,7 @@ public class CommentRequestDto {
                 .mid(mid)
                 .mname(mname)
                 .bid(bid)
+                .email(email)
                 .build();
     }
 }

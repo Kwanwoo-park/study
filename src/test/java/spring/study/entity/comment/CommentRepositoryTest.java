@@ -22,6 +22,7 @@ public class CommentRepositoryTest {
         commentSaveDto.setMid(1L);
         commentSaveDto.setMname("박관우");
         commentSaveDto.setBid(19L);
+        commentSaveDto.setEmail("akakslslzz@naver.com");
 
         Long result = commentService.save(commentSaveDto);
 

@@ -21,13 +21,15 @@ public class Comment extends BasetimeEntity {
     private Long mid;
     private String mname;
     private Long bid;
+    private String email;
 
     @Builder
-    public Comment(Long id, String comment, Long mid, String mname, Long bid) {
+    public Comment(Long id, String comment, Long mid, String mname, Long bid, String email) {
         this.id = id;
         this.comment = comment;
         this.mid = mid;
         this.mname = mname;
         this.bid = bid;
+        this.email = email;
     }
 }

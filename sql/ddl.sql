@@ -36,6 +36,7 @@ create table comment (
     mid bigint not null,
     mname varchar(100) not null,
     bid bigint not null,
+    email varchar(200) not null,
     register_time datetime null default null,
     update_time datetime null default null
 );

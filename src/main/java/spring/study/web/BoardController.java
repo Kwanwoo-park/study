@@ -119,6 +119,7 @@ public class BoardController {
                 commentRequestDto.setBid(boardRequestDto.getId());
                 commentRequestDto.setMid(member.getId());
                 commentRequestDto.setMname(member.getName());
+                commentRequestDto.setEmail(member.getEmail());
 
                 commentService.save(commentRequestDto);
             }

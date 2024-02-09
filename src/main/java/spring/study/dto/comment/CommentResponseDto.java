@@ -9,12 +9,14 @@ public class CommentResponseDto {
     private Long mid;
     private String mname;
     private Long bid;
+    private String email;
 
     public CommentResponseDto(Comment entity) {
         this.comment = entity.getComment();
         this.mid = entity.getMid();
         this.mname = entity.getMname();
         this.bid = entity.getBid();
+        this.email = entity.getEmail();
     }
 
     @Override
@@ -24,6 +26,7 @@ public class CommentResponseDto {
                 ", mid=" + mid +
                 ", mname=" + mname +
                 ", bid=" + bid +
+                ", email=" + email +
                 '}';
     }
 }
