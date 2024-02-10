@@ -133,6 +133,7 @@ public class MemberController {
         List<Follow> follower = followService.findFollower(member.getId());
 
         model.addAttribute("member", search_member);
+        model.addAttribute("equal_check", search_member.getEmail().equals(member.getEmail()));
         model.addAttribute("follower", followService.countFollowing(search_member.getId()));
         model.addAttribute("following", followService.countFollower(search_member.getId()));
 
