@@ -34,6 +34,7 @@ class BoardRepositoryTest {
             findAll();
             findById(result);
             findByName(boardSaveDto.getRegisterId());
+            findByEmail(boardSaveDto.getRegisterEmail());
             updateBoard(boardSaveDto.getId());
         }
         else {
@@ -78,6 +79,20 @@ class BoardRepositoryTest {
         }
         else {
             System.out.println("# Fail findByName() ~");
+        }
+    }
+
+    void findByEmail(String email) {
+        List<Board> result = boardService.findEmail(email);
+
+        if (result.size() > 0) {
+            System.out.println("# Success findByEmail() ~");
+            for (Board b : result) {
+                System.out.println(b.getTitle() + " " + b.getRegisterId() + " " + b.getContent());
+            }
+        }
+        else {
+            System.out.println("# Fail findByEmail() ~");
         }
     }
 

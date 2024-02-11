@@ -44,6 +44,8 @@ public class BoardService {
 
     public List<Board> findName(String name) { return boardRepository.findByRegisterId(name); }
 
+    public List<Board> findEmail(String email) { return boardRepository.findByRegisterEmail(email); }
+
     public int updateBoard(BoardRequestDto boardRequestDto) {
         return boardRepository.updateBoard(boardRequestDto);
     }

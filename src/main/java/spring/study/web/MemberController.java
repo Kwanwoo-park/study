@@ -79,7 +79,7 @@ public class MemberController {
 
         if (session != null) {
             member = (Member) session.getAttribute("member");
-            List<Board> list = boardService.findName(member.getName());
+            List<Board> list = boardService.findEmail(member.getEmail());
 
             model.addAttribute("member", member);
             model.addAttribute("follower", followService.countFollowing(member.getId()));
@@ -136,7 +136,7 @@ public class MemberController {
         model.addAttribute("equal_check", search_member.getEmail().equals(member.getEmail()));
         model.addAttribute("follower", followService.countFollowing(search_member.getId()));
         model.addAttribute("following", followService.countFollower(search_member.getId()));
-        model.addAttribute("list", boardService.findName(search_member.getName()));
+        model.addAttribute("list", boardService.findEmail(search_member.getEmail()));
 
         for (Follow f : follower) {
             if (f.getFollowing().equals(search_member.getId())) {

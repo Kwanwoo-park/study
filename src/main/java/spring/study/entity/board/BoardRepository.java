@@ -38,4 +38,6 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     public int deleteBoard(@Param("deleteList") Long[] deleteList);
 
     public List<Board> findByRegisterId(String name);
+
+    public List<Board> findByRegisterEmail(String email);
 }

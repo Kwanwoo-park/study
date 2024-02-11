@@ -50,13 +50,12 @@ public class SecurityConfig{
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                 .logoutSuccessUrl("/login")
                 .invalidateHttpSession(true)
-                .deleteCookies("member")
-                .permitAll()
+                .deleteCookies("member").permitAll()
                 .and()
                 .sessionManagement()
                 .maximumSessions(1)
                 .maxSessionsPreventsLogin(false)
-                .expiredUrl("/login?error-true&exception=Hava been attempted to login form a new place. or session expired");
+                .expiredUrl("/login?error-true&exception=Hava been attempted to login form a new place or session expired");
 
         return http.build();
     }
