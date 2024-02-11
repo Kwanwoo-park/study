@@ -136,6 +136,7 @@ public class MemberController {
         model.addAttribute("equal_check", search_member.getEmail().equals(member.getEmail()));
         model.addAttribute("follower", followService.countFollowing(search_member.getId()));
         model.addAttribute("following", followService.countFollower(search_member.getId()));
+        model.addAttribute("list", boardService.findName(search_member.getName()));
 
         for (Follow f : follower) {
             if (f.getFollowing().equals(search_member.getId())) {
