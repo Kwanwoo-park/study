@@ -13,30 +13,30 @@
 		<form id="frm" method="post">
 			<input type="hidden" name="id" th:value="${info.id}">
 			<div class="float-right">
-				<button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
+				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
 				<button type="submit" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
 			</div>
 			<div class="mb-3">
-			    <label class="form-label">Title</label>
+			    <label class="form-label" for="title">Title</label>
 			    <input type="text" class="form-control" id="title" name="title" th:value="${info.title}">
 			</div>
 			<div class="mb-3">
-		    	<label class="form-label">Content</label>
+		    	<label class="form-label" for="content">Content</label>
 		    	<textarea class="form-control" id="content" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
 			</div>
 			<div class="mb-3">
-			    <label class="form-label">Writer</label>
-			    <input type="disabled" class="form-control" name="registerId" th:value="${info.registerId}" disabled>
+			    <label class="form-label" for="registerId">Writer</label>
+			    <input type="disabled" class="form-control" id="registerId" name="registerId" th:value="${info.registerId}" disabled>
 			</div>
 			<button type="submit" id="edit" class="btn btn-primary" formaction="/board/view/action">Edit</button>
 
 			<br>
 			<hr>
 			<div class="mb-3">
-				<label class="form-label">Comment</label>
+				<label class="form-label" for="comment">Comment</label>
 				<textarea class="form-control" id="comment" rows="5" cols="" name="Comment"></textarea>
 			</div>
-			<button type="submit" id="submit" class="btn btn-primary" formaction="/comment/action">Submit</button>
+			<button type="button" id="submit" class="btn btn-primary" th:onclick="fnComment()">Submit</button>
 
 			<br>
 			<hr>
@@ -80,6 +80,23 @@
 				frm.attr("action","/board/view/delete");
 				frm.submit();
 			}
+		}
+
+		function fnComment() {
+			const data = {
+			 comment : $("#comment").val(),
+			 info : /*[[${info.id}]]*/
+			}
+
+			$.ajax({
+				type: 'POST',
+				url: '/comment/' + data.info + '/action',
+				dataType: 'JSON',
+				contentType: 'application/json; charset=utf-8',
+				data: JSON.stringify(data)
+			}).always(function() {
+				window.location.reload();
+			})
 		}
 		/*]]>*/
 	</script>

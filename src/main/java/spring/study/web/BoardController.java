@@ -21,7 +21,6 @@ public class BoardController {
 
     private Member member;
     private final MemberService memberService;
-
     private final CommentService commentService;
     HttpSession session;
 
@@ -54,7 +53,7 @@ public class BoardController {
         return "/board/write";
     }
 
-    @RequestMapping(value = "/board/view", method = {RequestMethod.GET, RequestMethod.POST})
+    @GetMapping("/board/view")
     public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto) throws Exception {
         try {
             if (member == null) {
@@ -110,13 +109,13 @@ public class BoardController {
         return "redirect:/board/list";
     }
 
-    @PostMapping("/comment/action")
-    public String commentAction(HttpServletRequest request,
-                                CommentRequestDto commentRequestDto,
-                                BoardRequestDto boardRequestDto) throws Exception {
+    @PostMapping("/comment/{bid}/action")
+    @ResponseBody
+    public void commentAction(@PathVariable Long bid, @RequestBody CommentRequestDto commentRequestDto) throws Exception {
         try {
+            System.out.println(commentRequestDto.getComment());
             if (commentRequestDto.getComment() != null){
-                commentRequestDto.setBid(boardRequestDto.getId());
+                commentRequestDto.setBid(bid);
                 commentRequestDto.setMid(member.getId());
                 commentRequestDto.setMname(member.getName());
                 commentRequestDto.setEmail(member.getEmail());
@@ -126,8 +125,6 @@ public class BoardController {
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
-
-        return "redirect:" + request.getHeader("Referer");
     }
 
     @PostMapping("/board/view/delete")
