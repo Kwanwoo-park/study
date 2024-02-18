@@ -113,7 +113,6 @@ public class BoardController {
     @ResponseBody
     public void commentAction(@PathVariable Long bid, @RequestBody CommentRequestDto commentRequestDto) throws Exception {
         try {
-            System.out.println(commentRequestDto.getComment());
             if (commentRequestDto.getComment() != null){
                 commentRequestDto.setBid(bid);
                 commentRequestDto.setMid(member.getId());

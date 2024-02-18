@@ -7,27 +7,51 @@
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
 <body>
-<div class="container">
-  <h1>Member List</h1>
-  <form action="/member_find/action" method="post">
-    <button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
-    <div >
-      <input type="text" class="form-control" id="name" name="name" placeholder="Search member">
-    </div>
-    <div class="card">
-      <ul class="list-group-flush">
-        <li class="list-group-item" th:each="list,index : ${member?.list}">
-          <span>
-            <span th:text="${index?.index+1}"></span>
-            <a th:href="@{./member_detail(email=${list?.email})}"><span th:text="${list?.name}"></span></a>
-            <span th:text="${list?.email}"></span>
-          </span>
-        </li>
-      </ul>
-    </div>
-  </form>
-</div>
-<script src="/js/lib/jquery.min.js"></script>
-<script src="/js/lib/bootstrap.min/js"></script>
+  <div class="container">
+    <h1>Member List</h1>
+    <form id="frm" method="post">
+      <button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
+      <div >
+        <input type="search" class="form-control" id="name" name="name"
+               placeholder="Search member" onkeypress="fnFind()">
+      </div>
+      <div class="card">
+        <ul class="list-group-flush">
+          <li class="list-group-item" th:each="list,index : ${member?.list}">
+            <span>
+              <span th:text="${index?.index+1}"></span>
+              <a th:href="@{./member_detail(email=${list?.email})}"><span th:text="${list?.name}"></span></a>
+              <span th:text="${list?.email}"></span>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+
+  <script src="/js/lib/jquery.min.js"></script>
+  <script type="application/json; charset=utf-8"
+          src="/js/lib/bootstrap.min/js"></script>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    	function fnFind() {
+			const data = {
+			 name : $("#name").val()
+			}
+
+			console.log(data.name);
+
+			$.ajax({
+				type: 'POST',
+				url: '/member_find/' +data.name + '/action',
+				dataType: 'JSON',
+				contentType: 'application/json; charset=utf-8',
+				data: JSON.stringify(data)
+			}).always(function() {
+				window.location.reload();
+			})
+		}
+	/*]]>*/
+	</script>
 </body>
 </html>

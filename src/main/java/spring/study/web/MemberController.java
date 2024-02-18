@@ -7,10 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import spring.study.alert.AlertMessage;
 import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.member.MemberRequestDto;
@@ -26,6 +23,7 @@ import spring.study.service.UserService;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -249,11 +247,12 @@ public class MemberController {
         return "redirect:/login";
     }
 
-    @PostMapping("/member_find/action")
-    public String memberFindAction(MemberRequestDto memberRequestDto) {
-        member_search = memberService.findName(memberRequestDto.getName());
+    @PostMapping("/member_find/{name}/action")
+    @ResponseBody
+    public void memberFindAction(@PathVariable String name) {
+        member_search = memberService.findName(name);
 
-        return "redirect:/member_find";
+        System.out.println(member_search);
     }
 
     @PostMapping("/member_detail/action")
