@@ -10,7 +10,7 @@
   <div class="container">
     <h1>Member List</h1>
     <form id="frm" method="post">
-      <button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
+      <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
       <div >
         <input type="search" class="form-control" id="name" name="name"
                placeholder="Search member" onkeypress="fnFind()">
@@ -38,8 +38,6 @@
 			const data = {
 			 name : $("#name").val()
 			}
-
-			console.log(data.name);
 
 			$.ajax({
 				type: 'POST',

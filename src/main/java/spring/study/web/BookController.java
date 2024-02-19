@@ -3,10 +3,7 @@ package spring.study.web;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 import spring.study.dto.book.BookRequestDto;
 import spring.study.entity.book.Book;
 import spring.study.service.BookService;
@@ -21,7 +18,7 @@ public class BookController {
 
     private Book book;
 
-    @RequestMapping(value = "/book/list", method = {RequestMethod.GET, RequestMethod.POST})
+    @GetMapping("/book/list")
     public String list(Model model) throws Exception {
         try {
             if (book == null)
@@ -42,22 +39,15 @@ public class BookController {
         return "/book/list";
     }
 
-    @GetMapping("/clear")
-    public String bookFindClear() {
+    @PostMapping("/clear")
+    @ResponseBody
+    public void clear() {
         book = null;
-
-        return "redirect:/book/list";
     }
 
-    @PostMapping("/book/list/action")
-    public String bookFindAction(BookRequestDto bookRequestDto, Model model) throws Exception {
-        try {
-            book = bookService.findBook(bookRequestDto.getTitle());
-        }
-        catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-
-        return "redirect:/book/list";
+    @PostMapping("/book/list/{title}/action")
+    @ResponseBody
+    public void bookFindAction(@PathVariable String title) throws Exception {
+        book = bookService.findBook(title);
     }
 }

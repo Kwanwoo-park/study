@@ -7,53 +7,82 @@
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
 <body>
-<div class="container">
-    <h1>Book List</h1>
-    <form action="/book/list/action" method="post">
-        <button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
-        <div class="float-right">
-            <a class="btn btn-primary" href="/clear">Clear</a>
-        </div>
-        <div >
-            <input type="text" class="form-control" id="title" name="title" placeholder="Search Book">
-        </div>
-        <table class="table table-striped table-horizontal table-bordered mt-3">
-            <thead class="thead-strong">
-            <tr>
-                <th width="">책번호</th>
-                <th width="">도서명</th>
-                <th width="">저자명</th>
-                <th width="">출판사</th>
-                <th width="">대분류</th>
-                <th width="">소분류</th>
-            </tr>
-            </thead>
-            <tbody id="tbody">
-            <tr th:each="list,index : ${book.list}">
-                <td>
-                    <span th:text="${list.bnum}"></span>
-                </td>
-                <td>
-                    <span th:text="${list.title}"></span>
-                </td>
-                <td>
-                    <span th:text="${list.author}"></span>
-                </td>
-                <td>
-                    <span th:text="${list.publisher}"></span>
-                </td>
-                <td>
-                    <span th:text="${list.bsort}"></span>
-                </td>
-                <td>
-                    <span th:text="${list.ssort}"></span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </form>
-</div>
-<script src="/js/lib/jquery.min.js"></script>
-<script src="/js/lib/bootstrap.min/js"></script>
+    <div class="container">
+        <h1>Book List</h1>
+        <form id="frm" method="post">
+            <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+            <button type="button" class="btn btn-success" onclick="fnClear()">Clear</button>
+            <div >
+                <input type="text" class="form-control" id="title" name="title"
+                       placeholder="Search Book" onkeypress="fnFind()">
+            </div>
+            <table class="table table-striped table-horizontal table-bordered mt-3">
+                <thead class="thead-strong">
+                <tr>
+                    <th width="">책번호</th>
+                    <th width="">도서명</th>
+                    <th width="">저자명</th>
+                    <th width="">출판사</th>
+                    <th width="">대분류</th>
+                    <th width="">소분류</th>
+                </tr>
+                </thead>
+                <tbody id="tbody">
+                <tr th:each="list,index : ${book.list}">
+                    <td>
+                        <span th:text="${list.bnum}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${list.title}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${list.author}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${list.publisher}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${list.bsort}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${list.ssort}"></span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+    </div>
+
+    <script src="/js/lib/jquery.min.js"></script>
+    <script type="application/json; charset=utf-8"
+            src="/js/lib/bootstrap.min/js"></script>
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    	function fnFind() {
+			const data = {
+			 title : $("#title").val()
+			}
+
+			$.ajax({
+				type: 'POST',
+				url: '/book/list/' +data.title + '/action',
+				dataType: 'JSON',
+				contentType: 'application/json; charset=utf-8',
+				data: JSON.stringify(data)
+			}).always(function() {
+				window.location.reload();
+			})
+		}
+
+		function fnClear() {
+		    $.ajax({
+		        type: 'POST',
+		        url: '/clear'
+		    }).always(function() {
+		        window.location.reload();
+		    })
+		}
+	/*]]>*/
+	</script>
 </body>
 </html>

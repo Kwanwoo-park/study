@@ -251,8 +251,6 @@ public class MemberController {
     @ResponseBody
     public void memberFindAction(@PathVariable String name) {
         member_search = memberService.findName(name);
-
-        System.out.println(member_search);
     }
 
     @PostMapping("/member_detail/action")
