@@ -2,7 +2,7 @@
 
 Framework: Spring Boot 3.0.5<br>
 Database: MySQL 8.0.33, JPA<br>
-etc: Thymeleaf, Spring Security<br>
+etc: Thymeleaf, JQuery<br>
 
 개발된 것
 <ul>
@@ -21,4 +21,5 @@ etc: Thymeleaf, Spring Security<br>
 개발 예정(계속해서 추가될 예정)
 <ul>
     <li>자동로그인</li>
+    <li>Chatting</li>
 </ul>
