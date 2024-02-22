@@ -1,0 +1,23 @@
+package spring.study.dto.chat;
+
+import lombok.Getter;
+import spring.study.entity.chat.ChatRoom;
+
+@Getter
+public class ChatRoomResponseDto {
+    private String roomId;
+    private String name;
+
+    public ChatRoomResponseDto(ChatRoom entity) {
+        this.roomId = entity.getRoomId();
+        this.name = entity.getName();
+    }
+
+    @Override
+    public String toString() {
+        return "ChatRoomResponseDto{" +
+                "roomId='" + roomId +
+                ", name='" + name +
+                '}';
+    }
+}

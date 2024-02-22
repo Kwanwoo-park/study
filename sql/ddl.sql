@@ -50,3 +50,16 @@ create table follow (
     following_name varchar(100) not null,
     following_email varchar(200) not null
 );
+
+create table chatRoom (
+    id bigint auto_increment primary key,
+    roomId varchar(200) not null,
+    name varchar(100) not null
+);
+
+create table chatMessage (
+    roomId varchar(200) not null,
+    sender varchar(100) not null,
+    message varchar(200) not null,
+    type varchar(20) not null
+);

@@ -19,7 +19,7 @@ public class ChatController {
 
    @RequestMapping("/chat/chatList")
     public String chatList(Model model) {
-       List<ChatRoom> roomList = chatService.findAllRoom();
+       List<ChatRoom> roomList = chatService.findAll();
        model.addAttribute("roomList", roomList);
        return "chat/chatList";
    }
@@ -34,7 +34,7 @@ public class ChatController {
 
    @GetMapping("/chat/chatRoom")
     public String chatRoom(Model model, @RequestParam String roomId) {
-       ChatRoom room = chatService.findRoomById(roomId);
+       ChatRoom room = chatService.findRoomId(roomId);
        model.addAttribute("room", room);
        return "chat/chatRoom";
    }

@@ -32,9 +32,10 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         ChatMessage chatMessage = objectMapper.readValue(payload, ChatMessage.class);
-        ChatRoom room = chatService.findRoomById(chatMessage.getRoomId());
+        ChatRoom room = chatService.findRoomId(chatMessage.getRoomId());
 
         Set<WebSocketSession> sessions = room.getSessions();
+        System.out.println(sessions);
 
         if (chatMessage.getType().equals(ChatMessage.MessageType.ENTER)) {
             sessions.add(session);

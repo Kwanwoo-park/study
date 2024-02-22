@@ -1,20 +1,31 @@
 package spring.study.entity.chat;
 
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.*;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@EqualsAndHashCode(of = {"id"})
+@NoArgsConstructor
 @Getter
+@Setter
+@Entity(name = "chatRoom")
 public class ChatRoom {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String roomId;
     private String name;
     private Set<WebSocketSession> sessions = new HashSet<>();
 
     @Builder
-    public ChatRoom(String roomId, String name) {
+    public ChatRoom(Long id, String roomId, String name) {
+        this.id = id;
         this.roomId = roomId;
         this.name = name;
     }
