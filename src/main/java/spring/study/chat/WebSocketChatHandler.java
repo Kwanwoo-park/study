@@ -14,6 +14,7 @@ import spring.study.entity.chat.ChatRoom;
 import spring.study.service.ChatService;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
@@ -32,10 +33,9 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         ChatMessage chatMessage = objectMapper.readValue(payload, ChatMessage.class);
-        ChatRoom room = chatService.findRoomId(chatMessage.getRoomId());
+        ChatRoom room = chatService.findRoom(chatMessage.getRoomId());
 
-        Set<WebSocketSession> sessions = room.getSessions();
-        System.out.println(sessions);
+        Set<WebSocketSession> sessions = new HashSet<>();
 
         if (chatMessage.getType().equals(ChatMessage.MessageType.ENTER)) {
             sessions.add(session);

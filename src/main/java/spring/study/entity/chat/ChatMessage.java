@@ -1,6 +1,9 @@
 package spring.study.entity.chat;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,8 +13,11 @@ import spring.study.entity.BasetimeEntity;
 @NoArgsConstructor
 @Getter
 @Setter
-@Entity(name = "chatMessage")
+@Entity(name = "message")
 public class ChatMessage extends BasetimeEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     public enum MessageType {
         ENTER, TALK, QUIT
     }

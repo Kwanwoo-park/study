@@ -14,14 +14,13 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Setter
-@Entity(name = "chatRoom")
+@Entity(name = "room")
 public class ChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String roomId;
     private String name;
-    private Set<WebSocketSession> sessions = new HashSet<>();
 
     @Builder
     public ChatRoom(Long id, String roomId, String name) {

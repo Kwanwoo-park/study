@@ -34,7 +34,7 @@ public class ChatController {
 
    @GetMapping("/chat/chatRoom")
     public String chatRoom(Model model, @RequestParam String roomId) {
-       ChatRoom room = chatService.findRoomId(roomId);
+       ChatRoom room = chatService.findRoom(roomId);
        model.addAttribute("room", room);
        return "chat/chatRoom";
    }

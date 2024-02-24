@@ -6,7 +6,8 @@ create table board (
     register_id varchar(100) not null,
     register_email varchar(200) not null,
     register_time datetime null default null,
-    update_time datetime null default null);
+    update_time datetime null default null
+);
 
 create table member (
     id bigint auto_increment primary key,
@@ -51,15 +52,18 @@ create table follow (
     following_email varchar(200) not null
 );
 
-create table chatRoom (
+create table room (
     id bigint auto_increment primary key,
-    roomId varchar(200) not null,
+    room_id varchar(200) not null,
     name varchar(100) not null
 );
 
-create table chatMessage (
-    roomId varchar(200) not null,
+create table message (
+    id bigint auto_increment primary key,
+    room_id varchar(200) not null,
     sender varchar(100) not null,
     message varchar(200) not null,
-    type varchar(20) not null
+    type varchar(20) not null,
+    register_time datetime null default null,
+    update_time datetime null default null
 );

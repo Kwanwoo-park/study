@@ -4,10 +4,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import spring.study.dto.chat.ChatMessageRequestDto;
-import spring.study.dto.chat.ChatRoomRequestDto;
 import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatMessageRepository;
 import spring.study.entity.chat.ChatRoom;
@@ -29,20 +27,18 @@ public class ChatService {
     }
 
     @Transactional
-    public void save(ChatRoomRequestDto chatRoomRequestDto) { chatRoomRepository.save(chatRoomRequestDto.toEntity()); }
+    public void save(ChatRoom chatRoom) { chatRoomRepository.save(chatRoom); }
 
     @Transactional
-    public void save(ChatMessageRequestDto chatMessageRequestDto) { chatMessageRepository.save(chatMessageRequestDto.toEntity()); }
+    public void save(ChatMessage chatMessage) { chatMessageRepository.save(chatMessage); }
 
     public List<ChatRoom> findAll() {
         return chatRoomRepository.findAll();
     }
 
-    public List<ChatMessage> findAll(Sort sort) {
-        return chatMessageRepository.findAll();
-    }
+    public ChatRoom findRoom(String roomId) { return chatRoomRepository.findByRoomId(roomId); }
 
-    public ChatRoom findRoomId(String roomId) { return chatRoomRepository.findByRoomId(roomId); }
+    public ChatMessage findMessage(String roomId) { return chatMessageRepository.findByRoomId(roomId); }
 
     public ChatRoom createRoom(String name) {
         String randomId = UUID.randomUUID().toString();
@@ -51,6 +47,8 @@ public class ChatService {
                 .roomId(randomId)
                 .name(name)
                 .build();
+
+        save(chatRoom);
 
         chatRooms.put(randomId, chatRoom);
         return chatRoom;
