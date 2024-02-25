@@ -1,9 +1,6 @@
 package spring.study.entity.chat;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -13,7 +10,6 @@ import java.util.Set;
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
 @Getter
-@Setter
 @Entity(name = "room")
 public class ChatRoom {
     @Id

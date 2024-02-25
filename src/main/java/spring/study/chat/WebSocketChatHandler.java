@@ -23,10 +23,12 @@ import java.util.Set;
 public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
     private final ChatService chatService;
+    private Set<WebSocketSession> sessions = new HashSet<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-
+        if (sessions != null)
+            sessions.add(session);
     }
 
     @Override
@@ -35,14 +37,12 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         ChatMessage chatMessage = objectMapper.readValue(payload, ChatMessage.class);
         ChatRoom room = chatService.findRoom(chatMessage.getRoomId());
 
-        Set<WebSocketSession> sessions = new HashSet<>();
+        System.out.println(session + "\n" +sessions);
 
         if (chatMessage.getType().equals(ChatMessage.MessageType.ENTER)) {
-            sessions.add(session);
             chatMessage.setMessage(chatMessage.getSender() + "님이 입장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
         } else if (chatMessage.getType().equals(ChatMessage.MessageType.QUIT)) {
-            sessions.remove(session);
             chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
         } else {

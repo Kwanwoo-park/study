@@ -1,11 +1,11 @@
 package spring.study.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import spring.study.dto.chat.ChatMessageRequestDto;
 import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatMessageRepository;
 import spring.study.entity.chat.ChatRoom;
@@ -17,6 +17,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Service
 public class ChatService {
+    private final ObjectMapper objectMapper;
     private Map<String, ChatRoom> chatRooms;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
