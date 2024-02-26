@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
-    static final String delete_room = "delete from chatRoom "
-            + "where roomId = :roomId";
+    static final String delete_room = "delete from room "
+            + "where room_id = :roomId";
     public ChatRoom findByRoomId(String roomId);
 
     @Transactional

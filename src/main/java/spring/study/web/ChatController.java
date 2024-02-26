@@ -28,7 +28,6 @@ public class ChatController {
     public String createRoom(Model model, @RequestParam String name, String username) {
        ChatRoom room = chatService.createRoom(name);
        model.addAttribute("room", room);
-       model.addAttribute("username", username);
        return "chat/chatRoom";
    }
 

@@ -24,6 +24,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
     private final ChatService chatService;
     private Set<WebSocketSession> sessions = new HashSet<>();
+    private ChatMessage chatMessage;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -34,10 +35,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
-        ChatMessage chatMessage = objectMapper.readValue(payload, ChatMessage.class);
-        ChatRoom room = chatService.findRoom(chatMessage.getRoomId());
-
-        System.out.println(session + "\n" +sessions);
+        chatMessage = objectMapper.readValue(payload, ChatMessage.class);
 
         if (chatMessage.getType().equals(ChatMessage.MessageType.ENTER)) {
             chatMessage.setMessage(chatMessage.getSender() + "님이 입장했습니다.");
@@ -52,7 +50,12 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        chatService.deleteRoom(chatMessage.getRoomId());
 
+        if (sessions != null)
+        {
+            sessions.remove(session);
+        }
     }
 
     private void sendToEachSocket(Set<WebSocketSession> sessions, TextMessage message) {

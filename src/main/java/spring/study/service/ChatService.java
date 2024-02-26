@@ -41,6 +41,8 @@ public class ChatService {
 
     public ChatMessage findMessage(String roomId) { return chatMessageRepository.findByRoomId(roomId); }
 
+    public void deleteRoom(String roomId) { chatRoomRepository.deleteByRoomId(roomId); }
+
     public ChatRoom createRoom(String name) {
         String randomId = UUID.randomUUID().toString();
 
