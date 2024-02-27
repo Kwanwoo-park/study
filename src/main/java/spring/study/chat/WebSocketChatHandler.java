@@ -50,8 +50,6 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        chatService.deleteRoom(chatMessage.getRoomId());
-
         if (sessions != null)
         {
             sessions.remove(session);

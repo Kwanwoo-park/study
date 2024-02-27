@@ -17,24 +17,26 @@ import java.util.List;
 public class ChatController {
    private final ChatService chatService;
 
+   //https://velog.io/@ho_c/%EA%B5%AD%EB%B9%84%EA%B5%90%EC%9C%A1-Day-88 -> reference
+
    @RequestMapping("/chat/chatList")
     public String chatList(Model model) {
-       List<ChatRoom> roomList = chatService.findAll();
-       model.addAttribute("roomList", roomList);
-       return "chat/chatList";
+      List<ChatRoom> roomList = chatService.findAll();
+      model.addAttribute("roomList", roomList);
+      return "chat/chatList";
    }
 
    @PostMapping("/chat/createRoom")
-    public String createRoom(Model model, @RequestParam String name, String username) {
-       ChatRoom room = chatService.createRoom(name);
-       model.addAttribute("room", room);
-       return "chat/chatRoom";
+    public String createRoom(Model model, @RequestParam String name) {
+      ChatRoom room = chatService.createRoom(name);
+      model.addAttribute("room", room);
+      return "chat/chatRoom";
    }
 
    @GetMapping("/chat/chatRoom")
     public String chatRoom(Model model, @RequestParam String roomId) {
-       ChatRoom room = chatService.findRoom(roomId);
-       model.addAttribute("room", room);
-       return "chat/chatRoom";
+      ChatRoom room = chatService.findRoom(roomId);
+      model.addAttribute("room", room);
+      return "chat/chatRoom";
    }
 }
