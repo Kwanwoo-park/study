@@ -3,10 +3,8 @@ package spring.study.web;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import spring.study.dto.chat.ChatMessageRequestDto;
 import spring.study.entity.chat.ChatRoom;
 import spring.study.service.ChatService;
 
@@ -17,8 +15,6 @@ import java.util.List;
 public class ChatController {
    private final ChatService chatService;
 
-   //https://velog.io/@ho_c/%EA%B5%AD%EB%B9%84%EA%B5%90%EC%9C%A1-Day-88 -> reference
-
    @RequestMapping("/chat/chatList")
     public String chatList(Model model) {
       List<ChatRoom> roomList = chatService.findAll();
@@ -27,7 +23,7 @@ public class ChatController {
    }
 
    @PostMapping("/chat/createRoom")
-    public String createRoom(Model model, @RequestParam String name) {
+    public String createRoom(Model model, @RequestParam String name, ChatMessageRequestDto chatMessageRequestDto) {
       ChatRoom room = chatService.createRoom(name);
       model.addAttribute("room", room);
       return "chat/chatRoom";

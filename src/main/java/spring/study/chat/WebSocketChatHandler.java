@@ -60,6 +60,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         sessions.parallelStream().forEach( roomSession -> {
             try {
                 roomSession.sendMessage(message);
+                chatService.save(chatMessage);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

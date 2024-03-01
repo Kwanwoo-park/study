@@ -19,11 +19,6 @@
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script th:inline="javascript">
-  function enterRoom(socket) {
-    var enterMsg = {"type" : "ENTER", "roomId" : [[${room.roomId}]], "sender" : "chee", "msg" : ""};
-    socket.send(JSON.stringify(enterMsg));
-  }
-
   let socket = new WebSocket("ws://localhost:8080/ws/chat");
 
   socket.onopen = function(e) {
@@ -45,14 +40,35 @@
     msgArea.append(newMsg);
   }
 
+  function enterRoom(socket) {
+    var enterMsg = {
+        type : "ENTER",
+        roomId : [[${room.roomId}]],
+        sender : "test"
+    };
+
+    socket.send(JSON.stringify(enterMsg));
+  }
+
   function sendMsg() {
     let content = document.querySelector('.content').value;
-    var talkMsg = {"type" : "TALK", "roomId" : [[${room.roomId}]], "sender" : "chee", "msg" : content};
+    var talkMsg = {
+        type : "TALK",
+        roomId : [[${room.roomId}]],
+        sender : "test",
+        message : content
+    };
+
     socket.send(JSON.stringify(talkMsg));
   }
 
   function quit() {
-    var quitMsg = {"type" : "QUIT", "roomId" : [[${room.roomId}]], "sender" : "chee", "msg" : "" };
+    var quitMsg = {
+        type : "QUIT",
+        roomId : [[${room.roomId}]],
+        sender : "test"
+    };
+
     socket.send(JSON.stringify(quitMsg));
     location.href = "/chat/chatList";
   }
