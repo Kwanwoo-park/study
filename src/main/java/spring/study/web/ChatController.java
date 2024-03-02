@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.chat.ChatMessageRequestDto;
+import spring.study.entity.chat.ChatMember;
 import spring.study.entity.chat.ChatRoom;
 import spring.study.entity.member.Member;
 import spring.study.service.ChatService;

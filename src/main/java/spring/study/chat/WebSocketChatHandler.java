@@ -9,6 +9,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import spring.study.entity.chat.ChatMember;
 import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoom;
 import spring.study.service.ChatService;
@@ -40,10 +41,19 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         if (chatMessage.getType().equals(ChatMessage.MessageType.ENTER)) {
             chatMessage.setMessage(chatMessage.getSender() + "님이 입장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+
+            if (chatService.findMember(chatMessage.getRoomId()) == null) {
+                ChatMember chatMember = new ChatMember();
+
+                chatMember.setRoomId(chatMessage.getRoomId());
+                chatMember.setMemName(chatMessage.getSender());
+
+                chatService.save(chatMember);
+            }
         } else if (chatMessage.getType().equals(ChatMessage.MessageType.QUIT)) {
             chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
-            chatService.deleteMessageBySender(chatMessage.getRoomId(), chatMessage.getSender());
+            chatService.deleteRoomMember(chatMessage.getRoomId(), chatMessage.getSender());
         } else {
             sendToEachSocket(sessions, message);
         }

@@ -67,3 +67,9 @@ create table message (
     register_time datetime null default null,
     update_time datetime null default null
 );
+
+create table room_member (
+    id bigint auto_increment primary key,
+    room_id varchar(200) not null,
+    mem_name varchar(100) not null
+);

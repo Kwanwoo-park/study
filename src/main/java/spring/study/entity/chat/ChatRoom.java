@@ -2,10 +2,6 @@ package spring.study.entity.chat;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.web.socket.WebSocketSession;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor

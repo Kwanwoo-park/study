@@ -6,10 +6,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import spring.study.entity.chat.ChatMessage;
-import spring.study.entity.chat.ChatMessageRepository;
-import spring.study.entity.chat.ChatRoom;
-import spring.study.entity.chat.ChatRoomRepository;
+import spring.study.entity.chat.*;
 
 import java.util.*;
 
@@ -21,6 +18,7 @@ public class ChatService {
     private Map<String, ChatRoom> chatRooms;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatMemberRepository chatMemberRepository;
 
     @PostConstruct
     private void init() {
@@ -33,6 +31,9 @@ public class ChatService {
     @Transactional
     public void save(ChatMessage chatMessage) { chatMessageRepository.save(chatMessage); }
 
+    @Transactional
+    public void save(ChatMember chatMember) { chatMemberRepository.save(chatMember); }
+
     public List<ChatRoom> findAll() {
         return chatRoomRepository.findAll();
     }
@@ -41,11 +42,13 @@ public class ChatService {
 
     public ChatMessage findMessage(String roomId) { return chatMessageRepository.findByRoomId(roomId); }
 
+    public ChatMember findMember(String roomId) { return chatMemberRepository.findByRoomId(roomId); }
+
     public void deleteRoom(String roomId) { chatRoomRepository.deleteByRoomId(roomId); }
 
-    public void deleteMessageBySender(String roomId, String name) { chatMessageRepository.deleteMessage(roomId, name);}
-
     public void deleteMessage(String roomId) { chatMessageRepository.deleteMessage(roomId);}
+
+    public void deleteRoomMember(String roomId, String name) { chatMemberRepository.deleteByRoomId(roomId, name);}
 
     public ChatRoom createRoom(String name) {
         String randomId = UUID.randomUUID().toString();

@@ -9,15 +9,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, String> {
-    static String delete_message_sender = "delete from message where room_id = :roomId and sender = :sender";
     static String delete_message = "delete from message where room_id = :roomId";
 
     public ChatMessage findByRoomId(String roomId);
-
-    @Transactional
-    @Modifying
-    @Query(value = delete_message_sender, nativeQuery = true)
-    public void deleteMessage(@Param("roomId") String roomId, @Param("sender") String sender);
 
     @Transactional
     @Modifying
