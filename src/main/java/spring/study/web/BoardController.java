@@ -22,7 +22,7 @@ public class BoardController {
     private Member member;
     private final MemberService memberService;
     private final CommentService commentService;
-    HttpSession session;
+    private HttpSession session;
 
     @RequestMapping(value = "/board/list", method = {RequestMethod.GET, RequestMethod.POST})
     public String getBoardListPage(Model model,

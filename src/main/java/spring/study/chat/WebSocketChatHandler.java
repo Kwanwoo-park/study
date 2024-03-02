@@ -43,6 +43,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         } else if (chatMessage.getType().equals(ChatMessage.MessageType.QUIT)) {
             chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+            chatService.deleteMessageBySender(chatMessage.getRoomId(), chatMessage.getSender());
         } else {
             sendToEachSocket(sessions, message);
         }

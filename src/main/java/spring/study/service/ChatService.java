@@ -43,6 +43,10 @@ public class ChatService {
 
     public void deleteRoom(String roomId) { chatRoomRepository.deleteByRoomId(roomId); }
 
+    public void deleteMessageBySender(String roomId, String name) { chatMessageRepository.deleteMessage(roomId, name);}
+
+    public void deleteMessage(String roomId) { chatMessageRepository.deleteMessage(roomId);}
+
     public ChatRoom createRoom(String name) {
         String randomId = UUID.randomUUID().toString();
 

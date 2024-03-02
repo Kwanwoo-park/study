@@ -20,6 +20,8 @@
 <script src="/js/lib/bootstrap.min.js"></script>
 <script th:inline="javascript">
   let socket = new WebSocket("ws://localhost:8080/ws/chat");
+  let roomId = [[${room.roomId}]];
+  let member = [[${member.name}]];
 
   socket.onopen = function(e) {
     console.log('open server!')
@@ -43,8 +45,8 @@
   function enterRoom(socket) {
     var enterMsg = {
         type : "ENTER",
-        roomId : [[${room.roomId}]],
-        sender : "test"
+        roomId : roomId,
+        sender : member
     };
 
     socket.send(JSON.stringify(enterMsg));
@@ -54,8 +56,8 @@
     let content = document.querySelector('.content').value;
     var talkMsg = {
         type : "TALK",
-        roomId : [[${room.roomId}]],
-        sender : "test",
+        roomId : roomId,
+        sender : member,
         message : content
     };
 
@@ -65,8 +67,8 @@
   function quit() {
     var quitMsg = {
         type : "QUIT",
-        roomId : [[${room.roomId}]],
-        sender : "test"
+        roomId : roomId,
+        sender : member
     };
 
     socket.send(JSON.stringify(quitMsg));
