@@ -26,13 +26,13 @@ public class ChatService {
     }
 
     @Transactional
-    public void save(ChatRoom chatRoom) { chatRoomRepository.save(chatRoom); }
+    public Long save(ChatRoom chatRoom) { return chatRoomRepository.save(chatRoom).getId(); }
 
     @Transactional
-    public void save(ChatMessage chatMessage) { chatMessageRepository.save(chatMessage); }
+    public Long save(ChatMessage chatMessage) { return chatMessageRepository.save(chatMessage).getId(); }
 
     @Transactional
-    public void save(ChatMember chatMember) { chatMemberRepository.save(chatMember); }
+    public Long save(ChatMember chatMember) { return chatMemberRepository.save(chatMember).getId(); }
 
     public List<ChatRoom> findAll() {
         return chatRoomRepository.findAll();
