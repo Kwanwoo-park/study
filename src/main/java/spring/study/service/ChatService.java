@@ -6,9 +6,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import spring.study.dto.chat.ChatMessageResponseDto;
 import spring.study.entity.chat.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -40,7 +42,14 @@ public class ChatService {
 
     public ChatRoom findRoom(String roomId) { return chatRoomRepository.findByRoomId(roomId); }
 
-    public ChatMessage findMessage(String roomId) { return chatMessageRepository.findByRoomId(roomId); }
+    public HashMap<String, Object> findMessage(String roomId) {
+        HashMap<String, Object> message = new HashMap<>();
+        List<ChatMessage> list = chatMessageRepository.findByRoomId(roomId);
+
+        message.put("list", list.stream().map(ChatMessageResponseDto::new).collect(Collectors.toList()));
+
+        return message;
+    }
 
     public ChatMember findMember(String roomId) { return chatMemberRepository.findByRoomId(roomId); }
 

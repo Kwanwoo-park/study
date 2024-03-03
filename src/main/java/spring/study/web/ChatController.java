@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.chat.ChatMessageRequestDto;
 import spring.study.entity.chat.ChatMember;
+import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoom;
 import spring.study.entity.member.Member;
 import spring.study.service.ChatService;
@@ -22,33 +23,28 @@ public class ChatController {
 
    @RequestMapping("/chat/chatList")
     public String chatList(Model model, HttpServletRequest request) {
-       List<ChatRoom> roomList = chatService.findAll();
+      HttpSession session = request.getSession();
+      member = (Member) session.getAttribute("member");
 
-       HttpSession session = request.getSession();
-       member = (Member) session.getAttribute("member");
+      model.addAttribute("roomList", chatService.findAll());
 
-       model.addAttribute("roomList", roomList);
-
-       return "chat/chatList";
+      return "chat/chatList";
    }
 
    @PostMapping("/chat/createRoom")
     public String createRoom(Model model, @RequestParam String name) {
-       ChatRoom room = chatService.createRoom(name);
+      model.addAttribute("room", chatService.createRoom(name));
+      model.addAttribute("member", member);
 
-       model.addAttribute("room", room);
-       model.addAttribute("member", member);
-
-       return "chat/chatRoom";
+      return "chat/chatRoom";
    }
 
    @GetMapping("/chat/chatRoom")
     public String chatRoom(Model model, @RequestParam String roomId) {
-       ChatRoom room = chatService.findRoom(roomId);
+      model.addAttribute("room", chatService.findRoom(roomId));
+      model.addAttribute("member", member);
+      model.addAttribute("message", chatService.findMessage(roomId));
 
-       model.addAttribute("room", room);
-       model.addAttribute("member", member);
-
-       return "chat/chatRoom";
+      return "chat/chatRoom";
    }
 }

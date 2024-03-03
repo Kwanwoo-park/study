@@ -7,6 +7,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.chat.ChatMemberRequestDto;
 import spring.study.service.ChatService;
 
+import java.util.List;
+import java.util.Map;
+
 @SpringBootTest
 public class ChatRepositoryTest {
     @Autowired
@@ -50,11 +53,18 @@ public class ChatRepositoryTest {
     }
 
     void findMessage(String roomId) {
-        ChatMessage message = chatService.findMessage(roomId);
+        Map<String, Object> result = chatService.findMessage(roomId);
 
-        System.out.print("findMessage(): ");
-        System.out.println(message.getRoomId() + " " + message.getSender() +
-                " " + message.getMessage());
+        if (result.size() > 0) {
+            System.out.println("#Success findMessage() : " + result.toString());
+
+            for (String s : result.keySet()) {
+                System.out.println(result.get(s));
+            }
+        }
+        else {
+            System.out.println("# Fail findMessage() ~");
+        }
     }
 
     void findRoomMember(String roomId) {

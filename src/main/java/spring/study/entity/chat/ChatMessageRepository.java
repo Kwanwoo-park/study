@@ -11,7 +11,7 @@ import java.util.List;
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, String> {
     static String delete_message = "delete from message where room_id = :roomId";
 
-    public ChatMessage findByRoomId(String roomId);
+    public List<ChatMessage> findByRoomId(String roomId);
 
     @Transactional
     @Modifying

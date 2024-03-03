@@ -13,7 +13,16 @@
 
   <div>
     <span>메세지</span>
-    <div class="msgArea"></div>
+    <div class="msgArea">
+        <ul class="list-group-flush">
+            <li class="list-group-item" th:each="list, index : ${message.list}">
+                <span>
+                    <span th:text="${list.sender}"></span>
+                    <pre th:text="${list.message}"></pre>
+                </span>
+            </li>
+        </ul>
+    </div>
   </div>
 </body>
 <script src="/js/lib/jquery.min.js"></script>
@@ -35,11 +44,24 @@
   }
 
   socket.onmessage = function(e) {
-    console.log(e.data);
-    let msgArea = document.querySelector('.msgArea');
-    let newMsg = document.createElement('div');
-    newMsg.innerText = e.data;
-    msgArea.append(newMsg);
+    const json = JSON.parse(e.data);
+    let msgArea = document.querySelector('.list-group-flush');
+
+    let newMsgLi = document.createElement('li');
+    let newMsgArea = document.createElement('span');
+    let name = document.createElement('span');
+    let newMsg = document.createElement('pre');
+
+    newMsgLi.className = "list-group-item";
+    name.innerText = json.sender;
+    newMsg.innerText = json.message;
+
+    newMsgArea.append(name);
+    newMsgArea.append(newMsg);
+
+    newMsgLi.append(newMsgArea);
+
+    msgArea.append(newMsgLi);
   }
 
   function enterRoom(socket) {
@@ -54,6 +76,7 @@
 
   function sendMsg() {
     let content = document.querySelector('.content').value;
+    document.querySelector('.content').value = null;
     var talkMsg = {
         type : "TALK",
         roomId : roomId,
