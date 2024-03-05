@@ -7,23 +7,22 @@
     <title>Chatting Room</title>
 </head>
 <body>
-  <input type="text" placeholder="보낼 메세지를 입력하세요." class="content">
-  <button type="button" value="전송" class="sendBtn" onclick="sendMsg()">전송</button>
-  <button type="button" value="방나가기" class="quit" onclick="quit()">방 나가기</button>
-
-  <div>
-    <span>메세지</span>
-    <div class="msgArea">
-        <ul class="list-group-flush">
-            <li class="list-group-item" th:each="list, index : ${message.list}">
-                <span>
-                    <span th:text="${list.sender}"></span>
-                    <pre th:text="${list.message}"></pre>
-                </span>
-            </li>
-        </ul>
+    <div>
+        <span>메세지</span>
+        <div class="msgArea">
+            <ul class="list-group-flush">
+                <li class="list-group-item" th:each="list, index : ${message.list}">
+                    <span>
+                        <span th:text="${list.sender}"></span>
+                        <pre th:text="${list.message}"></pre>
+                    </span>
+                </li>
+            </ul>
+        </div>
+        <input type="text" placeholder="보낼 메세지를 입력하세요." class="content">
+        <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
+        <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()">방 나가기</button>
     </div>
-  </div>
 </body>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
@@ -62,6 +61,8 @@
     newMsgLi.append(newMsgArea);
 
     msgArea.append(newMsgLi);
+
+    window.scrollTo(0, document.body.scrollHeight);
   }
 
   function enterRoom(socket) {
