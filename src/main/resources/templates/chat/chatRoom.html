@@ -30,10 +30,14 @@
   let socket = new WebSocket("ws://localhost:8080/ws/chat");
   let roomId = [[${room.roomId}]];
   let member = [[${member.name}]];
+  let email = [[${member.email}]];
+  let flag = [[${flag}]];
 
   socket.onopen = function(e) {
     console.log('open server!')
-    enterRoom(socket);
+    console.log(flag)
+    if (flag)
+        enterRoom(socket);
   }
   socket.onclose = function(e) {
     console.log('disconnect');
@@ -69,7 +73,8 @@
     var enterMsg = {
         type : "ENTER",
         roomId : roomId,
-        sender : member
+        sender : member,
+        email : email
     };
 
     socket.send(JSON.stringify(enterMsg));
@@ -82,6 +87,7 @@
         type : "TALK",
         roomId : roomId,
         sender : member,
+        email : email,
         message : content
     };
 
@@ -92,7 +98,8 @@
     var quitMsg = {
         type : "QUIT",
         roomId : roomId,
-        sender : member
+        sender : member,
+        email : email
     };
 
     socket.send(JSON.stringify(quitMsg));

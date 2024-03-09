@@ -19,8 +19,8 @@ public class ChatRepositoryTest {
     @Test
     void save() {
         ChatRoom chatRoom = new ChatRoom(1L, "row08wr08w0", "test");
-        ChatMessage chatMessage = new ChatMessage(ChatMessage.MessageType.ENTER, chatRoom.getRoomId(), "test", "test");
-        ChatMember chatMember = new ChatMember(1L, chatRoom.getRoomId(), chatMessage.getSender());
+        ChatMessage chatMessage = new ChatMessage(ChatMessage.MessageType.ENTER, chatRoom.getRoomId(), "test", "test", "test@test.com");
+        ChatMember chatMember = new ChatMember(1L, chatRoom.getRoomId(), chatMessage.getSender(), "test@test.com");
 
         Long result_room = chatService.save(chatRoom);
         Long result_message = chatService.save(chatMessage);
@@ -68,10 +68,12 @@ public class ChatRepositoryTest {
     }
 
     void findRoomMember(String roomId) {
-        ChatMember member = chatService.findMember(roomId);
+        List<ChatMember> list = chatService.findMember(roomId);
 
         System.out.print("findRoomMember(): ");
-        System.out.println(member.getRoomId() + " " + member.getMemName());
+        for (ChatMember member : list) {
+            System.out.println(member.getRoomId() + " " + member.getMemName());
+        }
     }
 
     void deleteRoom(String roomId) {

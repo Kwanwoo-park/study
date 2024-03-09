@@ -12,11 +12,13 @@ public class ChatMemberRequestDto {
     private Long id;
     private String roomId;
     private String memName;
+    private String email;
 
     public ChatMember toEntity() {
         return ChatMember.builder()
                 .roomId(roomId)
                 .memName(memName)
+                .email(email)
                 .build();
     }
 }

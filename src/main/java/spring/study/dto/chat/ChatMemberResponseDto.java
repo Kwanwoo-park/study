@@ -7,10 +7,12 @@ import spring.study.entity.chat.ChatMember;
 public class ChatMemberResponseDto {
     private String roomId;
     private String memName;
+    private String email;
 
     public ChatMemberResponseDto(ChatMember entity) {
         this.roomId = entity.getRoomId();
         this.memName = entity.getMemName();
+        this.email = entity.getEmail();
     }
 
     @Override
@@ -18,6 +20,7 @@ public class ChatMemberResponseDto {
         return "ChatMemberResponseDto{" +
                 "roomId='" + roomId + '\'' +
                 ", memName='" + memName + '\'' +
+                ", email='" + email +
                 '}';
     }
 }

@@ -17,11 +17,13 @@ public class ChatMember {
     private Long id;
     private String roomId;
     private String memName;
+    private String email;
 
     @Builder
-    public ChatMember(Long id, String roomId, String memName) {
+    public ChatMember(Long id, String roomId, String memName, String email) {
         this.id = id;
         this.roomId = roomId;
         this.memName = memName;
+        this.email = email;
     }
 }

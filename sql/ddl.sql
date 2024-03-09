@@ -62,6 +62,7 @@ create table message (
     id bigint auto_increment primary key,
     room_id varchar(200) not null,
     sender varchar(100) not null,
+    email varchar(200) not null,
     message varchar(200) not null,
     type varchar(20) not null,
     register_time datetime null default null,
@@ -71,5 +72,6 @@ create table message (
 create table room_member (
     id bigint auto_increment primary key,
     room_id varchar(200) not null,
-    mem_name varchar(100) not null
+    mem_name varchar(100) not null,
+    email varchar(200) not null
 );

@@ -6,10 +6,12 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface ChatMemberRepository extends JpaRepository<ChatMember, Long> {
     static final String delete_roomMember = "delete from room_member where room_id = :roomId and mem_name = :name";
 
-    public ChatMember findByRoomId(String roomId);
+    public List<ChatMember> findByRoomId(String roomId);
 
     @Transactional
     @Modifying

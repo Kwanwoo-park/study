@@ -7,6 +7,7 @@ import spring.study.entity.chat.ChatMessage;
 public class ChatMessageResponseDto {
     private String roomId;
     private String sender;
+    private String email;
     private String message;
     private ChatMessage.MessageType type;
 
@@ -22,6 +23,7 @@ public class ChatMessageResponseDto {
         return "ChatMessageResponseDto{" +
                 "roomId='" + roomId +
                 ", sender='" + sender +
+                ", email='" + email +
                 ", message='" + message +
                 ", type=" + type +
                 '}';

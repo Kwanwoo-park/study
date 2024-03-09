@@ -16,6 +16,7 @@ import spring.study.service.ChatService;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -42,13 +43,35 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
             chatMessage.setMessage(chatMessage.getSender() + "님이 입장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
 
-            if (chatService.findMember(chatMessage.getRoomId()) == null) {
-                ChatMember chatMember = new ChatMember();
+            List<ChatMember> list = chatService.findMember(chatMessage.getRoomId());
 
-                chatMember.setRoomId(chatMessage.getRoomId());
-                chatMember.setMemName(chatMessage.getSender());
+            if (list.size() >= 1) {
+                boolean flag = true;
+                for (ChatMember member : list) {
+                    if(chatMessage.getEmail().equals(member.getEmail())) {
+                        flag = false;
+                        break;
+                    }
+                }
 
-                chatService.save(chatMember);
+                if (flag) {
+                    ChatMember saveMem = new ChatMember();
+
+                    saveMem.setMemName(chatMessage.getSender());
+                    saveMem.setRoomId(chatMessage.getRoomId());
+                    saveMem.setEmail(chatMessage.getEmail());
+
+                    chatService.save(saveMem);
+                }
+            }
+            else {
+                ChatMember saveMem = new ChatMember();
+
+                saveMem.setMemName(chatMessage.getSender());
+                saveMem.setRoomId(chatMessage.getRoomId());
+                saveMem.setEmail(chatMessage.getEmail());
+
+                chatService.save(saveMem);
             }
         } else if (chatMessage.getType().equals(ChatMessage.MessageType.QUIT)) {
             chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");

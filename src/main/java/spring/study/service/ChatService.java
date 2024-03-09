@@ -51,7 +51,7 @@ public class ChatService {
         return message;
     }
 
-    public ChatMember findMember(String roomId) { return chatMemberRepository.findByRoomId(roomId); }
+    public List<ChatMember> findMember(String roomId) { return chatMemberRepository.findByRoomId(roomId); }
 
     public void deleteRoom(String roomId) { chatRoomRepository.deleteByRoomId(roomId); }
 

@@ -12,12 +12,14 @@ public class ChatMessageRequestDto {
     private String roomId;
     private String sender;
     private String message;
+    private String email;
     private ChatMessage.MessageType type;
 
     public ChatMessage toEntity() {
         return ChatMessage.builder()
                 .roomId(roomId)
                 .sender(sender)
+                .email(email)
                 .message(message)
                 .type(type)
                 .build();
