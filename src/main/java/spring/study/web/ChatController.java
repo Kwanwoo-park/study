@@ -17,11 +17,10 @@ public class ChatController {
    private final ChatService chatService;
    private Member member;
 
-   @RequestMapping("/chat/chatList")
+   @RequestMapping(value = "/chat/chatList", method = {RequestMethod.GET, RequestMethod.POST})
     public String chatList(Model model, HttpServletRequest request) {
       HttpSession session = request.getSession();
       member = (Member) session.getAttribute("member");
-
       model.addAttribute("roomList", chatService.findAll());
 
       return "chat/chatList";

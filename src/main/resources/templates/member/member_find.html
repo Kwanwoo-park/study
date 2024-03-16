@@ -9,11 +9,11 @@
 <body>
   <div class="container">
     <h1>Member List</h1>
-    <form id="frm" method="post">
+    <form id="frm">
       <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
       <div >
         <input type="search" class="form-control" id="name" name="name"
-               placeholder="Search member" onkeypress="fnFind()">
+               placeholder="Search member" onkeypress="fnFind(event)" formmethod="post">
       </div>
       <div class="card">
         <ul class="list-group-flush">
@@ -34,8 +34,9 @@
           src="/js/lib/bootstrap.min/js"></script>
   <script th:inline="javascript">
     /*<![CDATA[*/
-    	function fnFind() {
-			const data = {
+    	function fnFind(e) {
+    	  if (e.keyCode == 13) {
+    	   const data = {
 			 name : $("#name").val()
 			}
 
@@ -48,6 +49,7 @@
 			}).always(function() {
 				window.location.reload();
 			})
+    	  }
 		}
 	/*]]>*/
 	</script>

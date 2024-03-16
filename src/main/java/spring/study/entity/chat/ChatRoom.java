@@ -13,11 +13,13 @@ public class ChatRoom {
     private Long id;
     private String roomId;
     private String name;
+    private Long count;
 
     @Builder
-    public ChatRoom(Long id, String roomId, String name) {
+    public ChatRoom(Long id, String roomId, String name, Long count) {
         this.id = id;
         this.roomId = roomId;
         this.name = name;
+        this.count = count;
     }
 }

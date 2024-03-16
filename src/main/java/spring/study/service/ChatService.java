@@ -53,6 +53,10 @@ public class ChatService {
 
     public List<ChatMember> findMember(String roomId) { return chatMemberRepository.findByRoomId(roomId); }
 
+    public int updateRoomCountAdd(String roomId) { return chatRoomRepository.updateRoomCountAdd(roomId); }
+
+    public int updateRoomCountSub(String roomId) { return chatRoomRepository.updateRoomCountSub(roomId); }
+
     public void deleteRoom(String roomId) { chatRoomRepository.deleteByRoomId(roomId); }
 
     public void deleteMessage(String roomId) { chatMessageRepository.deleteMessage(roomId);}
@@ -65,6 +69,7 @@ public class ChatService {
         ChatRoom chatRoom = ChatRoom.builder()
                 .roomId(randomId)
                 .name(name)
+                .count(1L)
                 .build();
 
         save(chatRoom);

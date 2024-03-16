@@ -9,12 +9,12 @@
 <body>
     <div class="container">
         <h1>Book List</h1>
-        <form id="frm" method="post">
+        <form id="frm">
             <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
             <button type="button" class="btn btn-success" onclick="fnClear()">Clear</button>
             <div >
                 <input type="text" class="form-control" id="title" name="title"
-                       placeholder="Search Book" onkeypress="fnFind()">
+                       placeholder="Search Book" onkeypress="fnFind(event)" formmethod="post">
             </div>
             <table class="table table-striped table-horizontal table-bordered mt-3">
                 <thead class="thead-strong">
@@ -58,8 +58,9 @@
             src="/js/lib/bootstrap.min/js"></script>
     <script th:inline="javascript">
     /*<![CDATA[*/
-    	function fnFind() {
-			const data = {
+    	function fnFind(e) {
+    	    if (e.keyCode == 13) {
+    	        const data = {
 			 title : $("#title").val()
 			}
 
@@ -72,6 +73,7 @@
 			}).always(function() {
 				window.location.reload();
 			})
+    	    }
 		}
 
 		function fnClear() {

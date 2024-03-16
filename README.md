@@ -15,11 +15,12 @@ etc: Thymeleaf, JQuery<br>
     <li>회원 상세 정보에서 그 회원이 쓴 글 모아둔 기능</li>
     <li>회원 상세 정보에서 팔로워 및 팔로잉 하는 사람 보는 기능</li>
     <li>댓글에서 회원 선택하면 해당 회원 상세 정보로 이동</li>
+    <li>Chatting</li>
+    <li>자동로그인</li>
     <li>도서 검색(추후에 제거 고민 중)</li>
 </ul>
 
 개발 예정(계속해서 추가될 예정)
 <ul>
-    <li>자동로그인</li>
-    <li>Chatting</li>
+    <li></li>
 </ul>

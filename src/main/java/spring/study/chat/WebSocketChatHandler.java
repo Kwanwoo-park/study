@@ -62,6 +62,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
                     saveMem.setEmail(chatMessage.getEmail());
 
                     chatService.save(saveMem);
+                    chatService.updateRoomCountAdd(chatMessage.getRoomId());
                 }
             }
             else {
@@ -74,9 +75,10 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
                 chatService.save(saveMem);
             }
         } else if (chatMessage.getType().equals(ChatMessage.MessageType.QUIT)) {
+            chatService.deleteRoomMember(chatMessage.getRoomId(), chatMessage.getSender());
+            chatService.updateRoomCountSub(chatMessage.getRoomId());
             chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
-            chatService.deleteRoomMember(chatMessage.getRoomId(), chatMessage.getSender());
         } else {
             sendToEachSocket(sessions, message);
         }

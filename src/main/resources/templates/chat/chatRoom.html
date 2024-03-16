@@ -11,7 +11,7 @@
         <span>메세지</span>
         <div class="msgArea">
             <ul class="list-group-flush">
-                <li class="list-group-item" th:each="list, index : ${message.list}">
+                <li class="list-group-item" th:each="list, index : ${message?.list}">
                     <span>
                         <span th:text="${list.sender}"></span>
                         <pre th:text="${list.message}"></pre>
@@ -19,9 +19,9 @@
                 </li>
             </ul>
         </div>
-        <input type="text" placeholder="보낼 메세지를 입력하세요." class="content">
+        <input type="text" placeholder="보낼 메세지를 입력하세요." class="content" onkeypress="send(event)">
         <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
-        <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()">방 나가기</button>
+        <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
     </div>
 </body>
 <script src="/js/lib/jquery.min.js"></script>
@@ -35,9 +35,11 @@
 
   socket.onopen = function(e) {
     console.log('open server!')
-    console.log(flag)
+
     if (flag)
         enterRoom(socket);
+
+    window.scrollTo(0, document.body.scrollHeight);
   }
   socket.onclose = function(e) {
     console.log('disconnect');
@@ -80,18 +82,26 @@
     socket.send(JSON.stringify(enterMsg));
   }
 
+  function send(e) {
+    if (e.keyCode == 13)
+        sendMsg();
+  }
+
   function sendMsg() {
     let content = document.querySelector('.content').value;
-    document.querySelector('.content').value = null;
-    var talkMsg = {
-        type : "TALK",
-        roomId : roomId,
-        sender : member,
-        email : email,
-        message : content
-    };
+    if (content != '') {
+        document.querySelector('.content').value = null;
 
-    socket.send(JSON.stringify(talkMsg));
+        var talkMsg = {
+            type : "TALK",
+            roomId : roomId,
+            sender : member,
+            email : email,
+            message : content
+        };
+
+        socket.send(JSON.stringify(talkMsg));
+    }
   }
 
   function quit() {
@@ -103,7 +113,7 @@
     };
 
     socket.send(JSON.stringify(quitMsg));
-    location.href = "/chat/chatList";
+    location.href = '/chat/chatList';
   }
 </script>
 </html>

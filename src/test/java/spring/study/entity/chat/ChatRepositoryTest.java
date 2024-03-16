@@ -4,7 +4,6 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import spring.study.dto.chat.ChatMemberRequestDto;
 import spring.study.service.ChatService;
 
 import java.util.List;
@@ -18,7 +17,7 @@ public class ChatRepositoryTest {
     @Transactional
     @Test
     void save() {
-        ChatRoom chatRoom = new ChatRoom(1L, "row08wr08w0", "test");
+        ChatRoom chatRoom = new ChatRoom(1L, "row08wr08w0", "test", 1L);
         ChatMessage chatMessage = new ChatMessage(ChatMessage.MessageType.ENTER, chatRoom.getRoomId(), "test", "test", "test@test.com");
         ChatMember chatMember = new ChatMember(1L, chatRoom.getRoomId(), chatMessage.getSender(), "test@test.com");
 
@@ -45,11 +44,27 @@ public class ChatRepositoryTest {
         }
     }
 
+    @Transactional
+    @Test
+    void countTest() {
+        ChatRoom chatRoom = new ChatRoom(1L, "row08wr08w0", "test", 1L);
+
+        Long result_room = chatService.save(chatRoom);
+
+        if (result_room > 0) {
+            findRoom(chatRoom.getRoomId());
+            chatService.updateRoomCountAdd(chatRoom.getRoomId());
+            findRoom(chatRoom.getRoomId());
+            chatService.updateRoomCountSub(chatRoom.getRoomId());
+            findRoom(chatRoom.getRoomId());
+        }
+    }
+
     void findRoom(String roomId) {
         ChatRoom room = chatService.findRoom(roomId);
 
         System.out.print("findRoom(): ");
-        System.out.println(room.getRoomId() + " " + room.getName());
+        System.out.println(room.getRoomId() + " " + room.getName() + " " + room.getCount());
     }
 
     void findMessage(String roomId) {

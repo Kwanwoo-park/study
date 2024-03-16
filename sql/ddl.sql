@@ -55,7 +55,8 @@ create table follow (
 create table room (
     id bigint auto_increment primary key,
     room_id varchar(200) not null,
-    name varchar(100) not null
+    name varchar(100) not null,
+    count bigint not null
 );
 
 create table message (
