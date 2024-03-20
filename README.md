@@ -22,5 +22,5 @@ etc: Thymeleaf, JQuery<br>
 
 개발 예정(계속해서 추가될 예정)
 <ul>
-    <li></li>
+    <li>지도</li>
 </ul>
