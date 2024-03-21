@@ -98,7 +98,7 @@ public class BoardController {
         return message.showMessageAndRedirect(model);
     }
 
-    @PutMapping("/board/view/action")
+    @PatchMapping("/board/view/action")
     @ResponseBody
     public void boardViewAction(@RequestParam() Long id, @RequestBody BoardRequestDto boardRequestDto) throws Exception {
         try {
