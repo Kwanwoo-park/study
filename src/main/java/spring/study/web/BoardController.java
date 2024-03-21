@@ -98,15 +98,14 @@ public class BoardController {
         return message.showMessageAndRedirect(model);
     }
 
-    @PostMapping("/board/view/action")
-    public String boardViewAction(BoardRequestDto boardRequestDto) throws Exception {
+    @PutMapping("/board/view/action")
+    @ResponseBody
+    public void boardViewAction(@RequestParam() Long id, @RequestBody BoardRequestDto boardRequestDto) throws Exception {
         try {
             boardService.updateBoard(boardRequestDto);
         } catch (Exception e){
             throw new Exception(e.getMessage());
         }
-
-        return "redirect:/board/list";
     }
 
     @PostMapping("/comment/{bid}/action")
@@ -126,20 +125,18 @@ public class BoardController {
         }
     }
 
-    @PostMapping("/board/view/delete")
-    public String boardViewDeleteAction(@RequestParam() Long id, Model model) throws Exception {
+    @DeleteMapping("/board/view/delete")
+    @ResponseBody
+    public void boardViewDeleteAction(@RequestParam() Long id, Model model) throws Exception {
         try {
             boardService.deleteById(id);
             commentService.deleteComment(id);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
-
-        AlertMessage message = new AlertMessage("게시글 삭제가 완료되었습니다.", "/board/list", RequestMethod.GET, null);
-        return message.showMessageAndRedirect(model);
     }
 
-    @PostMapping("/board/delete")
+    @DeleteMapping("/board/delete")
     public String boardDeleteAction(@RequestParam() Long[] deleteId) throws Exception {
         try {
             boardService.deleteAll(deleteId);

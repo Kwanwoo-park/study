@@ -14,7 +14,7 @@
 			<input type="hidden" name="id" th:value="${info.id}">
 			<div class="float-right">
 				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-				<button type="submit" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
+				<button type="button" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
 			</div>
 			<div class="mb-3">
 			    <label class="form-label" for="title">Title</label>
@@ -28,7 +28,7 @@
 			    <label class="form-label" for="registerId">Writer</label>
 			    <input type="disabled" class="form-control" id="registerId" name="registerId" th:value="${info.registerId}" disabled>
 			</div>
-			<button type="submit" id="edit" class="btn btn-primary" formaction="/board/view/action">Edit</button>
+			<button type="button" id="edit" class="btn btn-primary" th:onclick="fnViewEdit()">Edit</button>
 
 			<br>
 			<hr>
@@ -76,10 +76,36 @@
 
 		function fnViewDelete() {
 			if (confirm("게시글을 삭제하시겠습니까?")) {
-				let frm = $("#frm");
-				frm.attr("action","/board/view/delete");
-				frm.submit();
+				$.ajax ({
+					type: 'DELETE',
+					url: '/board/view/delete?id=' + /*[[${info.id}]]*/,
+					contentType: 'application/json; charset=utf-8'
+				}).done(function() {
+					alert("삭제가 완료되었습니다.");
+					location.href = '/board/list';
+				}).error(function() {
+					alert("삭제에 실패했습니다.");
+				})
 			}
+		}
+
+		function fnViewEdit() {
+			const data = {
+				id : /*[[${info.id}]]*/,
+				title : $("#title").val(),
+				content : $("#content").val()
+			}
+
+			$.ajax ({
+				type: 'PUT',
+				url: '/board/view/action?id=' + /*[[${info.id}]]*/,
+				dataType: 'JSON',
+				contentType: 'application/json; charset=utf-8',
+				data: JSON.stringify(data)
+			}).always(function() {
+				alert("게시글이 수정되었습니다.");
+				location.href = '/board/list';
+			})
 		}
 
 		function fnComment() {

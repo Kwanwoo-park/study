@@ -61,18 +61,18 @@
     	function fnFind(e) {
     	    if (e.keyCode == 13) {
     	        const data = {
-			 title : $("#title").val()
-			}
+			        title : $("#title").val()
+			    }
 
-			$.ajax({
-				type: 'POST',
-				url: '/book/list/' +data.title + '/action',
-				dataType: 'JSON',
-				contentType: 'application/json; charset=utf-8',
-				data: JSON.stringify(data)
-			}).always(function() {
-				window.location.reload();
-			})
+                $.ajax({
+                    type: 'POST',
+                    url: '/book/list/' +data.title + '/action',
+                    dataType: 'JSON',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(data)
+                }).always(function() {
+                    window.location.reload();
+                })
     	    }
 		}
 
