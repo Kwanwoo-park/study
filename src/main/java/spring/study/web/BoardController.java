@@ -29,6 +29,7 @@ public class BoardController {
                                    HttpServletRequest request,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
+
         session = request.getSession();
         member = (Member) session.getAttribute("member");
 

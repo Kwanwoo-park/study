@@ -11,8 +11,9 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import spring.study.entity.chat.ChatMember;
 import spring.study.entity.chat.ChatMessage;
-import spring.study.entity.chat.ChatRoom;
-import spring.study.service.ChatService;
+import spring.study.service.ChatMemberService;
+import spring.study.service.ChatMessageService;
+import spring.study.service.ChatRoomService;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -24,7 +25,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
-    private final ChatService chatService;
+    private final ChatMemberService chatMemberService;
+    private final ChatRoomService chatRoomService;
+    private final ChatMessageService chatMessageService;
     private Set<WebSocketSession> sessions = new HashSet<>();
     private ChatMessage chatMessage;
 
@@ -43,7 +46,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
             chatMessage.setMessage(chatMessage.getSender() + "님이 입장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
 
-            List<ChatMember> list = chatService.findMember(chatMessage.getRoomId());
+            List<ChatMember> list = chatMemberService.findMember(chatMessage.getRoomId());
 
             if (list.size() >= 1) {
                 boolean flag = true;
@@ -61,8 +64,8 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
                     saveMem.setRoomId(chatMessage.getRoomId());
                     saveMem.setEmail(chatMessage.getEmail());
 
-                    chatService.save(saveMem);
-                    chatService.updateRoomCountAdd(chatMessage.getRoomId());
+                    chatMemberService.save(saveMem);
+                    chatRoomService.updateRoomCountAdd(chatMessage.getRoomId());
                 }
             }
             else {
@@ -72,11 +75,11 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
                 saveMem.setRoomId(chatMessage.getRoomId());
                 saveMem.setEmail(chatMessage.getEmail());
 
-                chatService.save(saveMem);
+                chatMemberService.save(saveMem);
             }
         } else if (chatMessage.getType().equals(ChatMessage.MessageType.QUIT)) {
-            chatService.deleteRoomMember(chatMessage.getRoomId(), chatMessage.getSender());
-            chatService.updateRoomCountSub(chatMessage.getRoomId());
+            chatMemberService.deleteRoomMember(chatMessage.getRoomId(), chatMessage.getSender());
+            chatRoomService.updateRoomCountSub(chatMessage.getRoomId());
             chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
         } else {
@@ -96,7 +99,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         sessions.parallelStream().forEach( roomSession -> {
             try {
                 roomSession.sendMessage(message);
-                chatService.save(chatMessage);
+                chatMessageService.save(chatMessage);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
