@@ -33,6 +33,9 @@ public class BoardController {
         session = request.getSession();
         member = (Member) session.getAttribute("member");
 
+        if (member == null)
+            return "redirect:/login";
+
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));
             model.addAttribute("member", member);

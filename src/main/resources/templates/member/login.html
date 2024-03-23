@@ -19,7 +19,7 @@
         <div class="card shadow-lg border-0 rounded-lg mt-5">
           <div class="card-header"><h3 class="text-center font-weight-bold my-4">Login</h3></div>
           <div class="card-body">
-            <form id="frm" name="frm" action="/login/action" method="post">
+            <form id="frm" name="frm" action="/login/action" method="get">
 <!--              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">-->
               <div th:if="${param.error}">
                 <p th:text="${exception}" class="alert alert-danger"></p>
@@ -33,7 +33,7 @@
               <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
                 <!-- <a class="small" href="javascript:">Forgot Password?</a> -->
                 <a class="btn btn-primary" href="javascript:fnSubmit();">Login</a>
-                <a class="btn btn-primary" href="/find">비밀번호 재설정</a>
+                <a class="btn btn-primary" href="/find">아이디/비밀번호 찾기</a>
                 <a class="btn btn-primary" href="/register">회원가입</a>
               </div>
             </form>

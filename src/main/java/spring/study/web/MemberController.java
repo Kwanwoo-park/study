@@ -50,20 +50,15 @@ public class MemberController {
 
         if (session != null) {
             member = (Member) session.getAttribute("member");
-            return "redirect:/board/list";
+            if (member == null)
+                session.invalidate();
+            else {
+                if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
+                return "redirect:/board/list";
+            }
         }
 
         return "/member/login";
-    }
-
-    @GetMapping("/logout")
-    public String logout(Model model){
-        if (member != null)
-            model.addAttribute("member", member);
-        else
-            return "redirect:/login";
-
-        return "/member/logout";
     }
 
     @GetMapping("/register")
@@ -92,14 +87,20 @@ public class MemberController {
     }
 
     @GetMapping("/find")
-    public String find() {
+    public String find(Model model,
+                       @RequestParam(value = "error", required = false) String error,
+                       @RequestParam(value = "exception", required = false) String exception) {
+
+        model.addAttribute("error", error);
+        model.addAttribute("exception", exception);
+
         return "/member/find";
     }
 
     @GetMapping("/updatePassword")
     public String updatePassword(Model model) throws Exception {
         try {
-            model.addAttribute("email", member.getEmail());
+            model.addAttribute("member", member);
         }
         catch (Exception e) {
             throw new Exception(e.getMessage());
@@ -150,7 +151,7 @@ public class MemberController {
         return "/member/member_detail";
     }
 
-    @PostMapping("/login/action")
+    @GetMapping("/login/action")
     public String loginAction(MemberRequestDto dto, HttpServletRequest request, Model model) throws Exception {
         try {
             member = (Member) memberService.loadUserByUsername(dto.getEmail());
@@ -164,7 +165,7 @@ public class MemberController {
                 return "redirect:/login?error=true&exception=Invalid Email or Password";
             }
         } catch (Exception e) {
-            throw new Exception(e.getMessage());
+            return "redirect:/login?error=true&exception=Invalid Email or Password";
         }
 
         AlertMessage message;
@@ -179,7 +180,7 @@ public class MemberController {
         return message.showMessageAndRedirect(model);
     }
 
-    @PostMapping("/logout/action")
+    @GetMapping("/logout/action")
     public String logoutAction(HttpServletRequest request) {
         member = null;
 
@@ -207,35 +208,27 @@ public class MemberController {
         return message.showMessageAndRedirect(model);
     }
 
-    @PostMapping("/detail/action")
-    public String detailAction() {
-        return "redirect:/updatePassword";
-    }
-
-    @PostMapping("/find/action")
+    @GetMapping("/find/action")
     public String findAction(MemberRequestDto memberRequestDto) {
-        member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
+        member = memberService.findMember(memberRequestDto.getEmail());
         if (member == null) return "redirect:/find?error=true&exception=Not Found account";
 
         return "redirect:/updatePassword";
     }
 
-    @PostMapping("/updatePassword/action")
-    public String updatePasswordAction(MemberRequestDto memberUpdateDto, Model model) throws Exception {
-        AlertMessage message;
+    @PatchMapping("/updatePassword/action")
+    @ResponseBody
+    public void updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto,
+                                     HttpServletRequest request) throws Exception {
         try {
-            int result = memberService.updateMemberPassword(member.getEmail(), memberUpdateDto.getPassword());
+            memberService.updateMemberPassword(member.getEmail(), memberUpdateDto.getPassword());
 
-            if (result < 0) {
-                message = new AlertMessage("변경에 실패했습니다.\n다시 한 번 시도해주세요", "/updatePassword", RequestMethod.GET, null);
-                return message.showMessageAndRedirect(model);
-            }
+            member = null;
+            HttpSession session = request.getSession();
+            session.invalidate();
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
-
-        message = new AlertMessage(member.getName() + "님 비밀번호 변경에 성공했습니다.", "/login", RequestMethod.GET, null);
-        return message.showMessageAndRedirect(model);
     }
 
     @PostMapping("/withdrawal/action")

@@ -50,6 +50,10 @@ public class MemberService implements UserDetailsService {
         return member;
     }
 
+    public Member findMember(String email) {
+        return memberRepository.findByEmail(email);
+    }
+
     public void deleteById(Long id) { memberRepository.deleteById(id); }
 
     public int updateMemberLastLogin(@Param("email") String email,
