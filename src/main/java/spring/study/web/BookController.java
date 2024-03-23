@@ -39,13 +39,13 @@ public class BookController {
         return "/book/list";
     }
 
-    @PostMapping("/clear")
+    @GetMapping("/clear")
     @ResponseBody
     public void clear() {
         book = null;
     }
 
-    @PostMapping("/book/list/{title}/action")
+    @GetMapping("/book/list/{title}/action")
     @ResponseBody
     public void bookFindAction(@PathVariable String title) throws Exception {
         book = bookService.findBook(title);

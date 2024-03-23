@@ -14,7 +14,7 @@
             <button type="button" class="btn btn-success" onclick="fnClear()">Clear</button>
             <div >
                 <input type="text" class="form-control" id="title" name="title"
-                       placeholder="Search Book" onkeypress="fnFind(event)" formmethod="post">
+                       placeholder="Search Book" onkeypress="fnFind(event)">
             </div>
             <table class="table table-striped table-horizontal table-bordered mt-3">
                 <thead class="thead-strong">
@@ -65,8 +65,8 @@
 			    }
 
                 $.ajax({
-                    type: 'POST',
-                    url: '/book/list/' +data.title + '/action',
+                    type: 'GET',
+                    url: '/book/list/' +encodeURI(data.title) + '/action',
                     dataType: 'JSON',
                     contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify(data)
@@ -78,7 +78,7 @@
 
 		function fnClear() {
 		    $.ajax({
-		        type: 'POST',
+		        type: 'GET',
 		        url: '/clear'
 		    }).always(function() {
 		        window.location.reload();

@@ -79,9 +79,14 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
             }
         } else if (chatMessage.getType().equals(ChatMessage.MessageType.QUIT)) {
             chatMemberService.deleteRoomMember(chatMessage.getRoomId(), chatMessage.getSender());
-            chatRoomService.updateRoomCountSub(chatMessage.getRoomId());
-            chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");
-            sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+
+            if (chatRoomService.findRoom(chatMessage.getRoomId()).getCount()-1 > 0) {
+                chatRoomService.updateRoomCountSub(chatMessage.getRoomId());
+                chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");
+                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+            }
+            else
+                chatRoomService.deleteRoom(chatMessage.getRoomId());
         } else {
             sendToEachSocket(sessions, message);
         }
