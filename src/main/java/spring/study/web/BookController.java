@@ -47,7 +47,9 @@ public class BookController {
 
     @GetMapping("/book/list/{title}/action")
     @ResponseBody
-    public void bookFindAction(@PathVariable String title) throws Exception {
+    public Book bookFindAction(@PathVariable String title) throws Exception {
         book = bookService.findBook(title);
+
+        return book;
     }
 }

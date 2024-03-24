@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <h1>Book List</h1>
-        <form id="frm">
+        <form id="frm" method="dialog">
             <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
             <button type="button" class="btn btn-success" onclick="fnClear()">Clear</button>
             <div >
@@ -69,9 +69,13 @@
                     url: '/book/list/' +encodeURI(data.title) + '/action',
                     dataType: 'JSON',
                     contentType: 'application/json; charset=utf-8',
-                    data: JSON.stringify(data)
-                }).always(function() {
-                    window.location.reload();
+                    data: JSON.stringify(data),
+                    success: function() {
+                        window.location.reload();
+                    },
+                    error: function() {
+                        alert("다시 시도하여주십시오.");
+                    }
                 })
     	    }
 		}

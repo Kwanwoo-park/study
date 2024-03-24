@@ -23,7 +23,6 @@ import spring.study.service.UserService;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -218,10 +217,12 @@ public class MemberController {
 
     @PatchMapping("/updatePassword/action")
     @ResponseBody
-    public void updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto,
+    public int updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto,
                                      HttpServletRequest request) throws Exception {
+        int result;
+
         try {
-            memberService.updateMemberPassword(member.getEmail(), memberUpdateDto.getPassword());
+            result = memberService.updateMemberPassword(member.getEmail(), memberUpdateDto.getPassword());
 
             member = null;
             HttpSession session = request.getSession();
@@ -229,25 +230,32 @@ public class MemberController {
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
+
+        return result;
     }
 
-    @PostMapping("/withdrawal/action")
-    public String withdrawalAction() {
+    @DeleteMapping("/withdrawal/action")
+    @ResponseBody
+    public void withdrawalAction(HttpServletRequest request) {
         memberService.deleteById(member.getId());
 
         member = null;
 
-        return "redirect:/login";
+        HttpSession session = request.getSession();
+        session.invalidate();
     }
 
-    @PostMapping("/member_find/{name}/action")
+    @GetMapping("/member_find/{name}/action")
     @ResponseBody
-    public void memberFindAction(@PathVariable String name) {
+    public boolean memberFindAction(@PathVariable String name) {
         member_search = memberService.findName(name);
+
+        return member_search.isEmpty();
     }
 
-    @PostMapping("/member_detail/action")
-    public String memberDetailAction(HttpServletRequest request) {
+    @PatchMapping("/member_detail/action")
+    @ResponseBody
+    public Long memberDetailAction() {
         if (!status) {
             FollowRequestDto followRequestDto = new FollowRequestDto();
 
@@ -258,11 +266,9 @@ public class MemberController {
             followRequestDto.setFollowing_name(search_member.getName());
             followRequestDto.setFollowing_email(search_member.getEmail());
 
-            followService.save(followRequestDto);
+            return followService.save(followRequestDto);
         }
         else
-            followService.deleteFollow(member.getId(), search_member.getId());
-
-        return "redirect:/member_detail?email="+search_member.getEmail();
+            return followService.deleteFollow(member.getId(), search_member.getId());
     }
 }

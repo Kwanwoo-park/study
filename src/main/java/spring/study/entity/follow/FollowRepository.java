@@ -14,7 +14,7 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     @Transactional
     @Modifying
     @Query(value = unfollow, nativeQuery = true)
-    public void unfollowing(@Param("follower") Long follower, @Param("following") Long following);
+    public int unfollowing(@Param("follower") Long follower, @Param("following") Long following);
 
     public Long countByFollower(Long follower);
 

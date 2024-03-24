@@ -9,7 +9,7 @@
 <body>
   <div class="container">
     <h1>Member List</h1>
-    <form id="frm">
+    <form id="frm" method="dialog">
       <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
       <div >
         <input type="search" class="form-control" id="name" name="name"
@@ -41,13 +41,17 @@
 			}
 
 			$.ajax({
-				type: 'POST',
+				type: 'GET',
 				url: '/member_find/' +data.name + '/action',
 				dataType: 'JSON',
 				contentType: 'application/json; charset=utf-8',
-				data: JSON.stringify(data)
-			}).always(function() {
-				window.location.reload();
+				data: JSON.stringify(data),
+				success: function() {
+				  window.location.reload();
+				},
+				error: function() {
+				  alert("찾기에 실패했습니다.");
+				}
 			})
     	  }
 		}

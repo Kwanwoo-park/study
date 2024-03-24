@@ -104,17 +104,23 @@ public class BoardController {
 
     @PatchMapping("/board/view/action")
     @ResponseBody
-    public void boardViewAction(@RequestParam() Long id, @RequestBody BoardRequestDto boardRequestDto) throws Exception {
+    public int boardViewAction(@RequestParam() Long id, @RequestBody BoardRequestDto boardRequestDto) throws Exception {
+        int result;
+
         try {
-            boardService.updateBoard(boardRequestDto);
+            result = boardService.updateBoard(boardRequestDto);
         } catch (Exception e){
             throw new Exception(e.getMessage());
         }
+
+        return result;
     }
 
     @PostMapping("/comment/{bid}/action")
     @ResponseBody
-    public void commentAction(@PathVariable Long bid, @RequestBody CommentRequestDto commentRequestDto) throws Exception {
+    public Long commentAction(@PathVariable Long bid, @RequestBody CommentRequestDto commentRequestDto) throws Exception {
+        long result = 0;
+
         try {
             if (commentRequestDto.getComment() != null){
                 commentRequestDto.setBid(bid);
@@ -122,11 +128,13 @@ public class BoardController {
                 commentRequestDto.setMname(member.getName());
                 commentRequestDto.setEmail(member.getEmail());
 
-                commentService.save(commentRequestDto);
+                result = commentService.save(commentRequestDto);
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
+
+        return result;
     }
 
     @DeleteMapping("/board/view/delete")

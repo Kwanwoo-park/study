@@ -10,7 +10,7 @@
 <body>
 <div class="container">
   <h1>Member Detail</h1>
-  <form method="post">
+  <form method="dialog">
     <div class="mb-3">
       <label class="form-label">Email: </label>
       <label class="form-label" th:text="${member.email}"></label>
@@ -64,7 +64,7 @@
       </tbody>
     </table>
     <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-    <button type="submit" id="follow" class="btn btn-success" formaction="/member_detail/action"></button>
+    <button type="button" id="follow" class="btn btn-success" onclick="fnFollow()"></button>
   </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->
@@ -93,6 +93,18 @@
         if (following == 0)
           document.querySelector("#following").removeAttribute('href');
 
+        function fnFollow() {
+          $.ajax({
+            type: 'PATCH',
+            url: '/member_detail/action',
+            success: function() {
+              window.location.reload();
+            },
+            error: function() {
+              alert("다시 시도하여주십시오.");
+            }
+          })
+        }
 	/*]]>*/
 </script>
 </body>
