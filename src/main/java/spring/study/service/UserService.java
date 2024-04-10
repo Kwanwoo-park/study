@@ -1,0 +1,34 @@
+package spring.study.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import spring.study.dto.member.MemberRequestDto;
+import spring.study.dto.member.MemberResponseDto;
+import spring.study.entity.Member;
+import spring.study.repository.MemberRepository;
+import spring.study.repository.UserServiceRepository;
+import spring.study.entity.Role;
+
+@Service
+@RequiredArgsConstructor
+public class UserService implements UserServiceRepository {
+    private final MemberRepository memberRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Override
+    public MemberResponseDto createUser(MemberRequestDto memberRequestDto) {
+        if (memberRepository.findByEmail(memberRequestDto.getEmail()) != null)
+            return null;
+
+        Member member = memberRepository.save(Member.builder()
+                        .email(memberRequestDto.getEmail())
+                        .pwd(bCryptPasswordEncoder.encode(memberRequestDto.getPassword()))
+                        .name(memberRequestDto.getName())
+                        .role(Role.USER)
+                        .profile("KakaoTalk_Photo_2023-04-14-21-36-15.jpeg")
+                        .build());
+
+        return new MemberResponseDto(member);
+    }
+}

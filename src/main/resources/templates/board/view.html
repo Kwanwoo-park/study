@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>Board List</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!--부트스트랩 css 추가-->
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+	<div class="container">
+		<h1>Board View</h1>
+		<form id="frm" method="post">
+			<input type="hidden" name="id" th:value="${info.id}">
+			<div class="float-right">
+				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+				<button type="button" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
+			</div>
+			<div class="mb-3">
+			    <label class="form-label" for="title">Title</label>
+			    <input type="text" class="form-control" id="title" name="title" th:value="${info.title}">
+			</div>
+			<div class="mb-3">
+		    	<label class="form-label" for="content">Content</label>
+		    	<textarea class="form-control" id="content" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
+			</div>
+			<div class="mb-3">
+			    <label class="form-label" for="registerId">Writer</label>
+			    <input type="disabled" class="form-control" id="registerId" name="registerId" th:value="${info.registerId}" disabled>
+			</div>
+			<button type="button" id="edit" class="btn btn-primary" th:onclick="fnViewEdit()">Edit</button>
+
+			<br>
+			<hr>
+			<div class="mb-3">
+				<label class="form-label" for="comment">Comment</label>
+				<textarea class="form-control" id="comment" rows="5" cols="" name="Comment"></textarea>
+			</div>
+			<button type="button" id="submit" class="btn btn-primary" th:onclick="fnComment()">Submit</button>
+
+			<br>
+			<hr>
+			<div class="card">
+				<div class="card-header bi bi-chat-dots">Comments</div>
+				<ul class="list-group-flush">
+					<li class="list-group-item" th:each="list,index : ${comment.list}">
+						<span>
+							<span th:text="${index.index+1}"></span>
+							<a th:href="@{/member/detail(email=${list.email})}">
+								<span th:text="${list.mname}"></span>
+							</a>
+							<pre th:text="${list.comment}"></pre>
+						</span>
+					</li>
+				</ul>
+			</div>
+		</form>
+	</div>
+    <!--부트스트랩 js, jquery 추가-->
+    <script src="/js/lib/jquery.min.js"></script>
+    <script src="/js/lib/bootstrap.min.js"></script>
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    	const member = /*[[${email}]]*/;
+    	const role = /*[[${role}]]*/;
+    	const board = /*[[${info.registerEmail}]]*/;
+
+    	if (role != "ADMIN") {
+			if (member != board) {
+				document.getElementById('title').disabled = true;
+				document.getElementById('content').disabled = true;
+				document.getElementById('edit').style.display = 'none';
+				document.getElementById('delete').style.display = 'none';
+			}
+    	}
+
+		function fnViewDelete() {
+			if (confirm("게시글을 삭제하시겠습니까?")) {
+				$.ajax ({
+					type: 'DELETE',
+					url: '/board/view/delete?id=' + /*[[${info.id}]]*/,
+					contentType: 'application/json; charset=utf-8'
+				}).done(function() {
+					alert("삭제가 완료되었습니다.");
+					location.href = '/board/list';
+				}).error(function() {
+					alert("삭제에 실패했습니다.");
+				})
+			}
+		}
+
+		function fnViewEdit() {
+			const data = {
+				id : /*[[${info.id}]]*/,
+				title : $("#title").val(),
+				content : $("#content").val()
+			}
+
+			$.ajax ({
+				type: 'PATCH',
+				url: '/board/view/action?id=' + /*[[${info.id}]]*/,
+				dataType: 'JSON',
+				contentType: 'application/json; charset=utf-8',
+				data: JSON.stringify(data),
+				success: function() {
+					alert("게시글이 수정되었습니다.");
+					window.location.reload();
+				},
+				error: function() {
+					alert("다시 시도하여주십시오.");
+				}
+			})
+		}
+
+		function fnComment() {
+			const data = {
+			 comment : $("#comment").val(),
+			 info : /*[[${info.id}]]*/
+			}
+
+			$.ajax({
+				type: 'POST',
+				url: '/comment/' + data.info + '/action',
+				dataType: 'JSON',
+				contentType: 'application/json; charset=utf-8',
+				data: JSON.stringify(data),
+				success: function() {
+					window.location.reload();
+				},
+				error: function() {
+					alert("다시 시도하여주십시오.");
+				}
+			})
+		}
+	/*]]>*/
+	</script>
+</body>
+</html>

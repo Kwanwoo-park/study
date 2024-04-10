@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Member Detail</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Member Detail</h1>
+  <form method="dialog" enctype="multipart/form-data">
+    <div class="mb-3">
+      <img th:src="@{/img/} + ${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Name: </label>
+      <label class="form-label" th:text="${member.name}"></label>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email: </label>
+      <label class="form-label" th:text="${member.email}"></label>
+    </div>
+    <div class="mb-3">
+      <a th:href="@{/follow/follower(id=${member.id})}" id="follower">
+        <label class="form-label">Follower: </label>
+        <label class="form-label" th:text="${follower}"></label>
+      </a>
+      <a th:href="@{/follow/following(id=${member.id})}" id="following">
+        <label class="form-label">&nbsp;Following: </label>
+        <label class="form-label" th:text="${following}"></label>
+      </a>
+    </div>
+    <table class="table table-striped table-horizontal table-bordered mt-3">
+      <thead class="thead-strong">
+        <tr>
+          <th width="10%">게시글 번호</th>
+          <th width="">제목</th>
+          <th width="20%">작성자</th>
+          <th width="10%">조회수</th>
+          <th width="20%">작성일</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr th:each="list, index : ${list}">
+          <td>
+            <span th:text="${index.index+1}"></span>
+          </td>
+          <td>
+            <a th:href="@{/board/view(id=${list.id})}"><span th:text="${list.title}"></span></a>
+          </td>
+          <td>
+            <span th:text="${list.registerId}"></span>
+          </td>
+          <td>
+            <span th:text="${list.readCnt}"></span>
+          </td>
+          <td>
+            <span th:text="${list.registerTime}"></span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+    <button type="button" id="follow" class="btn btn-success" onclick="fnFollow()"></button>
+  </form>
+</div>
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    	const status = /*[[${status}]]*/;
+    	const follower = /*[[${follower}]]*/;
+    	const following = /*[[${following}]]*/;
+    	const equal_check = /*[[${equal_check}]]*/;
+
+    	if (!equal_check) {
+           if (status)
+            document.querySelector("#follow").innerText = "Unfollow";
+          else
+            document.querySelector("#follow").innerText = "Follow";
+    	}
+    	else {
+    	  document.getElementById('follow').style.display = 'none';
+    	}
+
+    	if (follower == 0)
+    	  document.querySelector("#follower").removeAttribute('href');
+
+        if (following == 0)
+          document.querySelector("#following").removeAttribute('href');
+
+        function fnFollow() {
+          $.ajax({
+            type: 'PATCH',
+            url: '/member/detail/action',
+            success: function() {
+              window.location.reload();
+            },
+            error: function() {
+              alert("다시 시도하여주십시오.");
+            }
+          })
+        }
+	/*]]>*/
+</script>
+</body>
+</html>

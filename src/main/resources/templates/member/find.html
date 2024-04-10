@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>이메일 입력</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Find</h1>
+  <form action="/find/action" method="get">
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com"
+             onkeypress="fnFind(event)" required>
+    </div>
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+    <button type="submit" class="btn btn-primary" onclick="fnMemberFind()">Find</button>
+    <div th:if="${param.error}">
+      <p th:text="${exception}" class="alert alert-danger"></p>
+    </div>
+  </form>
+</div>
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script th:inline="javascript">
+/*<![CDATA[*/
+  function fnFind(e) {
+    if (e.keyCode == 13) {
+      fnMemberFind();
+    }
+  }
+
+  function fnMember(e) {
+    console.log(/*[[${error}]]*/)
+    console.log(/*[[${exception}]]*/)
+    const data = {
+      email : $("#email").val()
+    }
+
+    $.ajax({
+      type: 'GET',
+      url: '/find/action',
+      dataType: 'JSON',
+      contenttype: 'application/json; charset=utf-8',
+      data: JSON.stringify(data)
+    })
+  }
+/*]]>*/
+</script>
+</body>
+</html>
