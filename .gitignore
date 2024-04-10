@@ -37,3 +37,4 @@ application-real.properties
 
 ### VS Code ###
 .vscode/
+.DS_Store
