@@ -4,6 +4,12 @@ Framework: Spring Boot 3.0.5<br>
 Database: MySQL 8.0.33, JPA<br>
 etc: Thymeleaf, JQuery<br>
 
+해야할 일
+<ol>
+    <li>DB 전면 개편</li>
+    <li>코드 Refactoring</li>
+</ol>
+
 개발된 것
 <ul>
     <li>게시판</li>
