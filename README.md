@@ -6,7 +6,7 @@ etc: Thymeleaf, JQuery<br>
 
 해야할 일
 <ol>
-    <li>DB 전면 개편</li>
+    <li>DB 전면 개편(구상 중)</li>
     <li>코드 Refactoring</li>
 </ol>
 
