@@ -16,7 +16,7 @@
                 <li class="list-group-item" th:each="list,index : ${following}">
                   <span>
                     <span th:text="${index.index+1}"></span>
-                    <a th:href="@{/member/detail(email=${list.following_email})}">
+                    <a th:href="@{/member/search/detail(email=${list.following_email})}">
                         <span th:text="${list.following_name}"></span>
                     </a>
                     <span th:text="${list.following_email}"></span>

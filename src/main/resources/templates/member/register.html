@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>회원가입</title>
     <meta charset="UTF-8">
@@ -24,11 +24,37 @@
             <input type="text" class="form-control" id="name" name="name" placeholder="Name" required>
         </div>
         <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="button" class="btn btn-primary" onclick="fnSave()">Submit</button>
     </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+        function fnSave() {
+            const data = {
+                email: $("#email").val(),
+                password: $("#password").val(),
+                name: $("#name").val()
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: '/member/register/action',
+                dataType: 'JSON',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: function() {
+                    alert("회원가입이 완료되었습니다.");
+                    location.href = "/member/login";
+                },
+                error: function() {
+                    alert("다시 시도하여주십시오.");
+                }
+            })
+        }
+    /*]]>*/
+</script>
 </body>
 </html>

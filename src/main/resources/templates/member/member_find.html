@@ -20,7 +20,7 @@
           <li class="list-group-item" th:each="list,index : ${member?.list}">
             <span>
               <span th:text="${index?.index+1}"></span>
-              <a th:href="@{/member/detail(email=${list?.email})}"><span th:text="${list?.name}"></span></a>
+              <a th:href="@{/member/search/detail(email=${list?.email})}"><span th:text="${list?.name}"></span></a>
               <span th:text="${list?.email}"></span>
             </span>
           </li>
@@ -42,7 +42,7 @@
 
 			$.ajax({
 				type: 'GET',
-				url: '/member/find/' +data.name + '/action',
+				url: '/member/search/' +data.name + '/action',
 				dataType: 'JSON',
 				contentType: 'application/json; charset=utf-8',
 				data: JSON.stringify(data),

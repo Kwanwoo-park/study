@@ -36,7 +36,15 @@ public class BookService {
         return book;
     }
 
-    public Book findBook(String title) {
-        return bookRepository.findByTitle(title);
+    public HashMap<String, Object> findBook(String title, Integer page, Integer size) {
+        HashMap<String, Object> book = new HashMap<>();
+
+        Page<Book> list = bookRepository.findByTitle(title, PageRequest.of(page, size, Sort.by("bnum").descending()));
+        book.put("list", list.stream().map(BookResponseDto::new).collect(Collectors.toList()));
+        book.put("paging", list.getPageable());
+        book.put("totalCnt", list.getTotalElements());
+        book.put("totalPage", list.getTotalPages());
+
+        return book;
     }
 }

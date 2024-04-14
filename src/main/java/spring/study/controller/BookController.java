@@ -12,12 +12,13 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
+@RequestMapping("/book")
 public class BookController {
     private final BookService bookService;
 
-    private Book book;
+    private HashMap<String, Object> book;
 
-    @GetMapping("/book/list")
+    @GetMapping("/list")
     public String list(Model model,
                        @RequestParam(required = false, defaultValue = "0") Integer page,
                        @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
@@ -25,12 +26,7 @@ public class BookController {
             if (book == null)
                 model.addAttribute("book", bookService.findAll(page, size));
             else {
-                List<Book> list = new ArrayList<>();
-                list.add(book);
-
-                HashMap<String, Object> map = new HashMap<>();
-                map.put("list", list);
-                model.addAttribute("book", map);
+                model.addAttribute("book", book);
             }
         }
         catch (Exception e) {
@@ -46,10 +42,12 @@ public class BookController {
         book = null;
     }
 
-    @GetMapping("/book/list/{title}/action")
+    @GetMapping("/list/{title}/action")
     @ResponseBody
-    public Book bookFindAction(@PathVariable String title) throws Exception {
-        book = bookService.findBook(title);
+    public HashMap<String, Object> bookFindAction(@PathVariable String title,
+                                                  @RequestParam(required = false, defaultValue = "0") Integer page,
+                                                  @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
+        book = bookService.findBook(title, page, size);
 
         return book;
     }

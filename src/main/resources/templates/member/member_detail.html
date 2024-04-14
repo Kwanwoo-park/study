@@ -93,9 +93,18 @@
           document.querySelector("#following").removeAttribute('href');
 
         function fnFollow() {
+          const data = {
+            following: /*[[${member.id}]]*/,
+            following_name : /*[[${member.name}]]*/,
+            following_email: /*[[${member.email}]]*/
+          }
+
           $.ajax({
             type: 'PATCH',
-            url: '/member/detail/action',
+            url: '/member/search/detail/action',
+            dataType: 'JSON',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data),
             success: function() {
               window.location.reload();
             },

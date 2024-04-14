@@ -15,13 +15,14 @@ import spring.study.service.ChatRoomService;
 
 @Controller
 @RequiredArgsConstructor
+@RequestMapping("/chat")
 public class ChatController {
    private final ChatMessageService chatMessageService;
    private final ChatRoomService chatRoomService;
    private final ChatMemberService chatMemberService;
    private Member member;
 
-   @RequestMapping(value = "/chat/chatList", method = {RequestMethod.GET, RequestMethod.POST})
+   @RequestMapping(value = "/chatList", method = {RequestMethod.GET, RequestMethod.POST})
     public String chatList(Model model, HttpServletRequest request) {
       HttpSession session = request.getSession();
       member = (Member) session.getAttribute("member");
@@ -30,17 +31,17 @@ public class ChatController {
       return "chat/chatList";
    }
 
-   @PostMapping("/chat/createRoom")
+   @PostMapping("/createRoom")
     public String createRoom(Model model, @RequestParam String name) {
-      model.addAttribute("room", chatRoomService.createRoom(name));
-      model.addAttribute("name", member.getName());
-      model.addAttribute("email", member.getEmail());
-      model.addAttribute("flag", true);
+       model.addAttribute("room", chatRoomService.createRoom(name));
+       model.addAttribute("name", member.getName());
+       model.addAttribute("email", member.getEmail());
+       model.addAttribute("flag", true);
 
-      return "chat/chatRoom";
+       return "chat/chatRoom";
    }
 
-   @GetMapping("/chat/chatRoom")
+   @GetMapping("/chatRoom")
     public String chatRoom(Model model, @RequestParam String roomId) {
        boolean flag = true;
        model.addAttribute("room", chatRoomService.findRoom(roomId));
