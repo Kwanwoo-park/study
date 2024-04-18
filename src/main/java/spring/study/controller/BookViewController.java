@@ -1,19 +1,19 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import spring.study.entity.Book;
 import spring.study.service.BookService;
-import java.util.ArrayList;
+
 import java.util.HashMap;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/book")
-public class BookController {
+public class BookViewController {
     private final BookService bookService;
 
     private HashMap<String, Object> book;
@@ -21,7 +21,11 @@ public class BookController {
     @GetMapping("/list")
     public String list(Model model,
                        @RequestParam(required = false, defaultValue = "0") Integer page,
-                       @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
+                       @RequestParam(required = false, defaultValue = "5") Integer size,
+                       HttpServletRequest request) throws Exception {
+        HttpSession session = request.getSession();
+        book = (HashMap<String, Object>) session.getAttribute("book");
+
         try {
             if (book == null)
                 model.addAttribute("book", bookService.findAll(page, size));
@@ -40,15 +44,5 @@ public class BookController {
     @ResponseBody
     public void clear() {
         book = null;
-    }
-
-    @GetMapping("/list/{title}/action")
-    @ResponseBody
-    public HashMap<String, Object> bookFindAction(@PathVariable String title,
-                                                  @RequestParam(required = false, defaultValue = "0") Integer page,
-                                                  @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
-        book = bookService.findBook(title, page, size);
-
-        return book;
     }
 }

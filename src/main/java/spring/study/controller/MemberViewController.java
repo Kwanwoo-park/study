@@ -70,10 +70,10 @@ public class MemberViewController {
                 session.setAttribute("member", member);
             }
             else {
-                return "redirect:/login?error=true&exception=Invalid Email or Password";
+                return "redirect:/member/login?error=true&exception=Invalid Email or Password";
             }
         } catch (Exception e) {
-            return "redirect:/login?error=true&exception=Invalid Email or Password";
+            return "redirect:/member/login?error=true&exception=Invalid Email or Password";
         }
 
         AlertMessage message;
@@ -117,7 +117,7 @@ public class MemberViewController {
             model.addAttribute("list", list);
         }
         else {
-            return "redirect:/login?error=true&exception=Not Found account";
+            return "redirect:/member/login?error=true&exception=Not Found account";
         }
 
         return "/member/detail";
@@ -180,7 +180,7 @@ public class MemberViewController {
 
         HttpSession session = request.getSession();
         if (session == null)
-            return "redirect:/login?error=true&exception=Not Found account";
+            return "redirect:/member/login?error=true&exception=Not Found account";
 
         member = (Member) session.getAttribute("member");
 
