@@ -10,7 +10,7 @@
 <body>
 <div class="container">
   <h1>Withdrawal</h1>
-  <form action="/withdrawal/action" method="post">
+  <form method="post">
     <div class="mb-3">
       <p th:text="${name} + '님 정말 회원 탈퇴 하시겠습니까?'">회원님 정말 회원 탈퇴 하시겠습니까?</p>
     </div>
@@ -25,10 +25,10 @@
   function fnWithdrawal() {
     $.ajax({
       type: 'DELETE',
-      url: '/withdrawal/action',
+      url: '/member/withdrawal/action',
       success: function() {
         alert("삭제되었습니다.");
-        location.href = '/login';
+        location.href = '/member/login';
       },
       error: function() {
         alert("다시 시도하여주십시오");

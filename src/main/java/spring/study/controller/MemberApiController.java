@@ -38,6 +38,7 @@ public class MemberApiController {
     private final FollowService followService;
     private Member member;
     private HashMap<String, Object> member_search;
+    HttpSession session;
 
     @PostMapping("/register/action")
     public MemberResponseDto registerAction(@RequestBody MemberRequestDto memberRequestDto, Model model) throws Exception {
@@ -58,6 +59,9 @@ public class MemberApiController {
     @PatchMapping("/detail/action")
     public int detailAction(@RequestParam MultipartFile file, HttpServletRequest request) throws IOException {
         String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
+        session = request.getSession();
+
+        member = (Member) session.getAttribute("member");
 
         File f = new File(fileDir + file.getOriginalFilename());
 
@@ -69,7 +73,7 @@ public class MemberApiController {
 
         member.setProfile(file.getOriginalFilename());
 
-        HttpSession session = request.getSession();
+
         session.setAttribute("member", member);
 
         return result;
@@ -95,6 +99,9 @@ public class MemberApiController {
 
     @DeleteMapping("/withdrawal/action")
     public void withdrawalAction(HttpServletRequest request) {
+        session = request.getSession();
+        member = (Member) session.getAttribute("member");
+
         memberService.deleteById(member.getId());
 
         member = null;

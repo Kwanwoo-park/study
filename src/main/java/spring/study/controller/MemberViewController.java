@@ -139,8 +139,6 @@ public class MemberViewController {
     public Member findAction(@PathVariable String email) {
         member = memberService.findMember(email);
 
-        System.out.println(email);
-
         return member;
     }
 
