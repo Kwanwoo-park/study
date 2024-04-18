@@ -40,25 +40,22 @@ public class MemberApiController {
     private HashMap<String, Object> member_search;
 
     @PostMapping("/register/action")
-    public String registerAction(MemberRequestDto memberRequestDto, Model model) throws Exception {
-        AlertMessage message;
+    public MemberResponseDto registerAction(@RequestBody MemberRequestDto memberRequestDto, Model model) throws Exception {
+        MemberResponseDto memberResponseDto;
         try {
-            MemberResponseDto memberResponseDto = userService.createUser(memberRequestDto);
+             memberResponseDto= userService.createUser(memberRequestDto);
 
             if (memberResponseDto == null) {
-                message = new AlertMessage("이미 존재하는 이메일입니다.", "/register", RequestMethod.GET, null);
-                return message.showMessageAndRedirect(model);
+                return null;
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
 
-        message = new AlertMessage(memberRequestDto.getName() + "님 회원가입이 완료되었습니다.", "/login", RequestMethod.GET, null);
-        return message.showMessageAndRedirect(model);
+        return memberResponseDto;
     }
 
     @PatchMapping("/detail/action")
-    @ResponseBody
     public int detailAction(@RequestParam MultipartFile file, HttpServletRequest request) throws IOException {
         String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
@@ -78,21 +75,13 @@ public class MemberApiController {
         return result;
     }
 
-    @GetMapping("/find/action")
-    public String findAction(MemberRequestDto memberRequestDto) {
-        member = memberService.findMember(memberRequestDto.getEmail());
-        if (member == null) return "redirect:/find?error=true&exception=Not Found account";
-
-        return "redirect:/updatePassword";
-    }
-
     @PatchMapping("/updatePassword/action")
     public int updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto,
                                     HttpServletRequest request) throws Exception {
         int result;
 
         try {
-            result = memberService.updateMemberPassword(member.getEmail(), memberUpdateDto.getPassword());
+            result = memberService.updateMemberPassword(memberUpdateDto.getEmail(), memberUpdateDto.getPassword());
 
             member = null;
             HttpSession session = request.getSession();

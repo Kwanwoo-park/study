@@ -32,11 +32,11 @@ public class BoardViewController {
         member = (Member) session.getAttribute("member");
 
         if (session == null)
-            return "redirect:/login";
+            return "redirect:/member/login";
 
         if (member == null) {
             session.invalidate();
-            return "redirect:/login";
+            return "redirect:/member/login";
         }
 
         try {
@@ -52,7 +52,7 @@ public class BoardViewController {
     public String getBoardWritePage(Model model){
         if (session == null) {
             member = null;
-            return "redirect:/login?error=true&exception=Login Please";
+            return "redirect:/member/login?error=true&exception=Login Please";
         }
 
         model.addAttribute("name", member.getName());
@@ -64,7 +64,7 @@ public class BoardViewController {
         try {
             if (member == null) {
                 session.invalidate();
-                return "redirect:/login?error=true&exception=Login Please";
+                return "redirect:/member/login?error=true&exception=Login Please";
             }
 
             if (boardRequestDto.getId() != null) {

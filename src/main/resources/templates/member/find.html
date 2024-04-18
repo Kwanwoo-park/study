@@ -10,14 +10,14 @@
 <body>
 <div class="container">
   <h1>Find</h1>
-  <form action="/find/action" method="get">
+  <form method="dialog">
     <div class="mb-3">
       <label for="email" class="form-label">Email</label>
       <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com"
              onkeypress="fnFind(event)" required>
     </div>
     <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-    <button type="submit" class="btn btn-primary" onclick="fnMemberFind()">Find</button>
+    <button type="button" class="btn btn-primary" onclick="fnMemberFind()">Find</button>
     <div th:if="${param.error}">
       <p th:text="${exception}" class="alert alert-danger"></p>
     </div>
@@ -25,7 +25,8 @@
 </div>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
-<script src="/js/lib/bootstrap.min.js"></script>
+<script type="application/json; charset=utf-8"
+        src="/js/lib/bootstrap.min.js"></script>
 <script th:inline="javascript">
 /*<![CDATA[*/
   function fnFind(e) {
@@ -34,19 +35,25 @@
     }
   }
 
-  function fnMember(e) {
+  function fnMemberFind() {
     console.log(/*[[${error}]]*/)
     console.log(/*[[${exception}]]*/)
+
     const data = {
       email : $("#email").val()
     }
 
     $.ajax({
       type: 'GET',
-      url: '/find/action',
+      url: '/member/find/' + encodeURI(data.email) + '/action',
       dataType: 'JSON',
-      contenttype: 'application/json; charset=utf-8',
-      data: JSON.stringify(data)
+      contentType: 'application/json; charset=utf-8',
+      success: function() {
+        location.href = "/member/updatePassword";
+      },
+      error: function() {
+        alert("존재하지 않는 이메일입니다.");
+      }
     })
   }
 /*]]>*/

@@ -134,6 +134,16 @@ public class MemberViewController {
         return "/member/find";
     }
 
+    @GetMapping("/find/{email}/action")
+    @ResponseBody
+    public Member findAction(@PathVariable String email) {
+        member = memberService.findMember(email);
+
+        System.out.println(email);
+
+        return member;
+    }
+
     @GetMapping("/updatePassword")
     public String updatePassword(Model model) throws Exception {
         try {
@@ -146,8 +156,11 @@ public class MemberViewController {
     }
 
     @GetMapping("/withdrawal")
-    public String withdrawal(Model model) {
-        if (member == null) return "redirect:/login?error=true&exception=Not Found account";
+    public String withdrawal(Model model, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || member == null)
+            return "redirect:/login?error=true&exception=Not Found account";
 
         model.addAttribute("name", member.getName());
 
