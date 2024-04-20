@@ -23,8 +23,7 @@ public class ChatController {
    private Member member;
 
    @RequestMapping(value = "/chatList", method = {RequestMethod.GET, RequestMethod.POST})
-    public String chatList(Model model, HttpServletRequest request) {
-      HttpSession session = request.getSession();
+    public String chatList(Model model, HttpSession session) {
       member = (Member) session.getAttribute("member");
       model.addAttribute("roomList", chatRoomService.findAll());
 

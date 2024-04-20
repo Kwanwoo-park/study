@@ -1,6 +1,5 @@
 package spring.study.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
@@ -18,9 +17,8 @@ public class BoardApiController {
     private final CommentService commentService;
     @PostMapping("/write/action")
     public Long boardWriteAction(@RequestBody BoardRequestDto boardRequestDto,
-                                   HttpServletRequest request,
-                                   Model model) throws Exception {
-        HttpSession session = request.getSession();
+                                 HttpSession session,
+                                 Model model) throws Exception {
         Member member = (Member) session.getAttribute("member");
         Long result = 0L;
 

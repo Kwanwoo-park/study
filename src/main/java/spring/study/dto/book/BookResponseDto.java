@@ -3,8 +3,11 @@ package spring.study.dto.book;
 import lombok.Getter;
 import spring.study.entity.Book;
 
+import java.io.Serializable;
+
 @Getter
-public class BookResponseDto {
+public class BookResponseDto implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String bnum;
     private String title;
     private String author;

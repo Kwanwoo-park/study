@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/follow")
-public class FollowController {
+public class FollowViewController {
     private final FollowService followService;
 
     @GetMapping("/follower")

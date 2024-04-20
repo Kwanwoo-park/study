@@ -17,10 +17,9 @@ public class CommentApiController {
     @PostMapping("/{bid}/action")
     public Long commentAction(@PathVariable Long bid,
                               @RequestBody CommentRequestDto commentRequestDto,
-                              HttpServletRequest request) throws Exception {
+                              HttpSession session) throws Exception {
         long result = 0;
 
-        HttpSession session = request.getSession();
         Member member = (Member) session.getAttribute("member");
 
         try {

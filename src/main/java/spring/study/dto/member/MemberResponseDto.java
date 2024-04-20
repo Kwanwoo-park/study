@@ -4,10 +4,13 @@ import lombok.Getter;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
-public class MemberResponseDto {
+public class MemberResponseDto implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Long id;
     private String email;
     private String password;

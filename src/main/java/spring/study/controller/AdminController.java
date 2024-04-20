@@ -18,8 +18,7 @@ public class AdminController {
     private Member member;
 
     @GetMapping("/administrator")
-    public String admin(HttpServletRequest request){
-        HttpSession session = request.getSession();
+    public String admin(HttpSession session){
         member = (Member) session.getAttribute("member");
 
 

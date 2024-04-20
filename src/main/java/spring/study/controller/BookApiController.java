@@ -19,12 +19,16 @@ public class BookApiController {
     public HashMap<String, Object> bookFindAction(@PathVariable String title,
                                                   @RequestParam(required = false, defaultValue = "0") Integer page,
                                                   @RequestParam(required = false, defaultValue = "5") Integer size,
-                                                  HttpServletRequest request) throws Exception {
-        HttpSession session = request.getSession();
-
+                                                  HttpSession session) throws Exception {
         book = bookService.findBook(title, page, size);
         session.setAttribute("book", book);
 
         return book;
+    }
+
+    @GetMapping("/clear")
+    public void clear(HttpSession session) {
+        book = null;
+        session.removeAttribute("book");
     }
 }

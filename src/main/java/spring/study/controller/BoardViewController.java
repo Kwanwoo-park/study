@@ -6,9 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import spring.study.alert.AlertMessage;
 import spring.study.dto.board.BoardRequestDto;
-import spring.study.dto.comment.CommentRequestDto;
 import spring.study.entity.Member;
 import spring.study.service.BoardService;
 import spring.study.service.CommentService;
@@ -24,12 +22,9 @@ public class BoardViewController {
 
     @GetMapping("/list")
     public String getBoardListPage(Model model,
-                                   HttpServletRequest request,
+                                   HttpSession session,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
-
-        session = request.getSession();
-
         if (session == null)
             return "redirect:/member/login?error=true&exception=Session Expired";
 
@@ -54,9 +49,9 @@ public class BoardViewController {
     }
 
     @GetMapping("/view")
-    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) throws Exception {
+    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpSession session) throws Exception {
         try {
-            if (request.getSession() == null)
+            if (session == null)
                 return "redirect:/member/login?error=true&exception=Session Expired";
 
             if (member == null) {

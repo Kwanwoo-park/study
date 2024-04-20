@@ -22,8 +22,7 @@ public class BookViewController {
     public String list(Model model,
                        @RequestParam(required = false, defaultValue = "0") Integer page,
                        @RequestParam(required = false, defaultValue = "5") Integer size,
-                       HttpServletRequest request) throws Exception {
-        HttpSession session = request.getSession();
+                       HttpSession session) throws Exception {
         book = (HashMap<String, Object>) session.getAttribute("book");
 
         try {
@@ -38,11 +37,5 @@ public class BookViewController {
         }
 
         return "/book/list";
-    }
-
-    @GetMapping("/clear")
-    @ResponseBody
-    public void clear() {
-        book = null;
     }
 }

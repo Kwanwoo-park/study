@@ -53,7 +53,7 @@ public class SecurityConfig{
                 .deleteCookies("member").permitAll()
                 .and()
                 .sessionManagement()
-                .maximumSessions(1)
+                .maximumSessions(2)
                 .maxSessionsPreventsLogin(false)
                 .expiredUrl("/login?error-true&exception=Hava been attempted to login form a new place or session expired");
 
