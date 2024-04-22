@@ -3,13 +3,11 @@ package spring.study.controller;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Member;
-import spring.study.service.FollowService;
 import spring.study.service.MemberService;
 import spring.study.service.UserService;
 
@@ -24,23 +22,11 @@ import java.util.HashMap;
 public class MemberApiController {
     private final MemberService memberService;
     private final UserService userService;
-    private final FollowService followService;
     private Member member;
 
     @PostMapping("/register/action")
-    public MemberResponseDto registerAction(@RequestBody MemberRequestDto memberRequestDto, Model model) throws Exception {
-        MemberResponseDto memberResponseDto;
-        try {
-             memberResponseDto= userService.createUser(memberRequestDto);
-
-            if (memberResponseDto == null) {
-                return null;
-            }
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-
-        return memberResponseDto;
+    public MemberResponseDto registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
+        return userService.createUser(memberRequestDto);
     }
 
     @PatchMapping("/detail/action")
@@ -66,8 +52,7 @@ public class MemberApiController {
 
     @GetMapping("/find/{email}/action")
     @ResponseBody
-    public Member findAction(@PathVariable String email,
-                             HttpSession session) {
+    public Member findAction(@PathVariable String email, HttpSession session) {
         member = memberService.findMember(email);
 
         session.setAttribute("member", member);
@@ -76,20 +61,11 @@ public class MemberApiController {
     }
 
     @PatchMapping("/updatePassword/action")
-    public int updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto,
-                                    HttpSession session) throws Exception {
-        int result;
+    public int updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpSession session) {
+        member = null;
+        session.invalidate();
 
-        try {
-            result = memberService.updateMemberPassword(memberUpdateDto.getEmail(), memberUpdateDto.getPassword());
-
-            member = null;
-            session.invalidate();
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-
-        return result;
+        return memberService.updateMemberPassword(memberUpdateDto.getEmail(), memberUpdateDto.getPassword());
     }
 
     @DeleteMapping("/withdrawal/action")

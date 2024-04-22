@@ -1,13 +1,11 @@
 package spring.study.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import spring.study.entity.Member;
 import spring.study.service.MemberService;
 
 @RequiredArgsConstructor
@@ -15,24 +13,15 @@ import spring.study.service.MemberService;
 @RequestMapping("/admin")
 public class AdminController {
     private final MemberService memberService;
-    private Member member;
 
     @GetMapping("/administrator")
     public String admin(HttpSession session){
-        member = (Member) session.getAttribute("member");
-
-
         return "/admin/administrator";
     }
 
     @GetMapping("/member_check")
     public String member_check(Model model) throws Exception {
-        try {
-            model.addAttribute("member", memberService.findAll());
-        }
-        catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
+        model.addAttribute("member", memberService.findAll());
 
         return "/admin/member_check";
     }

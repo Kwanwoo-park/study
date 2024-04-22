@@ -1,6 +1,5 @@
 package spring.study.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -16,24 +15,17 @@ import java.util.HashMap;
 public class BookViewController {
     private final BookService bookService;
 
-    private HashMap<String, Object> book;
-
     @GetMapping("/list")
     public String list(Model model,
                        @RequestParam(required = false, defaultValue = "0") Integer page,
                        @RequestParam(required = false, defaultValue = "5") Integer size,
-                       HttpSession session) throws Exception {
-        book = (HashMap<String, Object>) session.getAttribute("book");
+                       HttpSession session) {
+        HashMap<String, Object> book = (HashMap<String, Object>) session.getAttribute("book");
 
-        try {
-            if (book == null)
-                model.addAttribute("book", bookService.findAll(page, size));
-            else {
-                model.addAttribute("book", book);
-            }
-        }
-        catch (Exception e) {
-            throw new Exception(e.getMessage());
+        if (book == null)
+            model.addAttribute("book", bookService.findAll(page, size));
+        else {
+            model.addAttribute("book", book);
         }
 
         return "/book/list";

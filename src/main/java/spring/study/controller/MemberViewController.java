@@ -30,8 +30,6 @@ public class MemberViewController {
     private final FollowService followService;
     private final BoardService boardService;
     private Member member;
-    private Member search_member;
-    private boolean status;
 
     @GetMapping("/login")
     public String login(Model model,
@@ -43,6 +41,7 @@ public class MemberViewController {
 
         if (session != null) {
             member = (Member) session.getAttribute("member");
+
             if (member == null)
                 session.invalidate();
             else {
@@ -55,9 +54,7 @@ public class MemberViewController {
     }
 
     @GetMapping("/login/action")
-    public String loginAction(MemberRequestDto dto,
-                              HttpSession session,
-                              Model model) throws Exception {
+    public String loginAction(MemberRequestDto dto, HttpSession session, Model model) {
         try {
             member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
@@ -122,12 +119,8 @@ public class MemberViewController {
     public String updatePassword(Model model, HttpSession session) throws Exception {
         member = (Member) session.getAttribute("member");
 
-        try {
-            model.addAttribute("email", member.getEmail());
-        }
-        catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
+        model.addAttribute("email", member.getEmail());
+
         return "/member/updatePassword";
     }
 
@@ -151,10 +144,9 @@ public class MemberViewController {
     }
 
     @GetMapping("/search/detail")
-    public String memberDetail(Model model, MemberRequestDto memberRequestDto,
-                               HttpSession session) {
-        status = false;
-        search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
+    public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpSession session) {
+        boolean status = false;
+        Member search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
 
         if (session == null)
             return "redirect:/member/login?error=true&exception=Not Found account";

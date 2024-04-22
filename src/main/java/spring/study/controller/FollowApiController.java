@@ -20,8 +20,7 @@ public class FollowApiController {
     private final FollowService followService;
 
     @PatchMapping("/action")
-    public Long memberDetailAction(@RequestBody FollowRequestDto followRequestDto,
-                                   HttpSession session) {
+    public Long memberDetailAction(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
 
         List<Follow> follower = followService.findFollower(member.getId());

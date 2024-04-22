@@ -19,7 +19,7 @@ public class BookApiController {
     public HashMap<String, Object> bookFindAction(@PathVariable String title,
                                                   @RequestParam(required = false, defaultValue = "0") Integer page,
                                                   @RequestParam(required = false, defaultValue = "5") Integer size,
-                                                  HttpSession session) throws Exception {
+                                                  HttpSession session) {
         book = bookService.findBook(title, page, size);
         session.setAttribute("book", book);
 

@@ -17,24 +17,19 @@ public class CommentApiController {
     @PostMapping("/{bid}/action")
     public Long commentAction(@PathVariable Long bid,
                               @RequestBody CommentRequestDto commentRequestDto,
-                              HttpSession session) throws Exception {
-        long result = 0;
+                              HttpSession session) {
 
         Member member = (Member) session.getAttribute("member");
 
-        try {
-            if (commentRequestDto.getComment() != null){
-                commentRequestDto.setBid(bid);
-                commentRequestDto.setMid(member.getId());
-                commentRequestDto.setMname(member.getName());
-                commentRequestDto.setEmail(member.getEmail());
+        if (commentRequestDto.getComment().length() > 0){
+            commentRequestDto.setBid(bid);
+            commentRequestDto.setMid(member.getId());
+            commentRequestDto.setMname(member.getName());
+            commentRequestDto.setEmail(member.getEmail());
 
-                result = commentService.save(commentRequestDto);
-            }
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
+            return commentService.save(commentRequestDto);
         }
 
-        return result;
+        return null;
     }
 }

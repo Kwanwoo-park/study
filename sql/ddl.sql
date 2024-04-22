@@ -17,7 +17,8 @@ create table member (
     role varchar(20) not null,
     last_login_time datetime null default null,
     register_time datetime null default null,
-    update_time datetime null default null);
+    update_time datetime null default null,
+    profile varchar(200) not null default KakaoTalk_Photo_2023-04-14-21-36-15.jpeg);
 create unique index email on member (email);
 
 create table book (
