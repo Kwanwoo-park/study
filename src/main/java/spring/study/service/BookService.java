@@ -47,4 +47,8 @@ public class BookService {
 
         return book;
     }
+
+    public Book findBookByTitle(String title) {
+        return bookRepository.findByTitle(title);
+    }
 }

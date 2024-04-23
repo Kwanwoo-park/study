@@ -10,7 +10,7 @@
     <div class="container">
         <h1>Book List</h1>
         <form id="frm" method="dialog">
-            <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+            <button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
             <button type="button" class="btn btn-success" onclick="fnClear()">Clear</button>
             <div >
                 <input type="text" class="form-control" id="title" name="title"
@@ -25,6 +25,8 @@
                     <th width="">출판사</th>
                     <th width="">대분류</th>
                     <th width="">소분류</th>
+                    <th width="">책상태</th>
+                    <th width="">대출현황</th>
                 </tr>
                 </thead>
                 <tbody id="tbody">
@@ -33,7 +35,7 @@
                         <span th:text="${list.bnum}"></span>
                     </td>
                     <td>
-                        <span th:text="${list.title}"></span>
+                        <a th:href="@{/book/detail(title=${list.title})}"><span th:text="${list.title}"></span></a>
                     </td>
                     <td>
                         <span th:text="${list.author}"></span>
@@ -46,6 +48,12 @@
                     </td>
                     <td>
                         <span th:text="${list.ssort}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${list.cond}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${list.borw}"></span>
                     </td>
                 </tr>
                 </tbody>

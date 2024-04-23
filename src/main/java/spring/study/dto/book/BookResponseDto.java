@@ -2,6 +2,8 @@ package spring.study.dto.book;
 
 import lombok.Getter;
 import spring.study.entity.Book;
+import spring.study.entity.Borrow;
+import spring.study.entity.Condition;
 
 import java.io.Serializable;
 
@@ -14,6 +16,8 @@ public class BookResponseDto implements Serializable {
     private String publisher;
     private String bsort;
     private String ssort;
+    private Condition cond;
+    private Borrow borw;
 
     public BookResponseDto(Book entity) {
         this.bnum = entity.getBnum();
@@ -22,11 +26,14 @@ public class BookResponseDto implements Serializable {
         this.publisher = entity.getPublisher();
         this.bsort = entity.getBsort();
         this.ssort = entity.getSsort();
+        this.cond = entity.getCond();
+        this.borw = entity.getBorw();
     }
 
     @Override
     public String toString() {
         return "BookListDto [bnum=" + bnum + ", title=" + title + ", author=" + author
-                + ", publisher=" + publisher + ", bsort=" + bsort + ", ssort=" + ssort + "]";
+                + ", publisher=" + publisher + ", bsort=" + bsort + ", ssort=" + ssort
+                + ", cond=" + cond + ", borw=" + borw + "]";
     }
 }

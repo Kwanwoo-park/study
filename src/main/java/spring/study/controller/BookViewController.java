@@ -30,4 +30,11 @@ public class BookViewController {
 
         return "/book/list";
     }
+
+    @GetMapping("/detail")
+    public String detail(Model model, @RequestParam() String title) {
+        model.addAttribute("book", bookService.findBookByTitle(title));
+
+        return "/book/detail";
+    }
 }

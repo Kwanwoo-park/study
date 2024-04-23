@@ -18,14 +18,19 @@ public class Book {
     private String publisher;
     private String bsort;
     private String ssort;
+    private Condition cond;
+    private Borrow borw;
 
     @Builder
-    public Book(String bnum, String title, String author, String publisher, String bsort, String ssort) {
+    public Book(String bnum, String title, String author, String publisher,
+                String bsort, String ssort, Condition cond, Borrow borw) {
         this.bnum = bnum;
         this.title = title;
         this.author = author;
         this.publisher = publisher;
         this.bsort = bsort;
         this.ssort = ssort;
+        this.cond = cond;
+        this.borw = borw;
     }
 }

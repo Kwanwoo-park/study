@@ -7,4 +7,5 @@ import spring.study.entity.Book;
 
 public interface BookRepository extends JpaRepository<Book, String> {
     public Page<Book> findByTitle(String title, PageRequest pageRequest);
+    public Book findByTitle(String title);
 }
