@@ -51,4 +51,6 @@ public class BookService {
     public Book findBookByTitle(String title) {
         return bookRepository.findByTitle(title);
     }
+
+    public int updateBook(String bnum) { return bookRepository.updateBorrowStatus(bnum); }
 }

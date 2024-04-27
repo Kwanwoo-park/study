@@ -12,6 +12,7 @@ import lombok.*;
 @Entity(name = "book")
 public class Book {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String bnum;
     private String title;
     private String author;
@@ -22,8 +23,9 @@ public class Book {
     private Borrow borw;
 
     @Builder
-    public Book(String bnum, String title, String author, String publisher,
+    public Book(Long id, String bnum, String title, String author, String publisher,
                 String bsort, String ssort, Condition cond, Borrow borw) {
+        this.id = id;
         this.bnum = bnum;
         this.title = title;
         this.author = author;

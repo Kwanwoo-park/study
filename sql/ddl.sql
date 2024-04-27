@@ -22,7 +22,8 @@ create table member (
 create unique index email on member (email);
 
 create table book (
-    bnum varchar(20) not null primary key,
+    id bigint auto_increment primary key,
+    bnum varchar(20) not null,
     title varchar(20) not null,
     author varchar(10) not null,
     publisher varchar(20) not null,

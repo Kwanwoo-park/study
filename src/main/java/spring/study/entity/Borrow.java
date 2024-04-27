@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Borrow {
-    UNBORROW("unborrow"), BORROW("borrow출");
+    비치중("unborrow"), 대출중("borrow출");
     private String value;
 }

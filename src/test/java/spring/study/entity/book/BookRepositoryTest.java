@@ -4,13 +4,69 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import spring.study.dto.book.BookRequestDto;
+import spring.study.entity.Book;
+import spring.study.entity.Borrow;
+import spring.study.entity.Condition;
 import spring.study.service.BookService;
+
+import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootTest
 public class BookRepositoryTest {
     @Autowired
     private BookService bookService;
+
+    @Transactional
+    @Test
+    void save() {
+        BookRequestDto bookSaveDto = new BookRequestDto();
+
+        bookSaveDto.setBnum("123");
+        bookSaveDto.setTitle("test");
+        bookSaveDto.setAuthor("test");
+        bookSaveDto.setPublisher("tester");
+        bookSaveDto.setBsort("테스트");
+        bookSaveDto.setSsort("test");
+        bookSaveDto.setCond(Condition.양호);
+        bookSaveDto.setBorw(Borrow.비치중);
+
+        if (bookService.save(bookSaveDto).length() > 0) {
+            findBookHash("test", 0, 5);
+            findBook("test");
+            updateBook("123");
+            findBookHash("test", 0, 5);
+            findBook("test");
+        }
+    }
+
+    void findBookHash(String title, Integer page, Integer size) {
+        HashMap<String, Object> book = bookService.findBook(title, page, size);
+
+        if (book != null) {
+            System.out.println("# Success findBookHash() : " + book.toString());
+
+            for (String s : book.keySet()) {
+                System.out.println(book.get(s));
+            }
+        }
+        else System.out.println("# Fail findBookHash() ~");
+    }
+
+    void findBook(String title) {
+        Book book = bookService.findBookByTitle(title);
+
+        if (book != null) System.out.println("# Success findBook() : " + book.toString());
+        else System.out.println("# Fail findBook() ~");
+    }
+
+    void updateBook(String bnum) {
+        int result = bookService.updateBook(bnum);
+
+        if (result > 0) System.out.println("# Success updateBook() ~");
+        else System.out.println("# Fail updateBook() ~");
+    }
 
     @Transactional
     @Test

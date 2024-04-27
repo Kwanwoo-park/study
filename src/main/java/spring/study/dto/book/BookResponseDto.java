@@ -5,11 +5,15 @@ import spring.study.entity.Book;
 import spring.study.entity.Borrow;
 import spring.study.entity.Condition;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 @Getter
 public class BookResponseDto implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
+
+    private Long id;
     private String bnum;
     private String title;
     private String author;
@@ -20,6 +24,7 @@ public class BookResponseDto implements Serializable {
     private Borrow borw;
 
     public BookResponseDto(Book entity) {
+        this.id = entity.getId();
         this.bnum = entity.getBnum();
         this.title = entity.getTitle();
         this.author = entity.getAuthor();

@@ -31,4 +31,9 @@ public class BookApiController {
         book = null;
         session.removeAttribute("book");
     }
+
+    @PatchMapping("/detail/action")
+    public void bookDetailAction() {
+
+    }
 }

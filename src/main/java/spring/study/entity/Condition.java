@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Condition {
-    FINE("fine"), BROKEN("broken");
+    양호("fine"), 파손됨("broken");
     private String value;
 }

@@ -11,6 +11,7 @@ import spring.study.entity.Condition;
 @Setter
 @NoArgsConstructor
 public class BookRequestDto {
+    private Long id;
     private String bnum;
     private String title;
     private String author;
@@ -28,8 +29,8 @@ public class BookRequestDto {
                 .publisher(publisher)
                 .bsort(bsort)
                 .ssort(ssort)
-                .cond(Condition.FINE)
-                .borw(Borrow.UNBORROW)
+                .cond(Condition.양호)
+                .borw(Borrow.비치중)
                 .build();
     }
 }
