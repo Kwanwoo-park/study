@@ -1,9 +1,9 @@
 package spring.study.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import spring.study.dto.book.BookRequestDto;
 import spring.study.service.BookService;
 
 import java.util.HashMap;
@@ -32,8 +32,13 @@ public class BookApiController {
         session.removeAttribute("book");
     }
 
-    @PatchMapping("/detail/action")
-    public void bookDetailAction() {
+    @PatchMapping("/borrow/action")
+    public int bookBorrowAction(@RequestBody BookRequestDto bookUpdateDto) {
+        return bookService.updateBookBorrow(bookUpdateDto.getBnum());
+    }
 
+    @PatchMapping("/return/action")
+    public int bookReturnAction(@RequestBody BookRequestDto bookUpdateDto) {
+        return bookService.updateBookReturn(bookUpdateDto.getBnum());
     }
 }

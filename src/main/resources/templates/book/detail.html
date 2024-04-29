@@ -24,7 +24,8 @@
       <label class="form-label" th:text="${book.publisher}"></label>
     </div>
 
-    <button type="button" class="btn btn-primary" id="borrow" onclick="fnBorrow()">대출</button>
+    <button type="button" class="btn btn-primary" style="visibility: hidden" id="borrow" onclick="fnBorrow()">대출</button>
+    <button type="button" class="btn btn-primary" style="visibility: hidden" id="return" onclick="fnReturn()">반납</button>
   </form>
 </div>
 <script src="/js/lib/jquery.min.js"></script>
@@ -34,16 +35,40 @@
 /*<![CDATA[*/
   const borrow = /*[[${book.borw}]]*/;
 
-  if (borrow == 1) {
-    document.querySelector("#borrow").innerText = "반납";
+  const data = {
+      bnum : /*[[${book.bnum}]]*/
+  }
+
+  if (borrow == '대출중') {
+    document.getElementById("return").style.visibility = "visible";
+  }
+  else {
+    document.getElementById("borrow").style.visibility = "visible";
   }
 
   function fnBorrow() {
     $.ajax({
       type: 'PATCH',
-      url: '/book/detail/action',
+      url: '/book/borrow/action',
       dataType: 'JSON',
       contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify(data),
+      success: function() {
+        window.location.reload();
+      },
+      error: function() {
+        alert("다시 시도하여주십시오.");
+      }
+    })
+  }
+
+  function fnReturn() {
+    $.ajax({
+      type: 'PATCH',
+      url: '/book/return/action',
+      dataType: 'JSON',
+      contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify(data),
       success: function() {
         window.location.reload();
       },

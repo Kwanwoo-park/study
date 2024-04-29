@@ -35,9 +35,7 @@ public class BookRepositoryTest {
         if (bookService.save(bookSaveDto).length() > 0) {
             findBookHash("test", 0, 5);
             findBook("test");
-            updateBook("123");
-            findBookHash("test", 0, 5);
-            findBook("test");
+            bookReturn("123");
         }
     }
 
@@ -61,11 +59,18 @@ public class BookRepositoryTest {
         else System.out.println("# Fail findBook() ~");
     }
 
-    void updateBook(String bnum) {
-        int result = bookService.updateBook(bnum);
+    void bookBorrow(String bnum) {
+        int result = bookService.updateBookBorrow(bnum);
 
-        if (result > 0) System.out.println("# Success updateBook() ~");
-        else System.out.println("# Fail updateBook() ~");
+        if (result > 0) System.out.println("# Success bookBorrow() ~");
+        else System.out.println("# Fail bookBorrow() ~");
+    }
+
+    void bookReturn(String bnum) {
+        int result = bookService.updateBookReturn(bnum);
+
+        if (result > 0) System.out.println("# Success bookReturn() ~");
+        else System.out.println("# Fail bookReturn() ~");
     }
 
     @Transactional

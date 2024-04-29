@@ -10,13 +10,20 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.Book;
 
 public interface BookRepository extends JpaRepository<Book, String> {
-    static final String update_book = "update book set borw = 1 where bnum = :bnum";
+    static final String book_borrow = "update book set borw = 1 where bnum = :bnum";
+
+    static final String book_return = "update book set borw = 0 where bnum = :bnum";
 
     public Page<Book> findByTitle(String title, PageRequest pageRequest);
     public Book findByTitle(String title);
 
     @Transactional
     @Modifying
-    @Query(value = update_book, nativeQuery = true)
-    public int updateBorrowStatus(@Param("bnum") String bnum);
+    @Query(value = book_return, nativeQuery = true)
+    public int updateBookReturn(@Param("bnum") String bnum);
+
+    @Transactional
+    @Modifying
+    @Query(value = book_borrow, nativeQuery = true)
+    public int updateBookBorrow(@Param("bnum") String bnum);
 }

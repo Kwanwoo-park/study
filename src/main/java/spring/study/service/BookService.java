@@ -11,7 +11,6 @@ import spring.study.dto.book.BookResponseDto;
 import spring.study.entity.Book;
 import spring.study.repository.BookRepository;
 import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -52,5 +51,7 @@ public class BookService {
         return bookRepository.findByTitle(title);
     }
 
-    public int updateBook(String bnum) { return bookRepository.updateBorrowStatus(bnum); }
+    public int updateBookReturn(String bnum) { return bookRepository.updateBookReturn(bnum); }
+
+    public int updateBookBorrow(String bnum) { return bookRepository.updateBookBorrow(bnum); }
 }
