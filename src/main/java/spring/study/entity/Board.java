@@ -8,7 +8,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import spring.study.entity.BasetimeEntity;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -19,16 +18,16 @@ public class Board extends BasetimeEntity {
     private String title;
     private String content;
     private int readCnt;
-    private String registerId;
+    private String registerName;
     private String registerEmail;
 
     @Builder
-    public Board(Long id, String title, String content, int readCnt, String registerId, String registerEmail) {
+    public Board(Long id, String title, String content, int readCnt, String registerName, String registerEmail) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.readCnt = readCnt;
-        this.registerId = registerId;
+        this.registerName = registerName;
         this.registerEmail = registerEmail;
     }
 }

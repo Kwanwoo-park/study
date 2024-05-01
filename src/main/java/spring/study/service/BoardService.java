@@ -42,7 +42,7 @@ public class BoardService {
         return new BoardResponseDto(boardRepository.findById(id).get());
     }
 
-    public List<Board> findName(String name) { return boardRepository.findByRegisterId(name); }
+    public List<Board> findName(String name) { return boardRepository.findByRegisterName(name); }
 
     public List<Board> findEmail(String email) { return boardRepository.findByRegisterEmail(email); }
 

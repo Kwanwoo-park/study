@@ -39,7 +39,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @Query(value = delete_board, nativeQuery = true)
     public int deleteBoard(@Param("deleteList") Long[] deleteList);
 
-    public List<Board> findByRegisterId(String name);
+    public List<Board> findByRegisterName(String name);
 
     public List<Board> findByRegisterEmail(String email);
 }

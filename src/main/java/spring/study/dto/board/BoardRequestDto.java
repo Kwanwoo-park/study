@@ -12,14 +12,14 @@ public class BoardRequestDto {
     private Long id;
     private String title;
     private String content;
-    private String registerId;
+    private String registerName;
     private String registerEmail;
 
     public Board toEntity() {
         return Board.builder()
                 .title(title)
                 .content(content)
-                .registerId(registerId)
+                .registerName(registerName)
                 .registerEmail(registerEmail)
                 .build();
     }

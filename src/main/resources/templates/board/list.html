@@ -41,7 +41,7 @@
 									<a th:href="@{./view(id=${list.id})}"><span th:text="${list.title}"></span></a>
 								</td>
 								<td>
-									<span th:text="${list.registerId}"></span>
+									<span th:text="${list.registerName}"></span>
 								</td>
 								<td>
 									<span th:text="${list.readCnt}"></span>
@@ -55,7 +55,7 @@
 			        <div class="row">
 						<div class="col">
 							<ul class="pagination">
-								<li class="page-item" th:each="index : ${#numbers.sequence(1, resultMap.totalPage)}" th:with="paging=${resultMap.paging}">
+								<li class="page-item" th:each="index : ${#numbers.sequence(1, resultMap.totalPage, 1)}" th:with="paging=${resultMap.paging}">
 									<a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./list(page=${index - 1},page=${paging.pageSize})}">
 										<span class="text-white" th:text="${index}"></span>
 									</a>

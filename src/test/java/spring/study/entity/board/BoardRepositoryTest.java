@@ -25,7 +25,7 @@ class BoardRepositoryTest {
 
         boardSaveDto.setTitle("제목입니다.");
         boardSaveDto.setContent("내용입니다.");
-        boardSaveDto.setRegisterId("test");
+        boardSaveDto.setRegisterName("test");
         boardSaveDto.setRegisterEmail("test");
 
         Long result = boardService.save(boardSaveDto);
@@ -34,7 +34,7 @@ class BoardRepositoryTest {
             System.out.println("# Success save() ~");
             findAll();
             findById(result);
-            findByName(boardSaveDto.getRegisterId());
+            findByName(boardSaveDto.getRegisterName());
             findByEmail(boardSaveDto.getRegisterEmail());
             updateBoard(boardSaveDto.getId());
         }
@@ -75,7 +75,7 @@ class BoardRepositoryTest {
         if (result.size() > 0) {
             System.out.println("# Success findByName() ~");
             for (Board b : result) {
-                System.out.println(b.getTitle() + " " + b.getRegisterId() + " " + b.getContent());
+                System.out.println(b.getTitle() + " " + b.getRegisterName() + " " + b.getContent());
             }
         }
         else {
@@ -89,7 +89,7 @@ class BoardRepositoryTest {
         if (result.size() > 0) {
             System.out.println("# Success findByEmail() ~");
             for (Board b : result) {
-                System.out.println(b.getTitle() + " " + b.getRegisterId() + " " + b.getContent());
+                System.out.println(b.getTitle() + " " + b.getRegisterName() + " " + b.getContent());
             }
         }
         else {
@@ -103,7 +103,7 @@ class BoardRepositoryTest {
         boardRequestDto.setId(id);
         boardRequestDto.setTitle("업데이트 제목");
         boardRequestDto.setContent("업데이트 내용");
-        boardRequestDto.setRegisterId("작성자");
+        boardRequestDto.setRegisterName("작성자");
 
         int result = boardService.updateBoard(boardRequestDto);
 
