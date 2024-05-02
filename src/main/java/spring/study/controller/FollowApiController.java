@@ -2,10 +2,7 @@ package spring.study.controller;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import spring.study.dto.follow.FollowRequestDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
@@ -19,28 +16,20 @@ import java.util.List;
 public class FollowApiController {
     private final FollowService followService;
 
-    @PatchMapping("/action")
-    public Long memberDetailAction(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
+    @PostMapping("/action")
+    public Long memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
 
-        List<Follow> follower = followService.findFollower(member.getId());
-        boolean status = false;
+        followRequestDto.setFollower(member.getId());
+        followRequestDto.setFollower_name(member.getName());
+        followRequestDto.setFollower_email(member.getEmail());
+        return followService.save(followRequestDto);
+    }
 
-        for (Follow f : follower) {
-            if (f.getFollowing().equals(followRequestDto.getFollowing())) {
-                status = true;
-                break;
-            }
-        }
+    @DeleteMapping("/action")
+    public Long memberUnfollow(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
+        Member member = (Member) session.getAttribute("member");
 
-        if (!status) {
-            followRequestDto.setFollower(member.getId());
-            followRequestDto.setFollower_name(member.getName());
-            followRequestDto.setFollower_email(member.getEmail());
-
-            return followService.save(followRequestDto);
-        }
-        else
-            return followService.deleteFollow(member.getId(), followRequestDto.getFollowing());
+        return followService.deleteFollow(member.getId(), followRequestDto.getFollowing());
     }
 }

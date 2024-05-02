@@ -99,8 +99,24 @@
             following_email: /*[[${member.email}]]*/
           }
 
-          $.ajax({
-            type: 'PATCH',
+          if (status) {
+            $.ajax({
+              type: 'DELETE',
+              url: '/follow/action',
+              dataType: 'JSON',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify(data),
+              success: function() {
+                window.location.reload();
+              },
+              error: function() {
+                alert("다시 시도하여주십시오.");
+              }
+            })
+          }
+          else {
+           $.ajax({
+            type: 'POST',
             url: '/follow/action',
             dataType: 'JSON',
             contentType: 'application/json; charset=utf-8',
@@ -112,6 +128,7 @@
               alert("다시 시도하여주십시오.");
             }
           })
+          }
         }
 	/*]]>*/
 </script>
