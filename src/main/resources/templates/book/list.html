@@ -10,9 +10,14 @@
     <div class="container">
         <h1>Book List</h1>
         <form id="frm" method="dialog">
-            <button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
-            <button type="button" class="btn btn-success" onclick="fnClear()">Clear</button>
-            <div >
+            <div class="float-left">
+                <button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
+                <button type="button" class="btn btn-success" onclick="fnClear()">Clear</button>
+            </div>
+            <div class="float-right">
+                <button type="button" id="admin" class="btn btn-success" onclick="javascript:location.href='/admin/book'">Book Admin</button>
+            </div>
+            <div>
                 <input type="text" class="form-control" id="title" name="title"
                        placeholder="Search Book" onkeypress="fnFind(event)">
             </div>
@@ -77,6 +82,12 @@
             src="/js/lib/bootstrap.min/js"></script>
     <script th:inline="javascript">
     /*<![CDATA[*/
+        const role = /*[[${role}]]*/;
+
+        if (role != "ADMIN") {
+            document.getElementById('admin').style.display = 'none';
+        }
+
     	function fnFind(e) {
     	    if (e.keyCode == 13) {
     	        const data = {
