@@ -11,11 +11,11 @@
         <h1>Book List</h1>
         <form id="frm" method="dialog">
             <div class="float-left">
-                <button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
-                <button type="button" class="btn btn-success" onclick="fnClear()">Clear</button>
+                <button type="button" class="btn btn-success" onclick="javascript:location.href='/admin/administrator'">Previous</button>
             </div>
             <div class="float-right">
-                <button type="button" id="admin" class="btn btn-success" onclick="javascript:location.href='/admin/book'">Book Admin</button>
+                <button type="button" class="btn btn-primary" onclick="fnSelectBorrow()">대출중인 책 보기</button>
+                <button type="button" class="btn btn-primary" onclick="fnSelectUnborrow()">비치중인 책 보기</button>
             </div>
             <div>
                 <input type="text" class="form-control" id="title" name="title"
@@ -82,12 +82,6 @@
             src="/js/lib/bootstrap.min/js"></script>
     <script th:inline="javascript">
     /*<![CDATA[*/
-        const role = /*[[${role}]]*/;
-
-        if (role != "ADMIN") {
-            document.getElementById('admin').style.display = 'none';
-        }
-
     	function fnFind(e) {
     	    if (e.keyCode == 13) {
     	        const data = {
@@ -101,7 +95,7 @@
                     contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify(data),
                     success: function() {
-                        window.location.reload();
+                        location.href = '/book/find?title='+data.title;
                     },
                     error: function() {
                         alert("다시 시도하여주십시오.");
@@ -110,12 +104,33 @@
     	    }
 		}
 
-		function fnClear() {
+		function fnSelectBorrow() {
 		    $.ajax({
 		        type: 'GET',
-		        url: '/book/clear'
-		    }).always(function() {
-		        window.location.reload();
+		        url: '/book/borrowStatus/' + '대출중' +  '/action',
+		        contentType: 'application/json; charset=utf-8',
+		        dataType: 'JSON',
+		        success: function() {
+		            location.href = '/book/borrowList?borw=대출중';
+		        },
+		        error: function() {
+		            alert('다시 시도하여주십시오');
+		        }
+		    })
+		}
+
+		function fnSelectUnborrow() {
+		    $.ajax({
+		        type: 'GET',
+		        url: '/book/borrowStatus/' + '비치중' + '/action',
+		        contentType: 'application/json; charset=utf-8',
+		        dataType: 'JSON',
+		        success: function() {
+		            location.href = '/book/borrowList?borw=비치중';
+		        },
+		        error: function() {
+		            alert('다시 시도하여주십시오');
+		        }
 		    })
 		}
 	/*]]>*/

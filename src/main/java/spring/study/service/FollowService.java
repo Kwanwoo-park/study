@@ -1,8 +1,8 @@
 package spring.study.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.follow.FollowResponseDto;
 import spring.study.entity.Follow;

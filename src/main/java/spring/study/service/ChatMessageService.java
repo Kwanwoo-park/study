@@ -1,9 +1,9 @@
 package spring.study.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.chat.ChatMessageResponseDto;
 import spring.study.entity.ChatMessage;
 import spring.study.repository.ChatMessageRepository;
@@ -21,6 +21,7 @@ public class ChatMessageService {
     @Transactional
     public Long save(ChatMessage chatMessage) { return chatMessageRepository.save(chatMessage).getId(); }
 
+    @Transactional(readOnly = true)
     public HashMap<String, Object> findMessage(String roomId) {
         HashMap<String, Object> message = new HashMap<>();
 

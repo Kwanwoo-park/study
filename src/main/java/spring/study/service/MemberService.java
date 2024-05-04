@@ -40,6 +40,7 @@ public class MemberService implements UserDetailsService {
         return member;
     }
 
+    @Transactional(readOnly = true)
     public HashMap<String, Object> findName(String name) {
         HashMap<String, Object> member = new HashMap<>();
 

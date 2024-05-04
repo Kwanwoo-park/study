@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.book.BookRequestDto;
+import spring.study.entity.Borrow;
 import spring.study.service.BookService;
 
 import java.util.HashMap;
@@ -26,10 +27,15 @@ public class BookApiController {
         return book;
     }
 
-    @GetMapping("/clear")
-    public void clear(HttpSession session) {
-        book = null;
-        session.removeAttribute("book");
+    @GetMapping("/borrowStatus/{borrow}/action")
+    public HashMap<String, Object> bookSelectBorrowAction(@PathVariable Borrow borrow,
+                                                          @RequestParam(required = false, defaultValue = "0") Integer page,
+                                                          @RequestParam(required = false, defaultValue = "5") Integer size,
+                                                          HttpSession session) {
+        book = bookService.findBorrow(borrow, page, size);
+        session.setAttribute("book", book);
+
+        return book;
     }
 
     @PatchMapping("/borrow/action")

@@ -1,9 +1,9 @@
 package spring.study.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.comment.CommentRequestDto;
 import spring.study.dto.comment.CommentResponseDto;
 import spring.study.entity.Comment;
@@ -23,6 +23,7 @@ public class CommentService {
     @Transactional
     public Long save(CommentRequestDto commentRequestDto) {return commentRepository.save(commentRequestDto.toEntity()).getId(); }
 
+    @Transactional(readOnly = true)
     public HashMap<String, Object> findAll() {
         list = commentRepository.findAll();
 
@@ -31,6 +32,7 @@ public class CommentService {
         return comment;
     }
 
+    @Transactional(readOnly = true)
     public HashMap<String, Object> findComment(Long bid) {
         list = commentRepository.findByBid(bid, Sort.by("id").descending());
 

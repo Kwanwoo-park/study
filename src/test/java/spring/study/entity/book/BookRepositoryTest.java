@@ -89,4 +89,21 @@ public class BookRepositoryTest {
             System.out.println("# Fail findAll() ~");
         }
     }
+
+    @Transactional
+    @Test
+    void findBorrowStatus() {
+        HashMap<String, Object> result = bookService.findBorrow(Borrow.비치중, 0, 5);
+
+        if (result != null) {
+            System.out.println("# Success findBorrowStatus() : " + result.toString());
+
+            for (String s: result.keySet()) {
+                System.out.println(result.get(s));
+            }
+        }
+        else {
+            System.out.println("# Fail findBorrowStatus() ~");
+        }
+    }
 }
