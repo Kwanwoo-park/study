@@ -14,8 +14,8 @@
                 <button type="button" class="btn btn-success" onclick="javascript:location.href='/admin/administrator'">Previous</button>
             </div>
             <div class="float-right">
-                <button type="button" class="btn btn-primary" onclick="fnSelectBorrow()">대출중인 책 보기</button>
-                <button type="button" class="btn btn-primary" onclick="fnSelectUnborrow()">비치중인 책 보기</button>
+                <button type="button" class="btn btn-primary" onclick="javascript:location.href='/book/borrowList?borw=대출중'">대출중인 책 보기</button>
+                <button type="button" class="btn btn-primary" onclick="javascript:location.href='/book/borrowList?borw=비치중'">비치중인 책 보기</button>
             </div>
             <div>
                 <input type="text" class="form-control" id="title" name="title"
@@ -88,19 +88,7 @@
 			        title : $("#title").val()
 			    }
 
-                $.ajax({
-                    type: 'GET',
-                    url: '/book/list/' +encodeURI(data.title) + '/action',
-                    dataType: 'JSON',
-                    contentType: 'application/json; charset=utf-8',
-                    data: JSON.stringify(data),
-                    success: function() {
-                        location.href = '/book/find?title='+data.title;
-                    },
-                    error: function() {
-                        alert("다시 시도하여주십시오.");
-                    }
-                })
+                location.href = '/book/find?title='+data.title;
     	    }
 		}
 
