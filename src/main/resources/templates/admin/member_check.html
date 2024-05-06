@@ -26,7 +26,7 @@
           <span th:text="${list.id}"></span>
         </td>
         <td>
-          <span th:text="${list.name}"></span>
+          <a th:href="@{/member/search/detail(email=${list.email})}"><span th:text="${list.name}"></span></a>
         </td>
         <td>
           <span th:text="${list.email}"></span>
@@ -40,7 +40,17 @@
       </tr>
     </tbody>
   </table>
-
+  <div class="row">
+    <div class="col">
+      <ul class="pagination">
+        <li class="page-item" th:each="index : ${#numbers.sequence(1, member.totalPage, 1)}" th:with="paging=${member.paging}">
+          <a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./memberCheck(page=${index - 1},page=${paging.pageSize})}">
+            <span class="text-white" th:text="${index}"></span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
   <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
 </div>
 <script src="/js/lib/jquery.min.js"></script>

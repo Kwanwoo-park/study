@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.service.MemberService;
@@ -18,6 +19,11 @@ public class AdminController {
 
     @GetMapping("/administrator")
     public String admin(HttpSession session){
+        if (session == null) {
+            return "redirect:/member/login?error=true&exception=Session Expired";
+        }
+
+
         Member member = (Member) session.getAttribute("member");
 
         if (member.getRole() != Role.ADMIN) {
@@ -28,8 +34,15 @@ public class AdminController {
         return "/admin/administrator";
     }
 
-    @GetMapping("/member_check")
-    public String member_check(Model model, HttpSession session){
+    @GetMapping("/memberCheck")
+    public String member_check(Model model, HttpSession session,
+                               @RequestParam(required = false, defaultValue = "0") Integer page,
+                               @RequestParam(required = false, defaultValue = "5") Integer size){
+        if (session == null) {
+            return "redirect:/member/login?error=true&exception=Session Expired";
+        }
+
+
         Member member = (Member) session.getAttribute("member");
 
         if (member.getRole() != Role.ADMIN) {
@@ -37,7 +50,7 @@ public class AdminController {
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
-        model.addAttribute("member", memberService.findAll());
+        model.addAttribute("member", memberService.findAll(page, size));
 
         return "/admin/member_check";
     }

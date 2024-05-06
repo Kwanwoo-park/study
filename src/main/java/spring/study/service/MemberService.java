@@ -1,6 +1,9 @@
 package spring.study.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,12 +33,15 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    public HashMap<String, Object> findAll() {
+    public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> member = new HashMap<>();
 
-        List<Member> list = memberRepository.findAll();
+        Page<Member> list = memberRepository.findAll(PageRequest.of(page, size, Sort.by("id").ascending()));
 
         member.put("list", list.stream().map(MemberResponseDto::new).collect(Collectors.toList()));
+        member.put("paging", list.getPageable());
+        member.put("totalCnt", list.getTotalElements());
+        member.put("totalPage", list.getTotalPages());
 
         return member;
     }

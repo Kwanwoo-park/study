@@ -75,7 +75,7 @@ public class MemberRepositoryTest {
     @Transactional
     @Test
     void findAll() {
-        Map<String, Object> result = memberService.findAll();
+        Map<String, Object> result = memberService.findAll(0, 5);
 
         if (result != null) {
             System.out.println("# Success findAll() : " + result.toString());
