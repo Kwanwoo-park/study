@@ -6,7 +6,6 @@ etc: Thymeleaf, JQuery<br>
 
 해야할 일
 <ol>
-    <li>DB 전면 개편(구상 중)</li>
     <li>코드 Refactoring</li>
 </ol>
 
@@ -30,6 +29,7 @@ etc: Thymeleaf, JQuery<br>
 개발 예정(계속해서 추가될 예정)
 <ul>
     <li>도서 대출</li>
+    <li>회원 권한 부여</li>
     <li>채팅에서 프로필 이미지 띄우기</li>
     <li>팔로워/팔로잉 목록에서 프로필 이미지 띄우기</li>
 </ul>
