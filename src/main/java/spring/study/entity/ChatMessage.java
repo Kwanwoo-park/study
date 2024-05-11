@@ -18,9 +18,6 @@ public class ChatMessage extends BasetimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    public enum MessageType {
-        ENTER, TALK, QUIT
-    }
 
     private MessageType type;
     private String roomId;

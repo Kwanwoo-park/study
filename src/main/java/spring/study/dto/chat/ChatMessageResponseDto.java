@@ -2,6 +2,7 @@ package spring.study.dto.chat;
 
 import lombok.Getter;
 import spring.study.entity.ChatMessage;
+import spring.study.entity.MessageType;
 
 @Getter
 public class ChatMessageResponseDto {
@@ -9,7 +10,7 @@ public class ChatMessageResponseDto {
     private String sender;
     private String email;
     private String message;
-    private ChatMessage.MessageType type;
+    private MessageType type;
 
     public ChatMessageResponseDto(ChatMessage entity) {
         this.roomId = entity.getRoomId();

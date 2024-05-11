@@ -59,8 +59,10 @@ public class MemberViewController {
             member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
             if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())){
-                memberService.updateMemberLastLogin(member.getEmail(), LocalDateTime.now());
-                session.setAttribute("member", member);
+                if (member.getRole() != Role.DENIED) {
+                    memberService.updateMemberLastLogin(member.getEmail(), LocalDateTime.now());
+                    session.setAttribute("member", member);
+                }
             }
             else {
                 return "redirect:/member/login?error=true&exception=Invalid Email or Password";
@@ -74,9 +76,13 @@ public class MemberViewController {
         if (member.getRole() == Role.ADMIN) {
             message = new AlertMessage(member.getName() + " 관리자님 환영합니다.", "/admin/administrator", RequestMethod.GET, null);
         }
-        else {
+        else if (member.getRole() == Role.USER){
             message = new AlertMessage(member.getName() + "님 환영합니다.", "/board/list", RequestMethod.GET, null);
         }
+        else {
+            return "redirect:/member/login?error=true&exception=Accept Denied";
+        }
+
 
         return message.showMessageAndRedirect(model);
     }

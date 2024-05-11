@@ -11,6 +11,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import spring.study.entity.ChatMember;
 import spring.study.entity.ChatMessage;
+import spring.study.entity.MessageType;
 import spring.study.service.ChatMemberService;
 import spring.study.service.ChatMessageService;
 import spring.study.service.ChatRoomService;
@@ -42,7 +43,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         chatMessage = objectMapper.readValue(payload, ChatMessage.class);
 
-        if (chatMessage.getType().equals(ChatMessage.MessageType.ENTER)) {
+        if (chatMessage.getType().equals(MessageType.ENTER)) {
             chatMessage.setMessage(chatMessage.getSender() + "님이 입장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
 
@@ -77,7 +78,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
                 chatMemberService.save(saveMem);
             }
-        } else if (chatMessage.getType().equals(ChatMessage.MessageType.QUIT)) {
+        } else if (chatMessage.getType().equals(MessageType.QUIT)) {
             chatMemberService.deleteRoomMember(chatMessage.getRoomId(), chatMessage.getSender());
 
             if (chatRoomService.findRoom(chatMessage.getRoomId()).getCount()-1 > 0) {

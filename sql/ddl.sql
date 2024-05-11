@@ -33,6 +33,14 @@ create table book (
     borw int default 0
 );
 
+create table book_borrow (
+    id bigint auto_increment primary key,
+    bnum varchar(20) not null,
+    title varchar(20) not null,
+    mid bigint not null,
+    name varchar(100) not null
+);
+
 create table comment (
     id bigint auto_increment primary key,
     comment text not null,

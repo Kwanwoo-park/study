@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.entity.ChatMember;
 import spring.study.entity.ChatMessage;
 import spring.study.entity.ChatRoom;
+import spring.study.entity.MessageType;
 import spring.study.service.ChatMemberService;
 import spring.study.service.ChatMessageService;
 import spring.study.service.ChatRoomService;
@@ -29,7 +30,7 @@ public class ChatRepositoryTest {
     @Test
     void save() {
         ChatRoom chatRoom = new ChatRoom(1L, "row08wr08w0", "test", 1L);
-        ChatMessage chatMessage = new ChatMessage(ChatMessage.MessageType.ENTER, chatRoom.getRoomId(), "test", "test", "test@test.com");
+        ChatMessage chatMessage = new ChatMessage(MessageType.ENTER, chatRoom.getRoomId(), "test", "test", "test@test.com");
         ChatMember chatMember = new ChatMember(1L, chatRoom.getRoomId(), chatMessage.getSender(), "test@test.com");
 
         Long result_room = chatRoomService.save(chatRoom);

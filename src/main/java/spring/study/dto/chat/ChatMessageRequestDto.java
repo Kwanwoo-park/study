@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import spring.study.entity.ChatMessage;
+import spring.study.entity.MessageType;
 
 @Getter
 @Setter
@@ -13,7 +14,7 @@ public class ChatMessageRequestDto {
     private String sender;
     private String message;
     private String email;
-    private ChatMessage.MessageType type;
+    private MessageType type;
 
     public ChatMessage toEntity() {
         return ChatMessage.builder()

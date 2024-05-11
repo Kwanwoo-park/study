@@ -4,10 +4,12 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import spring.study.dto.book.BookBorrowRequestDto;
 import spring.study.dto.book.BookRequestDto;
 import spring.study.entity.Book;
 import spring.study.entity.Borrow;
 import spring.study.entity.Condition;
+import spring.study.service.BookBorrowService;
 import spring.study.service.BookService;
 
 import java.util.HashMap;
@@ -17,6 +19,9 @@ import java.util.Map;
 public class BookRepositoryTest {
     @Autowired
     private BookService bookService;
+
+    @Autowired
+    private BookBorrowService bookBorrowService;
 
     @Transactional
     @Test
@@ -57,6 +62,29 @@ public class BookRepositoryTest {
 
         if (book != null) System.out.println("# Success findBook() : " + book.toString());
         else System.out.println("# Fail findBook() ~");
+    }
+
+    @Transactional
+    @Test
+    void bookBorrow() {
+        BookBorrowRequestDto borrowRequestDto = new BookBorrowRequestDto();
+
+        borrowRequestDto.setBnum("123");
+        borrowRequestDto.setTitle("test");
+        borrowRequestDto.setMid(1L);
+        borrowRequestDto.setName("test");
+
+        if (bookBorrowService.bookBorrow(borrowRequestDto).length() > 0) System.out.println("# Success bookBorrow()");
+        else System.out.println("# Fail bookBorrow()");
+
+        bookReturn(borrowRequestDto.getBnum(), borrowRequestDto.getTitle());
+    }
+
+    void bookReturn(String bnum, String title) {
+        int result = bookBorrowService.bookReturn(bnum, title);
+
+        if (result > 0) System.out.println("# Success bookReturn()");
+        else System.out.println("# Fail bookReturn()");
     }
 
     void bookBorrow(String bnum) {
