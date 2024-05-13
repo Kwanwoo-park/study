@@ -38,7 +38,8 @@ create table book_borrow (
     bnum varchar(20) not null,
     title varchar(20) not null,
     mid bigint not null,
-    name varchar(100) not null
+    name varchar(100) not null,
+    email varchar(200) not null
 );
 
 create table comment (

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.dto.book.BookRequestDto;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
+import spring.study.service.BookBorrowService;
 import spring.study.service.BookService;
 
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 @RequestMapping("/book")
 public class BookViewController {
     private final BookService bookService;
+    private final BookBorrowService bookBorrowService;
 
     @GetMapping("/list")
     public String list(Model model,
@@ -120,6 +122,7 @@ public class BookViewController {
         }
 
         model.addAttribute("book", bookService.findBookByTitle(title));
+        //model.addAttribute("name", bookBorrowService.findTitle(title));
 
         return "/book/detail";
     }

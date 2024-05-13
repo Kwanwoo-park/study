@@ -14,6 +14,7 @@ public class BookBorrowRequestDto {
     private String title;
     private Long mid;
     private String name;
+    private String email;
 
     public BookBorrow toEntity() {
         return BookBorrow.builder()
@@ -21,6 +22,7 @@ public class BookBorrowRequestDto {
                 .title(title)
                 .mid(mid)
                 .name(name)
+                .email(email)
                 .build();
     }
 }

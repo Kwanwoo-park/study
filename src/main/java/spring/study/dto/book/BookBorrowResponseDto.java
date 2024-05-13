@@ -10,12 +10,14 @@ public class BookBorrowResponseDto {
     private String title;
     private Long mid;
     private String name;
+    private String email;
 
     public BookBorrowResponseDto(BookBorrow entity) {
         this.id = entity.getId();
         this.title = entity.getTitle();
         this.mid = entity.getMid();
         this.name = entity.getName();
+        this.email = entity.getEmail();
     }
 
     @Override

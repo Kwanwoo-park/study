@@ -27,6 +27,9 @@
       <label class="form-label">condition: </label>
       <label class="form-label" th:text="${book.cond}"></label>
     </div>
+    <div class="mb-3" th:if="string.equals(${book.borw}, '대출중')">
+      <input type="text" class="form-control" id="email" name="email" placeholder="Input email">
+    </div>
     <button type="button" class="btn btn-primary" id="borrow" onclick="fnBorrow()">대출</button>
   </form>
 </div>
@@ -37,10 +40,6 @@
 /*<![CDATA[*/
   const borrow = /*[[${book.borw}]]*/;
 
-  const data = {
-      bnum : /*[[${book.bnum}]]*/
-  }
-
   if (borrow == '대출중') {
     document.getElementById("borrow").innerText = "반납";
   }
@@ -49,6 +48,12 @@
   }
 
   function fnBorrow() {
+    const data = {
+      bnum : /*[[${book.bnum}]]*/,
+      title : /*[[${book.title}]]*/,
+      email : $("#email").val()
+  }
+
     if (borrow == '대출중') {
       $.ajax({
         type: 'PATCH',

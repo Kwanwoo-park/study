@@ -19,13 +19,15 @@ public class BookBorrow {
     private String title;
     private Long mid;
     private String name;
+    private String email;
 
     @Builder
-    public BookBorrow(Long id, String bnum, String title, Long mid, String name) {
+    public BookBorrow(Long id, String bnum, String title, Long mid, String name, String email) {
         this.id = id;
         this.bnum = bnum;
         this.title = title;
         this.mid = mid;
         this.name = name;
+        this.email = email;
     }
 }
