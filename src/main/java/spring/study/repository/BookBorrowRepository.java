@@ -11,6 +11,8 @@ public interface BookBorrowRepository extends JpaRepository<BookBorrow, String> 
     static final String book_return = "delete from book_borrow where bnum = :bnum " +
                                         "and title = :title";
 
+    public BookBorrow findByTitle(String title);
+
     @Transactional
     @Modifying
     @Query(value = book_return, nativeQuery = true)

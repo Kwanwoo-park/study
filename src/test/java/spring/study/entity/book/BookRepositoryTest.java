@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.dto.book.BookBorrowRequestDto;
 import spring.study.dto.book.BookRequestDto;
 import spring.study.entity.Book;
+import spring.study.entity.BookBorrow;
 import spring.study.entity.Borrow;
 import spring.study.entity.Condition;
 import spring.study.service.BookBorrowService;
@@ -77,7 +78,15 @@ public class BookRepositoryTest {
         if (bookBorrowService.bookBorrow(borrowRequestDto).length() > 0) System.out.println("# Success bookBorrow()");
         else System.out.println("# Fail bookBorrow()");
 
+        bookBorrowFind(borrowRequestDto.getTitle());
         bookReturn(borrowRequestDto.getBnum(), borrowRequestDto.getTitle());
+    }
+
+    void bookBorrowFind(String title) {
+        BookBorrow borrow = bookBorrowService.findTitle(title);
+
+        if (borrow.getId() > 0) System.out.println(borrow.getBnum() + " " + borrow.getTitle() + " " + borrow.getName());
+        else System.out.println("# Fail bookBorrowFind()");
     }
 
     void bookReturn(String bnum, String title) {
