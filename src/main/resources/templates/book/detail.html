@@ -27,7 +27,7 @@
       <label class="form-label">condition: </label>
       <label class="form-label" th:text="${book.cond}"></label>
     </div>
-    <div class="mb-3" th:if="string.equals(${book.borw}, '대출중')">
+    <div class="mb-3" th:if="${#strings.equals(book.borw, '대출중')}">
       <input type="text" class="form-control" id="email" name="email" placeholder="Input email">
     </div>
     <button type="button" class="btn btn-primary" id="borrow" onclick="fnBorrow()">대출</button>

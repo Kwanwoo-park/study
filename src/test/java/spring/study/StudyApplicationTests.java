@@ -1,17 +1,24 @@
 package spring.study;
 
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import spring.study.dto.board.BoardRequestDto;
-import spring.study.dto.board.BoardResponseDto;
-import spring.study.service.BoardService;
+import spring.study.service.TestService;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @SpringBootTest
 class StudyApplicationTests {
+    @Autowired
+    private TestService testService;
 
+    @Test
+    void test() {
+        List<Object[]> result = testService.getCommentWithMember("박관우");
+
+        for(Object[] arr: result) {
+            System.out.println(Arrays.toString(arr));
+        }
+    }
 }
