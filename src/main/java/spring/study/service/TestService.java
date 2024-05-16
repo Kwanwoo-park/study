@@ -11,5 +11,7 @@ import java.util.List;
 public class TestService {
     private final TestRepository testRepository;
 
-    public List<Object[]> getCommentWithMember(String name) { return testRepository.getBoardWithMember(name); }
+    public List<Object[]> getCommentWithMember(Long bid) { return testRepository.getCommentWithMember(bid); }
+
+    public List<Object[]> getMessageWithMember(String roomId) { return testRepository.getMessageWithMember(roomId); }
 }

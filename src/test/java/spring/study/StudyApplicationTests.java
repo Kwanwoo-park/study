@@ -14,10 +14,19 @@ class StudyApplicationTests {
     private TestService testService;
 
     @Test
-    void test() {
-        List<Object[]> result = testService.getCommentWithMember("박관우");
+    void getComment() {
+        List<Object[]> result = testService.getCommentWithMember(1234567890L);
 
-        for(Object[] arr: result) {
+        for(Object[] arr : result) {
+            System.out.println(Arrays.toString(arr));
+        }
+    }
+
+    @Test
+    void getMessage() {
+        List<Object[]> result = testService.getMessageWithMember("roomId");
+
+        for(Object[] arr : result) {
             System.out.println(Arrays.toString(arr));
         }
     }
