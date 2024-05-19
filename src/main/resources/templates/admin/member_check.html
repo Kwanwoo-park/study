@@ -36,7 +36,7 @@
           <span th:text="${list.role}"></span>
         </td>
         <td>
-          <span th:text="${list.lastLoginTime}"></span>
+          <span th:text="${#temporals.format(list.lastLoginTime, 'yyyy-MM-dd')}"></span>
         </td>
       </tr>
     </tbody>

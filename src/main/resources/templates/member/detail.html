@@ -59,7 +59,7 @@
             <span th:text="${list.readCnt}"></span>
           </td>
           <td>
-            <span th:text="${list.registerTime}"></span>
+            <span th:text="${#temporals.format(list.registerTime, 'yyyy-MM-dd')}"></span>
           </td>
         </tr>
       </tbody>
