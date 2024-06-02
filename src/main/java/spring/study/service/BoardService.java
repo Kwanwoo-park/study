@@ -41,11 +41,6 @@ public class BoardService {
     public BoardResponseDto findById(Long id) {
         return new BoardResponseDto(boardRepository.findById(id).get());
     }
-
-    public List<Board> findName(String name) { return boardRepository.findByRegisterName(name); }
-
-    public List<Board> findEmail(String email) { return boardRepository.findByRegisterEmail(email); }
-
     public int updateBoard(BoardRequestDto boardRequestDto) {
         return boardRepository.updateBoard(boardRequestDto);
     }

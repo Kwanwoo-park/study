@@ -1,20 +1,15 @@
 package spring.study.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-@EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
 @Getter
 @Setter
@@ -22,15 +17,29 @@ import java.util.Set;
 public class Member extends BasetimeEntity implements UserDetails {
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id")
     private Long id;
+
+    @NotNull
     private String email;
+
+    @NotNull
     private String pwd;
+
+    @NotNull
     private String name;
+
+    @NotNull
     private Role role;
-    private LocalDateTime lastLoginTime;
+
+    @NotNull
     private String profile;
+    @Column(name = "last_login_time")
+    private LocalDateTime lastLoginTime;
+
+    @OneToMany(mappedBy = "member")
+    private List<Board> board = new ArrayList<>();
 
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile) {
@@ -80,27 +89,7 @@ public class Member extends BasetimeEntity implements UserDetails {
         return true;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getPwd() {
-        return pwd;
-    }
-
-    public LocalDateTime getLastLoginTime() {
-        return lastLoginTime;
+    public void addBoard(Board board) {
+        board.addMember(this);
     }
 }

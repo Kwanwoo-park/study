@@ -1,99 +1,158 @@
 package spring.study.entity.member;
 
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import spring.study.dto.member.MemberRequestDto;
+import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
-import spring.study.service.MemberService;
-import java.time.LocalDateTime;
-import java.util.Map;
+import spring.study.repository.MemberRepository;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 public class MemberRepositoryTest {
     @Autowired
-    MemberService memberService;
+    MemberRepository memberRepository;
 
     @Transactional
     @Test
     void save() {
-        MemberRequestDto memberSaveDto = new MemberRequestDto();
+        //given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .pwd("test")
+                .name("test")
+                .role(Role.USER)
+                .profile("1.jpg")
+                .build();
 
-        memberSaveDto.setEmail("test");
-        memberSaveDto.setPassword("test");
-        memberSaveDto.setName("test");
-        memberSaveDto.setRole(Role.USER);
-        memberSaveDto.setProfile("1.img");
+        //when
+        Member save = memberRepository.save(member);
 
-        Long result = memberService.save(memberSaveDto);
-
-        if (result > 0) {
-            assertThat("#Success Save");
-            find();
-            findName();
-        }
+        //then
+        assertThat(save.getName()).isEqualTo(member.getName());
+        assertThat(save.getEmail()).isEqualTo(member.getEmail());
     }
 
     @Transactional
     @Test
-    void update(){
-        int result = memberService.updateMemberLastLogin("test", LocalDateTime.now());
-
-        if (result > 0) {
-            assertThat("Success update");
-        }
-    }
-
     void find() {
-        Member member = new Member();
-        member.setName("test");
+        //given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .pwd("test")
+                .name("test")
+                .role(Role.USER)
+                .profile("1.jpg")
+                .build();
 
-        Member member2 = (Member) memberService.loadUserByUsername("test");
+        Member save = memberRepository.save(member);
 
-        assertThat(member.getName()).isEqualTo(member2.getName());
-    }
+        //when
+        Member result = memberRepository.findByEmail("test@test.com");
 
-    @Test
-    void findName() {
-        Map<String, Object> result = memberService.findName("test");
-
-        if (result != null) {
-            System.out.println("# Success findName() : " + result.toString());
-
-            for (String s : result.keySet()) {
-                System.out.println(result.get(s));
-            }
-        }
-        else
-            System.out.println("# Fail findAll() ~");
+        //then
+        assertThat(result.getName()).isEqualTo(save.getName());
     }
 
     @Transactional
     @Test
     void findAll() {
-        Map<String, Object> result = memberService.findAll(0, 5);
+        //given
+        Member member1 = Member.builder()
+                .email("test@test.com")
+                .pwd("test")
+                .name("test")
+                .role(Role.USER)
+                .profile("1.jpg")
+                .build();
 
-        if (result != null) {
-            System.out.println("# Success findAll() : " + result.toString());
+        Member member2 = Member.builder()
+                .email("test2@test.com")
+                .pwd("test")
+                .name("test2")
+                .role(Role.USER)
+                .profile("2.jpg")
+                .build();
 
-            for (String s : result.keySet()) {
-                System.out.println(result.get(s));
-            }
-        }
-        else
-            System.out.println("# Fail findAll() ~");
+        Member save1 = memberRepository.save(member1);
+        Member save2 = memberRepository.save(member2);
+
+        //when
+        List<Member> memberList = memberRepository.findAll(Sort.by("id").ascending());
+
+        //Then
+        assertThat(save1.getName()).isEqualTo(memberList.get(0).getName());
+        assertThat(save2.getName()).isEqualTo(memberList.get(1).getName());
+
+        assertThat(save1.getEmail()).isEqualTo(memberList.get(0).getEmail());
+        assertThat(save2.getEmail()).isEqualTo(memberList.get(1).getEmail());
     }
 
     @Transactional
     @Test
-    void updatePassword() {
-        Member member = new Member();
-        member.setEmail("test");
+    void findName() {
+        //given
+        Member member1 = Member.builder()
+                .email("test@test.com")
+                .pwd("test")
+                .name("test")
+                .role(Role.USER)
+                .profile("1.jpg")
+                .build();
 
-        memberService.updateMemberPassword(member.getEmail(), "test");
+        Member member2 = Member.builder()
+                .email("test2@test.com")
+                .pwd("test")
+                .name("test")
+                .role(Role.USER)
+                .profile("2.jpg")
+                .build();
+
+        Member save1 = memberRepository.save(member1);
+        Member save2 = memberRepository.save(member2);
+
+        //when
+        List<Member> result = memberRepository.findByName("test");
+
+        //then
+        assertThat(save1.getEmail()).isEqualTo(result.get(0).getEmail());
+        assertThat(save2.getEmail()).isEqualTo(result.get(1).getEmail());
+    }
+
+    @Transactional
+    @Test
+    void update() {
+        //given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .pwd("test")
+                .name("test")
+                .role(Role.USER)
+                .profile("1.jpg")
+                .build();
+
+        Member save = memberRepository.save(member);
+        Member result1 = null, result2 = null;
+
+        //when
+        save.setPwd("test2");
+        int update1 = memberRepository.updateMemberPassword(save.getEmail(), save.getPwd());
+        if (update1 > 0)
+            result1 = memberRepository.findByEmail(save.getEmail());
+
+
+        save.setProfile("2.jpg");
+        int update2 = memberRepository.updateMemberProfile(save.getEmail(), save.getProfile());
+        if (update2 > 0)
+            result2 = memberRepository.findByEmail(save.getEmail());
+
+        //then
+        if (result1 != null) assertThat(save.getPwd()).isEqualTo(result1.getPwd());
+        if (result2 != null) assertThat(save.getProfile()).isEqualTo(result2.getProfile());
     }
 }

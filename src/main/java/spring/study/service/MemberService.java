@@ -32,6 +32,9 @@ public class MemberService implements UserDetailsService {
         return memberRepository.save(memberSaveDto.toEntity()).getId();
     }
 
+    @Transactional
+    public Member save(Member member) { return memberRepository.save(member); }
+
     @Transactional(readOnly = true)
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> member = new HashMap<>();
@@ -55,6 +58,11 @@ public class MemberService implements UserDetailsService {
         member.put("list", list.stream().map(MemberResponseDto::new).collect(Collectors.toList()));
 
         return member;
+    }
+
+    @Transactional
+    public List<Member> findByName(String name) {
+        return memberRepository.findByName(name);
     }
 
     public Member findMember(String email) {

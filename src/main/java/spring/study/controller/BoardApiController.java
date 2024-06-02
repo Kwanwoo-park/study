@@ -20,8 +20,7 @@ public class BoardApiController {
         Long result;
 
         if (boardRequestDto.getContent() != null){
-            boardRequestDto.setRegisterName(member.getName());
-            boardRequestDto.setRegisterEmail(member.getEmail());
+            boardRequestDto.setMember(member);
             result = boardService.save(boardRequestDto);
 
             if (result < 0) {

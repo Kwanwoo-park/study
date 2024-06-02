@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import spring.study.entity.Board;
+import spring.study.entity.Member;
 
 @Getter
 @Setter
@@ -12,15 +13,12 @@ public class BoardRequestDto {
     private Long id;
     private String title;
     private String content;
-    private String registerName;
-    private String registerEmail;
+    private Member member;
 
     public Board toEntity() {
         return Board.builder()
                 .title(title)
                 .content(content)
-                .registerName(registerName)
-                .registerEmail(registerEmail)
                 .build();
     }
 }

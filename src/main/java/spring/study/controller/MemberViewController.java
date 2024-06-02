@@ -96,12 +96,12 @@ public class MemberViewController {
     public String detail(Model model, HttpSession session){
         if (session != null) {
             member = (Member) session.getAttribute("member");
-            List<Board> list = boardService.findEmail(member.getEmail());
+            //List<Board> list = boardService.findEmail(member.getEmail());
 
             model.addAttribute("member", member);
             model.addAttribute("follower", followService.countFollowing(member.getId()));
             model.addAttribute("following", followService.countFollower(member.getId()));
-            model.addAttribute("list", list);
+            //model.addAttribute("list", list);
         }
         else {
             return "redirect:/member/login?error=true&exception=Not Found account";
@@ -165,7 +165,7 @@ public class MemberViewController {
         model.addAttribute("equal_check", search_member.getEmail().equals(member.getEmail()));
         model.addAttribute("follower", followService.countFollowing(search_member.getId()));
         model.addAttribute("following", followService.countFollower(search_member.getId()));
-        model.addAttribute("list", boardService.findEmail(search_member.getEmail()));
+        //model.addAttribute("list", boardService.findEmail(search_member.getEmail()));
 
         for (Follow f : follower) {
             if (f.getFollowing().equals(search_member.getId())) {

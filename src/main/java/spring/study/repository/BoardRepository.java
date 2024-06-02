@@ -8,8 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.Board;
 
-import java.util.List;
-
 public interface BoardRepository extends JpaRepository<Board, Long> {
     static final String update_board = "update board " +
             "set title = :#{#boardRequestDto.title}, " +
@@ -39,7 +37,5 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @Query(value = delete_board, nativeQuery = true)
     public int deleteBoard(@Param("deleteList") Long[] deleteList);
 
-    public List<Board> findByRegisterName(String name);
-
-    public List<Board> findByRegisterEmail(String email);
+    public Board findByTitle(String title);
 }
