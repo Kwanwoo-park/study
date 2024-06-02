@@ -60,7 +60,7 @@ public class MemberViewController {
 
             if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())){
                 if (member.getRole() != Role.DENIED) {
-                    memberService.updateMemberLastLogin(member.getEmail(), LocalDateTime.now());
+                    memberService.updateLastLoginTime(member.getId(), LocalDateTime.now());
                     session.setAttribute("member", member);
                 }
             }

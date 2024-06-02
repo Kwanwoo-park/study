@@ -3,6 +3,8 @@ package spring.study.controller;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
@@ -30,7 +32,7 @@ public class MemberApiController {
     }
 
     @PatchMapping("/detail/action")
-    public int detailAction(@RequestParam MultipartFile file, HttpSession session) throws IOException {
+    public Member detailAction(@RequestParam MultipartFile file, HttpSession session) throws IOException {
         String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         member = (Member) session.getAttribute("member");
@@ -41,18 +43,18 @@ public class MemberApiController {
             file.transferTo(new File(fileDir + file.getOriginalFilename()));
         }
 
-        int result = memberService.updateMemberProfile(member.getEmail(), file.getOriginalFilename());
-
-        member.setProfile(file.getOriginalFilename());
+        memberService.updateProfile(member.getId(), file.getOriginalFilename());
 
         session.setAttribute("member", member);
 
-        return result;
+        return member;
     }
 
     @GetMapping("/find/{email}/action")
     @ResponseBody
     public Member findAction(@PathVariable String email, HttpSession session) {
+        member = (Member) session.getAttribute("member");
+
         member = memberService.findMember(email);
 
         session.setAttribute("member", member);
@@ -61,15 +63,19 @@ public class MemberApiController {
     }
 
     @PatchMapping("/updatePassword/action")
-    public int updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpSession session) {
+    public ResponseEntity updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpSession session) {
+        member = (Member) session.getAttribute("member");
+
+        memberService.updatePwd(member.getId(), memberUpdateDto.getPassword());
+
         member = null;
         session.invalidate();
 
-        return memberService.updateMemberPassword(memberUpdateDto.getEmail(), memberUpdateDto.getPassword());
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @DeleteMapping("/withdrawal/action")
-    public void withdrawalAction(HttpSession session) {
+    public ResponseEntity withdrawalAction(HttpSession session) {
         member = (Member) session.getAttribute("member");
 
         memberService.deleteById(member.getId());
@@ -77,6 +83,8 @@ public class MemberApiController {
         member = null;
 
         session.invalidate();
+
+        return new ResponseEntity(HttpStatus.OK);
     }
 
 

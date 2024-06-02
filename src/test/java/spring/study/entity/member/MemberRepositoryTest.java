@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.repository.MemberRepository;
+import spring.study.service.MemberService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -17,6 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 public class MemberRepositoryTest {
     @Autowired
     MemberRepository memberRepository;
+    @Autowired
+    MemberService memberService;
 
     @Transactional
     @Test
@@ -137,22 +141,18 @@ public class MemberRepositoryTest {
                 .build();
 
         Member save = memberRepository.save(member);
-        Member result1 = null, result2 = null;
 
         //when
-        save.setPwd("test2");
-        int update1 = memberRepository.updateMemberPassword(save.getEmail(), save.getPwd());
-        if (update1 > 0)
-            result1 = memberRepository.findByEmail(save.getEmail());
-
-
-        save.setProfile("2.jpg");
-        int update2 = memberRepository.updateMemberProfile(save.getEmail(), save.getProfile());
-        if (update2 > 0)
-            result2 = memberRepository.findByEmail(save.getEmail());
+        memberService.updatePwd(save.getId(), "test2");
+        memberService.updateProfile(save.getId(), "2.jpg");
+        LocalDateTime time = LocalDateTime.now();
+        memberService.updateLastLoginTime(save.getId(), time);
 
         //then
-        if (result1 != null) assertThat(save.getPwd()).isEqualTo(result1.getPwd());
-        if (result2 != null) assertThat(save.getProfile()).isEqualTo(result2.getProfile());
+        Member result = memberRepository.findByEmail(save.getEmail());
+
+        assertThat(result.getPwd()).isEqualTo("test2");
+        assertThat(result.getProfile()).isEqualTo("2.jpg");
+        assertThat(result.getLastLoginTime()).isEqualTo(time);
     }
 }

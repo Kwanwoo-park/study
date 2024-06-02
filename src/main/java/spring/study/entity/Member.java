@@ -3,6 +3,7 @@ package spring.study.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,6 +14,7 @@ import java.util.*;
 @NoArgsConstructor
 @Getter
 @Setter
+@DynamicUpdate
 @Entity(name = "member")
 public class Member extends BasetimeEntity implements UserDetails {
     private static final long serialVersionUID = 1L;
@@ -91,5 +93,17 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void addBoard(Board board) {
         board.addMember(this);
+    }
+
+    public void changeProfile(String profile) {
+        this.profile = profile;
+    }
+
+    public void changePwd(String pwd) {
+        this.pwd = pwd;
+    }
+
+    public void changeLastLoginTime(LocalDateTime lastLoginTime) {
+        this.lastLoginTime = lastLoginTime;
     }
 }

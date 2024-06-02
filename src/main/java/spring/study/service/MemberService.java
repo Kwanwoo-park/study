@@ -1,6 +1,8 @@
 package spring.study.service;
 
+import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,10 +24,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
+    private final EntityManagerFactory emf;
 
     @Transactional
     public Long save(MemberRequestDto memberSaveDto) {
@@ -60,7 +64,6 @@ public class MemberService implements UserDetailsService {
         return member;
     }
 
-    @Transactional
     public List<Member> findByName(String name) {
         return memberRepository.findByName(name);
     }
@@ -71,17 +74,31 @@ public class MemberService implements UserDetailsService {
 
     public void deleteById(Long id) { memberRepository.deleteById(id); }
 
-    public int updateMemberLastLogin(@Param("email") String email,
-                                     @Param("lastLoginTime") LocalDateTime lastLoginTime) {
-        return memberRepository.updateMemberLastLogin(email, lastLoginTime);
+    @Transactional
+    public void updateProfile(Long id, String profile) {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
+
+        member.changeProfile(profile);
     }
 
-    public int updateMemberPassword(@Param("email") String email, @Param("password") String password) {
-        return memberRepository.updateMemberPassword(email, new BCryptPasswordEncoder().encode(password));
+    @Transactional
+    public void updatePwd(Long id, String pwd) {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
+
+        member.changePwd(pwd);
     }
 
-    public int updateMemberProfile(@Param("email") String email, @Param("profile") String profile) {
-        return memberRepository.updateMemberProfile(email, profile);
+    @Transactional
+    public void updateLastLoginTime(Long id, LocalDateTime lastLoginTime) {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
+
+        member.changeLastLoginTime(lastLoginTime);
     }
 
     @Override
