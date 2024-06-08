@@ -9,7 +9,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.alert.AlertMessage;
 import spring.study.dto.member.MemberRequestDto;
-import spring.study.entity.Board;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
@@ -60,7 +59,7 @@ public class MemberViewController {
 
             if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())){
                 if (member.getRole() != Role.DENIED) {
-                    memberService.updateLastLoginTime(member.getId(), LocalDateTime.now());
+                    memberService.updateLastLoginTime(member.getId());
                     session.setAttribute("member", member);
                 }
             }

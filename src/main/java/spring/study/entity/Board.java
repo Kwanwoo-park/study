@@ -24,7 +24,7 @@ public class Board extends BasetimeEntity {
     private Member member;
 
     @Builder
-    public Board(Long id, String title, String content, int readCnt) {
+    public Board(Long id, String title, String content, int readCnt, Member member) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -32,7 +32,19 @@ public class Board extends BasetimeEntity {
     }
 
     public void addMember(Member member) {
-        member.getBoard().add(this);
         this.member = member;
+        member.getBoard().add(this);
+    }
+
+    public void changeReadCnt() {
+        this.readCnt++;
+    }
+
+    public void changeContent(String content) {
+        this.content = content;
+    }
+
+    public void changeTitle(String title) {
+        this.title = title;
     }
 }

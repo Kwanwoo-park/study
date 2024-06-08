@@ -10,6 +10,8 @@ import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.board.BoardResponseDto;
 import spring.study.entity.Board;
 import spring.study.repository.BoardRepository;
+
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,12 +43,25 @@ public class BoardService {
     public BoardResponseDto findById(Long id) {
         return new BoardResponseDto(boardRepository.findById(id).get());
     }
-    public int updateBoard(BoardRequestDto boardRequestDto) {
-        return boardRepository.updateBoard(boardRequestDto);
+
+    @Transactional
+    public void updateBoard(Long id, String title, String content) {
+        Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(
+                "존재하지 않는 게시글입니다."
+        ));
+
+        board.changeContent(content);
+        board.changeTitle(title);
+        board.changeUpdateTime(LocalDateTime.now());
     }
 
-    public int updateBoardReadCntInc(Long id) {
-        return boardRepository.updateBoardReadCntInc(id);
+    @Transactional
+    public void updateBoardReadCntInc(Long id) {
+        Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(
+                "존재하지 않는 게시글입니다."
+        ));
+
+        board.changeReadCnt();
     }
 
     public void deleteById(Long id) {

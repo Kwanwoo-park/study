@@ -9,28 +9,9 @@ import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.Board;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    static final String update_board = "update board " +
-            "set title = :#{#boardRequestDto.title}, " +
-            "content = :#{#boardRequestDto.content}, " +
-            "update_time = NOW() " +
-            "where id = :#{#boardRequestDto.id}";
-
-    static final String update_board_read_cnt_inc = "update board "
-            + "set read_cnt = read_cnt + 1 "
-            + "where id = :id";
 
     static final String delete_board = "delete from board "
             + "where id in (:deleteList)";
-
-    @Transactional
-    @Modifying
-    @Query(value = update_board, nativeQuery = true)
-    public int updateBoard(@Param("boardRequestDto")BoardRequestDto boardRequestDto);
-
-    @Transactional
-    @Modifying
-    @Query(value = update_board_read_cnt_inc, nativeQuery = true)
-    public int updateBoardReadCntInc(@Param("id") Long id);
 
     @Transactional
     @Modifying

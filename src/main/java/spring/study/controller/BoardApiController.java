@@ -2,6 +2,8 @@ package spring.study.controller;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.Member;
@@ -35,8 +37,10 @@ public class BoardApiController {
     }
 
     @PatchMapping("/view/action")
-    public int boardViewAction(@RequestBody BoardRequestDto boardRequestDto){
-        return boardService.updateBoard(boardRequestDto);
+    public ResponseEntity boardViewAction(@RequestBody BoardRequestDto boardRequestDto){
+        boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getTitle(), boardRequestDto.getContent());
+
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @DeleteMapping("/view/delete")

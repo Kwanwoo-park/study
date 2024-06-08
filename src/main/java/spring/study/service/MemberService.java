@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 @Service
 public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
-    private final EntityManagerFactory emf;
 
     @Transactional
     public Long save(MemberRequestDto memberSaveDto) {
@@ -93,12 +92,12 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public void updateLastLoginTime(Long id, LocalDateTime lastLoginTime) {
+    public void updateLastLoginTime(Long id) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));
 
-        member.changeLastLoginTime(lastLoginTime);
+        member.changeLastLoginTime(LocalDateTime.now());
     }
 
     @Override

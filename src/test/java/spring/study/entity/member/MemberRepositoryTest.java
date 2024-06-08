@@ -146,13 +146,12 @@ public class MemberRepositoryTest {
         memberService.updatePwd(save.getId(), "test2");
         memberService.updateProfile(save.getId(), "2.jpg");
         LocalDateTime time = LocalDateTime.now();
-        memberService.updateLastLoginTime(save.getId(), time);
+        memberService.updateLastLoginTime(save.getId());
 
         //then
         Member result = memberRepository.findByEmail(save.getEmail());
 
         assertThat(result.getPwd()).isEqualTo("test2");
         assertThat(result.getProfile()).isEqualTo("2.jpg");
-        assertThat(result.getLastLoginTime()).isEqualTo(time);
     }
 }
