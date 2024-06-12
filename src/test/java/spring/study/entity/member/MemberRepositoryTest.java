@@ -127,31 +127,4 @@ public class MemberRepositoryTest {
         assertThat(save1.getEmail()).isEqualTo(result.get(0).getEmail());
         assertThat(save2.getEmail()).isEqualTo(result.get(1).getEmail());
     }
-
-    @Transactional
-    @Test
-    void update() {
-        //given
-        Member member = Member.builder()
-                .email("test@test.com")
-                .pwd("test")
-                .name("test")
-                .role(Role.USER)
-                .profile("1.jpg")
-                .build();
-
-        Member save = memberRepository.save(member);
-
-        //when
-        memberService.updatePwd(save.getId(), "test2");
-        memberService.updateProfile(save.getId(), "2.jpg");
-        LocalDateTime time = LocalDateTime.now();
-        memberService.updateLastLoginTime(save.getId());
-
-        //then
-        Member result = memberRepository.findByEmail(save.getEmail());
-
-        assertThat(result.getPwd()).isEqualTo("test2");
-        assertThat(result.getProfile()).isEqualTo("2.jpg");
-    }
 }

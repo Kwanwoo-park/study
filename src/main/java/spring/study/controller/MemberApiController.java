@@ -66,7 +66,7 @@ public class MemberApiController {
     public ResponseEntity updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpSession session) {
         member = (Member) session.getAttribute("member");
 
-        memberService.updatePwd(member.getId(), memberUpdateDto.getPassword());
+        userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;
         session.invalidate();

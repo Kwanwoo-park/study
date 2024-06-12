@@ -83,15 +83,6 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public void updatePwd(Long id, String pwd) {
-        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
-                "존재하지 않는 회원입니다."
-        ));
-
-        member.changePwd(pwd);
-    }
-
-    @Transactional
     public void updateLastLoginTime(Long id) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."

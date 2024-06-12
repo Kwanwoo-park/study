@@ -26,6 +26,9 @@ public class BoardService {
         return boardRepository.save(boardSaveDto.toEntity()).getId();
     }
 
+    @Transactional
+    public Board save(Board board) { return boardRepository.save(board); };
+
     @Transactional(readOnly = true)
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
@@ -41,7 +44,7 @@ public class BoardService {
     }
 
     public BoardResponseDto findById(Long id) {
-        return new BoardResponseDto(boardRepository.findById(id).get());
+        return new BoardResponseDto(boardRepository.findById(id).orElseThrow());
     }
 
     @Transactional

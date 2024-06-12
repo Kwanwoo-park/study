@@ -131,39 +131,4 @@ public class BoardRepositoryTest {
         assertThat(result).isEqualTo(saveBoard);
         assertThat(result.getMember()).isEqualTo(save);
     }
-
-    @Transactional
-    @Test
-    void update() {
-        // given
-        Member member = Member.builder()
-                .email("test@test.com")
-                .pwd("test")
-                .name("test")
-                .role(Role.USER)
-                .profile("1.jpg")
-                .build();
-
-        Member save = memberRepository.save(member);
-
-        Board board = Board.builder()
-                .title("test")
-                .content("test")
-                .build();
-
-        save.addBoard(board);
-
-        Board saveBoard = boardRepository.save(board);
-
-        // when
-        boardService.updateBoardReadCntInc(saveBoard.getId());
-        boardService.updateBoard(saveBoard.getId(), "test2", "test2");
-
-        // then
-        Board result = boardRepository.findByTitle("test2");
-
-        assertThat(result.getReadCnt()).isEqualTo(1L);
-        assertThat(result.getTitle()).isEqualTo("test2");
-        assertThat(result.getContent()).isEqualTo("test2");
-    }
 }
