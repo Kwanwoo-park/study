@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.service.MemberService;
+import spring.study.service.UserService;
 
 import java.util.HashMap;
 
@@ -16,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class MemberServiceTest {
     @Autowired
     MemberService memberService;
+    @Autowired
+    UserService userService;
 
     @Transactional
     @Test
@@ -32,7 +35,7 @@ public class MemberServiceTest {
         Member save = memberService.save(member);
 
         //when
-        memberService.updatePwd(save.getId(), "test2");
+        userService.updatePwd(save.getId(), "test2");
         memberService.updateProfile(save.getId(), "2.jpg");
         memberService.updateLastLoginTime(save.getId());
 

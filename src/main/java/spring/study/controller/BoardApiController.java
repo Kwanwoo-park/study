@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
+import spring.study.entity.Board;
 import spring.study.entity.Member;
 import spring.study.service.BoardService;
 import spring.study.service.CommentService;
@@ -16,16 +17,20 @@ import spring.study.service.CommentService;
 public class BoardApiController {
     private final BoardService boardService;
     private final CommentService commentService;
+
     @PostMapping("/write/action")
-    public Long boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpSession session) {
+    public Board boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
-        Long result;
+        Board result = null;
 
         if (boardRequestDto.getContent() != null){
-            boardRequestDto.setMember(member);
-            result = boardService.save(boardRequestDto);
+            Board board = boardRequestDto.toEntity();
 
-            if (result < 0) {
+            board.addMember(member);
+
+            result = boardService.save(board);
+
+            if (result == null) {
                 return null;
             }
         }

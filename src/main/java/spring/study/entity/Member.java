@@ -1,5 +1,6 @@
 package spring.study.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -40,7 +41,8 @@ public class Member extends BasetimeEntity implements UserDetails {
     @Column(name = "last_login_time")
     private LocalDateTime lastLoginTime;
 
-    @OneToMany(mappedBy = "member")
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<Board> board = new ArrayList<>();
 
     @Builder

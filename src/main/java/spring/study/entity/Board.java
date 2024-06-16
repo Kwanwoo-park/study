@@ -1,5 +1,6 @@
 package spring.study.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -19,6 +20,7 @@ public class Board extends BasetimeEntity {
     private String content;
     @Column(name = "read_cnt")
     private int readCnt;
+    @JsonIgnore
     @JoinColumn(name = "member_id")
     @ManyToOne
     private Member member;
@@ -29,6 +31,7 @@ public class Board extends BasetimeEntity {
         this.title = title;
         this.content = content;
         this.readCnt = readCnt;
+        this.member = member;
     }
 
     public void addMember(Member member) {

@@ -95,4 +95,18 @@ public class BoardServiceTest {
             System.out.println(map.get(key).toString());
         }
     }
+
+    @Test
+    void findBoardList() {
+        // given
+        Member member = memberService.findMember("akakslslzz@naver.com");
+
+        // when
+        HashMap<String, Object> result = boardService.findBoardList(member, 0, 5);
+
+        // then
+        for (String key : result.keySet()) {
+            System.out.println(result.get(key).toString());
+        }
+    }
 }

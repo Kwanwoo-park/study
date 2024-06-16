@@ -1,19 +1,16 @@
 package spring.study.service;
 
-import jakarta.persistence.EntityManagerFactory;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.Param;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Member;
@@ -38,7 +35,7 @@ public class MemberService implements UserDetailsService {
     @Transactional
     public Member save(Member member) { return memberRepository.save(member); }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> member = new HashMap<>();
 
@@ -52,7 +49,6 @@ public class MemberService implements UserDetailsService {
         return member;
     }
 
-    @Transactional(readOnly = true)
     public HashMap<String, Object> findName(String name) {
         HashMap<String, Object> member = new HashMap<>();
 
@@ -61,10 +57,6 @@ public class MemberService implements UserDetailsService {
         member.put("list", list.stream().map(MemberResponseDto::new).collect(Collectors.toList()));
 
         return member;
-    }
-
-    public List<Member> findByName(String name) {
-        return memberRepository.findByName(name);
     }
 
     public Member findMember(String email) {

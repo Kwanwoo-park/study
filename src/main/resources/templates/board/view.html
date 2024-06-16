@@ -25,8 +25,8 @@
 		    	<textarea class="form-control" id="content" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
 			</div>
 			<div class="mb-3">
-			    <label class="form-label" for="registerName">Writer</label>
-			    <input type="disabled" class="form-control" id="registerName" name="registerName" th:value="${info.registerName}" disabled>
+			    <label class="form-label" for="name">Writer</label>
+			    <input type="disabled" class="form-control" id="name" name="name" th:value="${info.member.name}" disabled>
 			</div>
 			<button type="button" id="edit" class="btn btn-primary" th:onclick="fnViewEdit()">Edit</button>
 
@@ -63,7 +63,7 @@
     /*<![CDATA[*/
     	const member = /*[[${email}]]*/;
     	const role = /*[[${role}]]*/;
-    	const board = /*[[${info.registerEmail}]]*/;
+    	const board = /*[[${info.member.email}]]*/;
 
     	if (role != "ADMIN") {
 			if (member != board) {

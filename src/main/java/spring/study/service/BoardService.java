@@ -1,19 +1,19 @@
 package spring.study.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.board.BoardResponseDto;
 import spring.study.entity.Board;
+import spring.study.entity.Member;
 import spring.study.repository.BoardRepository;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -27,9 +27,10 @@ public class BoardService {
     }
 
     @Transactional
-    public Board save(Board board) { return boardRepository.save(board); };
+    public Board save(Board board) {
+        return boardRepository.save(board);
+    };
 
-    @Transactional(readOnly = true)
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
 
@@ -45,6 +46,19 @@ public class BoardService {
 
     public BoardResponseDto findById(Long id) {
         return new BoardResponseDto(boardRepository.findById(id).orElseThrow());
+    }
+
+    public HashMap<String, Object> findBoardList(Member member, Integer page, Integer size) {
+        HashMap<String, Object> resultMap = new HashMap<>();
+
+        Page<Board> list = boardRepository.findByMember(member, PageRequest.of(page, size, Sort.by("id").descending()));
+
+        resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
+        resultMap.put("paging", list.getPageable());
+        resultMap.put("totalCnt", list.getTotalElements());
+        resultMap.put("totalPage", list.getTotalPages());
+
+        return resultMap;
     }
 
     @Transactional

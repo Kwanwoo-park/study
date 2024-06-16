@@ -1,10 +1,10 @@
 package spring.study.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Member;
@@ -35,11 +35,13 @@ public class UserService implements UserServiceRepository {
     }
 
     @Transactional
-    public void updatePwd(Long id, String pwd) {
+    public int updatePwd(Long id, String pwd) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));
 
         member.changePwd(bCryptPasswordEncoder.encode(pwd));
+
+        return member.getId().intValue();
     }
 }

@@ -19,6 +19,7 @@ public class BoardRequestDto {
         return Board.builder()
                 .title(title)
                 .content(content)
+                .member(member)
                 .build();
     }
 }
