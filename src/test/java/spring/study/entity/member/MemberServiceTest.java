@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import spring.study.entity.Board;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.service.MemberService;
@@ -78,5 +79,11 @@ public class MemberServiceTest {
         }
     }
 
+    @Test
+    void find() {
+        Member member = (Member) memberService.loadUserByUsername("akakslslzz@naver.com");
 
+        for (Board b : member.getBoard())
+            System.out.println(b.getContent());
+    }
 }

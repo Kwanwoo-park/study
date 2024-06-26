@@ -101,6 +101,9 @@ public class BoardServiceTest {
         // given
         Member member = memberService.findMember("akakslslzz@naver.com");
 
+        for (Board b : member.getBoard())
+            System.out.println(b.getContent());
+
         // when
         HashMap<String, Object> result = boardService.findBoardList(member, 0, 5);
 
