@@ -62,7 +62,7 @@ public class BoardService {
     }
 
     @Transactional
-    public void updateBoard(Long id, String title, String content) {
+    public int updateBoard(Long id, String title, String content) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(
                 "존재하지 않는 게시글입니다."
         ));
@@ -70,6 +70,8 @@ public class BoardService {
         board.changeContent(content);
         board.changeTitle(title);
         board.changeUpdateTime(LocalDateTime.now());
+
+        return board.getId().intValue();
     }
 
     @Transactional

@@ -42,10 +42,8 @@ public class BoardApiController {
     }
 
     @PatchMapping("/view/action")
-    public ResponseEntity boardViewAction(@RequestBody BoardRequestDto boardRequestDto){
-        boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getTitle(), boardRequestDto.getContent());
-
-        return new ResponseEntity(HttpStatus.OK);
+    public int boardViewAction(@RequestBody BoardRequestDto boardRequestDto){
+        return boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getTitle(), boardRequestDto.getContent());
     }
 
     @DeleteMapping("/view/delete")

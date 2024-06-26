@@ -43,6 +43,7 @@ public class MemberApiController {
             file.transferTo(new File(fileDir + file.getOriginalFilename()));
         }
 
+        member.setProfile(file.getOriginalFilename());
         memberService.updateProfile(member.getId(), file.getOriginalFilename());
 
         session.setAttribute("member", member);
