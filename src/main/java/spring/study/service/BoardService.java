@@ -48,19 +48,6 @@ public class BoardService {
         return new BoardResponseDto(boardRepository.findById(id).orElseThrow());
     }
 
-    public HashMap<String, Object> findBoardList(Member member, Integer page, Integer size) {
-        HashMap<String, Object> resultMap = new HashMap<>();
-
-        Page<Board> list = boardRepository.findByMember(member, PageRequest.of(page, size, Sort.by("id").descending()));
-
-        resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
-        resultMap.put("paging", list.getPageable());
-        resultMap.put("totalCnt", list.getTotalElements());
-        resultMap.put("totalPage", list.getTotalPages());
-
-        return resultMap;
-    }
-
     @Transactional
     public int updateBoard(Long id, String title, String content) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(

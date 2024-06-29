@@ -132,20 +132,4 @@ public class BoardRepositoryTest {
         assertThat(result).isEqualTo(saveBoard);
         assertThat(result.getMember()).isEqualTo(save);
     }
-
-    @Test
-    void findMember() {
-        // given
-        Member member = memberRepository.findById(1L).orElseThrow();
-
-        // when
-        Page<Board> result = boardRepository.findByMember(member, PageRequest.of(0, 5, Sort.by("id").ascending()));
-
-        // then
-        for (Board b : result) {
-            System.out.println(b.getId());
-            System.out.println(b.getTitle());
-            System.out.println(b.getContent());
-        }
-    }
 }

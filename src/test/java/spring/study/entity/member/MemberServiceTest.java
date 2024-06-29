@@ -84,6 +84,6 @@ public class MemberServiceTest {
         Member member = (Member) memberService.loadUserByUsername("akakslslzz@naver.com");
 
         for (Board b : member.getBoard())
-            System.out.println(b.getContent());
+            System.out.println("Title = " + b.getTitle() + "\nContent = " +  b.getContent());
     }
 }

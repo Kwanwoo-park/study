@@ -25,6 +25,4 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     public int deleteBoard(@Param("deleteList") Long[] deleteList);
 
     public Board findByTitle(String title);
-
-    public Page<Board> findByMember(Member member, PageRequest pageRequest);
 }

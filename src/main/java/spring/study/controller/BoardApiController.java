@@ -29,6 +29,7 @@ public class BoardApiController {
             board.addMember(member);
 
             result = boardService.save(board);
+            session.setAttribute("member", member);
 
             if (result == null) {
                 return null;
