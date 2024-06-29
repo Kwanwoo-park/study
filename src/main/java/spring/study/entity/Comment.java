@@ -1,9 +1,7 @@
 package spring.study.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.*;
 import spring.study.entity.BasetimeEntity;
 
@@ -17,19 +15,33 @@ public class Comment extends BasetimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String comment;
-    private Long mid;
-    private String mname;
-    private Long bid;
-    private String email;
+    private String comments;
+
+    @JsonIgnore
+    @JoinColumn(name = "member_id")
+    @ManyToOne
+    private Member member;
+
+    @JsonIgnore
+    @JoinColumn(name = "board_id")
+    @ManyToOne
+    private Board board;
 
     @Builder
-    public Comment(Long id, String comment, Long mid, String mname, Long bid, String email) {
+    public Comment(Long id, String comments, Member member, Board board) {
         this.id = id;
-        this.comment = comment;
-        this.mid = mid;
-        this.mname = mname;
-        this.bid = bid;
-        this.email = email;
+        this.comments = comments;
+        this.member = member;
+        this.board = board;
+    }
+
+    public void addMember(Member member) {
+        this.member = member;
+        member.getComment().add(this);
+    }
+
+    public void addBoard(Board board) {
+        this.board = board;
+        board.getComment().add(this);
     }
 }

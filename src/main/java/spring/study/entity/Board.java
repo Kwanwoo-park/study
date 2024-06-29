@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -13,6 +15,7 @@ import java.io.Serializable;
 @Entity(name = "board")
 public class Board extends BasetimeEntity implements Serializable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "board_id")
     private Long id;
     @Column(name = "title")
     @NotNull
@@ -27,6 +30,9 @@ public class Board extends BasetimeEntity implements Serializable {
     @ManyToOne
     private Member member;
 
+    @OneToMany(mappedBy = "comment")
+    private List<Comment> comment = new ArrayList<>();
+
     @Builder
     public Board(Long id, String title, String content, int readCnt, Member member) {
         this.id = id;
@@ -39,6 +45,10 @@ public class Board extends BasetimeEntity implements Serializable {
     public void addMember(Member member) {
         this.member = member;
         member.getBoard().add(this);
+    }
+
+    public void addBoard(Comment comment) {
+        comment.addBoard(this);
     }
 
     public void changeReadCnt() {

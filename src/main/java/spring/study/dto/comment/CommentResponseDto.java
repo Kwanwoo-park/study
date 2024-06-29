@@ -1,32 +1,30 @@
 package spring.study.dto.comment;
 
 import lombok.Getter;
+import spring.study.entity.Board;
 import spring.study.entity.Comment;
+import spring.study.entity.Member;
 
 @Getter
 public class CommentResponseDto {
-    private String comment;
-    private Long mid;
-    private String mname;
-    private Long bid;
-    private String email;
+    private Long id;
+    private String comments;
+    private Member member;
+    private Board board;
 
     public CommentResponseDto(Comment entity) {
-        this.comment = entity.getComment();
-        this.mid = entity.getMid();
-        this.mname = entity.getMname();
-        this.bid = entity.getBid();
-        this.email = entity.getEmail();
+        this.id = entity.getId();
+        this.comments = entity.getComments();
+        this.member = entity.getMember();
+        this.board = entity.getBoard();
     }
 
     @Override
     public String toString() {
         return "CommentResponseDto{" +
-                "comment=" + comment +
-                ", mid=" + mid +
-                ", mname=" + mname +
-                ", bid=" + bid +
-                ", email=" + email +
+                "comment=" + comments +
+                ", member=" + member.getId() +
+                ", board=" + board.getId() +
                 '}';
     }
 }

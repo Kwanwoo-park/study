@@ -44,7 +44,7 @@ create table book_borrow (
 
 create table comment (
     id bigint auto_increment primary key,
-    comment text not null,
+    comments text not null,
     mid bigint not null,
     mname varchar(100) not null,
     email varchar(200) not null,

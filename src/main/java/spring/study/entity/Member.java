@@ -46,6 +46,10 @@ public class Member extends BasetimeEntity implements UserDetails {
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<Board> board = new ArrayList<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "comment")
+    private List<Comment> comment = new ArrayList<>();
+
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile) {
         this.id = id;
@@ -96,6 +100,10 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void addBoard(Board board) {
         board.addMember(this);
+    }
+
+    public void addComment(Comment comment) {
+        comment.addMember(this);
     }
 
     public void changeProfile(String profile) {
