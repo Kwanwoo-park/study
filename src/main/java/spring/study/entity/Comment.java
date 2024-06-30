@@ -5,12 +5,14 @@ import jakarta.persistence.*;
 import lombok.*;
 import spring.study.entity.BasetimeEntity;
 
+import java.io.Serializable;
+
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
 @Getter
 @Setter
 @Entity(name = "comment")
-public class Comment extends BasetimeEntity {
+public class Comment extends BasetimeEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

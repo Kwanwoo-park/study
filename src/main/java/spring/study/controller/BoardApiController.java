@@ -48,9 +48,19 @@ public class BoardApiController {
     }
 
     @DeleteMapping("/view/delete")
-    public void boardViewDeleteAction(@RequestParam() Long id){
+    public void boardViewDeleteAction(@RequestParam() Long id, HttpSession session){
+        Member member = (Member) session.getAttribute("member");
+        Board board = boardService.findBoard(id);
+
+        for (int i = 0; i < member.getBoard().size(); i++) {
+            if (member.getBoard().get(i).getId().equals(id))
+                member.getBoard().remove(i);
+        }
+
+        session.setAttribute("member", member);
+
         boardService.deleteById(id);
-        commentService.deleteComment(id);
+        //commentService.deleteComment(id);
     }
 
     @DeleteMapping("/delete")

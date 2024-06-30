@@ -76,7 +76,7 @@ public class BoardViewController {
             model.addAttribute("info", boardService.findById(boardRequestDto.getId()));
             model.addAttribute("email", member.getEmail());
             model.addAttribute("role", member.getRole());
-            model.addAttribute("comment", commentService.findComment(boardRequestDto.getId()));
+            //model.addAttribute("comment", commentService.findComment(boardRequestDto.getId()));
             boardService.updateBoardReadCntInc(boardRequestDto.getId());
         }
 

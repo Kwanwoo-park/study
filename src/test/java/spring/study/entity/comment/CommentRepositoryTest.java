@@ -4,65 +4,130 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import spring.study.dto.comment.CommentRequestDto;
-import spring.study.service.CommentService;
-import java.util.Map;
+import org.springframework.data.domain.Sort;
+import spring.study.entity.Board;
+import spring.study.entity.Comment;
+import spring.study.entity.Member;
+import spring.study.repository.BoardRepository;
+import spring.study.repository.CommentRepository;
+import spring.study.repository.MemberRepository;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 public class CommentRepositoryTest {
     @Autowired
-    CommentService commentService;
+    CommentRepository commentRepository;
+    @Autowired
+    MemberRepository memberRepository;
 
     @Transactional
     @Test
     void save() {
-        CommentRequestDto commentSaveDto = new CommentRequestDto();
+        // given
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
 
-        commentSaveDto.setComment("test");
-        commentSaveDto.setMid(1L);
-        commentSaveDto.setMname("박관우");
-        commentSaveDto.setBid(19L);
-        commentSaveDto.setEmail("test");
+        Board board = member.getBoard().get(0);
 
-        Long result = commentService.save(commentSaveDto);
+        Comment comment = Comment.builder()
+                .comments("tests")
+                .build();
 
-        if (result > 0) {
-            System.out.println("# Success save() ~");
-            findAll();
-            findComment(commentSaveDto.getBid());
-        }
-        else {
-            System.out.println("# Fail save()");
-        }
+        member.addComment(comment);
+        board.addComment(comment);
+
+        // when
+        Comment save = commentRepository.save(comment);
+
+        // then
+        assertThat(save.getComments()).isEqualTo(comment.getComments());
+        assertThat(save.getBoard()).isEqualTo(board);
+        assertThat(save.getMember()).isEqualTo(member);
     }
 
+    @Transactional
+    @Test
     void findAll() {
-        Map<String, Object> result = commentService.findAll();
+        // given
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
 
-        if (result != null) {
-            System.out.println("# Success findAll() : " + result.toString());
+        Board board = member.getBoard().get(0);
 
-            for (String s : result.keySet()) {
-                System.out.println(result.get(s));
-            }
-        }
-        else {
-            System.out.println("# Fail findAll() ~");
-        }
+        Comment comment1 = Comment.builder()
+                .comments("test1")
+                .build();
+
+        Comment comment2 = Comment.builder()
+                .comments("test2")
+                .build();
+
+        member.addComment(comment1);
+        member.addComment(comment2);
+
+        board.addComment(comment1);
+        board.addComment(comment2);
+
+        Comment saveComment1 = commentRepository.save(comment1);
+        Comment saveComment2 = commentRepository.save(comment2);
+
+        // when
+        List<Comment> result = commentRepository.findAll(Sort.by("id").ascending());
+
+        // then
+        assertThat(result.get(0).getComments()).isEqualTo(saveComment1.getComments());
+        assertThat(result.get(0).getMember()).isEqualTo(member);
+        assertThat(result.get(0).getBoard()).isEqualTo(board);
+
+        assertThat(result.get(1).getComments()).isEqualTo(saveComment2.getComments());
+        assertThat(result.get(1).getMember()).isEqualTo(member);
+        assertThat(result.get(1).getBoard()).isEqualTo(board);
     }
 
-    void findComment(Long bid) {
-        Map<String, Object> result = commentService.findComment(bid);
+    @Transactional
+    @Test
+    void find() {
+        // given
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
 
-        if (result != null) {
-            System.out.println("# Success findComment() : " + result.toString());
+        Board board= member.getBoard().get(0);
 
-            for (String s : result.keySet()) {
-                System.out.println(result.get(s));
-            }
-        }
-        else {
-            System.out.println("# Fail findComment() ~");
-        }
+        Comment comment = Comment.builder()
+                .comments("test")
+                .build();
+
+        member.addComment(comment);
+        board.addComment(comment);
+
+        Comment save = commentRepository.save(comment);
+
+        // when
+        Comment result = commentRepository.findByBoard(board);
+
+        // then
+        assertThat(result).isEqualTo(save);
+        assertThat(result.getBoard()).isEqualTo(save.getBoard());
+        assertThat(result.getMember()).isEqualTo(save.getMember());
+    }
+
+
+    @Test
+    void delete() {
+        // given
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+        Board board = member.getBoard().get(0);
+
+        Comment comment = board.getComment().get(0);
+
+        // when
+        member.getComment().remove(comment);
+        board.getComment().remove(comment);
+
+        commentRepository.deleteById(comment.getId());
+
+        // then
+        System.out.println(member.getComment().size());
+        System.out.println(board.getComment().size());
     }
 }

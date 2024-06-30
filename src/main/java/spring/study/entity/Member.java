@@ -47,7 +47,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     private List<Board> board = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "comment")
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<Comment> comment = new ArrayList<>();
 
     @Builder

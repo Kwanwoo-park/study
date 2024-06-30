@@ -21,14 +21,7 @@ public class CommentApiController {
 
         Member member = (Member) session.getAttribute("member");
 
-        if (commentRequestDto.getComment().length() > 0){
-            commentRequestDto.setBid(bid);
-            commentRequestDto.setMid(member.getId());
-            commentRequestDto.setMname(member.getName());
-            commentRequestDto.setEmail(member.getEmail());
 
-            return commentService.save(commentRequestDto);
-        }
 
         return null;
     }

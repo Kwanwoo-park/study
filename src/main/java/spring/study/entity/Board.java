@@ -30,7 +30,8 @@ public class Board extends BasetimeEntity implements Serializable {
     @ManyToOne
     private Member member;
 
-    @OneToMany(mappedBy = "comment")
+    @JsonIgnore
+    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
     private List<Comment> comment = new ArrayList<>();
 
     @Builder
@@ -47,7 +48,7 @@ public class Board extends BasetimeEntity implements Serializable {
         member.getBoard().add(this);
     }
 
-    public void addBoard(Comment comment) {
+    public void addComment(Comment comment) {
         comment.addBoard(this);
     }
 

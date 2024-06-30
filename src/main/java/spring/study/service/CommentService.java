@@ -15,33 +15,5 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class CommentService {
-    private HashMap<String, Object> comment = new HashMap<>();
 
-    private List<Comment> list;
-    private final CommentRepository commentRepository;
-
-    @Transactional
-    public Long save(CommentRequestDto commentRequestDto) {return commentRepository.save(commentRequestDto.toEntity()).getId(); }
-
-    @Transactional(readOnly = true)
-    public HashMap<String, Object> findAll() {
-        list = commentRepository.findAll();
-
-        comment.put("list", list.stream().map(CommentResponseDto::new).collect(Collectors.toList()));
-
-        return comment;
-    }
-
-    @Transactional(readOnly = true)
-    public HashMap<String, Object> findComment(Long bid) {
-        list = commentRepository.findByBid(bid, Sort.by("id").descending());
-
-        comment.put("list", list.stream().map(CommentResponseDto::new).toList());
-
-        return comment;
-    }
-
-    public void deleteComment(Long bid) {
-        commentRepository.deleteByBid(bid);
-    }
 }

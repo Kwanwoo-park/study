@@ -3,8 +3,6 @@ package spring.study.entity.board;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.Board;
@@ -17,12 +15,11 @@ import spring.study.service.BoardService;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+
 @SpringBootTest
 public class BoardRepositoryTest {
     @Autowired
     BoardRepository boardRepository;
-    @Autowired
-    BoardService boardService;
     @Autowired
     MemberRepository memberRepository;
 
