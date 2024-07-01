@@ -103,12 +103,12 @@ public class CommentRepositoryTest {
         Comment save = commentRepository.save(comment);
 
         // when
-        Comment result = commentRepository.findByBoard(board);
+        List<Comment> result = commentRepository.findByBoard(board);
 
         // then
-        assertThat(result).isEqualTo(save);
-        assertThat(result.getBoard()).isEqualTo(save.getBoard());
-        assertThat(result.getMember()).isEqualTo(save.getMember());
+        assertThat(result.get(0)).isEqualTo(save);
+        assertThat(result.get(0).getBoard()).isEqualTo(save.getBoard());
+        assertThat(result.get(0).getMember()).isEqualTo(save.getMember());
     }
 
 
@@ -121,10 +121,10 @@ public class CommentRepositoryTest {
         Comment comment = board.getComment().get(0);
 
         // when
+        commentRepository.deleteByBoard(board);
+
         member.getComment().remove(comment);
         board.getComment().remove(comment);
-
-        commentRepository.deleteById(comment.getId());
 
         // then
         System.out.println(member.getComment().size());

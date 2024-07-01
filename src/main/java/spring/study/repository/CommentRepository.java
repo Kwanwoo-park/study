@@ -12,7 +12,8 @@ import spring.study.entity.Comment;
 import java.util.List;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-    public Comment findByBoard(Board board);
+    public List<Comment> findByBoard(Board board);
 
+    @Transactional
     public void deleteByBoard(Board board);
 }
