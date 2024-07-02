@@ -6,13 +6,14 @@ import lombok.*;
 import spring.study.entity.BasetimeEntity;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
 @Getter
 @Setter
 @Entity(name = "comment")
-public class Comment extends BasetimeEntity implements Serializable {
+public class Comment extends BasetimeEntity implements Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

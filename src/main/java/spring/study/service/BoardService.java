@@ -44,8 +44,8 @@ public class BoardService {
         return resultMap;
     }
 
-    public BoardResponseDto findById(Long id) {
-        return new BoardResponseDto(boardRepository.findById(id).orElseThrow());
+    public Board findById(Long id) {
+        return boardRepository.findById(id).orElseThrow();
     }
 
     public Board findBoard(Long id) {

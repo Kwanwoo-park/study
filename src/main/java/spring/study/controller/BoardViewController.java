@@ -6,9 +6,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
+import spring.study.dto.comment.CommentResponseDto;
+import spring.study.entity.Board;
+import spring.study.entity.Comment;
 import spring.study.entity.Member;
 import spring.study.service.BoardService;
 import spring.study.service.CommentService;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -16,7 +24,7 @@ import spring.study.service.CommentService;
 public class BoardViewController {
     private final BoardService boardService;
     private Member member;
-    private final CommentService commentService;
+    private Long previous = -1L;
 
     @GetMapping("/list")
     public String getBoardListPage(Model model,
@@ -72,12 +80,23 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
+        Board board = boardService.findById(boardRequestDto.getId());
+
+        List<Comment> list = board.getComment();
+        HashMap<String, Object> comment = new HashMap<>();
+
+        comment.put("list", list.stream().map(CommentResponseDto::new).toList());
+
         if (boardRequestDto.getId() != null) {
-            model.addAttribute("info", boardService.findById(boardRequestDto.getId()));
+            model.addAttribute("info", board);
             model.addAttribute("email", member.getEmail());
             model.addAttribute("role", member.getRole());
-            //model.addAttribute("comment", commentService.findComment(boardRequestDto.getId()));
-            boardService.updateBoardReadCntInc(boardRequestDto.getId());
+            model.addAttribute("comment", comment);
+
+            if (!previous.equals(boardRequestDto.getId())) {
+                boardService.updateBoardReadCntInc(boardRequestDto.getId());
+                previous = boardRequestDto.getId();
+            }
         }
 
         return "/board/view";
