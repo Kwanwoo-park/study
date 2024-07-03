@@ -25,6 +25,9 @@ public class BoardViewController {
     private final BoardService boardService;
     private Member member;
     private Long previous = -1L;
+    private Board board;
+    private List<Comment> list;
+    private HashMap<String, Object> comment;
 
     @GetMapping("/list")
     public String getBoardListPage(Model model,
@@ -80,20 +83,20 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        Board board = boardService.findById(boardRequestDto.getId());
-
-        List<Comment> list = board.getComment();
-        HashMap<String, Object> comment = new HashMap<>();
-
-        comment.put("list", list.stream().map(CommentResponseDto::new).toList());
-
         if (boardRequestDto.getId() != null) {
-            model.addAttribute("info", board);
-            model.addAttribute("email", member.getEmail());
-            model.addAttribute("role", member.getRole());
-            model.addAttribute("comment", comment);
-
             if (!previous.equals(boardRequestDto.getId())) {
+                board = boardService.findById(boardRequestDto.getId());
+
+                list = board.getComment();
+                comment = new HashMap<>();
+
+                comment.put("list", list.stream().map(CommentResponseDto::new).toList());
+
+                model.addAttribute("info", board);
+                model.addAttribute("email", member.getEmail());
+                model.addAttribute("role", member.getRole());
+                model.addAttribute("comment", comment);
+
                 boardService.updateBoardReadCntInc(boardRequestDto.getId());
                 previous = boardRequestDto.getId();
             }

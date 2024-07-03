@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.Board;
+import spring.study.entity.Comment;
 import spring.study.entity.Member;
 import spring.study.service.BoardService;
 import spring.study.service.CommentService;
@@ -50,17 +51,30 @@ public class BoardApiController {
     @DeleteMapping("/view/delete")
     public void boardViewDeleteAction(@RequestParam() Long id, HttpSession session){
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findBoard(id);
+        Board board = boardService.findById(id);
+
+        for (Comment c : board.getComment()) {
+            for (int i = 0; i < member.getComment().size(); i++) {
+                if (member.getComment().get(i).getId().equals(c.getId())) {
+                    member.getComment().remove(i);
+                    break;
+                }
+            }
+        }
 
         for (int i = 0; i < member.getBoard().size(); i++) {
-            if (member.getBoard().get(i).getId().equals(id))
+            if (member.getBoard().get(i).getId().equals(id)) {
                 member.getBoard().remove(i);
+                break;
+            }
         }
+
+        System.out.println(member.getComment().size());
 
         session.setAttribute("member", member);
 
+        commentService.deleteComment(board);
         boardService.deleteById(id);
-        //commentService.deleteComment(id);
     }
 
     @DeleteMapping("/delete")

@@ -11,6 +11,7 @@ import spring.study.service.CommentService;
 import spring.study.service.MemberService;
 
 import java.util.HashMap;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -81,26 +82,48 @@ public class CommentServiceTest {
         Member member = memberService.findMember("akakslslzz@naver.com");
         Board board = member.getBoard().get(0);
 
-        Comment comment = Comment.builder()
+        Comment comment1 = Comment.builder()
                 .comments("test1")
                 .build();
 
-        member.addComment(comment);
-        board.addComment(comment);
+        Comment comment2 = Comment.builder()
+                .comments("test2")
+                .build();
 
-        Comment save = commentService.save(comment);
+        Comment comment3 = Comment.builder()
+                .comments("test2")
+                .build();
+
+        member.addComment(comment1);
+        board.addComment(comment1);
+
+        member.addComment(comment2);
+        board.addComment(comment2);
+
+        member.addComment(comment3);
+        board.addComment(comment3);
+
+        Comment save1 = commentService.save(comment1);
+        Comment save2 = commentService.save(comment2);
+        Comment save3 = commentService.save(comment3);
 
         System.out.println(member.getComment().size());
-        System.out.println(board.getComment().size());
+
+        List<Comment> comment = board.getComment();
 
         // when
         commentService.deleteComment(board);
 
-        member.getComment().remove(comment);
-        board.getComment().remove(comment);
+        for (Comment c : comment) {
+            for (int i = 0; i < member.getComment().size(); i++) {
+                if (member.getComment().get(i).getId().equals(c.getId())) {
+                    member.getComment().remove(i);
+                    break;
+                }
+            }
+        }
 
         // then
         System.out.println(member.getComment().size());
-        System.out.println(board.getComment().size());
     }
 }

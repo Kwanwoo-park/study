@@ -50,7 +50,7 @@ public class BoardServiceTest {
         boardService.updateBoard(saveBoard.getId(), "test2", "test2");
 
         // then
-        BoardResponseDto result = boardService.findById(board.getId());
+        Board result = boardService.findById(board.getId());
 
         assertThat(result.getReadCnt()).isEqualTo(1L);
         assertThat(result.getTitle()).isEqualTo("test2");

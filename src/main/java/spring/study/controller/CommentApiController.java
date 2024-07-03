@@ -24,7 +24,7 @@ public class CommentApiController {
                               HttpSession session) {
 
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findBoard(bid);
+        Board board = boardService.findById(bid);
 
         Comment comment = Comment.builder()
                 .comments(commentRequestDto.getComments())

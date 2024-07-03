@@ -48,10 +48,6 @@ public class BoardService {
         return boardRepository.findById(id).orElseThrow();
     }
 
-    public Board findBoard(Long id) {
-        return boardRepository.findById(id).orElseThrow();
-    }
-
     @Transactional
     public int updateBoard(Long id, String title, String content) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(
