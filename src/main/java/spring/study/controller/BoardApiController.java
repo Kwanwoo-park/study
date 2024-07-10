@@ -53,23 +53,14 @@ public class BoardApiController {
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
 
-        for (Comment c : board.getComment()) {
-            for (int i = 0; i < member.getComment().size(); i++) {
-                if (member.getComment().get(i).getId().equals(c.getId())) {
-                    member.getComment().remove(i);
-                    break;
-                }
-            }
-        }
+        member.removeComment(board.getComment());
 
-        for (int i = 0; i < member.getBoard().size(); i++) {
-            if (member.getBoard().get(i).getId().equals(id)) {
-                member.getBoard().remove(i);
+        for (Board b : member.getBoard()) {
+            if (b.getId().equals(board.getId())) {
+                member.removeBoard(b);
                 break;
             }
         }
-
-        System.out.println(member.getComment().size());
 
         session.setAttribute("member", member);
 

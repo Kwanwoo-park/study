@@ -102,8 +102,18 @@ public class Member extends BasetimeEntity implements UserDetails {
         board.addMember(this);
     }
 
+    public void removeBoard(Board b) {
+        board.remove(b);
+    }
+
     public void addComment(Comment comment) {
         comment.addMember(this);
+    }
+
+    public void removeComment(List<Comment> list) {
+        for (Comment c : list) {
+            comment.remove(c);
+        }
     }
 
     public void changeProfile(String profile) {

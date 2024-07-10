@@ -114,14 +114,7 @@ public class CommentServiceTest {
         // when
         commentService.deleteComment(board);
 
-        for (Comment c : comment) {
-            for (int i = 0; i < member.getComment().size(); i++) {
-                if (member.getComment().get(i).getId().equals(c.getId())) {
-                    member.getComment().remove(i);
-                    break;
-                }
-            }
-        }
+        member.removeComment(comment);
 
         // then
         System.out.println(member.getComment().size());

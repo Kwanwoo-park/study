@@ -84,22 +84,22 @@ public class BoardViewController {
         }
 
         if (boardRequestDto.getId() != null) {
+            board = boardService.findById(boardRequestDto.getId());
+
+            comment = new HashMap<>();
+            list = board.getComment();
+
+            comment.put("list", list.stream().map(CommentResponseDto::new).toList());
+
             if (!previous.equals(boardRequestDto.getId())) {
-                board = boardService.findById(boardRequestDto.getId());
-
-                list = board.getComment();
-                comment = new HashMap<>();
-
-                comment.put("list", list.stream().map(CommentResponseDto::new).toList());
-
-                model.addAttribute("info", board);
-                model.addAttribute("email", member.getEmail());
-                model.addAttribute("role", member.getRole());
-                model.addAttribute("comment", comment);
-
                 boardService.updateBoardReadCntInc(boardRequestDto.getId());
                 previous = boardRequestDto.getId();
             }
+
+            model.addAttribute("info", board);
+            model.addAttribute("email", member.getEmail());
+            model.addAttribute("role", member.getRole());
+            model.addAttribute("comment", comment);
         }
 
         return "/board/view";
