@@ -1,9 +1,7 @@
 package spring.study.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,22 +15,31 @@ public class Follow {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long follower;
-    private String follower_name;
-    private String follower_email;
-    private Long following;
-    private String following_name;
-    private String following_email;
+
+    @JsonIgnore
+    @JoinColumn(name = "follower")
+    @ManyToOne
+    private Member follower;
+
+    @JsonIgnore
+    @JoinColumn(name = "following")
+    @ManyToOne
+    private Member following;
 
     @Builder
-    public Follow(Long id, Long follower, String follower_name, String follower_email,
-                  Long following, String following_name, String following_email) {
+    public Follow(Long id, Member follower, Member following) {
         this.id = id;
         this.follower = follower;
-        this.follower_name = follower_name;
-        this.follower_email = follower_email;
         this.following = following;
-        this.following_name = following_name;
-        this.following_email = following_email;
+    }
+
+    public void addFollower(Member follower) {
+        this.follower = follower;
+        follower.getFollower().add(this);
+    }
+
+    public void addFollowing(Member following) {
+        this.following = following;
+        following.getFollowing().add(this);
     }
 }

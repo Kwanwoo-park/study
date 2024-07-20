@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.board.BoardResponseDto;
 import spring.study.entity.Board;
-import spring.study.entity.Member;
 import spring.study.repository.BoardRepository;
 
 import java.time.LocalDateTime;

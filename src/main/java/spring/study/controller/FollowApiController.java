@@ -20,9 +20,7 @@ public class FollowApiController {
     public Long memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
 
-        followRequestDto.setFollower(member.getId());
-        followRequestDto.setFollower_name(member.getName());
-        followRequestDto.setFollower_email(member.getEmail());
+
         return followService.save(followRequestDto);
     }
 
@@ -30,6 +28,7 @@ public class FollowApiController {
     public Long memberUnfollow(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
 
-        return followService.deleteFollow(member.getId(), followRequestDto.getFollowing());
+        //return followService.deleteFollow(member.getId(), followRequestDto.getFollowing());
+        return 1L;
     }
 }
