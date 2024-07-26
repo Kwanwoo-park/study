@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.follow.FollowResponseDto;
 import spring.study.entity.Follow;
+import spring.study.entity.Member;
 import spring.study.repository.FollowRepository;
 import java.util.HashMap;
 import java.util.List;
@@ -24,13 +25,7 @@ public class FollowService {
         return followRepository.save(follow);
     }
 
-    public HashMap<String, Object> findAll() {
-        HashMap<String, Object> map = new HashMap<>();
-
-        List<Follow> list = followRepository.findAll();
-
-        map.put("list", list.stream().map(FollowResponseDto::new).collect(Collectors.toList()));
-
-        return map;
+    public void delete(Member follower) {
+        followRepository.deleteByFollower(follower);
     }
 }

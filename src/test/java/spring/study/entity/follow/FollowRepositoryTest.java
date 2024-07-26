@@ -86,28 +86,16 @@ public class FollowRepositoryTest {
                 .following(saveFollowing)
                 .build();
 
-        Follow follow2 = Follow.builder()
-                .follower(saveFollowing)
-                .following(saveFollower)
-                .build();
-
         saveFollower.addFollower(follow1);
-        saveFollower.addFollowing(follow2);
 
         saveFollowing.addFollowing(follow1);
-        saveFollowing.addFollower(follow2);
 
         Follow saveFollow1 = followRepository.save(follow1);
-        Follow saveFollow2 = followRepository.save(follow2);
 
         // when
         followRepository.deleteByFollower(saveFollow1.getFollower());
         saveFollower.getFollower().remove(saveFollow1);
         saveFollowing.getFollowing().remove(saveFollow1);
-
-        followRepository.deleteByFollowing(saveFollow2.getFollowing());
-        saveFollower.getFollowing().remove(saveFollow2);
-        saveFollowing.getFollower().remove(saveFollow2);
 
         // then
         System.out.println("saveFollower");
