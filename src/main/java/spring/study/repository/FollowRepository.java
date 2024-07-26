@@ -6,15 +6,14 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import spring.study.entity.Follow;
+import spring.study.entity.Member;
 
 import java.util.List;
 
 public interface FollowRepository extends JpaRepository<Follow, Long> {
-    public Long countByFollower(Long follower);
+    @Transactional
+    void deleteByFollower(Member follower);
 
-    public List<Follow> findByFollower(Long follower);
-
-    public Long countByFollowing(Long following);
-
-    public List<Follow> findByFollowing(Long following);
+    @Transactional
+    void deleteByFollowing(Member following);
 }

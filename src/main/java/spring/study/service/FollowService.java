@@ -33,16 +33,4 @@ public class FollowService {
 
         return map;
     }
-
-    public Long countFollowing(Long following) { return followRepository.countByFollowing(following); }
-
-    public List<Follow> findFollowing(Long following) {
-        return followRepository.findByFollowing(following);
-    }
-
-    public Long countFollower(Long follower) { return followRepository.countByFollower(follower); }
-
-    public List<Follow> findFollower(Long follower) {
-        return followRepository.findByFollower(follower);
-    }
 }

@@ -18,18 +18,18 @@ public class FollowViewController {
 
     @GetMapping("/follower")
     public String follower(Model model, MemberRequestDto memberRequestDto) {
-        List<Follow> follower = followService.findFollowing(memberRequestDto.getId());
+        //List<Follow> follower = followService.findFollowing(memberRequestDto.getId());
 
-        model.addAttribute("follower", follower);
+        //model.addAttribute("follower", follower);
 
         return "/follow/follower";
     }
 
     @GetMapping("/following")
     public String following(Model model, MemberRequestDto memberRequestDto) {
-        List<Follow> following = followService.findFollower(memberRequestDto.getId());
+        //List<Follow> following = followService.findFollower(memberRequestDto.getId());
 
-        model.addAttribute("following", following);
+        //model.addAttribute("following", following);
 
         return "/follow/following";
     }
