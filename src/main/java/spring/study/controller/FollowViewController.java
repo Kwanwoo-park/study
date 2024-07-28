@@ -8,28 +8,30 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.service.FollowService;
+import spring.study.service.MemberService;
+
 import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/follow")
 public class FollowViewController {
-    private final FollowService followService;
+    private final MemberService memberService;
 
     @GetMapping("/follower")
     public String follower(Model model, MemberRequestDto memberRequestDto) {
-        //List<Follow> follower = followService.findFollowing(memberRequestDto.getId());
+        List<Follow> follower = memberService.findMember(memberRequestDto.getEmail()).getFollowing();
 
-        //model.addAttribute("follower", follower);
+        model.addAttribute("follower", follower);
 
         return "/follow/follower";
     }
 
     @GetMapping("/following")
     public String following(Model model, MemberRequestDto memberRequestDto) {
-        //List<Follow> following = followService.findFollower(memberRequestDto.getId());
+        List<Follow> following = memberService.findMember(memberRequestDto.getEmail()).getFollower();
 
-        //model.addAttribute("following", following);
+        model.addAttribute("following", following);
 
         return "/follow/following";
     }

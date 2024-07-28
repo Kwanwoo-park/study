@@ -97,8 +97,8 @@ public class MemberViewController {
             member = (Member) session.getAttribute("member");
 
             model.addAttribute("member", member);
-//            model.addAttribute("follower", followService.countFollowing(member.getId()));
-//            model.addAttribute("following", followService.countFollower(member.getId()));
+            model.addAttribute("follower", member.getFollowing().size());
+            model.addAttribute("following", member.getFollower().size());
             model.addAttribute("list", member.getBoard());
         }
         else {
@@ -157,24 +157,22 @@ public class MemberViewController {
 
         member = (Member) session.getAttribute("member");
 
-        //List<Follow> follower = followService.findFollower(member.getId());
+        List<Follow> follower = member.getFollower();
 
         model.addAttribute("member", search_member);
         model.addAttribute("equal_check", search_member.getEmail().equals(member.getEmail()));
-//        model.addAttribute("follower", followService.countFollowing(search_member.getId()));
-//        model.addAttribute("following", followService.countFollower(search_member.getId()));
+        model.addAttribute("follower", search_member.getFollowing().size());
+        model.addAttribute("following", search_member.getFollower().size());
         model.addAttribute("list", search_member.getBoard());
 
-//        for (Follow f : follower) {
-//            if (f.getFollowing().equals(search_member.getId())) {
-//                status = true;
-//                model.addAttribute("status", true);
-//                break;
-//            }
-//        }
+        for (Follow f : follower) {
+            if (f.getFollowing().getEmail().equals(search_member.getEmail())) {
+                status = true;
+                break;
+            }
+        }
 
-        if (!status)
-            model.addAttribute("status", false);
+        model.addAttribute("status", status);
 
         return "/member/member_detail";
     }

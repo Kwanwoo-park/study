@@ -57,6 +57,19 @@ public class FollowServiceTest {
         assertThat(save).isEqualTo(follow);
     }
 
+    @Transactional
+    @Test
+    void find() {
+        // given
+        Member follower = memberService.findMember("akakslslzz@naver.com");
+
+        // when
+        Follow follow = followService.findFollow(follower);
+
+        // then
+        assertThat(follow.getFollower()).isEqualTo(follower);
+    }
+
     @Test
     void delete() {
         // given

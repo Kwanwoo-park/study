@@ -13,4 +13,6 @@ import java.util.List;
 public interface FollowRepository extends JpaRepository<Follow, Long> {
     @Transactional
     void deleteByFollower(Member follower);
+
+    public Follow findByFollower(Member follower);
 }

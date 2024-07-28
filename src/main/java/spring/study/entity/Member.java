@@ -132,6 +132,15 @@ public class Member extends BasetimeEntity implements UserDetails {
         following.addFollowing(this);
     }
 
+    public void removeFollower(Follow follow) {
+        for (Follow f : follower) {
+            if (f.getFollowing().email.equals(follow.getFollowing().email)) {
+                follower.remove(f);
+                break;
+            }
+        }
+    }
+
     public void changeProfile(String profile) {
         this.profile = profile;
     }

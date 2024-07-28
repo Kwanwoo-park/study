@@ -4,13 +4,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.dto.follow.FollowRequestDto;
-import spring.study.dto.follow.FollowResponseDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
 import spring.study.repository.FollowRepository;
-import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -23,6 +19,10 @@ public class FollowService {
     @Transactional
     public Follow save(Follow follow) {
         return followRepository.save(follow);
+    }
+
+    public Follow findFollow(Member follower) {
+        return followRepository.findByFollower(follower);
     }
 
     public void delete(Member follower) {

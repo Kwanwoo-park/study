@@ -25,11 +25,11 @@
       <label class="form-label" th:text="${member.email}"></label>
     </div>
     <div class="mb-3">
-      <a th:href="@{/follow/follower(id=${member.id})}" id="follower">
+      <a th:href="@{/follow/follower(email=${member.email})}" id="follower">
         <label class="form-label">Follower: </label>
         <label class="form-label" th:text="${follower}"></label>
       </a>
-      <a th:href="@{/follow/following(id=${member.id})}" id="following">
+      <a th:href="@{/follow/following(email=${member.email})}" id="following">
         <label class="form-label">&nbsp;Following: </label>
         <label class="form-label" th:text="${following}"></label>
       </a>
