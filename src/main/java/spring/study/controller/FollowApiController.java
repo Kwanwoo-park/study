@@ -3,8 +3,7 @@ package spring.study.controller;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import spring.study.dto.follow.FollowRequestDto;
-import spring.study.dto.search.SearchRequestDto;
+import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
 import spring.study.service.FollowService;
@@ -20,9 +19,9 @@ public class FollowApiController {
     private final MemberService memberService;
 
     @PostMapping("/action")
-    public Follow memberFollow(@RequestBody SearchRequestDto searchRequestDto, HttpSession session) {
+    public Follow memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
-        Member search_member = memberService.findMember(searchRequestDto.getEmail());
+        Member search_member = memberService.findMember(memberRequestDto.getEmail());
 
         Follow follow = Follow.builder()
                 .follower(member)
