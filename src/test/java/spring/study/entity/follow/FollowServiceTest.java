@@ -61,13 +61,15 @@ public class FollowServiceTest {
     @Test
     void find() {
         // given
-        Member follower = memberService.findMember("akakslslzz@naver.com");
+        Member follower = memberService.findMember("akakslsl13@naver.com");
+        Member following = memberService.findMember("akakslslzz@naver.com");
 
         // when
-        Follow follow = followService.findFollow(follower);
+        Follow follow = followService.findFollow(follower, following);
 
         // then
         assertThat(follow.getFollower()).isEqualTo(follower);
+        assertThat(follow.getFollowing()).isEqualTo(following);
     }
 
     @Test
@@ -103,7 +105,7 @@ public class FollowServiceTest {
         Follow save = followService.save(follow);
 
         // when
-        followService.delete(save.getFollower());
+        followService.delete(save.getFollower(), save.getFollowing());
         saveFollower.getFollower().remove(save);
         saveFollowing.getFollowing().remove(save);
 

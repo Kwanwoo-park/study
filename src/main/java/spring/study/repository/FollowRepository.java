@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface FollowRepository extends JpaRepository<Follow, Long> {
     @Transactional
-    void deleteByFollower(Member follower);
+    void deleteByFollowerAndFollowing(Member follower, Member following);
 
-    public Follow findByFollower(Member follower);
+    public Follow findByFollowerAndFollowing(Member follower, Member following);
 }

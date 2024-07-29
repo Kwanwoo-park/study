@@ -83,13 +83,15 @@ public class FollowRepositoryTest {
     @Test
     void find() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+        Member follower = memberRepository.findByEmail("akakslsl13@naver.com");
+        Member following = memberRepository.findByEmail("akakslslzz@naver.com");
 
         // when
-        Follow follow = followRepository.findByFollower(member);
+        Follow follow = followRepository.findByFollowerAndFollowing(follower, following);
 
         // then
-        assertThat(follow.getFollower()).isEqualTo(member);
+        assertThat(follow.getFollower()).isEqualTo(follower);
+        assertThat(follow.getFollowing()).isEqualTo(following);
     }
 
     @Test
@@ -126,7 +128,7 @@ public class FollowRepositoryTest {
         Follow saveFollow1 = followRepository.save(follow1);
 
         // when
-        followRepository.deleteByFollower(saveFollow1.getFollower());
+        followRepository.deleteByFollowerAndFollowing(saveFollow1.getFollower(), saveFollow1.getFollowing());
         saveFollower.getFollower().remove(saveFollow1);
         saveFollowing.getFollowing().remove(saveFollow1);
 

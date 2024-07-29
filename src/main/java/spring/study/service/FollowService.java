@@ -21,11 +21,11 @@ public class FollowService {
         return followRepository.save(follow);
     }
 
-    public Follow findFollow(Member follower) {
-        return followRepository.findByFollower(follower);
+    public Follow findFollow(Member follower, Member following) {
+        return followRepository.findByFollowerAndFollowing(follower, following);
     }
 
-    public void delete(Member follower) {
-        followRepository.deleteByFollower(follower);
+    public void delete(Member follower, Member following) {
+        followRepository.deleteByFollowerAndFollowing(follower, following);
     }
 }

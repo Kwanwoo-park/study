@@ -2,6 +2,8 @@ package spring.study.controller;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
@@ -37,14 +39,16 @@ public class FollowApiController {
     }
 
     @DeleteMapping("/action")
-    public void memberUnfollow(HttpSession session) {
+    public ResponseEntity<Member> memberUnfollow(@RequestBody MemberRequestDto memberRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
+        Member search_member = memberService.findMember(memberRequestDto.getEmail());
 
-        member.removeFollower(followService.findFollow(member));
-        System.out.println(member.getFollower().size());
+        member.removeFollower(followService.findFollow(member, search_member));
 
-        followService.delete(member);
+        followService.delete(member, search_member);
 
         session.setAttribute("member", member);
+
+        return ResponseEntity.ok(member);
     }
 }

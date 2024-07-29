@@ -101,10 +101,12 @@
             $.ajax({
               type: 'DELETE',
               url: '/follow/action',
-              contentType: 'application/json; charset=utf-8'
+              dataType: 'JSON',
+              contentType: 'application/json; charset=utf-8',
+              data: JSON.stringify(data)
             }).done(function() {
               window.location.reload();
-            }).error(function() {
+            }).fail(function() {
               alert("다시 시도하여주십시오.");
             })
           }
