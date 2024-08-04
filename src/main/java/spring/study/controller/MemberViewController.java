@@ -97,6 +97,7 @@ public class MemberViewController {
             member = (Member) session.getAttribute("member");
 
             model.addAttribute("member", member);
+            model.addAttribute("board", member.getBoard().size());
             model.addAttribute("follower", member.getFollowing().size());
             model.addAttribute("following", member.getFollower().size());
             model.addAttribute("list", member.getBoard());
@@ -157,10 +158,13 @@ public class MemberViewController {
 
         member = (Member) session.getAttribute("member");
 
+        if (member.getEmail().equals(search_member.getEmail()))
+            return "redirect:/member/detail";
+
         List<Follow> follower = member.getFollower();
 
         model.addAttribute("member", search_member);
-        model.addAttribute("equal_check", search_member.getEmail().equals(member.getEmail()));
+        model.addAttribute("board", search_member.getBoard().size());
         model.addAttribute("follower", search_member.getFollowing().size());
         model.addAttribute("following", search_member.getFollower().size());
         model.addAttribute("list", search_member.getBoard());

@@ -13,6 +13,20 @@
   <form method="dialog" enctype="multipart/form-data">
     <div class="mb-3">
       <img th:src="@{/img/} + ${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <h3 style="display:inline">
+        <label class="form-label">Posts: </label>
+        <label class="form-label" th:text="${board}"></label>
+        <a th:href="@{/follow/follower(email=${member.email})}" id="follower">
+        <label class="form-label"> Follower: </label>
+        <label class="form-label" th:text="${follower}"></label>
+      </a>
+      <a th:href="@{/follow/following(email=${member.email})}" id="following">
+        <label class="form-label">Following: </label>
+        <label class="form-label" th:text="${following}"></label>
+      </a></h3>
+      <br>
+      <button type="button" id="follow" class="btn btn-success" onclick="fnFollow()"></button>
     </div>
     <div class="mb-3">
       <label class="form-label">Name: </label>
@@ -23,16 +37,7 @@
       <label class="form-label" th:text="${member.email}"></label>
     </div>
     <div class="mb-3">
-      <a th:href="@{/follow/follower(email=${member.email})}" id="follower">
-        <label class="form-label">Follower: </label>
-        <label class="form-label" th:text="${follower}"></label>
-      </a>
-      <a th:href="@{/follow/following(email=${member.email})}" id="following">
-        <label class="form-label">&nbsp;Following: </label>
-        <label class="form-label" th:text="${following}"></label>
-      </a>
     </div>
-    <button type="button" id="follow" class="btn btn-success" onclick="fnFollow()"></button>
     <table class="table table-striped table-horizontal table-bordered mt-3">
       <thead class="thead-strong">
         <tr>
@@ -74,17 +79,12 @@
     	const status = /*[[${status}]]*/;
     	const follower = /*[[${follower}]]*/;
     	const following = /*[[${following}]]*/;
-    	const equal_check = /*[[${equal_check}]]*/;
 
-    	if (!equal_check) {
-          if (status)
-            document.querySelector("#follow").innerText = "Unfollow";
-          else
-            document.querySelector("#follow").innerText = "Follow";
-    	}
-    	else {
-    	  document.getElementById('follow').style.display = 'none';
-    	}
+        if (status)
+          document.querySelector("#follow").innerText = "Unfollow";
+        else
+          document.querySelector("#follow").innerText = "Follow";
+
 
     	if (follower == 0)
     	  document.querySelector("#follower").removeAttribute('href');
