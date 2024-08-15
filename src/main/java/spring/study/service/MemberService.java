@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Service
 @Slf4j
 @RequiredArgsConstructor
-@Service
 public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
 

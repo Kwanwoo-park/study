@@ -35,6 +35,7 @@ public class MemberApiController {
     public Member detailAction(@RequestParam MultipartFile file, HttpSession session) throws IOException {
         String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
+        System.out.println(session.getAttribute("member"));
         member = (Member) session.getAttribute("member");
 
         File f = new File(fileDir + file.getOriginalFilename());
@@ -75,7 +76,7 @@ public class MemberApiController {
     }
 
     @DeleteMapping("/withdrawal/action")
-    public ResponseEntity withdrawalAction(HttpSession session) {
+    public ResponseEntity<Member> withdrawalAction(HttpSession session) {
         member = (Member) session.getAttribute("member");
 
         memberService.deleteById(member.getId());
@@ -84,7 +85,7 @@ public class MemberApiController {
 
         session.invalidate();
 
-        return new ResponseEntity(HttpStatus.OK);
+        return ResponseEntity.ok(member);
     }
 
 

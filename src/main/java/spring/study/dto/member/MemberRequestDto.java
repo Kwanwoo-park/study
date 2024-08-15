@@ -1,5 +1,6 @@
 package spring.study.dto.member;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,16 @@ public class MemberRequestDto {
     private String name;
     private Role role;
     private String profile;
+
+    @Builder
+    public MemberRequestDto(Long id, String email, String password, String name, Role role, String profile) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.role = role;
+        this.profile = profile;
+    }
 
     public Member toEntity() {
         return Member.builder()
