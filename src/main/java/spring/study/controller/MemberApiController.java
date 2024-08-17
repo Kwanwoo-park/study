@@ -35,7 +35,6 @@ public class MemberApiController {
     public Member detailAction(@RequestParam MultipartFile file, HttpSession session) throws IOException {
         String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
-        System.out.println(session.getAttribute("member"));
         member = (Member) session.getAttribute("member");
 
         File f = new File(fileDir + file.getOriginalFilename());

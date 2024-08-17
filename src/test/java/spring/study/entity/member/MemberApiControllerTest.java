@@ -2,10 +2,10 @@ package spring.study.entity.member;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.restdocs.RestDocsMockMvcBuilderCustomizer;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -17,15 +17,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.service.MemberService;
 
-import java.io.File;
 import java.io.FileInputStream;
 
 import static org.assertj.core.api.Assertions.*;
@@ -37,7 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Transactional
-@AutoConfigureMockMvc
 public class MemberApiControllerTest {
     @LocalServerPort
     private int port;
@@ -48,16 +46,14 @@ public class MemberApiControllerTest {
     private MemberService memberService;
     @Autowired
     private WebApplicationContext context;
-    @Autowired
     private MockMvc mvc;
-    private MockHttpSession session = new MockHttpSession();
 
     @WithMockUser(roles = "USER")
     @Test
     void save() throws Exception {
         // given
         MemberRequestDto memberRequestDto = MemberRequestDto.builder()
-                .email("test@test.com")
+                .email("test2@test.com")
                 .password("test")
                 .name("test")
                 .role(Role.USER)
@@ -65,6 +61,11 @@ public class MemberApiControllerTest {
                 .build();
 
         String url = "http://localhost:" + port + "/member/register/action";
+
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
 
         // when
         mvc.perform(post(url)
@@ -82,6 +83,12 @@ public class MemberApiControllerTest {
     @WithMockUser(roles = "USER")
     @Test
     void update() throws Exception {
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
+        MockHttpSession session = new MockHttpSession();
         session.setAttribute("member", memberService.findMember("test@test.com"));
 
         final String file = "/Users/lg/Desktop/study/study/src/main/resources/static/img/IMG_0111.jpeg";
@@ -98,11 +105,10 @@ public class MemberApiControllerTest {
         String url = "http://localhost:" + port + "/member/detail/action";
 
         mvc.perform(
-                MockMvcRequestBuilders.multipart(HttpMethod.PATCH, url)
-                        .file(image)
+                MockMvcRequestBuilders.multipart(HttpMethod.PATCH, url).file(image)
+                        .session(session)
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.MULTIPART_FORM_DATA)
-                        .session(session)
         ).andExpect(status().isOk());
 
         Member member = memberService.findMember("test@test.com");
