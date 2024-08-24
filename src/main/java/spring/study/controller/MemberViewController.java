@@ -125,6 +125,8 @@ public class MemberViewController {
     public String updatePassword(Model model, HttpSession session) throws Exception {
         member = (Member) session.getAttribute("member");
 
+        session.invalidate();
+
         model.addAttribute("email", member.getEmail());
 
         return "/member/updatePassword";

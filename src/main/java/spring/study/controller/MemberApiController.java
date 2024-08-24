@@ -53,8 +53,6 @@ public class MemberApiController {
 
     @GetMapping("/find/{email}/action")
     public Member findAction(@PathVariable String email, HttpSession session) {
-        member = (Member) session.getAttribute("member");
-
         member = memberService.findMember(email);
 
         session.setAttribute("member", member);
@@ -63,13 +61,11 @@ public class MemberApiController {
     }
 
     @PatchMapping("/updatePassword/action")
-    public int updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpSession session) {
-        member = (Member) session.getAttribute("member");
-
+    public int updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto) {
+        member = memberService.findMember(memberUpdateDto.getEmail());
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;
-        session.invalidate();
 
         return result;
     }

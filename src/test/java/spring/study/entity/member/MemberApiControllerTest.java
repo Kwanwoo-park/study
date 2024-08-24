@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -108,7 +109,7 @@ public class MemberApiControllerTest {
 
     @WithMockUser(roles = "USER")
     @Test
-    void update() throws Exception {
+    void updateProfile() throws Exception {
         // given
         mvc = MockMvcBuilders
                 .webAppContextSetup(context)
@@ -144,5 +145,53 @@ public class MemberApiControllerTest {
         assertThat(member.getProfile()).isEqualTo("IMG_0111.jpeg");
 
         session.invalidate();
+    }
+
+    @WithMockUser(roles = "USER")
+    @Test
+    void find() throws Exception{
+        // given
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
+        url += "/member/find/email=test@test.com/action";
+
+        // when
+        mvc.perform(get(url)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+        ).andExpect(status().isOk());
+    }
+
+    @WithMockUser
+    @Test
+    void updatePassword() throws Exception {
+        // given
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
+        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
+                .email("test@test.com")
+                .password("test2")
+                .build();
+
+        url += "/member/updatePassword/action";
+
+        // when
+        mvc.perform(patch(url)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(new ObjectMapper().writeValueAsString(memberRequestDto))
+        ).andExpect(status().isOk());
+
+        // then
+        Member member = memberService.findMember("test@test.com");
+
+        if (new BCryptPasswordEncoder().matches("test2", member.getPassword()))
+            System.out.println("Pass!!");
+        else
+            System.out.println("Fail!!");
     }
 }
