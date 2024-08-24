@@ -2,11 +2,9 @@ package spring.study.entity.member;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -19,6 +17,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Member;
@@ -28,7 +28,7 @@ import spring.study.service.MemberService;
 import java.io.FileInputStream;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.Matchers.is;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -40,6 +40,8 @@ public class MemberApiControllerTest {
     @LocalServerPort
     private int port;
 
+    String url = "http://localhost:" + port;
+
     @Autowired
     private TestRestTemplate testTemplate;
     @Autowired
@@ -50,8 +52,37 @@ public class MemberApiControllerTest {
 
     @WithMockUser(roles = "USER")
     @Test
+    void login() throws Exception {
+        // given
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
+        MockHttpSession session = new MockHttpSession();
+
+        MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
+        data.add("email", "test@test.com");
+        data.add("password", "test");
+
+        url += "/member/login/action";
+
+        // when
+        mvc.perform(get(url).session(session)
+                        .params(data)
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                ).andExpect(status().isOk());
+    }
+
+    @WithMockUser(roles = "USER")
+    @Test
     void save() throws Exception {
         // given
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
         MemberRequestDto memberRequestDto = MemberRequestDto.builder()
                 .email("test2@test.com")
                 .password("test")
@@ -60,12 +91,7 @@ public class MemberApiControllerTest {
                 .profile("1.img")
                 .build();
 
-        String url = "http://localhost:" + port + "/member/register/action";
-
-        mvc = MockMvcBuilders
-                .webAppContextSetup(context)
-                .apply(springSecurity())
-                .build();
+         url += "/member/register/action";
 
         // when
         mvc.perform(post(url)
@@ -83,6 +109,7 @@ public class MemberApiControllerTest {
     @WithMockUser(roles = "USER")
     @Test
     void update() throws Exception {
+        // given
         mvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .apply(springSecurity())
@@ -102,8 +129,9 @@ public class MemberApiControllerTest {
                 fileInputStream
         );
 
-        String url = "http://localhost:" + port + "/member/detail/action";
+        url += "/member/detail/action";
 
+        // when
         mvc.perform(
                 MockMvcRequestBuilders.multipart(HttpMethod.PATCH, url).file(image)
                         .session(session)
@@ -111,6 +139,7 @@ public class MemberApiControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA)
         ).andExpect(status().isOk());
 
+        // then
         Member member = memberService.findMember("test@test.com");
         assertThat(member.getProfile()).isEqualTo("IMG_0111.jpeg");
 

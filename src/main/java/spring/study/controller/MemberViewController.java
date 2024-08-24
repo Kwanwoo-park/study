@@ -67,6 +67,7 @@ public class MemberViewController {
                 return "redirect:/member/login?error=true&exception=Invalid Email or Password";
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return "redirect:/member/login?error=true&exception=Invalid Email or Password";
         }
 
