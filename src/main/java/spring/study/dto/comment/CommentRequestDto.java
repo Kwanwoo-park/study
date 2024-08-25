@@ -1,5 +1,6 @@
 package spring.study.dto.comment;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +16,11 @@ public class CommentRequestDto {
     private String comments;
     private Member member;
     private Board board;
+
+    @Builder
+    public CommentRequestDto(String comments) {
+        this.comments = comments;
+    }
 
     public Comment toEntity() {
         return Comment.builder()
