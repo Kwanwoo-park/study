@@ -194,4 +194,53 @@ public class MemberApiControllerTest {
         else
             System.out.println("Fail!!");
     }
+
+    @WithMockUser
+    @Test
+    void search() throws Exception {
+        // given
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
+        MockHttpSession session = new MockHttpSession();
+
+        url += "/member/search/name=test/action";
+
+        // when
+        mvc.perform(get(url).session(session)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                ).andExpect(status().isOk())
+                .andExpect(request().sessionAttributeDoesNotExist("member"));
+    }
+
+    @WithMockUser
+    @Test
+    void withdrawal() throws Exception {
+        // given
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("member", memberService.findMember("test@test.com"));
+
+        url += "/member/withdrawal/action";
+
+        // when
+        mvc.perform(delete(url)
+                .session(session)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+        ).andExpect(status().isOk());
+
+        // then
+        Member member = memberService.findMember("test@test.com");
+
+        if (member == null)
+            System.out.println("Pass!!");
+        else
+            System.out.println("Fail!!");
+    }
 }
