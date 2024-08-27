@@ -21,9 +21,16 @@ public class FollowApiController {
     private final MemberService memberService;
 
     @PostMapping("/action")
-    public Follow memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpSession session) {
+    public ResponseEntity<Follow> memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
+        List<Follow> follower = member.getFollower();
+
+        for (Follow f : follower) {
+            if (f.getFollowing().getEmail().equals(search_member.getEmail())) {
+                return ResponseEntity.status(501).body(null);
+            }
+        }
 
         Follow follow = Follow.builder()
                 .follower(member)
@@ -35,7 +42,7 @@ public class FollowApiController {
 
         session.setAttribute("member", member);
 
-        return followService.save(follow);
+        return ResponseEntity.ok(followService.save(follow));
     }
 
     @DeleteMapping("/action")
