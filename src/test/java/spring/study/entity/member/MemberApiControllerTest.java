@@ -1,7 +1,6 @@
 package spring.study.entity.member;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,12 +34,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Transactional
 public class MemberApiControllerTest {
     @LocalServerPort
     private int port;
 
-    String url = "http://localhost:" + port;
+    String url = "http://localhost:" + port + "/member";
 
     @Autowired
     private TestRestTemplate testTemplate;
@@ -65,7 +63,7 @@ public class MemberApiControllerTest {
         data.add("email", "test@test.com");
         data.add("password", "test");
 
-        url += "/member/login/action";
+        url += "/login/action";
 
         // when
         mvc.perform(get(url).session(session)
@@ -91,7 +89,7 @@ public class MemberApiControllerTest {
                 .profile("1.img")
                 .build();
 
-         url += "/member/register/action";
+         url += "/register/action";
 
         // when
         mvc.perform(post(url)
@@ -100,8 +98,8 @@ public class MemberApiControllerTest {
                 .andExpect(status().isOk());
 
         // then
-        Member member = memberService.findMember("test@test.com");
-        assertThat(member.getEmail()).isEqualTo("test@test.com");
+        Member member = memberService.findMember("test2@test.com");
+        assertThat(member.getEmail()).isEqualTo("test2@test.com");
         assertThat(member.getProfile()).isEqualTo("KakaoTalk_Photo_2023-04-14-21-36-15.jpeg");
         assertThat(member.getName()).isEqualTo("test");
     }
@@ -116,7 +114,7 @@ public class MemberApiControllerTest {
                 .build();
 
         MockHttpSession session = new MockHttpSession();
-        session.setAttribute("member", memberService.findMember("test@test.com"));
+        session.setAttribute("member", memberService.findMember("test2@test.com"));
 
         final String file = "/Users/lg/Desktop/study/study/src/main/resources/static/img/IMG_0111.jpeg";
 
@@ -129,7 +127,7 @@ public class MemberApiControllerTest {
                 fileInputStream
         );
 
-        url += "/member/detail/action";
+        url += "/detail/action";
 
         // when
         mvc.perform(
@@ -140,7 +138,7 @@ public class MemberApiControllerTest {
         ).andExpect(status().isOk());
 
         // then
-        Member member = memberService.findMember("test@test.com");
+        Member member = memberService.findMember("test2@test.com");
         assertThat(member.getProfile()).isEqualTo("IMG_0111.jpeg");
 
         session.invalidate();
@@ -155,12 +153,13 @@ public class MemberApiControllerTest {
                 .apply(springSecurity())
                 .build();
 
-        url += "/member/find/email=test@test.com/action";
+        url += "/find/email=test2@test.com/action";
 
         // when
         mvc.perform(get(url)
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
-        ).andExpect(status().isOk());
+                ).andExpect(status().isOk())
+                .andExpect(request().sessionAttributeDoesNotExist("member"));
     }
 
     @WithMockUser
@@ -173,11 +172,11 @@ public class MemberApiControllerTest {
                 .build();
 
         MemberRequestDto memberRequestDto = MemberRequestDto.builder()
-                .email("test@test.com")
+                .email("test2@test.com")
                 .password("test2")
                 .build();
 
-        url += "/member/updatePassword/action";
+        url += "/updatePassword/action";
 
         // when
         mvc.perform(patch(url)
@@ -186,7 +185,7 @@ public class MemberApiControllerTest {
         ).andExpect(status().isOk());
 
         // then
-        Member member = memberService.findMember("test@test.com");
+        Member member = memberService.findMember("test2@test.com");
 
         if (new BCryptPasswordEncoder().matches("test2", member.getPassword()))
             System.out.println("Pass!!");
@@ -205,7 +204,7 @@ public class MemberApiControllerTest {
 
         MockHttpSession session = new MockHttpSession();
 
-        url += "/member/search/name=test/action";
+        url += "/search/name=test/action";
 
         // when
         mvc.perform(get(url).session(session)
@@ -224,9 +223,9 @@ public class MemberApiControllerTest {
                 .build();
 
         MockHttpSession session = new MockHttpSession();
-        session.setAttribute("member", memberService.findMember("test@test.com"));
+        session.setAttribute("member", memberService.findMember("test2@test.com"));
 
-        url += "/member/withdrawal/action";
+        url += "/withdrawal/action";
 
         // when
         mvc.perform(delete(url)
@@ -235,7 +234,7 @@ public class MemberApiControllerTest {
         ).andExpect(status().isOk());
 
         // then
-        Member member = memberService.findMember("test@test.com");
+        Member member = memberService.findMember("test2@test.com");
 
         if (member == null)
             System.out.println("Pass!!");

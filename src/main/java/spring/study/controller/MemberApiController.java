@@ -27,12 +27,12 @@ public class MemberApiController {
     private Member member;
 
     @PostMapping("/register/action")
-    public MemberResponseDto registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
-        return userService.createUser(memberRequestDto);
+    public ResponseEntity<MemberResponseDto> registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
+        return ResponseEntity.ok(userService.createUser(memberRequestDto));
     }
 
     @PatchMapping("/detail/action")
-    public Member detailAction(@RequestParam MultipartFile file, HttpSession session) throws IOException {
+    public ResponseEntity<Member> detailAction(@RequestParam MultipartFile file, HttpSession session) throws IOException {
         String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         member = (Member) session.getAttribute("member");
@@ -48,26 +48,26 @@ public class MemberApiController {
 
         session.setAttribute("member", member);
 
-        return member;
+        return ResponseEntity.ok(member);
     }
 
     @GetMapping("/find/{email}/action")
-    public Member findAction(@PathVariable String email, HttpSession session) {
+    public ResponseEntity<Member> findAction(@PathVariable String email, HttpSession session) {
         member = memberService.findMember(email);
 
         session.setAttribute("member", member);
 
-        return member;
+        return ResponseEntity.ok(member);
     }
 
     @PatchMapping("/updatePassword/action")
-    public int updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto) {
+    public ResponseEntity<Member> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto) {
         member = memberService.findMember(memberUpdateDto.getEmail());
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;
 
-        return result;
+        return ResponseEntity.ok(member);
     }
 
     @DeleteMapping("/withdrawal/action")
@@ -85,11 +85,11 @@ public class MemberApiController {
 
 
     @GetMapping("/search/{name}/action")
-    public boolean memberFindAction(@PathVariable String name, HttpSession session) {
+    public ResponseEntity<Boolean> memberFindAction(@PathVariable String name, HttpSession session) {
         HashMap<String, Object> member_search = memberService.findName(name);
 
         session.setAttribute("member_search", member_search);
 
-        return member_search.isEmpty();
+        return ResponseEntity.ok(member_search.isEmpty());
     }
 }
