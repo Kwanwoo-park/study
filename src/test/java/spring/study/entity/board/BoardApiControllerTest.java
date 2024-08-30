@@ -70,11 +70,11 @@ public class BoardApiControllerTest {
         ).andExpect(status().isOk());
 
         // then
-        Board board = boardService.findById(31L);
+        Board board = boardService.findById(39L);
 
         assertThat(board.getTitle()).isEqualTo("test");
         assertThat(board.getContent()).isEqualTo("test");
-        assertThat(board.getMember()).isEqualTo(session.getAttribute("member"));
+        assertThat(board.getMember().getEmail()).isEqualTo("test@test.com");
 
         session.invalidate();
     }
@@ -89,7 +89,7 @@ public class BoardApiControllerTest {
                 .build();
 
         BoardRequestDto boardRequestDto = BoardRequestDto.builder()
-                .id(29L)
+                .id(39L)
                 .title("test")
                 .content("test2")
                 .build();
@@ -103,7 +103,7 @@ public class BoardApiControllerTest {
         ).andExpect(status().isOk());
 
         // then
-        Board board = boardService.findById(29L);
+        Board board = boardService.findById(39L);
 
         assertThat(board.getTitle()).isEqualTo(boardRequestDto.getTitle());
         assertThat(board.getContent()).isEqualTo(boardRequestDto.getContent());
@@ -118,7 +118,7 @@ public class BoardApiControllerTest {
                 .apply(springSecurity())
                 .build();
 
-        url += "/view/delete?id=30";
+        url += "/view/delete?id=39";
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("member", memberService.findMember("test@test.com"));

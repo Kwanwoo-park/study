@@ -7,6 +7,8 @@ etc: Thymeleaf, JQuery<br>
 해야할 일
 <ol>
     <li>코드 Refactoring</li>
+    <li>탈퇴하는 사용자 댓글 삭제</li>
+    <li>탈퇴하는 사용자 팔로우 삭제</li>
 </ol>
 
 개발된 것

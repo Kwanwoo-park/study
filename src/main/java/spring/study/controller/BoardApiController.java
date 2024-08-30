@@ -20,7 +20,7 @@ public class BoardApiController {
     private final CommentService commentService;
 
     @PostMapping("/write/action")
-    public Board boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpSession session) {
+    public ResponseEntity<Board> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
         Board result = null;
 
@@ -33,23 +33,23 @@ public class BoardApiController {
             session.setAttribute("member", member);
 
             if (result == null) {
-                return null;
+                return ResponseEntity.ok(result);
             }
         }
         else {
-            return null;
+            return ResponseEntity.ok(result);
         }
 
-        return result;
+        return ResponseEntity.ok(result);
     }
 
     @PatchMapping("/view/action")
-    public int boardViewAction(@RequestBody BoardRequestDto boardRequestDto){
-        return boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getTitle(), boardRequestDto.getContent());
+    public ResponseEntity<Integer> boardViewAction(@RequestBody BoardRequestDto boardRequestDto){
+        return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getTitle(), boardRequestDto.getContent()));
     }
 
     @DeleteMapping("/view/delete")
-    public void boardViewDeleteAction(@RequestParam() Long id, HttpSession session){
+    public ResponseEntity<Board> boardViewDeleteAction(@RequestParam() Long id, HttpSession session){
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
 
@@ -66,10 +66,7 @@ public class BoardApiController {
 
         commentService.deleteComment(board);
         boardService.deleteById(id);
-    }
 
-    @DeleteMapping("/delete")
-    public void boardDeleteAction(@RequestParam() Long[] deleteId) {
-        boardService.deleteAll(deleteId);
+        return ResponseEntity.ok(board);
     }
 }

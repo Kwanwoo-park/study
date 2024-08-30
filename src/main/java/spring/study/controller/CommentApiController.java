@@ -3,6 +3,7 @@ package spring.study.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.comment.CommentRequestDto;
 import spring.study.entity.Board;
@@ -19,9 +20,9 @@ public class CommentApiController {
     private final BoardService boardService;
 
     @PostMapping("/{bid}/action")
-    public Comment commentAction(@PathVariable Long bid,
-                              @RequestBody CommentRequestDto commentRequestDto,
-                              HttpSession session) {
+    public ResponseEntity<Comment> commentAction(@PathVariable Long bid,
+                                                 @RequestBody CommentRequestDto commentRequestDto,
+                                                 HttpSession session) {
 
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(bid);
@@ -35,6 +36,6 @@ public class CommentApiController {
 
         session.setAttribute("member", member);
 
-        return commentService.save(comment);
+        return ResponseEntity.ok(commentService.save(comment));
     }
 }

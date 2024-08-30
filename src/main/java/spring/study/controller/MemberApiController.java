@@ -9,13 +9,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
+import spring.study.entity.Board;
+import spring.study.entity.Comment;
 import spring.study.entity.Member;
+import spring.study.service.BoardService;
+import spring.study.service.CommentService;
 import spring.study.service.MemberService;
 import spring.study.service.UserService;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -23,6 +28,8 @@ import java.util.HashMap;
 @Slf4j
 public class MemberApiController {
     private final MemberService memberService;
+    private final BoardService boardService;
+    private final CommentService commentService;
     private final UserService userService;
     private Member member;
 
@@ -61,18 +68,26 @@ public class MemberApiController {
     }
 
     @PatchMapping("/updatePassword/action")
-    public ResponseEntity<Member> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto) {
+    public ResponseEntity<Integer> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto) {
         member = memberService.findMember(memberUpdateDto.getEmail());
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;
 
-        return ResponseEntity.ok(member);
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("/withdrawal/action")
     public ResponseEntity<Member> withdrawalAction(HttpSession session) {
         member = (Member) session.getAttribute("member");
+
+        List<Board> list = member.getBoard();
+        if (list.size() > 0) {
+            for (Board b : list) {
+                commentService.deleteComment(b);
+                boardService.deleteById(b.getId());
+            }
+        }
 
         memberService.deleteById(member.getId());
 

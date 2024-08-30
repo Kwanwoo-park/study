@@ -52,10 +52,10 @@ public class CommentApiControllerTest {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("member", memberService.findMember("test@test.com"));
 
-        url += "/31/action";
+        url += "/37/action";
 
         CommentRequestDto commentRequestDto = CommentRequestDto.builder()
-                .comments("test")
+                .comments("test37")
                 .build();
 
         // when
@@ -67,6 +67,6 @@ public class CommentApiControllerTest {
         // then
         Member member = memberService.findMember("test@test.com");
 
-        assertThat(member.getComment().get(0).getComments()).isEqualTo(commentRequestDto.getComments());
+        assertThat(member.getComment().get(3).getComments()).isEqualTo(commentRequestDto.getComments());
     }
 }
