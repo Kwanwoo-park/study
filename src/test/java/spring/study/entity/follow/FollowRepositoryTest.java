@@ -144,4 +144,30 @@ public class FollowRepositoryTest {
         memberRepository.deleteById(saveFollower.getId());
         memberRepository.deleteById(saveFollowing.getId());
     }
+
+    @Test
+    void deleteByFollower() {
+        // given
+        Member member = memberRepository.findByEmail("test@test.com");
+        System.out.println(followRepository.findAll().size());
+
+        // when
+        followRepository.deleteByFollower(member);
+
+        // then
+        System.out.println(followRepository.findAll().size());
+    }
+
+    @Test
+    void deleteByFollowing() {
+        // given
+        Member member = memberRepository.findByEmail("test@test.com");
+        System.out.println(followRepository.findAll().size());
+
+        // when
+        followRepository.deleteByFollowing(member);
+
+        // then
+        System.out.println(followRepository.findAll().size());
+    }
 }

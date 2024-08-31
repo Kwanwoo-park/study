@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.dto.book.BookBorrowRequestDto;
-import spring.study.dto.book.BookRequestDto;
 import spring.study.entity.BookBorrow;
 import spring.study.repository.BookBorrowRepository;
 

@@ -95,13 +95,15 @@ public class MemberViewController {
     @GetMapping("/detail")
     public String detail(Model model, HttpSession session){
         if (session != null) {
-            member = (Member) session.getAttribute("member");
+            member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
             model.addAttribute("member", member);
             model.addAttribute("board", member.getBoard().size());
             model.addAttribute("follower", member.getFollowing().size());
             model.addAttribute("following", member.getFollower().size());
             model.addAttribute("list", member.getBoard());
+
+            session.setAttribute("member", member);
         }
         else {
             return "redirect:/member/login?error=true&exception=Not Found account";
@@ -159,7 +161,7 @@ public class MemberViewController {
         if (session == null)
             return "redirect:/member/login?error=true&exception=Not Found account";
 
-        member = (Member) session.getAttribute("member");
+        member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
         if (member.getEmail().equals(search_member.getEmail()))
             return "redirect:/member/detail";

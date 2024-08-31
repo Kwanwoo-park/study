@@ -119,4 +119,17 @@ public class CommentServiceTest {
         // then
         System.out.println(member.getComment().size());
     }
+
+    @Test
+    void deleteByMember() {
+        // given
+        Member member = memberService.findMember("test@test.com");
+        System.out.println(commentService.findAll().size());
+
+        // when
+        commentService.deleteByMember(member);
+
+        // then
+        System.out.println(commentService.findAll().size());
+    }
 }

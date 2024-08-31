@@ -10,6 +10,7 @@ import spring.study.dto.comment.CommentRequestDto;
 import spring.study.dto.comment.CommentResponseDto;
 import spring.study.entity.Board;
 import spring.study.entity.Comment;
+import spring.study.entity.Member;
 import spring.study.repository.CommentRepository;
 
 import java.util.HashMap;
@@ -44,11 +45,15 @@ public class CommentService {
         return resultMap;
     }
 
-    public List<Comment> findComment(Board board) {
-        return commentRepository.findByBoard(board);
+    public List<Comment> findAll() {
+        return commentRepository.findAll();
     }
 
     public void deleteComment(Board board) {
         commentRepository.deleteByBoard(board);
+    }
+
+    public void deleteByMember(Member member) {
+        commentRepository.deleteByMember(member);
     }
 }

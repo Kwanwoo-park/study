@@ -129,4 +129,17 @@ public class BoardRepositoryTest {
         assertThat(result).isEqualTo(saveBoard);
         assertThat(result.getMember()).isEqualTo(save);
     }
+
+    @Test
+    void deleteByMember() {
+        // given
+        Member member = memberRepository.findByEmail("test@test.com");
+        System.out.println(boardRepository.findAll().size());
+
+        // when
+        boardRepository.deleteByMember(member);
+
+        // then
+        System.out.println(boardRepository.findAll().size());
+    }
 }

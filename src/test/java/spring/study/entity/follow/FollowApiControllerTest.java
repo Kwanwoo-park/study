@@ -128,4 +128,29 @@ public class FollowApiControllerTest {
         else
             System.out.println("Fail!!");
     }
+
+    @WithMockUser
+    @Test
+    void 삭제중복체크() throws Exception {
+        // given
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("member", memberService.findMember("test@test.com"));
+
+        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
+                .email("akakslslzz@naver.com")
+                .build();
+
+        url += "/action";
+
+        // when
+        mvc.perform(delete(url).session(session)
+                .content(new ObjectMapper().writeValueAsString(memberRequestDto))
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+        ).andExpect(status().is5xxServerError());
+    }
 }

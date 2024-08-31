@@ -8,6 +8,8 @@ import spring.study.entity.Follow;
 import spring.study.entity.Member;
 import spring.study.repository.FollowRepository;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class FollowService {
@@ -27,5 +29,17 @@ public class FollowService {
 
     public void delete(Member follower, Member following) {
         followRepository.deleteByFollowerAndFollowing(follower, following);
+    }
+
+    public void deleteByFollower(Member follower) {
+        followRepository.deleteByFollower(follower);
+    }
+
+    public void deleteByFollowing(Member following) {
+        followRepository.deleteByFollowing(following);
+    }
+
+    public List<Follow> findAll() {
+        return followRepository.findAll();
     }
 }

@@ -24,13 +24,9 @@ public class FollowApiController {
     public ResponseEntity<Follow> memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
-        List<Follow> follower = member.getFollower();
 
-        for (Follow f : follower) {
-            if (f.getFollowing().getEmail().equals(search_member.getEmail())) {
-                return ResponseEntity.status(501).body(null);
-            }
-        }
+        if (followService.findFollow(member, search_member) != null)
+            return ResponseEntity.status(501).body(null);
 
         Follow follow = Follow.builder()
                 .follower(member)
@@ -49,8 +45,12 @@ public class FollowApiController {
     public ResponseEntity<Member> memberUnfollow(@RequestBody MemberRequestDto memberRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
+        Follow follow = followService.findFollow(member, search_member);
 
-        member.removeFollower(followService.findFollow(member, search_member));
+        if (followService.findFollow(member, search_member) == null)
+            return ResponseEntity.status(501).body(null);
+
+        member.removeFollower(follow);
 
         followService.delete(member, search_member);
 

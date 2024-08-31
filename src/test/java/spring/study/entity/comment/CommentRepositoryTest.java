@@ -130,4 +130,17 @@ public class CommentRepositoryTest {
         System.out.println(member.getComment().size());
         System.out.println(board.getComment().size());
     }
+
+    @Test
+    void deleteByMember() {
+        // given
+        Member member = memberRepository.findByEmail("test@test.com");
+        System.out.println(commentRepository.findAll().size());
+
+        // when
+        commentRepository.deleteByMember(member);
+
+        // then
+        System.out.println(commentRepository.findAll().size());
+    }
 }

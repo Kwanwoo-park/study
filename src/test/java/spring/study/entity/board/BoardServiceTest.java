@@ -95,4 +95,17 @@ public class BoardServiceTest {
             System.out.println(map.get(key).toString());
         }
     }
+
+    @Test
+    void deleteByMember() {
+        // given
+        Member member = memberService.findMember("test@test.com");
+        System.out.println(boardService.findAll().size());
+
+        // when
+        boardService.deleteByMember(member);
+
+        // then
+        System.out.println(boardService.findAll().size());
+    }
 }

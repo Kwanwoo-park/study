@@ -121,4 +121,30 @@ public class FollowServiceTest {
         memberService.deleteById(saveFollower.getId());
         memberService.deleteById(saveFollowing.getId());
     }
+
+    @Test
+    void deleteByFollower() {
+        // given
+        Member member = memberService.findMember("test@test.com");
+        System.out.println(followService.findAll().size());
+
+        // when
+        followService.deleteByFollower(member);
+
+        // then
+        System.out.println(followService.findAll().size());
+    }
+
+    @Test
+    void deleteByFollowing() {
+        // given
+        Member member = memberService.findMember("test@test.com");
+        System.out.println(followService.findAll().size());
+
+        // when
+        followService.deleteByFollowing(member);
+
+        // then
+        System.out.println(followService.findAll().size());
+    }
 }

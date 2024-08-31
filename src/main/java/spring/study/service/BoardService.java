@@ -9,10 +9,12 @@ import org.springframework.stereotype.Service;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.board.BoardResponseDto;
 import spring.study.entity.Board;
+import spring.study.entity.Member;
 import spring.study.repository.BoardRepository;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -41,6 +43,10 @@ public class BoardService {
         resultMap.put("totalPage", list.getTotalPages());
 
         return resultMap;
+    }
+
+    public List<Board> findAll() {
+        return boardRepository.findAll();
     }
 
     public Board findById(Long id) {
@@ -73,7 +79,7 @@ public class BoardService {
         boardRepository.deleteById(id);
     }
 
-    public void deleteAll(Long[] deleteId) {
-        boardRepository.deleteBoard(deleteId);
+    public void deleteByMember(Member member) {
+        boardRepository.deleteByMember(member);
     }
 }

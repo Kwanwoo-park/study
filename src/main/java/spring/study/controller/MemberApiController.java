@@ -12,10 +12,7 @@ import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Board;
 import spring.study.entity.Comment;
 import spring.study.entity.Member;
-import spring.study.service.BoardService;
-import spring.study.service.CommentService;
-import spring.study.service.MemberService;
-import spring.study.service.UserService;
+import spring.study.service.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +27,7 @@ public class MemberApiController {
     private final MemberService memberService;
     private final BoardService boardService;
     private final CommentService commentService;
+    private final FollowService followService;
     private final UserService userService;
     private Member member;
 
@@ -81,13 +79,11 @@ public class MemberApiController {
     public ResponseEntity<Member> withdrawalAction(HttpSession session) {
         member = (Member) session.getAttribute("member");
 
-        List<Board> list = member.getBoard();
-        if (list.size() > 0) {
-            for (Board b : list) {
-                commentService.deleteComment(b);
-                boardService.deleteById(b.getId());
-            }
-        }
+        commentService.deleteByMember(member);
+        boardService.deleteByMember(member);
+
+        followService.deleteByFollower(member);
+        followService.deleteByFollowing(member);
 
         memberService.deleteById(member.getId());
 
