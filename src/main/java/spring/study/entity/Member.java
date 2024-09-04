@@ -58,6 +58,10 @@ public class Member extends BasetimeEntity implements UserDetails {
     @OneToMany(mappedBy = "following", fetch = FetchType.EAGER)
     private List<Follow> following = new ArrayList<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    private List<ChatMessage> messages = new ArrayList<>();
+
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile) {
         this.id = id;
@@ -139,6 +143,10 @@ public class Member extends BasetimeEntity implements UserDetails {
                 break;
             }
         }
+    }
+
+    public void addMessage(ChatMessage message) {
+        message.addMember(this);
     }
 
     public void changeProfile(String profile) {

@@ -1,9 +1,8 @@
 package spring.study.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,22 +14,42 @@ import spring.study.entity.BasetimeEntity;
 @Setter
 @Entity(name = "message")
 public class ChatMessage extends BasetimeEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "message_id")
     private Long id;
 
-    private MessageType type;
-    private String roomId;
-    private String sender;
+    @NotNull
     private String message;
-    private String email;
+
+    @NotNull
+    private MessageType type;
+
+    @JsonIgnore
+    @JoinColumn(name = "member_id")
+    @ManyToOne
+    private Member member;
+
+    @JsonIgnore
+    @JoinColumn(name = "room_id")
+    @ManyToOne
+    private ChatRoom room;
 
     @Builder
-    public ChatMessage(MessageType type, String roomId, String sender, String message, String email) {
-        this.type = type;
-        this.roomId = roomId;
-        this.sender = sender;
+    public ChatMessage(Long id, String message, MessageType type, Member member, ChatRoom room) {
+        this.id = id;
         this.message = message;
-        this.email = email;
+        this.type = type;
+        this.member = member;
+        this.room = room;
+    }
+
+    public void addMember(Member member) {
+        this.member = member;
+        member.getMessages().add(this);
+    }
+
+    public void addRoom(ChatRoom room) {
+        this.room = room;
+        room.getMessages().add(this);
     }
 }

@@ -2,6 +2,7 @@ package spring.study.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import spring.study.entity.BasetimeEntity;
 
@@ -18,6 +19,7 @@ public class Comment extends BasetimeEntity implements Serializable{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     private String comments;
 
     @JsonIgnore
