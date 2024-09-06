@@ -72,4 +72,21 @@ public class ChatRoomServiceTest {
         ChatRoom chatRoom2 = chatRoomService.find(roomId);
         assertThat(chatRoom2.getCount()).isEqualTo(2L);
     }
+
+    @Test
+    void delete() {
+        // given
+        String roomId = "row08wr08w0";
+
+        // when
+        chatRoomService.delete(roomId);
+
+        // then
+        ChatRoom chatRoom = chatRoomService.find(roomId);
+
+        if (chatRoom == null)
+            System.out.println("Pass!!");
+        else
+            System.out.println("Fail!!");
+    }
 }
