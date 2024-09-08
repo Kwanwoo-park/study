@@ -1,16 +1,13 @@
 package spring.study.dto.chat;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import spring.study.entity.ChatMessage;
-import spring.study.entity.ChatRoom;
-import spring.study.entity.Member;
-import spring.study.entity.MessageType;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.*;
+import spring.study.entity.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessageRequestDto {
     private Long id;
     private String message;
@@ -18,9 +15,12 @@ public class ChatMessageRequestDto {
     private Member member;
     private ChatRoom room;
 
-    public ChatMessageRequestDto(String message, MessageType type) {
+    @Builder
+    public ChatMessageRequestDto(String message, MessageType type, ChatRoom room, Member member) {
         this.message = message;
         this.type = type;
+        this.member = member;
+        this.room = room;
     }
 
     public ChatMessage toEntity() {

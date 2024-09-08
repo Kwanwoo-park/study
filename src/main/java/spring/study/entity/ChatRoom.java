@@ -18,7 +18,7 @@ public class ChatRoom {
     private Long id;
 
     @NotNull
-    @Column(unique = true)
+    @Column(name = "roomId", unique = true)
     private String roomId;
 
     @NotNull

@@ -2,9 +2,11 @@ package spring.study.entity.member;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
-import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.repository.MemberRepository;
@@ -15,17 +17,19 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE,
+        connection = EmbeddedDatabaseConnection.H2)
 public class MemberRepositoryTest {
     @Autowired
     MemberRepository memberRepository;
 
-    @Transactional
+
     @Test
     void save() {
         //given
         Member member = Member.builder()
-                .email("test@test.com")
+                .email("test2@test.com")
                 .pwd("test")
                 .name("test")
                 .role(Role.USER)
@@ -40,12 +44,11 @@ public class MemberRepositoryTest {
         assertThat(save.getEmail()).isEqualTo(member.getEmail());
     }
 
-    @Transactional
     @Test
     void find() {
         //given
         Member member = Member.builder()
-                .email("test@test.com")
+                .email("test2@test.com")
                 .pwd("test")
                 .name("test")
                 .role(Role.USER)
@@ -61,12 +64,11 @@ public class MemberRepositoryTest {
         assertThat(result.getName()).isEqualTo(save.getName());
     }
 
-    @Transactional
     @Test
     void findAll() {
         //given
         Member member1 = Member.builder()
-                .email("test@test.com")
+                .email("test2@test.com")
                 .pwd("test")
                 .name("test")
                 .role(Role.USER)
@@ -74,7 +76,7 @@ public class MemberRepositoryTest {
                 .build();
 
         Member member2 = Member.builder()
-                .email("test2@test.com")
+                .email("test3@test.com")
                 .pwd("test")
                 .name("test2")
                 .role(Role.USER)
@@ -88,19 +90,18 @@ public class MemberRepositoryTest {
         List<Member> memberList = memberRepository.findAll(Sort.by("id").ascending());
 
         //Then
-        assertThat(save1.getName()).isEqualTo(memberList.get(0).getName());
-        assertThat(save2.getName()).isEqualTo(memberList.get(1).getName());
+        assertThat(save1.getName()).isEqualTo(memberList.get(4).getName());
+        assertThat(save2.getName()).isEqualTo(memberList.get(5).getName());
 
-        assertThat(save1.getEmail()).isEqualTo(memberList.get(0).getEmail());
-        assertThat(save2.getEmail()).isEqualTo(memberList.get(1).getEmail());
+        assertThat(save1.getEmail()).isEqualTo(memberList.get(4).getEmail());
+        assertThat(save2.getEmail()).isEqualTo(memberList.get(5).getEmail());
     }
 
-    @Transactional
     @Test
     void findName() {
         //given
         Member member1 = Member.builder()
-                .email("test@test.com")
+                .email("test2@test.com")
                 .pwd("test")
                 .name("test")
                 .role(Role.USER)
@@ -108,7 +109,7 @@ public class MemberRepositoryTest {
                 .build();
 
         Member member2 = Member.builder()
-                .email("test2@test.com")
+                .email("test3@test.com")
                 .pwd("test")
                 .name("test")
                 .role(Role.USER)
@@ -122,7 +123,7 @@ public class MemberRepositoryTest {
         List<Member> result = memberRepository.findByName("test");
 
         //then
-        assertThat(save1.getEmail()).isEqualTo(result.get(0).getEmail());
-        assertThat(save2.getEmail()).isEqualTo(result.get(1).getEmail());
+        assertThat(save1.getEmail()).isEqualTo(result.get(1).getEmail());
+        assertThat(save2.getEmail()).isEqualTo(result.get(2).getEmail());
     }
 }

@@ -47,7 +47,7 @@ public class CommentRepositoryTest {
         assertThat(save.getMember()).isEqualTo(member);
     }
 
-    @Transactional
+    //@Transactional
     @Test
     void findAll() {
         // given

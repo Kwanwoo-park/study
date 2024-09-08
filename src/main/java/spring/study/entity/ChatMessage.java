@@ -1,6 +1,7 @@
 package spring.study.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -24,12 +25,10 @@ public class ChatMessage extends BasetimeEntity {
     @NotNull
     private MessageType type;
 
-    @JsonIgnore
     @JoinColumn(name = "member_id")
     @ManyToOne
     private Member member;
 
-    @JsonIgnore
     @JoinColumn(name = "room_id")
     @ManyToOne
     private ChatRoom room;

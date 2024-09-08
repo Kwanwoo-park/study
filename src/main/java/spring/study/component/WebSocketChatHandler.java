@@ -1,6 +1,7 @@
 package spring.study.component;
 
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,8 +10,13 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import spring.study.dto.chat.ChatMessageRequestDto;
+import spring.study.dto.chat.ChatMessageResponseDto;
 import spring.study.entity.ChatMessage;
+import spring.study.entity.ChatRoom;
 import spring.study.entity.MessageType;
+import spring.study.service.ChatMessageService;
+import spring.study.service.ChatRoomService;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -21,6 +27,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
+    private final ChatMessageService chatMessageService;
+    private final ChatRoomService chatRoomService;
     private Set<WebSocketSession> sessions = new HashSet<>();
     private ChatMessage chatMessage;
 
@@ -33,13 +41,18 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
-        chatMessage = objectMapper.readValue(payload, ChatMessage.class);
+        chatMessage = objectMapper.readValue(payload, ChatMessageRequestDto.class).toEntity();
+
+        System.out.println(chatMessage.getMessage());
+        System.out.println(chatMessage.getType());
+        System.out.println(chatMessage.getMember());
+        System.out.println(chatMessage.getRoom());
 
         if (chatMessage.getType().equals(MessageType.ENTER)) {
-            //chatMessage.setMessage(chatMessage.getSender() + "님이 입장했습니다.");
+            chatMessage.setMessage(chatMessage.getMember().getName() + "님이 입장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
         } else if (chatMessage.getType().equals(MessageType.QUIT)) {
-            //chatMessage.setMessage(chatMessage.getSender() + "님이 퇴장했습니다.");
+            chatMessage.setMessage(chatMessage.getMember().getName() + "님이 퇴장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
         } else {
             sendToEachSocket(sessions, message);

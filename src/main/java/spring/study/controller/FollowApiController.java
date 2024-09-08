@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
@@ -21,9 +22,9 @@ public class FollowApiController {
     private final MemberService memberService;
 
     @PostMapping("/action")
-    public ResponseEntity<Follow> memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpSession session) {
+    public ResponseEntity<Follow> memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
-        Member search_member = memberService.findMember(memberRequestDto.getEmail());
+        Member search_member = followRequestDto.getFollowing();
 
         if (followService.findFollow(member, search_member) != null)
             return ResponseEntity.status(501).body(null);
@@ -42,9 +43,9 @@ public class FollowApiController {
     }
 
     @DeleteMapping("/action")
-    public ResponseEntity<Member> memberUnfollow(@RequestBody MemberRequestDto memberRequestDto, HttpSession session) {
+    public ResponseEntity<Member> memberUnfollow(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
         Member member = (Member) session.getAttribute("member");
-        Member search_member = memberService.findMember(memberRequestDto.getEmail());
+        Member search_member = followRequestDto.getFollowing();
         Follow follow = followService.findFollow(member, search_member);
 
         if (followService.findFollow(member, search_member) == null)

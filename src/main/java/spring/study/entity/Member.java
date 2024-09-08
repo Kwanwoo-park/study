@@ -1,6 +1,7 @@
 package spring.study.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -12,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
 @DynamicUpdate
@@ -72,6 +73,11 @@ public class Member extends BasetimeEntity implements UserDetails {
         this.lastLoginTime = lastLoginTime;
         this.profile = profile;
     }
+
+    @Transient
+    @JsonIgnore
+    @JsonDeserialize(as = SimpleGrantedAuthority.class)
+    private Set<SimpleGrantedAuthority> authorities;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

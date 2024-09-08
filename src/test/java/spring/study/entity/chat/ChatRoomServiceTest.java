@@ -1,33 +1,48 @@
 package spring.study.entity.chat;
 
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.entity.ChatRoom;
 import spring.study.service.ChatRoomService;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @SpringBootTest
 public class ChatRoomServiceTest {
     @Autowired
     ChatRoomService chatRoomService;
 
+    @Transactional
     @Test
     void save() {
         // given
-        ChatRoom chatroom = ChatRoom.builder()
-                .roomId("row08wr08w0")
-                .name("test")
-                .count(1L)
-                .build();
+        String name = "test";
 
         // when
-        ChatRoom save = chatRoomService.save(chatroom);
+        ChatRoom save = chatRoomService.createRoom(name);
 
         // then
-        assertThat(save.getRoomId()).isEqualTo(chatroom.getRoomId());
-        assertThat(save.getName()).isEqualTo(chatroom.getName());
+        assertThat(save.getName()).isEqualTo(name);
+        assertThat(save, is(notNullValue()));
+    }
+
+    @Test
+    void findAll() {
+        // when
+        List<ChatRoom> roomList = chatRoomService.findAll();
+
+        // then
+        for (ChatRoom room : roomList) {
+            assertThat(room, is(notNullValue()));
+            assertThat(room.getName()).isEqualTo("test");
+        }
     }
 
     @Test

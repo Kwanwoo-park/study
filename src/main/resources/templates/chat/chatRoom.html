@@ -13,7 +13,7 @@
             <ul class="list-group-flush">
                 <li class="list-group-item" th:each="list, index : ${message?.list}">
                     <span>
-                        <span th:text="${list.sender}"></span>
+                        <span th:text="${list.member.name}"></span>
                         <pre th:text="${list.message}"></pre>
                     </span>
                 </li>
@@ -29,8 +29,7 @@
 <script th:inline="javascript">
   let socket = new WebSocket("ws://localhost:8080/ws/chat");
   let roomId = [[${room.roomId}]];
-  let member = [[${name}]];
-  let email = [[${email}]];
+  let member = [[${member}]];
   let flag = [[${flag}]];
 
   console.log(roomId);
@@ -60,7 +59,7 @@
     let newMsg = document.createElement('pre');
 
     newMsgLi.className = "list-group-item";
-    name.innerText = json.sender;
+    name.innerText = json.member.name;
     newMsg.innerText = json.message;
 
     newMsgArea.append(name);
@@ -76,9 +75,8 @@
   function enterRoom(socket) {
     var enterMsg = {
         type : "ENTER",
-        roomId : roomId,
-        sender : member,
-        email : email
+        room : [[${room}]],
+        member : member
     };
 
     socket.send(JSON.stringify(enterMsg));
@@ -97,8 +95,7 @@
         var talkMsg = {
             type : "TALK",
             roomId : roomId,
-            sender : member,
-            email : email,
+            member : member,
             message : content
         };
 
@@ -110,8 +107,7 @@
     var quitMsg = {
         type : "QUIT",
         roomId : roomId,
-        sender : member,
-        email : email
+        member : member
     };
 
     socket.send(JSON.stringify(quitMsg));
