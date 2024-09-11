@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import spring.study.entity.ChatRoom;
+import spring.study.entity.Member;
 import spring.study.repository.ChatRoomRepository;
 
 import java.util.LinkedHashMap;

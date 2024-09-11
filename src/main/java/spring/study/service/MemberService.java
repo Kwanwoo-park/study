@@ -83,6 +83,24 @@ public class MemberService implements UserDetailsService {
         member.changeLastLoginTime(LocalDateTime.now());
     }
 
+    @Transactional
+    public void updatePhone(Long id, String phone) {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
+
+        member.changePhone(phone);
+    }
+
+    @Transactional
+    public void updatePhoneAndBirth(Long id, String phone, String birth) {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
+
+        member.changePhoneAndBirth(phone, birth);
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return Optional

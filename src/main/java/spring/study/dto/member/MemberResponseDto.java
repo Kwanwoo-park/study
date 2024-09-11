@@ -1,12 +1,14 @@
 package spring.study.dto.member;
 
 import lombok.Getter;
+import lombok.ToString;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+@ToString
 @Getter
 public class MemberResponseDto implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -18,6 +20,8 @@ public class MemberResponseDto implements Serializable {
     private Role role;
     private LocalDateTime lastLoginTime;
     private String profile;
+    private String phone;
+    private String birth;
 
     public MemberResponseDto(Member entity) {
         this.id = entity.getId();
@@ -27,12 +31,7 @@ public class MemberResponseDto implements Serializable {
         this.role = entity.getRole();
         this.lastLoginTime = entity.getLastLoginTime();
         this.profile = entity.getProfile();
-    }
-
-    @Override
-    public String toString() {
-        return "MemberListDto [id=" + id + ", email=" + email + ", name=" + name
-                + ", role=" + role + ", lastLoginTime=" + lastLoginTime
-                + ", profile=" + profile + "]";
+        this.phone = entity.getPhone();
+        this.birth = entity.getBirth();
     }
 }

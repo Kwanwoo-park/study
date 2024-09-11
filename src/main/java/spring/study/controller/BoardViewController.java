@@ -40,6 +40,8 @@ public class BoardViewController {
 
         member = (Member) session.getAttribute("member");
 
+
+
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";

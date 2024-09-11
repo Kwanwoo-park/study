@@ -112,7 +112,7 @@ public class MemberViewController {
         return "/member/detail";
     }
 
-    @GetMapping("/find")
+    @GetMapping("/emailFind")
     public String find(Model model,
                        @RequestParam(value = "error", required = false) String error,
                        @RequestParam(value = "exception", required = false) String exception) {
@@ -120,7 +120,7 @@ public class MemberViewController {
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
 
-        return "/member/find";
+        return "/member/email_find";
     }
 
     @GetMapping("/updatePassword")

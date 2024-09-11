@@ -43,11 +43,6 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         chatMessage = objectMapper.readValue(payload, ChatMessageRequestDto.class).toEntity();
 
-        System.out.println(chatMessage.getMessage());
-        System.out.println(chatMessage.getType());
-        System.out.println(chatMessage.getMember());
-        System.out.println(chatMessage.getRoom());
-
         if (chatMessage.getType().equals(MessageType.ENTER)) {
             chatMessage.setMessage(chatMessage.getMember().getName() + "님이 입장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));

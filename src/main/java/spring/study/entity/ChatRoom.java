@@ -31,6 +31,10 @@ public class ChatRoom {
     @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
     private List<ChatMessage> messages = new ArrayList<>();
 
+//    @JsonIgnore
+//    @ManyToMany(mappedBy = "room", fetch = FetchType.EAGER)
+//    private List<Member> member = new ArrayList<>();
+
     @Builder
     public ChatRoom(Long id, String roomId, String name, Long count) {
         this.id = id;

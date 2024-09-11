@@ -47,6 +47,21 @@ public class MemberServiceTest {
         assertThat(result.getProfile()).isEqualTo("2.jpg");
     }
 
+    @Test
+    void updatePhoneAndBirth() {
+        // given
+        Member member = memberService.findMember("test@test.com");
+
+        // when
+        memberService.updatePhoneAndBirth(member.getId(), "010-1234-1234", "1900-01-01");
+
+        // then
+        member = memberService.findMember("test@test.com");
+
+        assertThat(member.getBirth()).isEqualTo("1900-01-01");
+        assertThat(member.getPhone()).isEqualTo("010-1234-1234");
+    }
+
     @Transactional
     @Test
     void findAll() {

@@ -39,6 +39,12 @@ public class Member extends BasetimeEntity implements UserDetails {
     private Role role;
 
     @NotNull
+    private String phone;
+
+    @NotNull
+    private String birth;
+
+    @NotNull
     private String profile;
     @Column(name = "last_login_time")
     private LocalDateTime lastLoginTime;
@@ -59,12 +65,25 @@ public class Member extends BasetimeEntity implements UserDetails {
     @OneToMany(mappedBy = "following", fetch = FetchType.EAGER)
     private List<Follow> following = new ArrayList<>();
 
+//    @JsonIgnore
+//    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+//    private List<ChatRoomMember> chatRoomMembers = new ArrayList<>();
+//
+//
+//    @ManyToMany(fetch = FetchType.EAGER)
+//    @JoinTable(
+//            name = "room_member",
+//            joinColumns = @JoinColumn(name = "member_id"),
+//            inverseJoinColumns = @JoinColumn(name = "room_id")
+//    )
+//    private List<ChatRoom> room = new ArrayList<>();
+
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<ChatMessage> messages = new ArrayList<>();
 
     @Builder
-    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile) {
+    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;
@@ -72,6 +91,8 @@ public class Member extends BasetimeEntity implements UserDetails {
         this.role = role;
         this.lastLoginTime = lastLoginTime;
         this.profile = profile;
+        this.phone = phone;
+        this.birth = birth;
     }
 
     @Transient
@@ -165,5 +186,15 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void changeLastLoginTime(LocalDateTime lastLoginTime) {
         this.lastLoginTime = lastLoginTime;
+    }
+
+    public void changePhone(String phone) {
+        this.phone = phone;
+    }
+
+    // 회원가입 시 전화번호랑 생년월일 안 받은 사람들 받는 용도
+    public void changePhoneAndBirth(String phone, String birth) {
+        this.phone = phone;
+        this.birth = birth;
     }
 }
