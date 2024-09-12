@@ -7,6 +7,7 @@ import spring.study.entity.Role;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @ToString
 @Getter
@@ -21,7 +22,7 @@ public class MemberResponseDto implements Serializable {
     private LocalDateTime lastLoginTime;
     private String profile;
     private String phone;
-    private String birth;
+    private LocalDateTime birth;
 
     public MemberResponseDto(Member entity) {
         this.id = entity.getId();

@@ -1,16 +1,20 @@
 package spring.study.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -41,8 +45,9 @@ public class Member extends BasetimeEntity implements UserDetails {
     @NotNull
     private String phone;
 
-    @NotNull
-    private String birth;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
+    private LocalDateTime birth;
 
     @NotNull
     private String profile;
@@ -83,7 +88,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     private List<ChatMessage> messages = new ArrayList<>();
 
     @Builder
-    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth) {
+    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, LocalDateTime birth) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;
@@ -193,7 +198,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     }
 
     // 회원가입 시 전화번호랑 생년월일 안 받은 사람들 받는 용도
-    public void changePhoneAndBirth(String phone, String birth) {
+    public void changePhoneAndBirth(String phone, LocalDateTime birth) {
         this.phone = phone;
         this.birth = birth;
     }

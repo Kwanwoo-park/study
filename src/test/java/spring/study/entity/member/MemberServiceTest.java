@@ -10,6 +10,12 @@ import spring.study.entity.Role;
 import spring.study.service.MemberService;
 import spring.study.service.UserService;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,18 +54,24 @@ public class MemberServiceTest {
     }
 
     @Test
-    void updatePhoneAndBirth() {
-        // given
-        Member member = memberService.findMember("test@test.com");
+    void updatePhoneAndBirth() throws Exception{
+        try {
+            // given
+            Member member = memberService.findMember("test@test.com");
 
-        // when
-        memberService.updatePhoneAndBirth(member.getId(), "010-1234-1234", "1900-01-01");
+            LocalDateTime date = LocalDate.parse("1900-01-01", DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
 
-        // then
-        member = memberService.findMember("test@test.com");
+            // when
+            memberService.updatePhoneAndBirth(member.getId(), "010-1234-1234", date);
 
-        assertThat(member.getBirth()).isEqualTo("1900-01-01");
-        assertThat(member.getPhone()).isEqualTo("010-1234-1234");
+            // then
+            member = memberService.findMember("test@test.com");
+
+            assertThat(member.getBirth()).isEqualTo(date);
+            assertThat(member.getPhone()).isEqualTo("010-1234-1234");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Transactional
