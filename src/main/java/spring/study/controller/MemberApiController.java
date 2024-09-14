@@ -56,9 +56,20 @@ public class MemberApiController {
         return ResponseEntity.ok(member);
     }
 
-    @GetMapping("/find/{email}/action")
+    @GetMapping("/find/email/{email}/action")
     public ResponseEntity<Member> findAction(@PathVariable String email, HttpSession session) {
         member = memberService.findMember(email);
+
+        session.setAttribute("member", member);
+
+        return ResponseEntity.ok(member);
+    }
+
+    @GetMapping("/find/info/{phone}&{birth}/action")
+    public ResponseEntity<Member> findAction(@PathVariable String phone, @PathVariable String birth, HttpSession session) {
+        String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
+        phone = phone.replaceAll(regEx, "$1-$2-$3");
+        member = memberService.findMember(phone, birth);
 
         session.setAttribute("member", member);
 

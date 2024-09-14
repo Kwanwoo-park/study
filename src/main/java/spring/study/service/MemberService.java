@@ -16,7 +16,6 @@ import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Member;
 import spring.study.repository.MemberRepository;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -64,6 +63,10 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findByEmail(email);
     }
 
+    public Member findMember(String phone, String birth) {
+        return memberRepository.findByPhoneAndBirth(phone, birth);
+    }
+
     public void deleteById(Long id) { memberRepository.deleteById(id); }
 
     @Transactional
@@ -94,7 +97,7 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public void updatePhoneAndBirth(Long id, String phone, LocalDateTime birth) {
+    public void updatePhoneAndBirth(Long id, String phone, String birth) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));

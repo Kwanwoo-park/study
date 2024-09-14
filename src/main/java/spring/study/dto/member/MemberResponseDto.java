@@ -22,7 +22,7 @@ public class MemberResponseDto implements Serializable {
     private LocalDateTime lastLoginTime;
     private String profile;
     private String phone;
-    private LocalDateTime birth;
+    private String birth;
 
     public MemberResponseDto(Member entity) {
         this.id = entity.getId();

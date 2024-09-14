@@ -112,15 +112,19 @@ public class MemberViewController {
         return "/member/detail";
     }
 
-    @GetMapping("/emailFind")
-    public String find(Model model,
-                       @RequestParam(value = "error", required = false) String error,
-                       @RequestParam(value = "exception", required = false) String exception) {
+    @GetMapping("/find")
+    public String find(Model model) {
+        return "/member/find";
+    }
 
-        model.addAttribute("error", error);
-        model.addAttribute("exception", exception);
-
+    @GetMapping("/findByEmail")
+    public String findByEmail(Model model) {
         return "/member/email_find";
+    }
+
+    @GetMapping("/findByInfo")
+    public String findByInfo(Model model) {
+        return "/member/info_find";
     }
 
     @GetMapping("/updatePassword")

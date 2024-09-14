@@ -21,10 +21,10 @@ public class MemberRequestDto {
     private Role role;
     private String profile;
     private String phone;
-    private LocalDateTime birth;
+    private String birth;
 
     @Builder
-    public MemberRequestDto(Long id, String email, String password, String name, Role role, String profile, String phone, LocalDateTime birth) {
+    public MemberRequestDto(Long id, String email, String password, String name, Role role, String profile, String phone, String birth) {
         this.id = id;
         this.email = email;
         this.password = password;

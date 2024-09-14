@@ -10,12 +10,9 @@ import spring.study.entity.Role;
 import spring.study.service.MemberService;
 import spring.study.service.UserService;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,24 +51,36 @@ public class MemberServiceTest {
     }
 
     @Test
-    void updatePhoneAndBirth() throws Exception{
-        try {
-            // given
-            Member member = memberService.findMember("test@test.com");
+    void findMember() {
+        // given
+        Member member = memberService.findMember("test@test.com");
 
-            LocalDateTime date = LocalDate.parse("1900-01-01", DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+        String phone = "010-1234-1234";
+        String birth = "1900-01-01";
 
-            // when
-            memberService.updatePhoneAndBirth(member.getId(), "010-1234-1234", date);
+        // when
+        Member result = memberService.findMember(phone, birth);
 
-            // then
-            member = memberService.findMember("test@test.com");
+        // then
+        assertThat(member.getName()).isEqualTo(result.getName());
+        assertThat(member.getEmail()).isEqualTo(result.getEmail());
+    }
 
-            assertThat(member.getBirth()).isEqualTo(date);
-            assertThat(member.getPhone()).isEqualTo("010-1234-1234");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    @Test
+    void updatePhoneAndBirth() {
+        // given
+        Member member = memberService.findMember("test@test.com");
+
+        String date = "1900-01-01";
+
+        // when
+        memberService.updatePhoneAndBirth(member.getId(), "010-1234-1234", date);
+
+        // then
+        member = memberService.findMember("test@test.com");
+
+        assertThat(member.getBirth()).isEqualTo(date);
+        assertThat(member.getPhone()).isEqualTo("010-1234-1234");
     }
 
     @Transactional

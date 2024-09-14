@@ -12,7 +12,9 @@ import spring.study.entity.Role;
 import spring.study.repository.MemberRepository;
 import spring.study.service.MemberService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -125,5 +127,21 @@ public class MemberRepositoryTest {
         //then
         assertThat(save1.getEmail()).isEqualTo(result.get(1).getEmail());
         assertThat(save2.getEmail()).isEqualTo(result.get(2).getEmail());
+    }
+
+    @Test
+    void findByPhoneAndBirth() {
+        // given
+        Member member = memberRepository.findByEmail("test@test.com");
+
+        String phone = "010-1234-1234";
+        String birth = "1900-01-01";
+
+        // when
+        Member result = memberRepository.findByPhoneAndBirth(phone, birth);
+
+        // then
+        assertThat(member.getEmail()).isEqualTo(result.getEmail());
+        assertThat(member.getName()).isEqualTo(result.getName());
     }
 }

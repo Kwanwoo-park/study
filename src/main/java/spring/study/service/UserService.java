@@ -23,10 +23,15 @@ public class UserService implements UserServiceRepository {
         if (memberRepository.findByEmail(memberRequestDto.getEmail()) != null)
             return null;
 
+        String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
+        String phone = memberRequestDto.getPhone().replaceAll(regEx, "$1-$2-$3");
+
         Member member = memberRepository.save(Member.builder()
                         .email(memberRequestDto.getEmail())
                         .pwd(bCryptPasswordEncoder.encode(memberRequestDto.getPassword()))
                         .name(memberRequestDto.getName())
+                        .phone(phone)
+                        .birth(memberRequestDto.getBirth())
                         .role(Role.USER)
                         .profile("KakaoTalk_Photo_2023-04-14-21-36-15.jpeg")
                         .build());

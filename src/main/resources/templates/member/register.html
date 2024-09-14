@@ -23,6 +23,14 @@
             <label for="name" class="form-label">Name</label>
             <input type="text" class="form-control" id="name" name="name" placeholder="Name" required>
         </div>
+        <div class="mb-3">
+            <label for="phone" class="form-label"></label>
+            <input type="text" class="form-control" id="phone" name="phone" placeholder="Phone Number without -" required>
+        </div>
+        <div class="mb-3">
+            <label for="birth" class="form-label">Birth</label>
+            <input type="date" class="form-control" id="birth" name="birth" value="1900-01-01" max="9999-12-31" required>
+        </div>
         <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
         <button type="button" class="btn btn-primary" onclick="fnSave()">Submit</button>
     </form>
@@ -36,7 +44,9 @@
             const data = {
                 email: $("#email").val(),
                 password: $("#password").val(),
-                name: $("#name").val()
+                name: $("#name").val(),
+                phone: $("#phone").val(),
+                birth: $("#birth").val()
             }
 
             $.ajax({
