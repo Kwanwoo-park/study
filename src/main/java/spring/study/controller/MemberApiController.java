@@ -1,5 +1,6 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,28 +58,33 @@ public class MemberApiController {
     }
 
     @GetMapping("/find/email/{email}/action")
-    public ResponseEntity<Member> findAction(@PathVariable String email, HttpSession session) {
+    public ResponseEntity<Member> findAction(@PathVariable String email) {
         member = memberService.findMember(email);
-
-        session.setAttribute("member", member);
 
         return ResponseEntity.ok(member);
     }
 
     @GetMapping("/find/info/{phone}&{birth}/action")
-    public ResponseEntity<Member> findAction(@PathVariable String phone, @PathVariable String birth, HttpSession session) {
+    public ResponseEntity<Member> findAction(@PathVariable String phone, @PathVariable String birth) {
         String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
         phone = phone.replaceAll(regEx, "$1-$2-$3");
         member = memberService.findMember(phone, birth);
-
-        session.setAttribute("member", member);
 
         return ResponseEntity.ok(member);
     }
 
     @PatchMapping("/updatePassword/action")
-    public ResponseEntity<Integer> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto) {
-        member = memberService.findMember(memberUpdateDto.getEmail());
+    public ResponseEntity<Integer> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            member = memberService.findMember(memberUpdateDto.getEmail());
+        }
+        else {
+            member = (Member) session.getAttribute("member");
+            session.invalidate();
+        }
+
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;

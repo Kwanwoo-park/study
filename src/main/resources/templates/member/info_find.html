@@ -42,7 +42,7 @@
       contentType: 'application/json; charset=utf-8',
       success: function(replies) {
         alert("회원님의 이메일은 '" + replies.email + "' 입니다");
-        location.href = "/member/updatePassword";
+        location.href = "/member/updatePassword/" + replies.email;
       },
       error: function() {
         alert("존재하지 않는 회원정보입니다.");

@@ -128,12 +128,17 @@ public class MemberViewController {
     }
 
     @GetMapping("/updatePassword")
-    public String updatePassword(Model model, HttpSession session) throws Exception {
+    public String updatePassword(Model model, HttpSession session) {
         member = (Member) session.getAttribute("member");
 
-        session.invalidate();
-
         model.addAttribute("email", member.getEmail());
+
+        return "/member/updatePassword";
+    }
+
+    @GetMapping("/updatePassword/{email}")
+    public String updatePassword(@PathVariable String email, Model model) throws Exception {
+        model.addAttribute("email", email);
 
         return "/member/updatePassword";
     }
