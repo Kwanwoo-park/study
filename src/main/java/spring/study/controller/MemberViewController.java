@@ -1,5 +1,6 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,11 +35,13 @@ public class MemberViewController {
     public String login(Model model,
                         @RequestParam(value = "error", required = false) String error,
                         @RequestParam(value = "exception", required = false) String exception,
-                        HttpSession session) {
+                        HttpServletRequest request) {
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
 
-        if (session != null) {
+        HttpSession session = request.getSession();
+
+        if (session != null && request.isRequestedSessionIdValid()) {
             member = (Member) session.getAttribute("member");
 
             if (member == null)
@@ -62,6 +65,7 @@ public class MemberViewController {
                     memberService.updateLastLoginTime(member.getId());
                     session.setAttribute("member", member);
                 }
+                else return "redirect:/member/login?error=true&exception=You account is denied";
             }
             else {
                 return "redirect:/member/login?error=true&exception=Invalid Email or Password";
@@ -93,9 +97,16 @@ public class MemberViewController {
     }
 
     @GetMapping("/detail")
-    public String detail(Model model, HttpSession session){
-        if (session != null) {
+    public String detail(Model model, HttpServletRequest request){
+        HttpSession session = request.getSession();
+
+        if (session != null && request.isRequestedSessionIdValid()) {
             member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+
+            if (member == null) {
+                session.invalidate();
+                return "redirect:/member/login?error=true&exception=Not Found account";
+            }
 
             model.addAttribute("member", member);
             model.addAttribute("board", member.getBoard().size());
@@ -128,8 +139,16 @@ public class MemberViewController {
     }
 
     @GetMapping("/updatePassword")
-    public String updatePassword(Model model, HttpSession session) {
+    public String updatePassword(Model model, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return "redirect:/member/login?error=true&exception=Not Found account";
+
         member = (Member) session.getAttribute("member");
+
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found account";
 
         model.addAttribute("email", member.getEmail());
 
@@ -144,9 +163,16 @@ public class MemberViewController {
     }
 
     @GetMapping("/withdrawal")
-    public String withdrawal(Model model, HttpSession session) {
-        if (session == null || member == null)
-            return "redirect:/login?error=true&exception=Not Found account";
+    public String withdrawal(Model model, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return "redirect:/member/login?error=true&exception=Not Found account";
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found account";
 
         model.addAttribute("name", member.getName());
 
@@ -163,17 +189,22 @@ public class MemberViewController {
     }
 
     @GetMapping("/search/detail")
-    public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpSession session) {
+    public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
         boolean status = false;
         Member search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
 
-        if (session == null)
+        if (session == null || !request.isRequestedSessionIdValid())
             return "redirect:/member/login?error=true&exception=Not Found account";
 
-        member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+        if (session.getAttribute("member") == null)
+            return "redirect:/member/login?error=true&exception=Not Found account";
 
-        if (member.getEmail().equals(search_member.getEmail()))
+        if (((Member) session.getAttribute("member")).getEmail().equals(search_member.getEmail()))
             return "redirect:/member/detail";
+
+        member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
         List<Follow> follower = member.getFollower();
 
@@ -191,6 +222,8 @@ public class MemberViewController {
         }
 
         model.addAttribute("status", status);
+
+        session.setAttribute("member", member);
 
         return "/member/member_detail";
     }

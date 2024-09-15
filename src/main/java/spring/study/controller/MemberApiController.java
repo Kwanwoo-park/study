@@ -38,10 +38,18 @@ public class MemberApiController {
     }
 
     @PatchMapping("/detail/action")
-    public ResponseEntity<Member> detailAction(@RequestParam MultipartFile file, HttpSession session) throws IOException {
-        String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
+    public ResponseEntity<Member> detailAction(@RequestParam MultipartFile file, HttpServletRequest request) throws IOException {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(501).body(null);
 
         member = (Member) session.getAttribute("member");
+
+        if (member == null)
+            return ResponseEntity.status(501).body(null);
+
+        String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         File f = new File(fileDir + file.getOriginalFilename());
 
@@ -83,6 +91,9 @@ public class MemberApiController {
         else {
             member = (Member) session.getAttribute("member");
             session.invalidate();
+
+            if (member == null)
+                return ResponseEntity.status(501).body(null);
         }
 
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
@@ -93,8 +104,16 @@ public class MemberApiController {
     }
 
     @DeleteMapping("/withdrawal/action")
-    public ResponseEntity<Member> withdrawalAction(HttpSession session) {
+    public ResponseEntity<Member> withdrawalAction(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(501).body(null);
+
         member = (Member) session.getAttribute("member");
+
+        if (member == null)
+            return ResponseEntity.status(501).body(null);
 
         commentService.deleteByMember(member);
         boardService.deleteByMember(member);

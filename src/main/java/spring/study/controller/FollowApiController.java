@@ -1,5 +1,6 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,12 @@ public class FollowApiController {
     private final MemberService memberService;
 
     @PostMapping("/action")
-    public ResponseEntity<Follow> memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
+    public ResponseEntity<Follow> memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(501).body(null);
+
         Member member = (Member) session.getAttribute("member");
         Member search_member = followRequestDto.getFollowing();
 
@@ -43,7 +49,12 @@ public class FollowApiController {
     }
 
     @DeleteMapping("/action")
-    public ResponseEntity<Member> memberUnfollow(@RequestBody FollowRequestDto followRequestDto, HttpSession session) {
+    public ResponseEntity<Member> memberUnfollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(501).body(null);
+
         Member member = (Member) session.getAttribute("member");
         Member search_member = followRequestDto.getFollowing();
         Follow follow = followService.findFollow(member, search_member);

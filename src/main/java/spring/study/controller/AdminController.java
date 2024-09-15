@@ -1,5 +1,6 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -18,11 +19,12 @@ public class AdminController {
     private final MemberService memberService;
 
     @GetMapping("/administrator")
-    public String admin(HttpSession session){
-        if (session == null) {
+    public String admin(HttpServletRequest request){
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
-
 
         Member member = (Member) session.getAttribute("member");
 
@@ -35,13 +37,14 @@ public class AdminController {
     }
 
     @GetMapping("/memberCheck")
-    public String member_check(Model model, HttpSession session,
+    public String member_check(Model model, HttpServletRequest request,
                                @RequestParam(required = false, defaultValue = "0") Integer page,
                                @RequestParam(required = false, defaultValue = "5") Integer size){
-        if (session == null) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
-
 
         Member member = (Member) session.getAttribute("member");
 

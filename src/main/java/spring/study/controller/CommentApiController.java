@@ -22,7 +22,11 @@ public class CommentApiController {
     @PostMapping("/{bid}/action")
     public ResponseEntity<Comment> commentAction(@PathVariable Long bid,
                                                  @RequestBody CommentRequestDto commentRequestDto,
-                                                 HttpSession session) {
+                                                 HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(501).body(null);
 
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(bid);

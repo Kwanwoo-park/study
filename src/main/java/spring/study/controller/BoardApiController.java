@@ -1,5 +1,6 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,12 @@ public class BoardApiController {
     private final CommentService commentService;
 
     @PostMapping("/write/action")
-    public ResponseEntity<Board> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpSession session) {
+    public ResponseEntity<Board> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(501).body(null);
+
         Member member = (Member) session.getAttribute("member");
         Board result = null;
 
@@ -49,7 +55,12 @@ public class BoardApiController {
     }
 
     @DeleteMapping("/view/delete")
-    public ResponseEntity<Board> boardViewDeleteAction(@RequestParam() Long id, HttpSession session){
+    public ResponseEntity<Board> boardViewDeleteAction(@RequestParam() Long id, HttpServletRequest request){
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(501).body(null);
+
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
 

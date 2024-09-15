@@ -1,5 +1,6 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -31,16 +32,16 @@ public class BoardViewController {
 
     @GetMapping("/list")
     public String getBoardListPage(Model model,
-                                   HttpSession session,
+                                   HttpServletRequest request,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
-        if (session == null) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid()) {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
         member = (Member) session.getAttribute("member");
-
-
 
         if (member == null) {
             session.invalidate();
@@ -57,8 +58,10 @@ public class BoardViewController {
     }
 
     @GetMapping("/write")
-    public String getBoardWritePage(Model model, HttpSession session){
-        if (session == null) {
+    public String getBoardWritePage(Model model, HttpServletRequest request){
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid()) {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
@@ -74,8 +77,10 @@ public class BoardViewController {
     }
 
     @GetMapping("/view")
-    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpSession session) {
-        if (session == null)
+    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
             return "redirect:/member/login?error=true&exception=Session Expired";
 
         member = (Member) session.getAttribute("member");
