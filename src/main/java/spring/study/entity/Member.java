@@ -65,18 +65,9 @@ public class Member extends BasetimeEntity implements UserDetails {
     @OneToMany(mappedBy = "following", fetch = FetchType.EAGER)
     private List<Follow> following = new ArrayList<>();
 
-//    @JsonIgnore
-//    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
-//    private List<ChatRoomMember> chatRoomMembers = new ArrayList<>();
-//
-//
-//    @ManyToMany(fetch = FetchType.EAGER)
-//    @JoinTable(
-//            name = "room_member",
-//            joinColumns = @JoinColumn(name = "member_id"),
-//            inverseJoinColumns = @JoinColumn(name = "room_id")
-//    )
-//    private List<ChatRoom> room = new ArrayList<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    private List<ChatRoomMember> chatRoomMembers= new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
@@ -174,6 +165,10 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void addMessage(ChatMessage message) {
         message.addMember(this);
+    }
+
+    public void addChatRoomMembers(ChatRoomMember chatRoomMember) {
+        chatRoomMember.addMember(this);
     }
 
     public void changeProfile(String profile) {

@@ -31,9 +31,9 @@ public class ChatRoom {
     @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
     private List<ChatMessage> messages = new ArrayList<>();
 
-//    @JsonIgnore
-//    @ManyToMany(mappedBy = "room", fetch = FetchType.EAGER)
-//    private List<Member> member = new ArrayList<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
+    private List<ChatRoomMember> chatRoomMembers = new ArrayList<>();
 
     @Builder
     public ChatRoom(Long id, String roomId, String name, Long count) {
@@ -41,6 +41,10 @@ public class ChatRoom {
         this.roomId = roomId;
         this.name = name;
         this.count = count;
+    }
+
+    public void addChatRoomMembers(ChatRoomMember chatRoomMember) {
+        chatRoomMember.addRoom(this);
     }
 
     public void addMessage(ChatMessage message) {
