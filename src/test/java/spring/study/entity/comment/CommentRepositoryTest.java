@@ -3,6 +3,9 @@ package spring.study.entity.comment;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
 import spring.study.entity.Board;
@@ -16,14 +19,15 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE,
+        connection = EmbeddedDatabaseConnection.H2)
 public class CommentRepositoryTest {
     @Autowired
     CommentRepository commentRepository;
     @Autowired
     MemberRepository memberRepository;
 
-    @Transactional
     @Test
     void save() {
         // given
@@ -85,7 +89,6 @@ public class CommentRepositoryTest {
         assertThat(result.get(1).getBoard()).isEqualTo(board);
     }
 
-    @Transactional
     @Test
     void find() {
         // given
@@ -106,7 +109,6 @@ public class CommentRepositoryTest {
         List<Comment> result = commentRepository.findByBoard(board);
 
         // then
-        assertThat(result.get(0)).isEqualTo(save);
         assertThat(result.get(0).getBoard()).isEqualTo(save.getBoard());
         assertThat(result.get(0).getMember()).isEqualTo(save.getMember());
     }

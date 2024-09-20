@@ -17,7 +17,10 @@ public class ChatViewController {
     private Member member;
 
     @RequestMapping(value = "/chatList", method = {RequestMethod.GET, RequestMethod.POST})
-    public String chatList(Model model, HttpSession session) {
+    public String chatList(Model model,
+                           @RequestParam(required = false, defaultValue = "0") Integer page,
+                           @RequestParam(required = false, defaultValue = "5") Integer size,
+                           HttpSession session) {
         if (session == null)
             return "redirect:/member/login?error=true&exception=Session Expired";
 
@@ -28,7 +31,7 @@ public class ChatViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        model.addAttribute("roomList", roomService.findAll());
+        model.addAttribute("roomList", roomService.findAll(page, size));
 
         return "chat/chatList";
     }

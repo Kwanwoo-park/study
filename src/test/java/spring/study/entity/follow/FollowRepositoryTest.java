@@ -3,6 +3,9 @@ package spring.study.entity.follow;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
@@ -12,7 +15,9 @@ import spring.study.repository.MemberRepository;
 
 import static org.assertj.core.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE,
+        connection = EmbeddedDatabaseConnection.H2)
 public class FollowRepositoryTest {
     @Autowired
     FollowRepository followRepository;
@@ -20,7 +25,6 @@ public class FollowRepositoryTest {
     @Autowired
     MemberRepository memberRepository;
 
-    @Transactional
     @Test
     void save() {
         // given
@@ -28,6 +32,8 @@ public class FollowRepositoryTest {
                 .email("follower@test.com")
                 .pwd("test")
                 .name("test1")
+                .phone("010-1234-1234")
+                .birth("1900-01-01")
                 .role(Role.USER)
                 .profile("1.jpg")
                 .build();
@@ -36,6 +42,8 @@ public class FollowRepositoryTest {
                 .email("following@test.com")
                 .pwd("test")
                 .name("test2")
+                .phone("010-1234-1234")
+                .birth("1900-01-01")
                 .role(Role.USER)
                 .profile("1.jpg")
                 .build();
@@ -79,7 +87,6 @@ public class FollowRepositoryTest {
             System.out.println(f.getFollower().getName() + " " + f.getFollowing().getName());
     }
 
-    @Transactional
     @Test
     void find() {
         // given
@@ -101,6 +108,8 @@ public class FollowRepositoryTest {
                 .email("follower@test.com")
                 .pwd("test")
                 .name("test")
+                .phone("010-1234-1234")
+                .birth("1900-01-01")
                 .role(Role.USER)
                 .profile("1.jpg")
                 .build();
@@ -109,6 +118,8 @@ public class FollowRepositoryTest {
                 .email("following@test.com")
                 .pwd("test")
                 .name("test")
+                .phone("010-1234-1234")
+                .birth("1900-01-01")
                 .role(Role.USER)
                 .profile("1.jpg")
                 .build();

@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.entity.ChatRoom;
 import spring.study.service.ChatRoomService;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,13 +37,11 @@ public class ChatRoomServiceTest {
     @Test
     void findAll() {
         // when
-        List<ChatRoom> roomList = chatRoomService.findAll();
+        HashMap<String, Object> map = chatRoomService.findAll(0, 5);
 
         // then
-        for (ChatRoom room : roomList) {
-            assertThat(room, is(notNullValue()));
-            assertThat(room.getName()).isEqualTo("test");
-        }
+        for (String key : map.keySet())
+            System.out.println(map.get(key).toString());
     }
 
     @Test

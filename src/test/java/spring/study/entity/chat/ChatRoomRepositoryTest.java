@@ -1,15 +1,18 @@
 package spring.study.entity.chat;
 
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import spring.study.entity.ChatRoom;
 import spring.study.repository.ChatRoomRepository;
 
 import static org.assertj.core.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE,
+        connection = EmbeddedDatabaseConnection.H2)
 public class ChatRoomRepositoryTest {
     @Autowired
     ChatRoomRepository chatRoomRepository;
@@ -18,7 +21,7 @@ public class ChatRoomRepositoryTest {
     void save() {
         // given
         ChatRoom chatRoom = ChatRoom.builder()
-                .roomId("row08wr08w0")
+                .roomId("row08wr08w01")
                 .name("test")
                 .count(1L)
                 .build();

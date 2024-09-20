@@ -5,16 +5,18 @@ import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import spring.study.dto.chat.ChatRoomResponseDto;
 import spring.study.entity.ChatRoom;
 import spring.study.entity.Member;
 import spring.study.repository.ChatRoomRepository;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -46,8 +48,17 @@ public class ChatRoomService {
         return save;
     }
 
-    public List<ChatRoom> findAll() {
-        return chatRoomRepository.findAll();
+    public HashMap<String, Object> findAll(Integer page, Integer size) {
+        HashMap<String, Object> resultMap = new HashMap<>();
+
+        Page<ChatRoom> list = chatRoomRepository.findAll(PageRequest.of(page, size, Sort.by("id").descending()));
+
+        resultMap.put("list", list.stream().map(ChatRoomResponseDto::new).collect(Collectors.toList()));
+        resultMap.put("paging", list.getPageable());
+        resultMap.put("totalCnt", list.getTotalElements());
+        resultMap.put("totalPage", list.getTotalPages());
+
+        return resultMap;
     }
 
     public ChatRoom find(String roomId) {

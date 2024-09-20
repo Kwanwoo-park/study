@@ -1,10 +1,7 @@
 package spring.study.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -19,6 +16,12 @@ public class ChatRoomMember {
     @Id @JoinColumn(name = "room_id")
     @ManyToOne
     private ChatRoom room;
+
+    @Builder
+    public ChatRoomMember(Member member, ChatRoom room) {
+        this.member = member;
+        this.room = room;
+    }
 
     public void addMember(Member member) {
         this.member = member;

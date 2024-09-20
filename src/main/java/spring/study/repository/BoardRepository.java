@@ -5,9 +5,11 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.Board;
 import spring.study.entity.Member;
 
+import java.util.List;
+
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    public Board findByTitle(String title);
+    public List<Board> findByTitle(String title);
 
     @Transactional
     public void deleteByMember(Member member);
