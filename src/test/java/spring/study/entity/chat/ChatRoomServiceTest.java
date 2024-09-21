@@ -8,12 +8,12 @@ import spring.study.entity.ChatRoom;
 import spring.study.service.ChatRoomService;
 
 import java.util.HashMap;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 @SpringBootTest
 public class ChatRoomServiceTest {
@@ -53,6 +53,7 @@ public class ChatRoomServiceTest {
         ChatRoom result = chatRoomService.find(roomId);
 
         // then
+        assertThat(result, is(notNullValue()));
         assertThat(result.getRoomId()).isEqualTo(roomId);
         assertThat(result.getName()).isEqualTo("test");
     }
@@ -98,9 +99,6 @@ public class ChatRoomServiceTest {
         // then
         ChatRoom chatRoom = chatRoomService.find(roomId);
 
-        if (chatRoom == null)
-            System.out.println("Pass!!");
-        else
-            System.out.println("Fail!!");
+        assertThat(chatRoom, is(nullValue()));
     }
 }
