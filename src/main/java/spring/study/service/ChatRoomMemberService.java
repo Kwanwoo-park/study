@@ -16,8 +16,12 @@ public class ChatRoomMemberService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
 
     @Transactional
-    public ChatRoomMember save(ChatRoomMember chatRoomMember) {
-        return chatRoomMemberRepository.save(chatRoomMember);
+    public ChatRoomMember save(Member member, ChatRoom room) {
+        return chatRoomMemberRepository.save(ChatRoomMember.builder()
+                .member(member)
+                .room(room)
+                .build()
+        );
     }
 
     public ChatRoomMember find(Member member) {

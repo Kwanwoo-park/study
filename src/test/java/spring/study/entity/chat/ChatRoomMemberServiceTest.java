@@ -33,18 +33,13 @@ public class ChatRoomMemberServiceTest {
         Member member = memberService.findMember("test@test.com");
         ChatRoom room = roomService.find("row08wr08w0");
 
-        ChatRoomMember roomMember = ChatRoomMember.builder()
-                .member(member)
-                .room(room)
-                .build();
-
         //when
-        ChatRoomMember result = chatRoomMemberService.save(roomMember);
+        ChatRoomMember result = chatRoomMemberService.save(member, room);
 
         //then
         assertThat(result, is(notNullValue()));
-        assertThat(result.getMember().getEmail()).isEqualTo(roomMember.getMember().getEmail());
-        assertThat(result.getRoom().getRoomId()).isEqualTo(roomMember.getRoom().getRoomId());
+        assertThat(result.getMember().getEmail()).isEqualTo(member.getEmail());
+        assertThat(result.getRoom().getRoomId()).isEqualTo(room.getRoomId());
     }
 
     @Test

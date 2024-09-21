@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import spring.study.entity.ChatRoom;
+import spring.study.entity.ChatRoomMember;
 import spring.study.entity.Member;
+import spring.study.service.ChatRoomMemberService;
 import spring.study.service.ChatRoomService;
 
 
@@ -34,25 +37,6 @@ public class ChatViewController {
         model.addAttribute("roomList", roomService.findAll(page, size));
 
         return "chat/chatList";
-    }
-
-    @PostMapping("/createRoom")
-    public String createRoom(HttpSession session, Model model, @RequestParam String name) {
-        if (session == null)
-            return "redirect:/member/login?error=true&exception=Session Expired";
-
-        member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        model.addAttribute("room", roomService.createRoom(name));
-        model.addAttribute("member", member);
-        model.addAttribute("flag", true);
-
-        return "chat/chatRoom";
     }
 
     @GetMapping("/chatRoom")
