@@ -35,7 +35,7 @@ public class MemberRepositoryTest {
                 .pwd("test")
                 .name("test")
                 .phone("010-1234-1234")
-                .birth("1900-01-01")
+                .birth("1900-01-02")
                 .role(Role.USER)
                 .profile("1.jpg")
                 .build();
