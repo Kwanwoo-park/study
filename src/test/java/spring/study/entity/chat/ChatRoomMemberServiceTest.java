@@ -11,6 +11,8 @@ import spring.study.service.ChatRoomMemberService;
 import spring.study.service.ChatRoomService;
 import spring.study.service.MemberService;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -63,12 +65,12 @@ public class ChatRoomMemberServiceTest {
         ChatRoom room = roomService.find("row08wr08w0");
 
         //when
-        ChatRoomMember result = chatRoomMemberService.find(member);
+        List<ChatRoomMember> result = chatRoomMemberService.find(member);
 
         //then
         assertThat(result, is(notNullValue()));
-        assertThat(result.getRoom().getRoomId()).isEqualTo(room.getRoomId());
-        assertThat(result.getMember().getEmail()).isEqualTo(member.getEmail());
+        assertThat(result.get(result.size()-1).getRoom().getRoomId()).isEqualTo(room.getRoomId());
+        assertThat(result.get(result.size()-1).getMember().getEmail()).isEqualTo(member.getEmail());
     }
 
     @Test
@@ -78,11 +80,11 @@ public class ChatRoomMemberServiceTest {
         ChatRoom room = roomService.find("row08wr08w0");
 
         //when
-        ChatRoomMember result = chatRoomMemberService.find(room);
+        List<ChatRoomMember> result = chatRoomMemberService.find(room);
 
         //then
         assertThat(result, is(notNullValue()));
-        assertThat(result.getRoom().getRoomId()).isEqualTo(room.getRoomId());
-        assertThat(result.getMember().getEmail()).isEqualTo(member.getEmail());
+        assertThat(result.get(result.size()-1).getRoom().getRoomId()).isEqualTo(room.getRoomId());
+        assertThat(result.get(result.size()-1).getMember().getEmail()).isEqualTo(member.getEmail());
     }
 }

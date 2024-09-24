@@ -12,6 +12,8 @@ import spring.study.repository.ChatRoomMemberRepository;
 import spring.study.repository.ChatRoomRepository;
 import spring.study.repository.MemberRepository;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -83,11 +85,13 @@ public class ChatRoomMemberRepositoryTest {
         chatRoomMemberRepository.save(chatRoomMember);
 
         //when
-        ChatRoomMember result = chatRoomMemberRepository.findByMember(member);
+        List<ChatRoomMember> result = chatRoomMemberRepository.findByMember(member);
 
         //then
-        assertThat(result.getRoom()).isEqualTo(chatRoomMember.getRoom());
-        assertThat(result.getMember()).isEqualTo(chatRoomMember.getMember());
+        assertThat(result.get(result.size()-1).getRoom().getRoomId())
+                .isEqualTo(chatRoomMember.getRoom().getRoomId());
+        assertThat(result.get(result.size()-1).getMember().getEmail())
+                .isEqualTo(chatRoomMember.getMember().getEmail());
     }
 
     @Test
@@ -104,10 +108,12 @@ public class ChatRoomMemberRepositoryTest {
         chatRoomMemberRepository.save(chatRoomMember);
 
         //when
-        ChatRoomMember result = chatRoomMemberRepository.findByRoom(room);
+        List<ChatRoomMember> result = chatRoomMemberRepository.findByRoom(room);
 
         //then
-        assertThat(result.getRoom()).isEqualTo(chatRoomMember.getRoom());
-        assertThat(result.getMember()).isEqualTo(chatRoomMember.getMember());
+        assertThat(result.get(result.size()-1).getRoom().getRoomId())
+                .isEqualTo(chatRoomMember.getRoom().getRoomId());
+        assertThat(result.get(result.size()-1).getMember().getEmail())
+                .isEqualTo(chatRoomMember.getMember().getEmail());
     }
 }

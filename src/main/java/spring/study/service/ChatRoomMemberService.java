@@ -9,6 +9,8 @@ import spring.study.entity.ChatRoomMember;
 import spring.study.entity.Member;
 import spring.study.repository.ChatRoomMemberRepository;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -28,11 +30,11 @@ public class ChatRoomMemberService {
         return chatRoomMemberRepository.findByMemberAndRoom(member, room);
     }
 
-    public ChatRoomMember find(Member member) {
+    public List<ChatRoomMember> find(Member member) {
         return chatRoomMemberRepository.findByMember(member);
     }
 
-    public ChatRoomMember find(ChatRoom room) {
+    public List<ChatRoomMember> find(ChatRoom room) {
         return chatRoomMemberRepository.findByRoom(room);
     }
 }
