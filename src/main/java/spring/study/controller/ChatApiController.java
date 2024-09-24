@@ -27,10 +27,15 @@ public class ChatApiController {
     public ResponseEntity<ChatRoom> createRoom(HttpServletRequest request, @RequestBody ChatRoomRequestDto roomRequestDto) {
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+        if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(501).body(null);
 
         member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return ResponseEntity.status(501).body(null);
+        }
 
         ChatRoom room = roomService.createRoom(roomRequestDto.getName());
 

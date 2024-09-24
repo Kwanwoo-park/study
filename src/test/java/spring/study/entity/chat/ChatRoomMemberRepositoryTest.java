@@ -12,7 +12,10 @@ import spring.study.repository.ChatRoomMemberRepository;
 import spring.study.repository.ChatRoomRepository;
 import spring.study.repository.MemberRepository;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE,
@@ -42,6 +45,28 @@ public class ChatRoomMemberRepositoryTest {
         //then
         assertThat(save.getMember()).isEqualTo(chatRoomMember.getMember());
         assertThat(save.getRoom()).isEqualTo(chatRoomMember.getRoom());
+    }
+
+    @Test
+    void find() {
+        //given
+        Member member = memberRepository.findByEmail("test@test.com");
+        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
+
+        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
+                .member(member)
+                .room(room)
+                .build();
+
+        chatRoomMemberRepository.save(chatRoomMember);
+
+        //when
+        ChatRoomMember result = chatRoomMemberRepository.findByMemberAndRoom(member, room);
+
+        //then
+        assertThat(result, is(notNullValue()));
+        assertThat(result.getMember().getEmail()).isEqualTo(chatRoomMember.getMember().getEmail());
+        assertThat(result.getRoom().getRoomId()).isEqualTo(chatRoomMember.getRoom().getRoomId());
     }
 
     @Test

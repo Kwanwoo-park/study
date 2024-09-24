@@ -11,4 +11,6 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
     public ChatRoomMember findByRoom(ChatRoom room);
 
     public ChatRoomMember findByMember(Member member);
+
+    public ChatRoomMember findByMemberAndRoom(Member member, ChatRoom room);
 }

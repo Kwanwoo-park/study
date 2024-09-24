@@ -24,6 +24,10 @@ public class ChatRoomMemberService {
         );
     }
 
+    public ChatRoomMember find(Member member, ChatRoom room) {
+        return chatRoomMemberRepository.findByMemberAndRoom(member, room);
+    }
+
     public ChatRoomMember find(Member member) {
         return chatRoomMemberRepository.findByMember(member);
     }

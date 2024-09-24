@@ -26,8 +26,13 @@ public class FollowApiController {
     public ResponseEntity<Follow> memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+        if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(501).body(null);
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            return ResponseEntity.status(501).body(null);
+        }
 
         Member member = (Member) session.getAttribute("member");
         Member search_member = followRequestDto.getFollowing();
@@ -52,8 +57,13 @@ public class FollowApiController {
     public ResponseEntity<Member> memberUnfollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+        if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(501).body(null);
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            return ResponseEntity.status(501).body(null);
+        }
 
         Member member = (Member) session.getAttribute("member");
         Member search_member = followRequestDto.getFollowing();

@@ -24,8 +24,13 @@ public class BoardApiController {
     public ResponseEntity<Board> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+        if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(501).body(null);
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            return ResponseEntity.status(501).body(null);
+        }
 
         Member member = (Member) session.getAttribute("member");
         Board result = null;
@@ -58,8 +63,13 @@ public class BoardApiController {
     public ResponseEntity<Board> boardViewDeleteAction(@RequestParam() Long id, HttpServletRequest request){
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+        if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(501).body(null);
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            return ResponseEntity.status(501).body(null);
+        }
 
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
