@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE,
@@ -115,5 +116,27 @@ public class ChatRoomMemberRepositoryTest {
                 .isEqualTo(chatRoomMember.getRoom().getRoomId());
         assertThat(result.get(result.size()-1).getMember().getEmail())
                 .isEqualTo(chatRoomMember.getMember().getEmail());
+    }
+
+    @Test
+    void delete() {
+        //given
+        Member member = memberRepository.findByEmail("test@test.com");
+        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
+
+        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
+                .member(member)
+                .room(room)
+                .build();
+
+        chatRoomMemberRepository.save(chatRoomMember);
+
+        //when
+        chatRoomMemberRepository.deleteByMemberAndRoom(member, room);
+
+        //then
+        ChatRoomMember result = chatRoomMemberRepository.findByMemberAndRoom(member, room);
+
+        assertThat(result, is(nullValue()));
     }
 }

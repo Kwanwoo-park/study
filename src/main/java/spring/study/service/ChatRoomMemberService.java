@@ -37,4 +37,8 @@ public class ChatRoomMemberService {
     public List<ChatRoomMember> find(ChatRoom room) {
         return chatRoomMemberRepository.findByRoom(room);
     }
+
+    public void delete(Member member, ChatRoom room) {
+        chatRoomMemberRepository.deleteByMemberAndRoom(member, room);
+    }
 }

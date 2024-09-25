@@ -94,7 +94,7 @@
 
         var talkMsg = {
             type : "TALK",
-            roomId : roomId,
+            room : [[${room}]],
             member : member,
             message : content
         };
@@ -106,7 +106,7 @@
   function quit() {
     var quitMsg = {
         type : "QUIT",
-        roomId : roomId,
+        room : [[${room}]],
         member : member
     };
 

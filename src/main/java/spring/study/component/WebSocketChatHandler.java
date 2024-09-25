@@ -12,14 +12,14 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import spring.study.dto.chat.ChatMessageRequestDto;
 import spring.study.dto.chat.ChatMessageResponseDto;
-import spring.study.entity.ChatMessage;
-import spring.study.entity.ChatRoom;
-import spring.study.entity.MessageType;
+import spring.study.entity.*;
 import spring.study.service.ChatMessageService;
+import spring.study.service.ChatRoomMemberService;
 import spring.study.service.ChatRoomService;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -27,8 +27,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
-    private final ChatMessageService chatMessageService;
-    private final ChatRoomService chatRoomService;
+    private final ChatRoomMemberService roomMemberService;
+    private final ChatMessageService messageService;
+    private final ChatRoomService roomService;
     private Set<WebSocketSession> sessions = new HashSet<>();
     private ChatMessage chatMessage;
 
@@ -44,11 +45,34 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         chatMessage = objectMapper.readValue(payload, ChatMessageRequestDto.class).toEntity();
 
         if (chatMessage.getType().equals(MessageType.ENTER)) {
-            chatMessage.setMessage(chatMessage.getMember().getName() + "님이 입장했습니다.");
+            ChatRoom room = chatMessage.getRoom();
+            Member member = chatMessage.getMember();
+            boolean flag = true;
+
+            List<ChatRoomMember> list = roomMemberService.find(room);
+
+            if (list.size() > room.getCount()) {
+                room.addCount();
+            }
+
+            chatMessage.setMessage(member.getName() + "님이 입장했습니다.");
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
         } else if (chatMessage.getType().equals(MessageType.QUIT)) {
-            chatMessage.setMessage(chatMessage.getMember().getName() + "님이 퇴장했습니다.");
-            sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+            ChatRoom room = chatMessage.getRoom();
+            Member member = chatMessage.getMember();
+
+            roomMemberService.delete(member, room);
+
+            if (room.getCount() -1 > 0) {
+                room.subCount();
+
+                chatMessage.setMessage(chatMessage.getMember().getName() + "님이 퇴장했습니다.");
+                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+            }
+            else {
+                messageService.deleteByRoom(room);
+                roomService.delete(room.getRoomId());
+            }
         } else {
             sendToEachSocket(sessions, message);
         }
@@ -66,6 +90,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         sessions.parallelStream().forEach( roomSession -> {
             try {
                 roomSession.sendMessage(message);
+                messageService.save(chatMessage);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
