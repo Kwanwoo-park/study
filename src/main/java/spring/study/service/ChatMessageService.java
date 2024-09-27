@@ -9,6 +9,8 @@ import spring.study.entity.ChatRoom;
 import spring.study.entity.Member;
 import spring.study.repository.ChatMessageRepository;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -20,7 +22,7 @@ public class ChatMessageService {
         return chatMessageRepository.save(message);
     }
 
-    public ChatMessage find(ChatRoom room) {
+    public List<ChatMessage> find(ChatRoom room) {
         return chatMessageRepository.findByRoom(room);
     }
 

@@ -47,7 +47,6 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         if (chatMessage.getType().equals(MessageType.ENTER)) {
             ChatRoom room = chatMessage.getRoom();
             Member member = chatMessage.getMember();
-            boolean flag = true;
 
             List<ChatRoomMember> list = roomMemberService.find(room);
 

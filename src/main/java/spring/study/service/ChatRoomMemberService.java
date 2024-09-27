@@ -41,4 +41,8 @@ public class ChatRoomMemberService {
     public void delete(Member member, ChatRoom room) {
         chatRoomMemberRepository.deleteByMemberAndRoom(member, room);
     }
+
+    public void delete(Member member) {
+        chatRoomMemberRepository.deleteByMember(member);
+    }
 }

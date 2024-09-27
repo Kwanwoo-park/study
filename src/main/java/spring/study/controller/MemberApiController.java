@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Board;
+import spring.study.entity.ChatRoomMember;
 import spring.study.entity.Comment;
 import spring.study.entity.Member;
 import spring.study.service.*;
@@ -29,6 +30,8 @@ public class MemberApiController {
     private final BoardService boardService;
     private final CommentService commentService;
     private final FollowService followService;
+    private final ChatRoomMemberService roomMemberService;
+    private final ChatMessageService messageService;
     private final UserService userService;
     private Member member;
 
@@ -124,6 +127,14 @@ public class MemberApiController {
 
         followService.deleteByFollower(member);
         followService.deleteByFollowing(member);
+
+        for (ChatRoomMember roomMember : roomMemberService.find(member)) {
+            roomMember.getRoom().subCount();
+        }
+
+        messageService.deleteByMember(member);
+
+        roomMemberService.delete(member);
 
         memberService.deleteById(member.getId());
 

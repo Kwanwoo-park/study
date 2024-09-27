@@ -11,6 +11,8 @@ import spring.study.repository.ChatMessageRepository;
 import spring.study.repository.ChatRoomRepository;
 import spring.study.repository.MemberRepository;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
@@ -57,11 +59,11 @@ public class ChatMessageRepositoryTest {
         Member member = memberRepository.findByEmail("test@test.com");
 
         // when
-        ChatMessage message = chatMessageRepository.findByRoom(room);
+        List<ChatMessage> message = chatMessageRepository.findByRoom(room);
 
         // then
-        assertThat(message.getMessage()).isEqualTo("testMessage");
-        assertThat(message.getMember().getEmail()).isEqualTo(member.getEmail());
+        assertThat(message.get(message.size()-1).getMessage()).isEqualTo("testMessage");
+        assertThat(message.get(message.size()-1).getMember().getEmail()).isEqualTo(member.getEmail());
     }
 
     @Test
@@ -73,7 +75,7 @@ public class ChatMessageRepositoryTest {
         chatMessageRepository.deleteByRoom(room);
 
         // then
-        ChatMessage message = chatMessageRepository.findByRoom(room);
+        List<ChatMessage> message = chatMessageRepository.findByRoom(room);
 
         if (message == null)
             System.out.println("Pass!!");
@@ -91,7 +93,7 @@ public class ChatMessageRepositoryTest {
         chatMessageRepository.deleteByMember(member);
 
         // then
-        ChatMessage message = chatMessageRepository.findByRoom(room);
+        List<ChatMessage> message = chatMessageRepository.findByRoom(room);
 
         if (message == null)
             System.out.println("Pass!!");
