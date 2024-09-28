@@ -9,7 +9,6 @@ import spring.study.entity.BasetimeEntity;
 import java.io.Serializable;
 import java.util.Comparator;
 
-@EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
 @Getter
 @Setter

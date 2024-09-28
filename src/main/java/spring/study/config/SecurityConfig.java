@@ -3,69 +3,49 @@ package spring.study.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import spring.study.component.CustomAuthenticationProvider;
-import spring.study.component.AuthFailureHandler;
-import spring.study.component.AuthSuccessHandler;
-import spring.study.service.MemberService;
+import spring.study.component.JwtTokenProvider;
+import spring.study.filter.JwtAuthenticationFilter;
 
 @RequiredArgsConstructor
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
 @Configuration
 public class SecurityConfig{
-    private final MemberService memberService;
-    private final AuthSuccessHandler authSuccessHandler;
-    private final AuthFailureHandler authFailureHandler;
-
-    @Bean
-    public BCryptPasswordEncoder encryptPassword() {
-        return new BCryptPasswordEncoder();
-    }
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
+        return http
+                .httpBasic().disable()
                 .csrf().disable()
+                .formLogin().disable()
+                .logout()
+                .logoutRequestMatcher(new AntPathRequestMatcher("/member/logout"))
+                .logoutSuccessUrl("/member/login")
+                    .and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .and()
                 .authorizeHttpRequests()
                 .requestMatchers("/**", "/login/**", "/register/**", "/detail/**", "/find/**", "/updatePassword/**").permitAll()
                 .requestMatchers("/js/**", "/css/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .and()
-                .formLogin()
-                .loginPage("/member/login")
-                .successHandler(authSuccessHandler)
-                .failureHandler(authFailureHandler)
-                .defaultSuccessUrl("/board/list")
-                .and()
-                .logout()
-                .logoutRequestMatcher(new AntPathRequestMatcher("/member/logout"))
-                .logoutSuccessUrl("/member/login")
-                .invalidateHttpSession(true)
-                .deleteCookies("member").permitAll()
-                .and()
-                .sessionManagement()
-                .maximumSessions(2)
-                .maxSessionsPreventsLogin(false)
-                .expiredUrl("/login?error-true&exception=Hava been attempted to login form a new place or session expired");
-
-        return http.build();
+                .anyRequest().authenticated()
+                    .and()
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity, BCryptPasswordEncoder bCryptPasswordEncoder) throws Exception{
-        AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
-
-        authenticationManagerBuilder.authenticationProvider(new CustomAuthenticationProvider(memberService, bCryptPasswordEncoder));
-
-        return authenticationManagerBuilder.build();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

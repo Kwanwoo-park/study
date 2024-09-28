@@ -1,17 +1,14 @@
 package spring.study.entity.comment;
 
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
 import spring.study.entity.Board;
 import spring.study.entity.Comment;
 import spring.study.entity.Member;
-import spring.study.repository.BoardRepository;
 import spring.study.repository.CommentRepository;
 import spring.study.repository.MemberRepository;
 
@@ -31,7 +28,7 @@ public class CommentRepositoryTest {
     @Test
     void save() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 
         Board board = member.getBoard().get(0);
 
@@ -55,7 +52,7 @@ public class CommentRepositoryTest {
     @Test
     void findAll() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 
         Board board = member.getBoard().get(0);
 
@@ -92,7 +89,7 @@ public class CommentRepositoryTest {
     @Test
     void find() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 
         Board board= member.getBoard().get(0);
 
@@ -117,7 +114,7 @@ public class CommentRepositoryTest {
     @Test
     void delete() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
         Board board = member.getBoard().get(0);
 
         Comment comment = board.getComment().get(0);
@@ -136,7 +133,7 @@ public class CommentRepositoryTest {
     @Test
     void deleteByMember() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         System.out.println(commentRepository.findAll().size());
 
         // when

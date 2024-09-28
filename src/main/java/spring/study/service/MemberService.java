@@ -7,10 +7,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import spring.study.component.JwtTokenProvider;
+import spring.study.dto.JWT.JwtToken;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Member;
@@ -26,6 +31,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Transactional
+    public JwtToken signIn(String email, String password) {
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email, password);
+
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+
+        return jwtTokenProvider.generateToken(authentication);
+    }
 
     @Transactional
     public Long save(MemberRequestDto memberSaveDto) {
@@ -60,7 +76,9 @@ public class MemberService implements UserDetailsService {
     }
 
     public Member findMember(String email) {
-        return memberRepository.findByEmail(email);
+        return memberRepository.findByEmail(email).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
     }
 
     public Member findMember(String phone, String birth) {
@@ -108,7 +126,7 @@ public class MemberService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return Optional
-                .ofNullable(memberRepository.findByEmail(email))
+                .of(memberRepository.findByEmail(email).orElseThrow())
                 .orElseThrow(() -> new BadCredentialsException(
                         "이메일이나 비밀번호를 확인해주세요"
                 ));

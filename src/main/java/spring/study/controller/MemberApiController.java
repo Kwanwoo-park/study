@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.Util.SecurityUtil;
+import spring.study.dto.JWT.JwtToken;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Board;
@@ -34,6 +36,21 @@ public class MemberApiController {
     private final ChatMessageService messageService;
     private final UserService userService;
     private Member member;
+
+    @PostMapping("/signIn")
+    public JwtToken signIn(@RequestBody MemberRequestDto memberRequestDto) {
+        String email = memberRequestDto.getEmail();
+        String password = memberRequestDto.getPassword();
+        JwtToken jwtToken = memberService.signIn(email, password);
+        log.info("request username = {}, password = {}", email, password);
+        log.info("jwtToken accessToken = {}, refreshToken = {}", jwtToken.getAccessToken(), jwtToken.getRefreshToken());
+        return jwtToken;
+    }
+
+    @PostMapping("/test")
+    public String test() {
+        return SecurityUtil.getCurrentUsername();
+    }
 
     @PostMapping("/register/action")
     public ResponseEntity<MemberResponseDto> registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {

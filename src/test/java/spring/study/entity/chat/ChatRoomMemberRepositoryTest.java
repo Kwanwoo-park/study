@@ -34,7 +34,7 @@ public class ChatRoomMemberRepositoryTest {
     @Test
     void save() {
         //given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 
         ChatRoomMember chatRoomMember = ChatRoomMember.builder()
@@ -53,7 +53,7 @@ public class ChatRoomMemberRepositoryTest {
     @Test
     void find() {
         //given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 
         ChatRoomMember chatRoomMember = ChatRoomMember.builder()
@@ -75,7 +75,7 @@ public class ChatRoomMemberRepositoryTest {
     @Test
     void findByMem() {
         //given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 
         ChatRoomMember chatRoomMember = ChatRoomMember.builder()
@@ -98,7 +98,7 @@ public class ChatRoomMemberRepositoryTest {
     @Test
     void findByRoom() {
         //given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 
         ChatRoomMember chatRoomMember = ChatRoomMember.builder()
@@ -121,7 +121,7 @@ public class ChatRoomMemberRepositoryTest {
     @Test
     void delete() {
         //given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 
         ChatRoomMember chatRoomMember = ChatRoomMember.builder()

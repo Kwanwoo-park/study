@@ -1,14 +1,14 @@
 package spring.study.entity.member;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
+import spring.study.dto.JWT.JwtToken;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
@@ -30,15 +31,17 @@ import java.io.FileInputStream;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Slf4j
 public class MemberApiControllerTest {
     @LocalServerPort
     private int port;
 
-    String url = "http://localhost:" + port + "/member";
+    String url = "http://localhost:" + 8080 + "/member";
 
     @Autowired
     private TestRestTemplate testTemplate;
@@ -74,6 +77,55 @@ public class MemberApiControllerTest {
 
     @WithMockUser(roles = "USER")
     @Test
+    void signIn() throws Exception {
+        //given
+        mvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+
+        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
+                .email("test@test.com")
+                .password("test")
+                .build();
+
+        url += "/signIn";
+
+        //when
+        mvc.perform(post(url)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(new ObjectMapper().writeValueAsString(memberRequestDto)))
+                .andExpect(status().isOk())
+                .andDo(print());
+    }
+
+    @Test
+    void test() throws Exception {
+        //given
+        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
+                .email("test@test.com")
+                .password("test")
+                .build();
+
+        JwtToken jwtToken = memberService.signIn("test@test.com", "test");
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth(jwtToken.getAccessToken());
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        log.info("httpHeaders = {}", httpHeaders);
+
+        url += "/test";
+
+        //when
+        ResponseEntity<String> response = testTemplate.postForEntity(url, new HttpEntity<>(httpHeaders), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo("test@test.com");
+    }
+
+    @WithMockUser(roles = "USER")
+    @Test
     void save() throws Exception {
         // given
         mvc = MockMvcBuilders
@@ -86,7 +138,8 @@ public class MemberApiControllerTest {
                 .password("test")
                 .name("test")
                 .role(Role.USER)
-                .profile("1.img")
+                .phone("010-1234-1234")
+                .birth("1900-01-01")
                 .build();
 
          url += "/register/action";
@@ -95,7 +148,8 @@ public class MemberApiControllerTest {
         mvc.perform(post(url)
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .content(new ObjectMapper().writeValueAsString(memberRequestDto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andDo(print());
 
         // then
         Member member = memberService.findMember("test2@test.com");

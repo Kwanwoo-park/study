@@ -1,12 +1,10 @@
 package spring.study.entity.follow;
 
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
@@ -90,8 +88,8 @@ public class FollowRepositoryTest {
     @Test
     void find() {
         // given
-        Member follower = memberRepository.findByEmail("akakslsl13@naver.com");
-        Member following = memberRepository.findByEmail("akakslslzz@naver.com");
+        Member follower = memberRepository.findByEmail("akakslsl13@naver.com").orElseThrow();
+        Member following = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 
         // when
         Follow follow = followRepository.findByFollowerAndFollowing(follower, following);
@@ -159,7 +157,7 @@ public class FollowRepositoryTest {
     @Test
     void deleteByFollower() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         System.out.println(followRepository.findAll().size());
 
         // when
@@ -172,7 +170,7 @@ public class FollowRepositoryTest {
     @Test
     void deleteByFollowing() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         System.out.println(followRepository.findAll().size());
 
         // when

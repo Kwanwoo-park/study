@@ -4,18 +4,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import spring.study.dto.member.MemberRequestDto;
+import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Board;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.service.MemberService;
 import spring.study.service.UserService;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 @SpringBootTest
 public class MemberServiceTest {
@@ -23,6 +27,30 @@ public class MemberServiceTest {
     MemberService memberService;
     @Autowired
     UserService userService;
+
+
+    @Transactional
+    @Test
+    void save() {
+        //given
+        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
+                .email("test2@test.com")
+                .password("test")
+                .name("test")
+                .role(Role.USER)
+                .profile("1.img")
+                .phone("010-1234-1234")
+                .birth("1900-01-01")
+                .build();
+
+        //when
+        MemberResponseDto responseDto = userService.createUser(memberRequestDto);
+
+        //then
+        assertThat(responseDto, is(notNullValue()));
+        assertThat(responseDto.getEmail()).isEqualTo(memberRequestDto.getEmail());
+    }
+
 
     @Transactional
     @Test

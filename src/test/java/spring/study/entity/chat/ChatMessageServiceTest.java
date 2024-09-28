@@ -11,6 +11,8 @@ import spring.study.service.ChatMessageService;
 import spring.study.service.ChatRoomService;
 import spring.study.service.MemberService;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,12 +57,12 @@ public class ChatMessageServiceTest {
         ChatRoom room = chatRoomService.find("row08wr08w0");
 
         // when
-        ChatMessage message = chatMessageService.find(room);
+        List<ChatMessage> message = chatMessageService.find(room);
 
         // then
-        assertThat(message.getMessage()).isEqualTo("testMessage");
-        assertThat(message.getType()).isEqualTo(MessageType.TALK);
-        assertThat(message.getRoom().getRoomId()).isEqualTo(room.getRoomId());
+        assertThat(message.get(message.size()-1).getMessage()).isEqualTo("testMessage");
+        assertThat(message.get(message.size()-1).getType()).isEqualTo(MessageType.TALK);
+        assertThat(message.get(message.size()-1).getRoom().getRoomId()).isEqualTo(room.getRoomId());
     }
 
     @Test
@@ -72,7 +74,7 @@ public class ChatMessageServiceTest {
         chatMessageService.deleteByRoom(room);
 
         // then
-        ChatMessage message = chatMessageService.find(room);
+        List<ChatMessage> message = chatMessageService.find(room);
 
         if (message == null)
             System.out.println("Pass!!");
@@ -90,7 +92,7 @@ public class ChatMessageServiceTest {
         chatMessageService.deleteByMember(member);
 
         // then
-        ChatMessage message = chatMessageService.find(room);
+        List<ChatMessage> message = chatMessageService.find(room);
 
         if (message == null)
             System.out.println("Pass!!");

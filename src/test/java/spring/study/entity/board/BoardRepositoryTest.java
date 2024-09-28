@@ -5,15 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
-import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.Board;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.repository.BoardRepository;
 import spring.study.repository.MemberRepository;
-import spring.study.service.BoardService;
 
 import java.util.List;
 
@@ -134,7 +131,7 @@ public class BoardRepositoryTest {
     @Test
     void deleteByMember() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
         System.out.println(boardRepository.findAll().size());
 
         // when

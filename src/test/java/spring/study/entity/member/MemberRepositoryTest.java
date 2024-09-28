@@ -5,16 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.repository.MemberRepository;
-import spring.study.service.MemberService;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -64,7 +59,7 @@ public class MemberRepositoryTest {
         Member save = memberRepository.save(member);
 
         //when
-        Member result = memberRepository.findByEmail("test@test.com");
+        Member result = memberRepository.findByEmail("test@test.com").orElseThrow();
 
         //then
         assertThat(result.getName()).isEqualTo(save.getName());
@@ -93,8 +88,8 @@ public class MemberRepositoryTest {
                 .profile("2.jpg")
                 .build();
 
-        Member save1 = memberRepository.save(member1);
-        Member save2 = memberRepository.save(member2);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
 
         //when
         List<Member> memberList = memberRepository.findAll(Sort.by("id").ascending());
@@ -141,7 +136,7 @@ public class MemberRepositoryTest {
     @Test
     void findByPhoneAndBirth() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com");
+        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 
         String phone = "010-1234-1234";
         String birth = "1900-01-01";
@@ -152,5 +147,10 @@ public class MemberRepositoryTest {
         // then
         assertThat(member.getEmail()).isEqualTo(result.getEmail());
         assertThat(member.getName()).isEqualTo(result.getName());
+    }
+
+    @Test
+    void test() {
+        System.out.println(memberRepository.findByEmail("test2@test.com"));
     }
 }
