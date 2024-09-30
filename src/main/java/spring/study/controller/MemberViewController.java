@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.alert.AlertMessage;
+import spring.study.dto.JWT.JwtToken;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
@@ -53,42 +54,6 @@ public class MemberViewController {
         }
 
         return "/member/login";
-    }
-
-    @GetMapping("/login/action")
-    public String loginAction(MemberRequestDto dto, HttpSession session, Model model) {
-        try {
-            member = (Member) memberService.loadUserByUsername(dto.getEmail());
-
-            if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())){
-                if (member.getRole() != Role.DENIED) {
-                    memberService.updateLastLoginTime(member.getId());
-                    session.setAttribute("member", member);
-                }
-                else return "redirect:/member/login?error=true&exception=You account is denied";
-            }
-            else {
-                return "redirect:/member/login?error=true&exception=Invalid Email or Password";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/member/login?error=true&exception=Invalid Email or Password";
-        }
-
-        AlertMessage message;
-
-        if (member.getRole() == Role.ADMIN) {
-            message = new AlertMessage(member.getName() + " 관리자님 환영합니다.", "/admin/administrator", RequestMethod.GET, null);
-        }
-        else if (member.getRole() == Role.USER){
-            message = new AlertMessage(member.getName() + "님 환영합니다.", "/board/list", RequestMethod.GET, null);
-        }
-        else {
-            return "redirect:/member/login?error=true&exception=Accept Denied";
-        }
-
-
-        return message.showMessageAndRedirect(model);
     }
 
     @GetMapping("/register")

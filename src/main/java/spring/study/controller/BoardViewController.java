@@ -1,11 +1,17 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import spring.study.Util.SecurityUtil;
+import spring.study.component.JwtTokenProvider;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.comment.CommentResponseDto;
 import spring.study.entity.Board;
@@ -14,6 +20,7 @@ import spring.study.entity.Member;
 import spring.study.service.BoardService;
 import spring.study.service.CommentService;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -22,8 +29,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/board")
+@Slf4j
 public class BoardViewController {
     private final BoardService boardService;
+    private final JwtTokenProvider jwtTokenProvider;
     private Member member;
     private Long previous = -1L;
     private Board board;
@@ -32,21 +41,9 @@ public class BoardViewController {
 
     @GetMapping("/list")
     public String getBoardListPage(Model model,
-                                   HttpServletRequest request,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
-        member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
+        SecurityUtil.getCurrentUsername();
 
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));

@@ -1,27 +1,31 @@
 package spring.study.controller;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.Util.SecurityUtil;
 import spring.study.dto.JWT.JwtToken;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
-import spring.study.entity.Board;
-import spring.study.entity.ChatRoomMember;
-import spring.study.entity.Comment;
-import spring.study.entity.Member;
+import spring.study.entity.*;
 import spring.study.service.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -36,6 +40,7 @@ public class MemberApiController {
     private final ChatMessageService messageService;
     private final UserService userService;
     private Member member;
+    private final AuthenticationManager authenticationManager;
 
     @PostMapping("/signIn")
     public JwtToken signIn(@RequestBody MemberRequestDto memberRequestDto) {
@@ -50,6 +55,39 @@ public class MemberApiController {
     @PostMapping("/test")
     public String test() {
         return SecurityUtil.getCurrentUsername();
+    }
+
+    @PostMapping("/login/action")
+    public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletResponse response) {
+        member = (Member) memberService.loadUserByUsername(dto.getEmail());
+
+        if (member == null)
+            return null;
+
+        if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())) {
+            if (member.getRole() != Role.DENIED) {
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
+                Authentication authentication = authenticationManager.authenticate(authenticationToken);
+
+                JwtToken jwtToken = memberService.signIn(dto.getEmail(), dto.getPassword());
+
+                memberService.updateLastLoginTime(member.getId());
+
+                Cookie cookie = new Cookie("jwt", "Bearer="+jwtToken.getAccessToken());
+                cookie.setPath("/");
+                cookie.setSecure(true);
+                cookie.setHttpOnly(true);
+                cookie.setMaxAge(60*10);
+
+                response.addCookie(cookie);
+
+                log.info("JWT: {}", jwtToken);
+
+                return ResponseEntity.ok(member);
+            }
+        }
+
+        return null;
     }
 
     @PostMapping("/register/action")

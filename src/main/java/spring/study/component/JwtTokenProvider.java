@@ -24,6 +24,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class JwtTokenProvider {
+    private static final String AUTHORITIES_KEY = "auth";
+    private static final String BEARER_TYPE = "Bearer";
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 10;            // 30분
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
+
     private final Key key;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
@@ -31,37 +36,50 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public JwtToken generateToken(Authentication authentication) {
+    public JwtToken generateToken(Authentication authentication, String email, String password) {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         long now = (new Date()).getTime();
 
-        Date accessTokenExpiresIn = new Date(now + 86400000);
+        Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         String accessToken = Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim("auth", authorities)
+                .setHeaderParam("typ", "JWT")
+                .setSubject("AccessToken")
+                .setIssuedAt(new Date())
                 .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .claim("email", email)
+                .claim("password", password)
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
+        Date refreshTokenExpireIn = new Date(now + REFRESH_TOKEN_EXPIRE_TIME);
         String refreshToken = Jwts.builder()
-                .setExpiration(new Date(now + 86400000))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setHeaderParam("typ", "JWT")
+                .setSubject("RefreshToken")
+                .setExpiration(refreshTokenExpireIn)
+                .claim("email", email)
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
         return JwtToken.builder()
-                .grantType("Bearer")
+                .grantType(BEARER_TYPE)
                 .accessToken(accessToken)
+                .accessTokenExpireTime(accessTokenExpiresIn)
                 .refreshToken(refreshToken)
+                .refreshTokenExpireTime(refreshTokenExpireIn)
                 .build();
+    }
+
+    public String getEmail(String token) {
+        return parserClaims(token).get("email", String.class);
     }
 
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parserClaims(accessToken);
 
-        if (claims.get("auth") == null) {
+        if (claims.get(AUTHORITIES_KEY) == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
 

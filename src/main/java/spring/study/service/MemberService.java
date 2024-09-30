@@ -40,7 +40,7 @@ public class MemberService implements UserDetailsService {
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
-        return jwtTokenProvider.generateToken(authentication);
+        return jwtTokenProvider.generateToken(authentication, email, password);
     }
 
     @Transactional
@@ -125,9 +125,7 @@ public class MemberService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return Optional
-                .of(memberRepository.findByEmail(email).orElseThrow())
-                .orElseThrow(() -> new BadCredentialsException(
+        return memberRepository.findByEmail(email).orElseThrow(() -> new BadCredentialsException(
                         "이메일이나 비밀번호를 확인해주세요"
                 ));
     }
