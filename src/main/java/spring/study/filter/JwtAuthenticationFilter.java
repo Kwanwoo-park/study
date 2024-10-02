@@ -42,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = Arrays.stream(request.getCookies()).filter(c -> c.getName().equals("jwt")).toList().get(0).getValue();
+        String bearerToken = request.getHeader("AccessToken");
 
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer=")) {
             return bearerToken.substring(7);

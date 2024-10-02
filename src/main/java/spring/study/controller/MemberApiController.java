@@ -71,19 +71,21 @@ public class MemberApiController {
 
                 JwtToken jwtToken = memberService.signIn(dto.getEmail(), dto.getPassword());
 
-                memberService.updateLastLoginTime(member.getId());
+                response.setHeader("Authorization", "Bearer " + jwtToken.getAccessToken());
 
-                Cookie cookie = new Cookie("jwt", "Bearer="+jwtToken.getAccessToken());
+                Cookie cookie = new Cookie("refreshToken", jwtToken.getRefreshToken());
                 cookie.setPath("/");
-                cookie.setSecure(true);
                 cookie.setHttpOnly(true);
-                cookie.setMaxAge(60*10);
+                cookie.setSecure(true);
+                cookie.setMaxAge(60 * 60 * 60);
 
                 response.addCookie(cookie);
 
+                memberService.updateLastLoginTime(member.getId());
+
                 log.info("JWT: {}", jwtToken);
 
-                return ResponseEntity.ok(member);
+                return ResponseEntity.status(HttpStatus.OK).body(member);
             }
         }
 
