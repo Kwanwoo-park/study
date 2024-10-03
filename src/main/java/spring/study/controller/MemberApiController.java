@@ -62,24 +62,32 @@ public class MemberApiController {
         member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
         if (member == null)
-            return null;
+            return ResponseEntity.status(501).body(null);
 
         if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())) {
             if (member.getRole() != Role.DENIED) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
                 Authentication authentication = authenticationManager.authenticate(authenticationToken);
+                //System.out.println(authentication);
 
                 JwtToken jwtToken = memberService.signIn(dto.getEmail(), dto.getPassword());
 
                 response.setHeader("Authorization", "Bearer " + jwtToken.getAccessToken());
 
-                Cookie cookie = new Cookie("refreshToken", jwtToken.getRefreshToken());
-                cookie.setPath("/");
-                cookie.setHttpOnly(true);
-                cookie.setSecure(true);
-                cookie.setMaxAge(60 * 60 * 60);
+                Cookie accessToken = new Cookie("accessToken", "Bearer="+jwtToken.getRefreshToken());
+                accessToken.setPath("/");
+                accessToken.setHttpOnly(true);
+                accessToken.setSecure(true);
+                accessToken.setMaxAge(60 * 60);
 
-                response.addCookie(cookie);
+                Cookie refreshToken = new Cookie("refreshToken", jwtToken.getRefreshToken());
+                refreshToken.setPath("/");
+                refreshToken.setHttpOnly(true);
+                refreshToken.setSecure(true);
+                refreshToken.setMaxAge(60 * 60 * 60);
+
+                //response.addCookie(accessToken);
+                response.addCookie(refreshToken);
 
                 memberService.updateLastLoginTime(member.getId());
 
@@ -89,7 +97,7 @@ public class MemberApiController {
             }
         }
 
-        return null;
+        return ResponseEntity.status(501).body(null);
     }
 
     @PostMapping("/register/action")

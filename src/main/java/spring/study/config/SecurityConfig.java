@@ -41,8 +41,6 @@ public class SecurityConfig{
         CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManager);
         customAuthenticationFilter.setFilterProcessesUrl("/member/login");
 
-        http.csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable());
-
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
@@ -55,18 +53,17 @@ public class SecurityConfig{
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .invalidSessionUrl("/member/login?error=true&exception=Not Found account")
                     .and()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/member/login/**", "/js/**", "/css/**", "/img/**").permitAll()
+                        .requestMatchers("/member/**", "/board/**", "/chat/**", "/follow/**").hasRole("ROLE_USER")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .addFilter(new CustomAuthenticationFilter(authenticationManager))
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling((exceptionHandling) -> exceptionHandling
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
-                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/", "/member/login", "/js/**", "/css/**", "/img/**").permitAll()
-//                        .requestMatchers("/member/**", "/board/**", "/chat/**", "/follow/**").hasRole("USER")
-//                        .requestMatchers("/admin/**").hasRole("ADMIN")
-//                        .anyRequest().authenticated()
-                        .anyRequest().permitAll())
-                .addFilter(new CustomAuthenticationFilter(authenticationManager))
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

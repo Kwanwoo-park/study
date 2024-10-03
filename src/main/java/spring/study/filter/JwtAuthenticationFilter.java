@@ -1,6 +1,7 @@
 package spring.study.filter;
 
 import jakarta.servlet.*;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +43,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("AccessToken");
+        String bearerToken = null;
+        for (Cookie c : request.getCookies()) {
+            if (c.getName().equals("accessToken"))
+                bearerToken = c.getValue();
+        }
 
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer=")) {
             return bearerToken.substring(7);

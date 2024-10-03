@@ -32,12 +32,12 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
             if (email.isEmpty() || email == null || password .isEmpty() || password == null) {
                 throw new RuntimeException("Email or Password can't be null");
             }
-
             authenticationToken = new UsernamePasswordAuthenticationToken(email, password);
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse login request body", e);
         }
 
+        setDetails(request, authenticationToken);
         return authenticationManager.authenticate(authenticationToken);
     }
 

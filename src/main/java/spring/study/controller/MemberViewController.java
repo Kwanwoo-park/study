@@ -30,28 +30,14 @@ public class MemberViewController {
     private final MemberService memberService;
     private final FollowService followService;
     private final BoardService boardService;
-    private Member member;
 
     @GetMapping("/login")
     public String login(Model model,
                         @RequestParam(value = "error", required = false) String error,
-                        @RequestParam(value = "exception", required = false) String exception,
-                        HttpServletRequest request) {
+                        @RequestParam(value = "exception", required = false) String exception) {
+
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
-
-        HttpSession session = request.getSession();
-
-        if (session != null && request.isRequestedSessionIdValid()) {
-            member = (Member) session.getAttribute("member");
-
-            if (member == null)
-                session.invalidate();
-            else {
-                if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
-                return "redirect:/board/list";
-            }
-        }
 
         return "/member/login";
     }
@@ -66,7 +52,7 @@ public class MemberViewController {
         HttpSession session = request.getSession();
 
         if (session != null && request.isRequestedSessionIdValid()) {
-            member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+            Member member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
             if (member == null) {
                 session.invalidate();
@@ -110,7 +96,7 @@ public class MemberViewController {
         if (session == null || !request.isRequestedSessionIdValid())
             return "redirect:/member/login?error=true&exception=Not Found account";
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null)
             return "redirect:/member/login?error=true&exception=Not Found account";
@@ -134,7 +120,7 @@ public class MemberViewController {
         if (session == null || !request.isRequestedSessionIdValid())
             return "redirect:/member/login?error=true&exception=Not Found account";
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null)
             return "redirect:/member/login?error=true&exception=Not Found account";
@@ -169,7 +155,7 @@ public class MemberViewController {
         if (((Member) session.getAttribute("member")).getEmail().equals(search_member.getEmail()))
             return "redirect:/member/detail";
 
-        member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+        Member member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
         List<Follow> follower = member.getFollower();
 

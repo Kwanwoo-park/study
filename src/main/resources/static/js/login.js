@@ -18,7 +18,6 @@ if (button) {
         .then((response) => {
             if (response.ok) {
                 alert("Login Success");
-                window.localStorage.setItem("accessToken", response.headers.get("Authorization").substr(7));
                 location.replace(`/board/list`);
             } else {
                 alert("Login Fail" + response.statusText);

@@ -19,7 +19,7 @@
         <div class="card shadow-lg border-0 rounded-lg mt-5">
           <div class="card-header"><h3 class="text-center font-weight-bold my-4">Login</h3></div>
           <div class="card-body">
-            <form method="dialog">
+            <form method="post">
 <!--              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">-->
               <div th:if="${param.error}">
                 <p th:text="${exception}" class="alert alert-danger"></p>

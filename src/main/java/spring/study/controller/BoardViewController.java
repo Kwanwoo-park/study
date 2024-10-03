@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,12 +40,11 @@ public class BoardViewController {
     private List<Comment> list;
     private HashMap<String, Object> comment;
 
+    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/list")
     public String getBoardListPage(Model model,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
-        SecurityUtil.getCurrentUsername();
-
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));
         } catch (Exception e) {
