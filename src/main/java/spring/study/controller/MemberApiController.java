@@ -74,11 +74,11 @@ public class MemberApiController {
 
                 response.setHeader("Authorization", "Bearer " + jwtToken.getAccessToken());
 
-                Cookie accessToken = new Cookie("accessToken", "Bearer="+jwtToken.getRefreshToken());
-                accessToken.setPath("/");
-                accessToken.setHttpOnly(true);
-                accessToken.setSecure(true);
-                accessToken.setMaxAge(60 * 60);
+//                Cookie accessToken = new Cookie("accessToken", "Bearer="+jwtToken.getRefreshToken());
+//                accessToken.setPath("/");
+//                accessToken.setHttpOnly(true);
+//                accessToken.setSecure(true);
+//                accessToken.setMaxAge(60 * 60);
 
                 Cookie refreshToken = new Cookie("refreshToken", jwtToken.getRefreshToken());
                 refreshToken.setPath("/");

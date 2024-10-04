@@ -51,6 +51,7 @@ public class JwtTokenProvider {
                 .setExpiration(accessTokenExpiresIn)
                 .claim("email", email)
                 .claim("password", password)
+                .claim("auth", authorities)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 

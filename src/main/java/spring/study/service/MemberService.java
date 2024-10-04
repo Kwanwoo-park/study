@@ -39,7 +39,7 @@ public class MemberService implements UserDetailsService {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email, password);
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        System.out.println(authentication);
+        //System.out.println(authentication);
 
         return jwtTokenProvider.generateToken(authentication, email, password);
     }

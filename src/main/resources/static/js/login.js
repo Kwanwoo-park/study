@@ -18,15 +18,29 @@ if (button) {
         .then((response) => {
             if (response.ok) {
                 alert("Login Success");
-                location.replace(`/board/list`);
+
+                fetch(`/jwt/auth`, {
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + response.headers.get("Authorization").substr(7)
+                    },
+                })
+                .then((response) => {
+                    console.log(response)
+                    if (response.ok)
+                        location.href = "/board/list";
+                    else
+                        alert("Authorization Fail")
+                })
+                .catch((error) => {
+                    console.error('Error during login:', error);
+                    alert('An error occurred. Please try again later');
+                });
             } else {
-                alert("Login Fail" + response.statusText);
+                alert("Login Fail");
             }
          })
-//        .then((json) => {
-//            console.log(json)
-//            window.localStorage.setItem("accessToken", json.accessToken);
-//        })
         .catch((error) => {
             console.error('Error during login:', error);
             alert('An error occurred. Please try again later');

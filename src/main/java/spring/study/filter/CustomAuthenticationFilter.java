@@ -38,7 +38,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         }
 
         setDetails(request, authenticationToken);
-        return authenticationManager.authenticate(authenticationToken);
+        return this.getAuthenticationManager().authenticate(authenticationToken);
     }
 
     @Override

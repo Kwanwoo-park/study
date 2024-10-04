@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -26,6 +27,7 @@ import spring.study.service.MemberService;
 
 @RequiredArgsConstructor
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = false, securedEnabled = true)
 @Configuration
 public class SecurityConfig{
     private final JwtTokenProvider jwtTokenProvider;
@@ -51,10 +53,9 @@ public class SecurityConfig{
                 .logoutSuccessUrl("/member/login")
                     .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .invalidSessionUrl("/member/login?error=true&exception=Not Found account")
                     .and()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/member/login/**", "/js/**", "/css/**", "/img/**").permitAll()
+                        .requestMatchers("/**", "/member/login/**", "/js/**", "/css/**", "/img/**").permitAll()
                         .requestMatchers("/member/**", "/board/**", "/chat/**", "/follow/**").hasRole("ROLE_USER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
