@@ -7,11 +7,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import spring.study.component.JwtTokenProvider;
+import spring.study.config.JwtPrincipal;
 import spring.study.entity.Member;
 import spring.study.service.MemberService;
 
@@ -30,12 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String email = jwtTokenProvider.getEmail(token);
 
-            UserDetails userDetails =  memberService.loadUserByUsername(email);
+            Member member = (Member) memberService.loadUserByUsername(email);
 
-            if (userDetails != null) {
-                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword());
+            if (member != null) {
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(new JwtPrincipal(member.getUsername()), null, Arrays.asList(new SimpleGrantedAuthority(member.getRole().getValue())));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContext context = SecurityContextHolder.getContext();
+                context.setAuthentication(usernamePasswordAuthenticationToken);
+
+                System.out.println(SecurityContextHolder.getContext().getAuthentication());
             }
         }
 
@@ -43,9 +49,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
+        String bearerToken = null;
+        for (Cookie c : request.getCookies()) {
+            if (c.getName().equals("accessToken"))
+                bearerToken = c.getValue();
+        }
 
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer=")) {
             return bearerToken.substring(7);
         }
         return null;

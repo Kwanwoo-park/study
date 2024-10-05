@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,13 +23,13 @@ public class TokenApiController {
 
     @GetMapping("/auth")
     public ResponseEntity<Authentication> auth(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String accessToken = request.getHeader("Authorization");
-        Authentication authentication = jwtTokenProvider.getAuthentication(accessToken.substring(7));
+//        String accessToken = request.getHeader("Authorization");
+//        Authentication authentication = jwtTokenProvider.getAuthentication(accessToken.substring(7));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         System.out.println(authentication);
 
         if (authentication.isAuthenticated()) {
-            response.sendRedirect("/board/list");
             return ResponseEntity.ok(authentication);
         }
         else

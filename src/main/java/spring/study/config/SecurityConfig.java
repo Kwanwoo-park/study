@@ -27,7 +27,7 @@ import spring.study.service.MemberService;
 
 @RequiredArgsConstructor
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = false, securedEnabled = true)
+@EnableMethodSecurity(securedEnabled = true)
 @Configuration
 public class SecurityConfig{
     private final JwtTokenProvider jwtTokenProvider;
@@ -56,8 +56,8 @@ public class SecurityConfig{
                     .and()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/**", "/member/login/**", "/js/**", "/css/**", "/img/**").permitAll()
-                        .requestMatchers("/member/**", "/board/**", "/chat/**", "/follow/**").hasRole("ROLE_USER")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/member/**", "/board/**", "/chat/**", "/follow/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated())
                 .addFilter(new CustomAuthenticationFilter(authenticationManager))
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)

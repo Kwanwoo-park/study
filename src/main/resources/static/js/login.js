@@ -17,19 +17,17 @@ if (button) {
         })
         .then((response) => {
             if (response.ok) {
-                alert("Login Success");
-
                 fetch(`/jwt/auth`, {
                     method: 'GET',
                     headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + response.headers.get("Authorization").substr(7)
+                        "Content-Type": "application/json"
                     },
                 })
                 .then((response) => {
                     console.log(response)
-                    if (response.ok)
-                        location.href = "/board/list";
+                    if (response.ok) {
+                        location.replace(`/board/list`)
+                    }
                     else
                         alert("Authorization Fail")
                 })

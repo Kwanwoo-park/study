@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -41,9 +42,10 @@ public class BoardViewController {
     private List<Comment> list;
     private HashMap<String, Object> comment;
 
-    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/list")
-    public String getBoardListPage(Model model,
+    public String getBoardListPage(@AuthenticationPrincipal Member member,
+                                   Model model,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size,
                                    HttpServletRequest request) throws Exception {
@@ -52,6 +54,7 @@ public class BoardViewController {
 //
 //        System.out.println(authentication);
         System.out.println(SecurityUtil.getCurrentUsername());
+        System.out.println(SecurityContextHolder.getContext().getAuthentication());
 
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));

@@ -72,13 +72,13 @@ public class MemberApiController {
 
                 JwtToken jwtToken = memberService.signIn(dto.getEmail(), dto.getPassword());
 
-                response.setHeader("Authorization", "Bearer " + jwtToken.getAccessToken());
+                //response.setHeader("Authorization", "Bearer " + jwtToken.getAccessToken());
 
-//                Cookie accessToken = new Cookie("accessToken", "Bearer="+jwtToken.getRefreshToken());
-//                accessToken.setPath("/");
-//                accessToken.setHttpOnly(true);
-//                accessToken.setSecure(true);
-//                accessToken.setMaxAge(60 * 60);
+                Cookie accessToken = new Cookie("accessToken", "Bearer="+jwtToken.getRefreshToken());
+                accessToken.setPath("/");
+                accessToken.setHttpOnly(true);
+                accessToken.setSecure(true);
+                accessToken.setMaxAge(60 * 60);
 
                 Cookie refreshToken = new Cookie("refreshToken", jwtToken.getRefreshToken());
                 refreshToken.setPath("/");
@@ -86,7 +86,7 @@ public class MemberApiController {
                 refreshToken.setSecure(true);
                 refreshToken.setMaxAge(60 * 60 * 60);
 
-                //response.addCookie(accessToken);
+                response.addCookie(accessToken);
                 response.addCookie(refreshToken);
 
                 memberService.updateLastLoginTime(member.getId());
