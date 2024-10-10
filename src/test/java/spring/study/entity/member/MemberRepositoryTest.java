@@ -59,7 +59,7 @@ public class MemberRepositoryTest {
         Member save = memberRepository.save(member);
 
         //when
-        Member result = memberRepository.findByEmail("test@test.com").orElseThrow();
+        Member result = memberRepository.findByEmail("test@test.com");
 
         //then
         assertThat(result.getName()).isEqualTo(save.getName());
@@ -136,7 +136,7 @@ public class MemberRepositoryTest {
     @Test
     void findByPhoneAndBirth() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+        Member member = memberRepository.findByEmail("test@test.com");
 
         String phone = "010-1234-1234";
         String birth = "1900-01-01";

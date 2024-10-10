@@ -18,22 +18,18 @@ import spring.study.entity.Member;
 @RequiredArgsConstructor
 public class CustomAuthenticationProvider implements AuthenticationProvider {
     private final UserDetailsService userDetailsService;
-    private final PasswordEncoder passwordEncoder;
-
+    private final BCryptPasswordEncoder passwordEncoder;
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) authentication;
         String userEmail = token.getName();
         String userPassword = (String) token.getCredentials();
-
         Member member = (Member) userDetailsService.loadUserByUsername(userEmail);
         if (!passwordEncoder.matches(userPassword, member.getPassword())) {
             throw new BadCredentialsException(member.getUsername() + "Check Password");
         }
-
         return new UsernamePasswordAuthenticationToken(member, userPassword, member.getAuthorities());
     }
-
     @Override
     public boolean supports(Class<?> authentication) {
         return true;

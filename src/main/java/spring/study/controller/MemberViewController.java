@@ -4,16 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import spring.study.alert.AlertMessage;
-import spring.study.dto.JWT.JwtToken;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
-import spring.study.entity.Role;
 import spring.study.service.BoardService;
 import spring.study.service.FollowService;
 import spring.study.service.MemberService;
@@ -28,8 +24,6 @@ import java.util.List;
 @Slf4j
 public class MemberViewController {
     private final MemberService memberService;
-    private final FollowService followService;
-    private final BoardService boardService;
 
     @GetMapping("/login")
     public String login(Model model,

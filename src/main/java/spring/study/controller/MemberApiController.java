@@ -1,23 +1,14 @@
 package spring.study.controller;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import spring.study.Util.SecurityUtil;
-import spring.study.dto.JWT.JwtToken;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.*;
@@ -40,25 +31,9 @@ public class MemberApiController {
     private final ChatMessageService messageService;
     private final UserService userService;
     private Member member;
-    private final AuthenticationManager authenticationManager;
-
-    @PostMapping("/signIn")
-    public JwtToken signIn(@RequestBody MemberRequestDto memberRequestDto) {
-        String email = memberRequestDto.getEmail();
-        String password = memberRequestDto.getPassword();
-        JwtToken jwtToken = memberService.signIn(email, password);
-        log.info("request username = {}, password = {}", email, password);
-        log.info("jwtToken accessToken = {}, refreshToken = {}", jwtToken.getAccessToken(), jwtToken.getRefreshToken());
-        return jwtToken;
-    }
-
-    @PostMapping("/test")
-    public String test() {
-        return SecurityUtil.getCurrentUsername();
-    }
 
     @PostMapping("/login/action")
-    public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletResponse response) {
+    public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
         member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
         if (member == null)
@@ -66,32 +41,8 @@ public class MemberApiController {
 
         if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())) {
             if (member.getRole() != Role.DENIED) {
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
-                Authentication authentication = authenticationManager.authenticate(authenticationToken);
-                //System.out.println(authentication);
-
-                JwtToken jwtToken = memberService.signIn(dto.getEmail(), dto.getPassword());
-
-                //response.setHeader("Authorization", "Bearer " + jwtToken.getAccessToken());
-
-                Cookie accessToken = new Cookie("accessToken", "Bearer="+jwtToken.getRefreshToken());
-                accessToken.setPath("/");
-                accessToken.setHttpOnly(true);
-                accessToken.setSecure(true);
-                accessToken.setMaxAge(60 * 60);
-
-                Cookie refreshToken = new Cookie("refreshToken", jwtToken.getRefreshToken());
-                refreshToken.setPath("/");
-                refreshToken.setHttpOnly(true);
-                refreshToken.setSecure(true);
-                refreshToken.setMaxAge(60 * 60 * 60);
-
-                response.addCookie(accessToken);
-                response.addCookie(refreshToken);
-
                 memberService.updateLastLoginTime(member.getId());
-
-                log.info("JWT: {}", jwtToken);
+                request.getSession().setAttribute("member", member);
 
                 return ResponseEntity.status(HttpStatus.OK).body(member);
             }

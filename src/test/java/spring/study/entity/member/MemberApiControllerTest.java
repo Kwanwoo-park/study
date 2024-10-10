@@ -41,7 +41,7 @@ public class MemberApiControllerTest {
     @LocalServerPort
     private int port;
 
-    String url = "http://localhost:" + 8080 + "/member";
+    String url = "http://localhost:" + port + "/member";
 
     @Autowired
     private TestRestTemplate testTemplate;
@@ -73,55 +73,6 @@ public class MemberApiControllerTest {
                         .params(data)
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                 ).andExpect(status().isOk());
-    }
-
-    @WithMockUser(roles = "USER")
-    @Test
-    void signIn() throws Exception {
-        //given
-        mvc = MockMvcBuilders
-                .webAppContextSetup(context)
-                .apply(springSecurity())
-                .build();
-
-        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
-                .email("test@test.com")
-                .password("test")
-                .build();
-
-        url += "/signIn";
-
-        //when
-        mvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .content(new ObjectMapper().writeValueAsString(memberRequestDto)))
-                .andExpect(status().isOk())
-                .andDo(print());
-    }
-
-    @Test
-    void test() throws Exception {
-        //given
-        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
-                .email("test@test.com")
-                .password("test")
-                .build();
-
-        JwtToken jwtToken = memberService.signIn("test@test.com", "test");
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth(jwtToken.getAccessToken());
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-        log.info("httpHeaders = {}", httpHeaders);
-
-        url += "/test";
-
-        //when
-        ResponseEntity<String> response = testTemplate.postForEntity(url, new HttpEntity<>(httpHeaders), String.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo("test@test.com");
     }
 
     @WithMockUser(roles = "USER")

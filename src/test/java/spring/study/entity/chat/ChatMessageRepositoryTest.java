@@ -30,7 +30,7 @@ public class ChatMessageRepositoryTest {
     void save() {
         // given
         ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
-        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+        Member member = memberRepository.findByEmail("test@test.com");
 
         ChatMessage message = ChatMessage.builder()
                 .message("testMessage")
@@ -56,7 +56,7 @@ public class ChatMessageRepositoryTest {
     void find() {
         // given
         ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
-        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+        Member member = memberRepository.findByEmail("test@test.com");
 
         // when
         List<ChatMessage> message = chatMessageRepository.findByRoom(room);
@@ -86,7 +86,7 @@ public class ChatMessageRepositoryTest {
     @Test
     void deleteByMember() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+        Member member = memberRepository.findByEmail("test@test.com");
         ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 
         // when

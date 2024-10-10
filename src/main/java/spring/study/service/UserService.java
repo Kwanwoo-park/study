@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.study.dto.member.MemberRequestDto;
@@ -18,11 +19,11 @@ import spring.study.entity.Role;
 @RequiredArgsConstructor
 public class UserService implements UserServiceRepository {
     private final MemberRepository memberRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
     public MemberResponseDto createUser(MemberRequestDto memberRequestDto) {
-        if (memberRepository.findByEmail(memberRequestDto.getEmail()).isPresent())
+        if (memberRepository.findByEmail(memberRequestDto.getEmail()) != null)
             return null;
 
         String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
@@ -30,7 +31,7 @@ public class UserService implements UserServiceRepository {
 
         Member member = memberRepository.save(Member.builder()
                         .email(memberRequestDto.getEmail())
-                        .pwd(passwordEncoder.encode(memberRequestDto.getPassword()))
+                        .pwd(bCryptPasswordEncoder.encode(memberRequestDto.getPassword()))
                         .name(memberRequestDto.getName())
                         .phone(phone)
                         .birth(memberRequestDto.getBirth())
@@ -47,16 +48,8 @@ public class UserService implements UserServiceRepository {
                 "존재하지 않는 회원입니다."
         ));
 
-        member.changePwd(passwordEncoder.encode(pwd));
+        member.changePwd(bCryptPasswordEncoder.encode(pwd));
 
         return member.getId().intValue();
-    }
-
-    private UserDetails createUserDetails(Member member) {
-        return User.builder()
-                .username(member.getUsername())
-                .password(passwordEncoder.encode(member.getPassword()))
-                .roles(member.getRole().toString())
-                .build();
     }
 }

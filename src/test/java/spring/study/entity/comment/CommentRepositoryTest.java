@@ -28,7 +28,7 @@ public class CommentRepositoryTest {
     @Test
     void save() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
 
         Board board = member.getBoard().get(0);
 
@@ -52,7 +52,7 @@ public class CommentRepositoryTest {
     @Test
     void findAll() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
 
         Board board = member.getBoard().get(0);
 
@@ -89,7 +89,7 @@ public class CommentRepositoryTest {
     @Test
     void find() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
 
         Board board= member.getBoard().get(0);
 
@@ -114,7 +114,7 @@ public class CommentRepositoryTest {
     @Test
     void delete() {
         // given
-        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
+        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
         Board board = member.getBoard().get(0);
 
         Comment comment = board.getComment().get(0);
@@ -133,7 +133,7 @@ public class CommentRepositoryTest {
     @Test
     void deleteByMember() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+        Member member = memberRepository.findByEmail("test@test.com");
         System.out.println(commentRepository.findAll().size());
 
         // when

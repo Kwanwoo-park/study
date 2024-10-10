@@ -88,8 +88,8 @@ public class FollowRepositoryTest {
     @Test
     void find() {
         // given
-        Member follower = memberRepository.findByEmail("akakslsl13@naver.com").orElseThrow();
-        Member following = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
+        Member follower = memberRepository.findByEmail("akakslsl13@naver.com");
+        Member following = memberRepository.findByEmail("akakslslzz@naver.com");
 
         // when
         Follow follow = followRepository.findByFollowerAndFollowing(follower, following);
@@ -157,7 +157,7 @@ public class FollowRepositoryTest {
     @Test
     void deleteByFollower() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+        Member member = memberRepository.findByEmail("test@test.com");
         System.out.println(followRepository.findAll().size());
 
         // when
@@ -170,7 +170,7 @@ public class FollowRepositoryTest {
     @Test
     void deleteByFollowing() {
         // given
-        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+        Member member = memberRepository.findByEmail("test@test.com");
         System.out.println(followRepository.findAll().size());
 
         // when

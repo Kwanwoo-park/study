@@ -15,33 +15,16 @@ if (button) {
                 password: document.getElementById('password').value,
             }),
         })
-        .then((response) => {
-            if (response.ok) {
-                fetch(`/jwt/auth`, {
-                    method: 'GET',
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                })
-                .then((response) => {
-                    console.log(response)
-                    if (response.ok) {
-                        location.replace(`/board/list`)
-                    }
-                    else
-                        alert("Authorization Fail")
-                })
-                .catch((error) => {
-                    console.error('Error during login:', error);
-                    alert('An error occurred. Please try again later');
-                });
-            } else {
-                alert("Login Fail");
-            }
-         })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json.role == "USER")
+                location.replace(`/board/list`)
+            else
+                location.replace(`/admin/administrator`)
+        })
         .catch((error) => {
             console.error('Error during login:', error);
-            alert('An error occurred. Please try again later');
+            alert('Login error occurred. Please try again later');
         });
     });
 }
@@ -52,4 +35,3 @@ if (password) {
             button.click();
     });
 }
-

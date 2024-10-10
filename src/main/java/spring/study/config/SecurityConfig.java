@@ -1,85 +1,63 @@
 package spring.study.config;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import spring.study.component.CustomAccessDeniedHandler;
-import spring.study.component.CustomAuthenticationEntryPoint;
-import spring.study.component.JwtTokenProvider;
-import spring.study.filter.CustomAuthenticationFilter;
-import spring.study.filter.JwtAuthenticationFilter;
+import spring.study.component.CustomAuthenticationProvider;
+import spring.study.component.AuthFailureHandler;
+import spring.study.component.AuthSuccessHandler;
 import spring.study.service.MemberService;
-
 @RequiredArgsConstructor
 @EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true)
+@EnableMethodSecurity
 @Configuration
 public class SecurityConfig{
-    private final JwtTokenProvider jwtTokenProvider;
     private final MemberService memberService;
-    private final CustomAccessDeniedHandler customAccessDeniedHandler;
-    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-
+    private final AuthSuccessHandler authSuccessHandler;
+    private final AuthFailureHandler authFailureHandler;
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-        AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
-
-        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManager);
-        customAuthenticationFilter.setFilterProcessesUrl("/member/login");
-
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable)
-                .logout()
-                .logoutRequestMatcher(new AntPathRequestMatcher("/member/logout"))
-                .logoutSuccessUrl("/member/login")
-                    .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and()
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**", "/member/login/**", "/js/**", "/css/**", "/img/**").permitAll()
-                        .requestMatchers("/member/**", "/board/**", "/chat/**", "/follow/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
-                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-                        .anyRequest().authenticated())
-                .addFilter(new CustomAuthenticationFilter(authenticationManager))
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling((exceptionHandling) -> exceptionHandling
-                        .authenticationEntryPoint(customAuthenticationEntryPoint)
-                        .accessDeniedHandler(customAccessDeniedHandler)
-                )
-                .build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
+    public BCryptPasswordEncoder encryptPassword() {
         return new BCryptPasswordEncoder();
     }
-
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtTokenProvider, memberService);
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf().disable()
+                .authorizeHttpRequests()
+                .requestMatchers("/**", "/login/**", "/register/**", "/detail/**", "/find/**", "/updatePassword/**").permitAll()
+                .requestMatchers("/js/**", "/css/**").permitAll()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .and()
+                .formLogin()
+                .loginPage("/login")
+                .successHandler(authSuccessHandler)
+                .failureHandler(authFailureHandler)
+                .defaultSuccessUrl("/board/list")
+                .and()
+                .logout()
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutSuccessUrl("/login")
+                .invalidateHttpSession(true)
+                .deleteCookies("member").permitAll()
+                .and()
+                .sessionManagement()
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(false)
+                .expiredUrl("/login?error-true&exception=Hava been attempted to login form a new place or session expired");
+
+        return http.build();
     }
-
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity, BCryptPasswordEncoder bCryptPasswordEncoder) throws Exception{
+        AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.authenticationProvider(new CustomAuthenticationProvider(memberService, bCryptPasswordEncoder));
+        return authenticationManagerBuilder.build();
     }
 }

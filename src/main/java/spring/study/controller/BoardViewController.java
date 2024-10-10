@@ -6,28 +6,21 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import spring.study.Util.SecurityUtil;
-import spring.study.component.JwtTokenProvider;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.comment.CommentResponseDto;
 import spring.study.entity.Board;
 import spring.study.entity.Comment;
 import spring.study.entity.Member;
 import spring.study.service.BoardService;
-import spring.study.service.CommentService;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -35,27 +28,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BoardViewController {
     private final BoardService boardService;
-    private final JwtTokenProvider jwtTokenProvider;
     private Member member;
     private Long previous = -1L;
     private Board board;
     private List<Comment> list;
     private HashMap<String, Object> comment;
 
-    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/list")
-    public String getBoardListPage(@AuthenticationPrincipal Member member,
-                                   Model model,
+    public String getBoardListPage(Model model,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
-                                   @RequestParam(required = false, defaultValue = "5") Integer size,
-                                   HttpServletRequest request) throws Exception {
-//        String accessToken = request.getHeader("Authorization");
-//        Authentication authentication = jwtTokenProvider.getAuthentication(accessToken.substring(7));
-//
-//        System.out.println(authentication);
-        System.out.println(SecurityUtil.getCurrentUsername());
-        System.out.println(SecurityContextHolder.getContext().getAuthentication());
-
+                                   @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));
         } catch (Exception e) {
@@ -85,19 +67,7 @@ public class BoardViewController {
     }
 
     @GetMapping("/view")
-    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid())
-            return "redirect:/member/login?error=true&exception=Session Expired";
-
-        member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
+    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto) {
         if (boardRequestDto.getId() != null) {
             board = boardService.findById(boardRequestDto.getId());
 
