@@ -10,11 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
-import spring.study.service.BoardService;
-import spring.study.service.FollowService;
+import spring.study.entity.Role;
 import spring.study.service.MemberService;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,11 +22,21 @@ import java.util.List;
 @Slf4j
 public class MemberViewController {
     private final MemberService memberService;
+    private Member member;
 
     @GetMapping("/login")
     public String login(Model model,
                         @RequestParam(value = "error", required = false) String error,
-                        @RequestParam(value = "exception", required = false) String exception) {
+                        @RequestParam(value = "exception", required = false) String exception,
+                        HttpServletRequest request) {
+
+        if (request.getSession().getAttribute("member") != null) {
+            member = (Member) request.getSession().getAttribute("member");
+
+            if (member.getRole() == Role.USER) return "redirect:/board/list";
+            else if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
+            else request.getSession().invalidate();
+        }
 
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
@@ -46,7 +54,7 @@ public class MemberViewController {
         HttpSession session = request.getSession();
 
         if (session != null && request.isRequestedSessionIdValid()) {
-            Member member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+            member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
             if (member == null) {
                 session.invalidate();
@@ -90,7 +98,7 @@ public class MemberViewController {
         if (session == null || !request.isRequestedSessionIdValid())
             return "redirect:/member/login?error=true&exception=Not Found account";
 
-        Member member = (Member) session.getAttribute("member");
+        member = (Member) session.getAttribute("member");
 
         if (member == null)
             return "redirect:/member/login?error=true&exception=Not Found account";
@@ -114,7 +122,7 @@ public class MemberViewController {
         if (session == null || !request.isRequestedSessionIdValid())
             return "redirect:/member/login?error=true&exception=Not Found account";
 
-        Member member = (Member) session.getAttribute("member");
+        member = (Member) session.getAttribute("member");
 
         if (member == null)
             return "redirect:/member/login?error=true&exception=Not Found account";
@@ -149,7 +157,7 @@ public class MemberViewController {
         if (((Member) session.getAttribute("member")).getEmail().equals(search_member.getEmail()))
             return "redirect:/member/detail";
 
-        Member member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+        member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
         List<Follow> follower = member.getFollower();
 

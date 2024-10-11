@@ -19,8 +19,8 @@ public class CommentApiController {
     private final CommentService commentService;
     private final BoardService boardService;
 
-    @PostMapping("/{bid}/action")
-    public ResponseEntity<Comment> commentAction(@PathVariable Long bid,
+    @PostMapping("/action")
+    public ResponseEntity<Comment> commentAction(@RequestParam() Long id,
                                                  @RequestBody CommentRequestDto commentRequestDto,
                                                  HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -29,7 +29,7 @@ public class CommentApiController {
             return ResponseEntity.status(501).body(null);
 
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findById(bid);
+        Board board = boardService.findById(id);
 
         Comment comment = Comment.builder()
                 .comments(commentRequestDto.getComments())

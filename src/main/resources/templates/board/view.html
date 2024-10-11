@@ -61,7 +61,6 @@
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
     <script th:inline="javascript">
-    /*<![CDATA[*/
     	const member = /*[[${email}]]*/;
     	const role = /*[[${role}]]*/;
     	const board = /*[[${info.member.email}]]*/;
@@ -77,16 +76,20 @@
 
 		function fnViewDelete() {
 			if (confirm("게시글을 삭제하시겠습니까?")) {
-				$.ajax ({
-					type: 'DELETE',
-					url: '/board/view/delete?id=' + /*[[${info.id}]]*/,
-					contentType: 'application/json; charset=utf-8'
-				}).done(function() {
+				fetch(`/board/view/delete?id=` + /*[[${info.id}]]*/, {
+					method: 'DELETE',
+					headers: {
+						"Content-Type": "application/json; charset=utf-8",
+            		},
+				})
+				.then((response) => response.json())
+				.then((json) => {
 					alert("삭제가 완료되었습니다.");
 					location.href = '/board/list';
-				}).fail(function() {
-					alert("삭제에 실패했습니다.");
 				})
+				.catch((error) => {
+					alert("삭제에 실패했습니다.");
+				});
 			}
 		}
 
@@ -97,43 +100,43 @@
 				content : $("#content").val()
 			}
 
-			$.ajax ({
-				type: 'PATCH',
-				url: '/board/view/action?id=' + /*[[${info.id}]]*/,
-				dataType: 'JSON',
-				contentType: 'application/json; charset=utf-8',
-				data: JSON.stringify(data),
-				success: function() {
-					alert("게시글이 수정되었습니다.");
-					window.location.reload();
-				},
-				error: function() {
-					alert("다시 시도하여주십시오.");
-				}
+			fetch(`/board/view/action?id=` + /*[[${info.id}]]*/, {
+				method: 'PATCH',
+				headers: {
+					"Content-Type": "application/json; charset=utf-8",
+            	},
+            	body: JSON.stringify(data),
 			})
+			.then((response) => response.json())
+			.then((json) => {
+				alert("게시글이 수정되었습니다.");
+				window.location.reload();
+			})
+			.catch((error) => {
+				alert("다시 시도하여주십시오.");
+			});
 		}
 
 		function fnComment() {
 			const data = {
-			 comments : $("#comments").val(),
-			 info : /*[[${info.id}]]*/
+			 comments : $("#comments").val()
 			}
 
-			$.ajax({
-				type: 'POST',
-				url: '/comment/' + data.info + '/action',
-				dataType: 'JSON',
-				contentType: 'application/json; charset=utf-8',
-				data: JSON.stringify(data),
-				success: function() {
-					window.location.reload();
-				},
-				error: function() {
-					alert("다시 시도하여주십시오.");
-				}
+			fetch(`/comment/action?id=` + /*[[${info.id}]]*/, {
+					method: 'POST',
+					headers: {
+						"Content-Type": "application/json; charset=utf-8",
+            		},
+            		body: JSON.stringify(data),
 			})
+			.then((response) => response.json())
+			.then((json) => {
+				window.location.reload();
+			})
+			.catch((error) => {
+				alert("다시 시도하여주십시오.");
+			});
 		}
-	/*]]>*/
 	</script>
 </body>
 </html>

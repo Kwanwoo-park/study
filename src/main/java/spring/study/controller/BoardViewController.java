@@ -37,7 +37,21 @@ public class BoardViewController {
     @GetMapping("/list")
     public String getBoardListPage(Model model,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
-                                   @RequestParam(required = false, defaultValue = "5") Integer size) throws Exception {
+                                   @RequestParam(required = false, defaultValue = "5") Integer size,
+                                   HttpServletRequest request) throws Exception {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            return "redirect:/member/login?error=true&exception=Session Expired";
+        }
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));
         } catch (Exception e) {
@@ -67,7 +81,20 @@ public class BoardViewController {
     }
 
     @GetMapping("/view")
-    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto) {
+    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            return "redirect:/member/login?error=true&exception=Session Expired";
+        }
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
         if (boardRequestDto.getId() != null) {
             board = boardService.findById(boardRequestDto.getId());
 
