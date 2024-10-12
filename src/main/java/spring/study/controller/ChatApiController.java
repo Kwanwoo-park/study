@@ -4,10 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import spring.study.dto.chat.ChatRoomRequestDto;
 import spring.study.entity.ChatRoom;
 import spring.study.entity.ChatRoomMember;
@@ -24,7 +21,7 @@ public class ChatApiController {
     private Member member;
 
     @PostMapping("/createRoom")
-    public ResponseEntity<ChatRoom> createRoom(HttpServletRequest request, @RequestBody ChatRoomRequestDto roomRequestDto) {
+    public ResponseEntity<ChatRoom> createRoom(@RequestParam String name, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -37,7 +34,9 @@ public class ChatApiController {
             return ResponseEntity.status(501).body(null);
         }
 
-        ChatRoom room = roomService.createRoom(roomRequestDto.getName());
+        System.out.println(name);
+
+        ChatRoom room = roomService.createRoom(name);
 
         roomMemberService.save(member, room);
 

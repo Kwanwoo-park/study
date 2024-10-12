@@ -78,7 +78,6 @@
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script th:inline="javascript">
-    /*<![CDATA[*/
     	const follower = /*[[${follower}]]*/;
     	const following = /*[[${following}]]*/;
 
@@ -109,24 +108,19 @@
           const formData = new FormData();
           formData.append("file", file);
 
-          $.ajax({
-            type: 'PATCH',
-            url: '/member/detail/action',
-            enctype: 'multipart/form-data',
-            contentType: false,
-            processData: false,
-            data: formData,
-            dataType: 'JSON',
-            success: function() {
-              alert("사진이 변경되었습니다.");
-              window.location.reload();
-            },
-            error: function() {
-              alert("사진 변경에 실패했습니다.");
-            }
+          fetch(`/member/detail/action`, {
+            method: 'PATCH',
+            body: formData,
           })
+          .then((response) => response.json())
+          .then((json) => {
+            alert("사진이 변경되었습니다.");
+            window.location.reload();
+          })
+          .catch((error) => {
+            alert("사진 변경에 실패했습니다.");
+          });
         }
-	/*]]>*/
 </script>
 </body>
 </html>

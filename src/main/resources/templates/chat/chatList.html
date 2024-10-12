@@ -7,9 +7,9 @@
     <title>Chat List</title>
 </head>
 <body>
-    <form action="/chat/createRoom" method="post">
+    <form method="dialog">
         <input type="text" id="name" name="name" placeholder="채팅방 이름">
-        <button type="button" class="btn btn-primary" onclick="fnCreate()">방 만들기</button>
+        <button type="button" id="create" class="btn btn-primary">방 만들기</button>
     </form>
 
     <table class="table table-striped table-horizontal table-bordered mt-3">
@@ -46,36 +46,8 @@
             </ul>
         </div>
     </div>
+    <script src="/js/lib/jquery.min.js"></script>
+    <script src="/js/lib/bootstrap.min.js"></script>
+    <script src="/js/chat.js"></script>
 </body>
-<script src="/js/lib/jquery.min.js"></script>
-<script src="/js/lib/bootstrap.min.js"></script>
-<script th:inline="javascript">
-    /*<![CDATA[*/
-        function roomCreate(e) {
-            if (e.keyCode == 13) {
-             fnCreate();
-            }
-        }
-
-        function fnCreate() {
-            const data = {
-                name : $("#name").val()
-            }
-
-            $.ajax({
-                type: 'POST',
-                url: '/chat/createRoom',
-                dataType: 'JSON',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(data),
-                success: function(replies) {
-                    location.href = "/chat/chatRoom?roomId=" + replies.roomId;
-                },
-                error: function() {
-                    alert("다시 시도하여주십시오");
-                }
-            })
-        }
-    /*]]>*/
-</script>
 </html>

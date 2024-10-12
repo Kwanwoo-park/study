@@ -22,7 +22,7 @@ public class ChatViewController {
     private final ChatRoomMemberService roomMemberService;
     private Member member;
 
-    @RequestMapping(value = "/chatList", method = {RequestMethod.GET, RequestMethod.POST})
+    @GetMapping(value = "/chatList")
     public String chatList(Model model,
                            @RequestParam(required = false, defaultValue = "0") Integer page,
                            @RequestParam(required = false, defaultValue = "5") Integer size,

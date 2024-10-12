@@ -17,6 +17,8 @@ if (button) {
         })
         .then((response) => response.json())
         .then((json) => {
+            alert(json.name + "님 환영합니다!")
+
             if (json.role == "USER")
                 location.replace(`/board/list`)
             else

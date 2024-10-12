@@ -85,7 +85,7 @@
 				.then((response) => response.json())
 				.then((json) => {
 					alert("삭제가 완료되었습니다.");
-					location.href = '/board/list';
+					location.replace(`/board/list`)
 				})
 				.catch((error) => {
 					alert("삭제에 실패했습니다.");
