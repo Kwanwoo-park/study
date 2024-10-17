@@ -22,7 +22,7 @@ import java.util.HashMap;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/member")
+@RequestMapping("/api/member")
 @Slf4j
 public class MemberApiController {
     private final MemberService memberService;
@@ -88,8 +88,8 @@ public class MemberApiController {
         return ResponseEntity.ok(member);
     }
 
-    @GetMapping("/find/email/{email}/action")
-    public ResponseEntity<Member> findAction(@PathVariable String email) {
+    @GetMapping("/find")
+    public ResponseEntity<Member> findAction(@RequestParam() String email) {
         member = memberService.findMember(email);
 
         return ResponseEntity.ok(member);

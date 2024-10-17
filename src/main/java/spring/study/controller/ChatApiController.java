@@ -14,7 +14,7 @@ import spring.study.service.ChatRoomService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/chat")
+@RequestMapping("/api/chat")
 public class ChatApiController {
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;

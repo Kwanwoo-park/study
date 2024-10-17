@@ -1,32 +1,32 @@
-const button = document.getElementById('create');
-const name = document.getElementById('name');
+const button = document.getElementById('find');
+const email = document.getElementById('email');
 
 if (button) {
     button.addEventListener('click', (event) => {
         event.preventDefault();
-        if (name.value != '') {
-            fetch(`/api/chat/createRoom?name=` + name.value, {
-                method: 'POST',
+
+        if (email.value != '') {
+            fetch(`/api/member/find?email=`+email.value, {
+                method: 'GET',
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
                 },
-                body: JSON.stringify(name.value),
             })
             .then((response) => response.json())
             .then((json) => {
-                location.href = '/chat/chatRoom?roomId=' + json.roomId;
+                location.href = "/member/updatePassword/" + json.email;
             })
             .catch((error) => {
                 console.error(error)
                 alert("다시 시도하여주십시오");
-            });
+            })
         }
-    });
+    })
 }
 
-if (name) {
-    name.addEventListener('keydown', (event) => {
+if (email) {
+    email.addEventListener('keydown', (event) => {
         if (event.key == 'Enter')
             button.click();
-    });
+    })
 }

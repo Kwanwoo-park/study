@@ -14,7 +14,7 @@ import spring.study.service.CommentService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/comment")
+@RequestMapping("/api/comment")
 public class CommentApiController {
     private final CommentService commentService;
     private final BoardService boardService;

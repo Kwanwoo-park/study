@@ -5,7 +5,7 @@ if (button) {
     button.addEventListener('click', (event) => {
         event.preventDefault();
 
-        fetch(`/member/login/action`, {
+        fetch(`/api/member/login/action`, {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",
