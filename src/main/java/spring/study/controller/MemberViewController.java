@@ -133,10 +133,15 @@ public class MemberViewController {
     }
 
     @GetMapping("/search")
-    public String memberFind(Model model, HttpSession session) {
-        HashMap<String, Object> member_search = (HashMap<String, Object>) session.getAttribute("member_search");
+    public String memberFind(Model model) {
+        return "/member/member_find";
+    }
 
-        model.addAttribute("member", member_search);
+    @GetMapping("/search/{name}")
+    public String memberFind(@PathVariable String name, Model model) {
+        HashMap<String, Object> resultMap = memberService.findName(name);
+
+        model.addAttribute("member", resultMap);
 
         return "/member/member_find";
     }

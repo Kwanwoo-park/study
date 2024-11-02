@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +32,7 @@ public class MemberApiController {
     private final UserService userService;
     private Member member;
 
-    @PostMapping("/login/action")
+    @PostMapping("/login")
     public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
         member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
@@ -53,7 +51,7 @@ public class MemberApiController {
         return ResponseEntity.status(501).body(null);
     }
 
-    @PostMapping("/register/action")
+    @PostMapping("/register")
     public ResponseEntity<MemberResponseDto> registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
         return ResponseEntity.ok(userService.createUser(memberRequestDto));
     }
@@ -88,15 +86,15 @@ public class MemberApiController {
         return ResponseEntity.ok(member);
     }
 
-    @GetMapping("/find")
+    @GetMapping("/find/email")
     public ResponseEntity<Member> findAction(@RequestParam() String email) {
         member = memberService.findMember(email);
 
         return ResponseEntity.ok(member);
     }
 
-    @GetMapping("/find/info/{phone}&{birth}/action")
-    public ResponseEntity<Member> findAction(@PathVariable String phone, @PathVariable String birth) {
+    @GetMapping("/find/info")
+    public ResponseEntity<Member> findAction(@RequestParam String birth, @RequestParam String phone) {
         String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
         phone = phone.replaceAll(regEx, "$1-$2-$3");
         member = memberService.findMember(phone, birth);
@@ -104,11 +102,14 @@ public class MemberApiController {
         return ResponseEntity.ok(member);
     }
 
-    @PatchMapping("/updatePassword/action")
+    @PatchMapping("/updatePassword")
     public ResponseEntity<Integer> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
+        System.out.println(session);
+        System.out.println(request.isRequestedSessionIdValid());
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
             member = memberService.findMember(memberUpdateDto.getEmail());
         }
         else {
@@ -119,15 +120,17 @@ public class MemberApiController {
                 return ResponseEntity.status(501).body(null);
         }
 
+        System.out.println(member.getEmail());
+
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.status(200).body(result);
     }
 
-    @DeleteMapping("/withdrawal/action")
-    public ResponseEntity<Member> withdrawalAction(HttpServletRequest request) {
+    @DeleteMapping("/withdrawal")
+    public ResponseEntity<Boolean> withdrawalAction(HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -160,16 +163,14 @@ public class MemberApiController {
 
         session.invalidate();
 
-        return ResponseEntity.ok(member);
+        return ResponseEntity.ok(true);
     }
 
 
     @GetMapping("/search/{name}/action")
-    public ResponseEntity<Boolean> memberFindAction(@PathVariable String name, HttpSession session) {
+    public ResponseEntity<HashMap<String, Object>> memberFindAction(@PathVariable String name, HttpSession session) {
         HashMap<String, Object> member_search = memberService.findName(name);
 
-        session.setAttribute("member_search", member_search);
-
-        return ResponseEntity.ok(member_search.isEmpty());
+        return ResponseEntity.ok(member_search);
     }
 }

@@ -13,7 +13,7 @@
       <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
       <div >
         <input type="search" class="form-control" id="name" name="name"
-               placeholder="Search member" onkeypress="fnFind(event)">
+               placeholder="Search member">
       </div>
       <div class="card">
         <ul class="list-group-flush">
@@ -33,29 +33,6 @@
   <script src="/js/lib/jquery.min.js"></script>
   <script type="application/json; charset=utf-8"
           src="/js/lib/bootstrap.min/js"></script>
-  <script th:inline="javascript">
-    /*<![CDATA[*/
-    	function fnFind(e) {
-    	  if (e.keyCode == 13) {
-    	   const data = {
-			 name : $("#name").val()
-			}
-
-			$.ajax({
-				type: 'GET',
-				url: '/member/search/' +data.name + '/action',
-				dataType: 'JSON',
-				contentType: 'application/json; charset=utf-8',
-				success: function() {
-				  window.location.reload();
-				},
-				error: function() {
-				  alert("찾기에 실패했습니다.");
-				}
-			})
-    	  }
-		}
-	/*]]>*/
-	</script>
+  <script src="/js/search.js"></script>
 </body>
 </html>

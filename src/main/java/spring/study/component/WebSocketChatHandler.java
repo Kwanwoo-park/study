@@ -48,14 +48,12 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
             ChatRoom room = chatMessage.getRoom();
             Member member = chatMessage.getMember();
 
-            List<ChatRoomMember> list = roomMemberService.find(room);
-
-            if (list.size() > room.getCount()) {
-                room.addCount();
+            if (roomMemberService.find(member, room) == null) {
+                roomMemberService.save(member, room);
+                roomService.addCount(room.getId());
+                chatMessage.setMessage(member.getName() + "님이 입장했습니다.");
+                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
             }
-
-            chatMessage.setMessage(member.getName() + "님이 입장했습니다.");
-            sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
         } else if (chatMessage.getType().equals(MessageType.QUIT)) {
             ChatRoom room = chatMessage.getRoom();
             Member member = chatMessage.getMember();
@@ -63,7 +61,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
             roomMemberService.delete(member, room);
 
             if (room.getCount() -1 > 0) {
-                room.subCount();
+                roomService.subCount(room.getId());
 
                 chatMessage.setMessage(chatMessage.getMember().getName() + "님이 퇴장했습니다.");
                 sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));

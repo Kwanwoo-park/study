@@ -34,8 +34,6 @@ public class ChatApiController {
             return ResponseEntity.status(501).body(null);
         }
 
-        System.out.println(name);
-
         ChatRoom room = roomService.createRoom(name);
 
         roomMemberService.save(member, room);

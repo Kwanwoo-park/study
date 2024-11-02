@@ -75,7 +75,6 @@
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script th:inline="javascript">
-    /*<![CDATA[*/
     	const status = /*[[${status}]]*/;
     	const follower = /*[[${follower}]]*/;
     	const following = /*[[${following}]]*/;
@@ -98,35 +97,38 @@
           }
 
           if (status) {
-            $.ajax({
-              type: 'DELETE',
-              url: '/follow/action',
-              dataType: 'JSON',
-              contentType: 'application/json; charset=utf-8',
-              data: JSON.stringify(data)
-            }).done(function() {
+            fetch(`/api/follow`, {
+              method: 'DELETE',
+              headers: {
+                "Content-Type": "application/json; charset=utf-8",
+              },
+              body: JSON.stringify(data),
+            })
+            .then((response) => response.json())
+            .then((json) => {
               window.location.reload();
-            }).fail(function() {
+            })
+            .catch((error) => {
               alert("다시 시도하여주십시오.");
             })
           }
           else {
-           $.ajax({
-            type: 'POST',
-            url: '/follow/action',
-            dataType: 'JSON',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data),
-            success: function() {
+            fetch(`/api/follow`, {
+              method: 'POST',
+              headers: {
+                "Content-Type": "application/json; charset=utf-8",
+              },
+              body: JSON.stringify(data),
+            })
+            .then((response) => response.json())
+            .then((json) => {
               window.location.reload();
-            },
-            error: function() {
+            })
+            .catch((error) => {
               alert("다시 시도하여주십시오.");
-            }
-          })
+            })
           }
         }
-	/*]]>*/
 </script>
 </body>
 </html>

@@ -53,10 +53,10 @@ public class ChatRoom implements Serializable {
     }
 
     public void addCount() {
-        this.count++;
+        ++this.count;
     }
 
     public void subCount() {
-        this.count--;
+        --this.count;
     }
 }

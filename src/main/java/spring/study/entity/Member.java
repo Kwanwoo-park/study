@@ -39,6 +39,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     private Role role;
 
     @NotNull
+    @Column(unique = true)
     private String phone;
 
     @NotNull

@@ -69,42 +69,5 @@
     <!--부트스트랩 js, jquery 추가-->
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
-    <script th:inline="javascript">
-    	// header checkbox event
-    	$("#chkAll").click(function() {
-    		if (this.checked) {
-    			$("input[name='deleteId']").prop("checked", true);
-    		} else {
-    			$("input[name='deleteId']").prop("checked", false);
-    		}
-    	});
-    	
-    	// body checkbox event
-    	$("input[name='deleteId']").click(function() {
-    		let delInpLen = $("input[name='deleteId']").length;
-    		let delInpChkLen = $("input[name='deleteId']:checked").length;
-    		
-    		if (delInpLen == delInpChkLen) {
-    			$("#chkAll").prop("checked", true);
-    		} else {
-    			$("#chkAll").prop("checked", false);
-    		}
-    	});
-    
-		function fnDelete() {
-			let delInpChkLen = $("input[name='deleteId']:checked").length;
-			
-			if (delInpChkLen > 0) {
-				if (confirm("Do you want to delete it?")) {
-					let frm = $("#frm");
-					frm.attr("action","/board/delete");
-					frm.attr("method","post");
-					frm.submit();
-				}
-			} else {
-				alert("Not selected.");
-			}
-		}
-	</script>
 </body>
 </html>

@@ -22,7 +22,7 @@ public class FollowApiController {
     private final FollowService followService;
     private final MemberService memberService;
 
-    @PostMapping("/action")
+    @PostMapping("")
     public ResponseEntity<Follow> memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
@@ -53,7 +53,7 @@ public class FollowApiController {
         return ResponseEntity.ok(followService.save(follow));
     }
 
-    @DeleteMapping("/action")
+    @DeleteMapping("")
     public ResponseEntity<Member> memberUnfollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 

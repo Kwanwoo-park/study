@@ -6,7 +6,7 @@ if (button) {
         event.preventDefault();
 
         if (email.value != '') {
-            fetch(`/api/member/find?email=`+email.value, {
+            fetch(`/api/member/find/email?email=`+email.value, {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
@@ -18,7 +18,7 @@ if (button) {
             })
             .catch((error) => {
                 console.error(error)
-                alert("다시 시도하여주십시오");
+                alert("존재하지 않는 회원정보입니다.");
             })
         }
     })
