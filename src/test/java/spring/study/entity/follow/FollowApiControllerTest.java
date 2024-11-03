@@ -1,6 +1,7 @@
 package spring.study.entity.follow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import spring.study.dto.follow.FollowRequestDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.service.MemberService;
@@ -31,7 +33,7 @@ public class FollowApiControllerTest {
     @LocalServerPort
     private int port;
 
-    String url = "http://localhost:" + port + "/follow";
+    String url = "http://localhost:" + port + "/api/follow";
 
     @Autowired
     private TestRestTemplate testTemplate;
@@ -83,15 +85,13 @@ public class FollowApiControllerTest {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("member", memberService.findMember("test@test.com"));
 
-        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
-                .email("akakslslzz@naver.com")
+        FollowRequestDto followRequestDto = FollowRequestDto.builder()
+                .following(memberService.findMember("akakslslzz@naver.com"))
                 .build();
-
-        url += "/action";
 
         // when
         mvc.perform(post(url).session(session)
-                .content(new ObjectMapper().writeValueAsString(memberRequestDto))
+                .content(new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(followRequestDto))
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
         ).andExpect(status().is5xxServerError());
     }
@@ -141,15 +141,13 @@ public class FollowApiControllerTest {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("member", memberService.findMember("test@test.com"));
 
-        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
-                .email("akakslslzz@naver.com")
+        FollowRequestDto requestDto = FollowRequestDto.builder()
+                .following(memberService.findMember("akakslslzz@naver.com"))
                 .build();
-
-        url += "/action";
 
         // when
         mvc.perform(delete(url).session(session)
-                .content(new ObjectMapper().writeValueAsString(memberRequestDto))
+                .content(new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(requestDto))
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
         ).andExpect(status().is5xxServerError());
     }

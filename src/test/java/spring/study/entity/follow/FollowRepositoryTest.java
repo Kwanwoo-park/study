@@ -100,6 +100,22 @@ public class FollowRepositoryTest {
     }
 
     @Test
+    void exist() {
+        // given
+        Member follower = memberRepository.findByEmail("akakslsl13@naver.com");
+        Member following = memberRepository.findByEmail("akakslslzz@naver.com");
+
+        // when
+        Boolean flag = followRepository.existsByFollowerAndFollowing(follower, following);
+
+        // then
+        if (flag)
+            System.out.println("Exist");
+        else
+            System.out.println("Not exist");
+    }
+
+    @Test
     void delete() {
         // given
         Member follower = Member.builder()

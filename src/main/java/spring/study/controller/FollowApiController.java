@@ -37,7 +37,7 @@ public class FollowApiController {
         Member member = (Member) session.getAttribute("member");
         Member search_member = followRequestDto.getFollowing();
 
-        if (followService.findFollow(member, search_member) != null)
+        if (followService.existFollow(member, search_member))
             return ResponseEntity.status(501).body(null);
 
         Follow follow = Follow.builder()
@@ -67,12 +67,11 @@ public class FollowApiController {
 
         Member member = (Member) session.getAttribute("member");
         Member search_member = followRequestDto.getFollowing();
-        Follow follow = followService.findFollow(member, search_member);
 
-        if (followService.findFollow(member, search_member) == null)
+        if (!followService.existFollow(member, search_member))
             return ResponseEntity.status(501).body(null);
 
-        member.removeFollower(follow);
+        member.removeFollower(followService.findFollow(member, search_member));
 
         followService.delete(member, search_member);
 

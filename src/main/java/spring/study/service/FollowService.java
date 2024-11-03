@@ -27,6 +27,10 @@ public class FollowService {
         return followRepository.findByFollowerAndFollowing(follower, following);
     }
 
+    public Boolean existFollow(Member follower, Member following) {
+        return followRepository.existsByFollowerAndFollowing(follower, following);
+    }
+
     public void delete(Member follower, Member following) {
         followRepository.deleteByFollowerAndFollowing(follower, following);
     }

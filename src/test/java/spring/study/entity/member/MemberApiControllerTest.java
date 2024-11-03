@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
-import spring.study.dto.JWT.JwtToken;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Member;
 import spring.study.entity.Role;

@@ -73,6 +73,22 @@ public class FollowServiceTest {
     }
 
     @Test
+    void exist() {
+        // given
+        Member follower = memberService.findMember("akakslsl13@naver.com");
+        Member following = memberService.findMember("akakslslzz@naver.com");
+
+        // when
+        Boolean flag = followService.existFollow(follower, following);
+
+        // then
+        if (flag)
+            System.out.println("Exist");
+        else
+            System.out.println("Not exist");
+    }
+
+    @Test
     void delete() {
         // given
         Member follower = Member.builder()
