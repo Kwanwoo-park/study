@@ -41,7 +41,7 @@ public class MemberViewController {
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
 
-        return "/member/login";
+        return "member/login";
     }
 
     @GetMapping("/register")
