@@ -33,7 +33,7 @@ public class AdminController {
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
-        return "/admin/administrator";
+        return "admin/administrator";
     }
 
     @GetMapping("/memberCheck")
@@ -55,6 +55,6 @@ public class AdminController {
 
         model.addAttribute("member", memberService.findAll(page, size));
 
-        return "/admin/member_check";
+        return "admin/member_check";
     }
 }

@@ -24,7 +24,7 @@ public class FollowViewController {
 
         model.addAttribute("follower", follower);
 
-        return "/follow/follower";
+        return "follow/follower";
     }
 
     @GetMapping("/following")
@@ -33,6 +33,6 @@ public class FollowViewController {
 
         model.addAttribute("following", following);
 
-        return "/follow/following";
+        return "follow/following";
     }
 }

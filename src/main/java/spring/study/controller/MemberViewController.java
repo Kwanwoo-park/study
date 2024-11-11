@@ -53,7 +53,7 @@ public class MemberViewController {
     public String detail(Model model, HttpServletRequest request){
         HttpSession session = request.getSession();
 
-        if (session != null && request.isRequestedSessionIdValid()) {
+        if (session != null && request.isRequestedSessionIdValid() && session.getAttribute("member") != null) {
             member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
             if (member == null) {
@@ -73,22 +73,22 @@ public class MemberViewController {
             return "redirect:/member/login?error=true&exception=Not Found account";
         }
 
-        return "/member/detail";
+        return "member/detail";
     }
 
     @GetMapping("/find")
     public String find(Model model) {
-        return "/member/find";
+        return "member/find";
     }
 
     @GetMapping("/findByEmail")
     public String findByEmail(Model model) {
-        return "/member/email_find";
+        return "member/email_find";
     }
 
     @GetMapping("/findByInfo")
     public String findByInfo(Model model) {
-        return "/member/info_find";
+        return "member/info_find";
     }
 
     @GetMapping("/updatePassword")
@@ -105,14 +105,14 @@ public class MemberViewController {
 
         model.addAttribute("email", member.getEmail());
 
-        return "/member/updatePassword";
+        return "member/updatePassword";
     }
 
     @GetMapping("/updatePassword/{email}")
     public String updatePassword(@PathVariable String email, Model model) throws Exception {
         model.addAttribute("email", email);
 
-        return "/member/updatePassword";
+        return "member/updatePassword";
     }
 
     @GetMapping("/withdrawal")
@@ -129,12 +129,12 @@ public class MemberViewController {
 
         model.addAttribute("name", member.getName());
 
-        return "/member/withdrawal";
+        return "member/withdrawal";
     }
 
     @GetMapping("/search")
     public String memberFind(Model model) {
-        return "/member/member_find";
+        return "member/member_find";
     }
 
     @GetMapping("/search/{name}")
@@ -143,7 +143,7 @@ public class MemberViewController {
 
         model.addAttribute("member", resultMap);
 
-        return "/member/member_find";
+        return "member/member_find";
     }
 
     @GetMapping("/search/detail")
@@ -183,6 +183,6 @@ public class MemberViewController {
 
         session.setAttribute("member", member);
 
-        return "/member/member_detail";
+        return "member/member_detail";
     }
 }

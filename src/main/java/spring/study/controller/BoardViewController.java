@@ -58,7 +58,7 @@ public class BoardViewController {
             throw new Exception(e.getMessage());
         }
 
-        return "/board/list";
+        return "board/list";
     }
 
     @GetMapping("/write")
@@ -77,7 +77,7 @@ public class BoardViewController {
         }
 
         model.addAttribute("name", member.getName());
-        return "/board/write";
+        return "board/write";
     }
 
     @GetMapping("/view")
@@ -114,6 +114,6 @@ public class BoardViewController {
             model.addAttribute("comment", comment);
         }
 
-        return "/board/view";
+        return "board/view";
     }
 }
