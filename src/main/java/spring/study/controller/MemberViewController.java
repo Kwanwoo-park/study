@@ -46,7 +46,7 @@ public class MemberViewController {
 
     @GetMapping("/register")
     public String register() {
-        return "/member/register";
+        return "member/register";
     }
 
     @GetMapping("/detail")
