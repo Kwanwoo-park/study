@@ -19,7 +19,7 @@ public class CommentApiController {
     private final CommentService commentService;
     private final BoardService boardService;
 
-    @PostMapping("/action")
+    @PostMapping("")
     public ResponseEntity<Comment> commentAction(@RequestParam() Long id,
                                                  @RequestBody CommentRequestDto commentRequestDto,
                                                  HttpServletRequest request) {

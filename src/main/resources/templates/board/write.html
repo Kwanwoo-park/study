@@ -37,7 +37,7 @@
 					content : $("#content").val()
 				}
 
-				fetch(`/board/write/action`, {
+				fetch(`/api/board/write`, {
 					method: 'POST',
 					headers: {
 						"Content-Type": "application/json; charset=utf-8",

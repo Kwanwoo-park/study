@@ -20,7 +20,7 @@ public class BoardApiController {
     private final BoardService boardService;
     private final CommentService commentService;
 
-    @PostMapping("/write/action")
+    @PostMapping("/write")
     public ResponseEntity<Board> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
@@ -54,7 +54,7 @@ public class BoardApiController {
         return ResponseEntity.ok(result);
     }
 
-    @PatchMapping("/view/action")
+    @PatchMapping("/view")
     public ResponseEntity<Integer> boardViewAction(@RequestBody BoardRequestDto boardRequestDto){
         return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getTitle(), boardRequestDto.getContent()));
     }
