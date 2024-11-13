@@ -12,6 +12,7 @@
         <div class="msgArea">
             <ul class="list-group-flush">
                 <li class="list-group-item" th:each="list, index : ${message}">
+                    <img th:src="@{/img/} + ${list.member.profile}" width="50vw" height="50vw" style="border-radius: 90px" id="profile">
                     <span>
                         <span th:text="${list.member.name}"></span>
                         <pre th:text="${list.message}"></pre>
