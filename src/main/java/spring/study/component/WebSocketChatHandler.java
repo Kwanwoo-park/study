@@ -1,7 +1,5 @@
 package spring.study.component;
 
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +9,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import spring.study.dto.chat.ChatMessageRequestDto;
-import spring.study.dto.chat.ChatMessageResponseDto;
 import spring.study.entity.*;
 import spring.study.service.ChatMessageService;
 import spring.study.service.ChatRoomMemberService;
@@ -19,7 +16,6 @@ import spring.study.service.ChatRoomService;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -48,7 +44,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
             ChatRoom room = chatMessage.getRoom();
             Member member = chatMessage.getMember();
 
-            if (roomMemberService.find(member, room) == null) {
+            if (!roomMemberService.exist(member, room)) {
                 roomMemberService.save(member, room);
                 roomService.addCount(room.getId());
                 chatMessage.setMessage(member.getName() + "님이 입장했습니다.");

@@ -15,6 +15,8 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
 
     public ChatRoomMember findByMemberAndRoom(Member member, ChatRoom room);
 
+    public boolean existsByMemberAndRoom(Member member, ChatRoom room);
+
     @Transactional
     public void deleteByMemberAndRoom(Member member, ChatRoom room);
 

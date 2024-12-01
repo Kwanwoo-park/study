@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.Member;
+import spring.study.entity.Role;
 import spring.study.repository.MemberRepository;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -103,6 +104,17 @@ public class MemberService implements UserDetailsService {
         ));
 
         member.changePhoneAndBirth(phone, birth);
+    }
+
+    @Transactional
+    public int updateRole(Long id, Role role) {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
+
+        member.changeRole(role);
+
+        return member.getId().intValue();
     }
 
     @Override

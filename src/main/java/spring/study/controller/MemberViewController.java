@@ -11,6 +11,7 @@ import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
+import spring.study.service.FollowService;
 import spring.study.service.MemberService;
 
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import java.util.List;
 @Slf4j
 public class MemberViewController {
     private final MemberService memberService;
+    private final FollowService followService;
     private Member member;
 
     @GetMapping("/login")
@@ -172,12 +174,8 @@ public class MemberViewController {
         model.addAttribute("following", search_member.getFollower().size());
         model.addAttribute("list", search_member.getBoard());
 
-        for (Follow f : follower) {
-            if (f.getFollowing().getEmail().equals(search_member.getEmail())) {
-                status = true;
-                break;
-            }
-        }
+        if (followService.existFollow(member, search_member))
+            status = true;
 
         model.addAttribute("status", status);
 

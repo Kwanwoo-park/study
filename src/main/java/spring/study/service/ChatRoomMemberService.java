@@ -26,6 +26,10 @@ public class ChatRoomMemberService {
         );
     }
 
+    public Boolean exist(Member member, ChatRoom room) {
+        return chatRoomMemberRepository.existsByMemberAndRoom(member, room);
+    }
+
     public ChatRoomMember find(Member member, ChatRoom room) {
         return chatRoomMemberRepository.findByMemberAndRoom(member, room);
     }

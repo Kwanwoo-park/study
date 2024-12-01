@@ -6,13 +6,20 @@
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <title>Chatting Room</title>
 </head>
+<style type="text/css">
+    img {
+        width: 50px;
+        height: 50px;
+        border-radius: 90px;
+    }
+</style>
 <body>
     <div>
         <span>메세지</span>
         <div class="msgArea">
             <ul class="list-group-flush">
                 <li class="list-group-item" th:each="list, index : ${message}">
-                    <img th:src="@{/img/} + ${list.member.profile}" width="50vw" height="50vw" style="border-radius: 90px" id="profile">
+                    <img th:src="@{/img/} + ${list.member.profile}" id="profile">
                     <span>
                         <span th:text="${list.member.name}"></span>
                         <pre th:text="${list.message}"></pre>
@@ -28,7 +35,8 @@
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script th:inline="javascript">
-  let socket = new WebSocket("ws://ec2-3-34-175-237.ap-northeast-2.compute.amazonaws.com:8080/ws/chat");
+  //let socket = new WebSocket("ws://ec2-3-34-175-237.ap-northeast-2.compute.amazonaws.com:8080/ws/chat");
+  let socket = new WebSocket("ws://localhost:8080/ws/chat");
   let roomId = [[${room.roomId}]];
   let member = [[${member}]];
   let flag = [[${flag}]];
@@ -58,11 +66,15 @@
     let newMsgArea = document.createElement('span');
     let name = document.createElement('span');
     let newMsg = document.createElement('pre');
+    let img = document.createElement('img');
 
     newMsgLi.className = "list-group-item";
+    img.src = "/img/" + json.member.profile;
+    img.id = "profile"
     name.innerText = json.member.name;
     newMsg.innerText = json.message;
 
+    newMsgArea.append(img);
     newMsgArea.append(name);
     newMsgArea.append(newMsg);
 

@@ -27,10 +27,10 @@
           <span th:text="${list.id}"></span>
         </td>
         <td>
-          <a th:href="@{/member/search/detail(email=${list.email})}"><span th:text="${list.name}"></span></a>
+          <span th:text="${list.name}"></span>
         </td>
         <td>
-          <span th:text="${list.email}"></span>
+          <a th:href="@{/admin/member/detail(email=${list.email})}"><span th:text="${list.email}"></span></a>
         </td>
         <td>
           <span th:text="${list.role}"></span>

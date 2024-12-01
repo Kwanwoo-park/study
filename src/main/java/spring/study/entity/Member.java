@@ -193,4 +193,8 @@ public class Member extends BasetimeEntity implements UserDetails {
         this.phone = phone;
         this.birth = birth;
     }
+
+    public void changeRole(Role role) {
+        this.role = role;
+    }
 }

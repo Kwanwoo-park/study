@@ -43,9 +43,9 @@ public class MemberApiController {
             if (member.getRole() != Role.DENIED) {
                 memberService.updateLastLoginTime(member.getId());
                 request.getSession().setAttribute("member", member);
-
-                return ResponseEntity.status(HttpStatus.OK).body(member);
             }
+
+            return ResponseEntity.status(HttpStatus.OK).body(member);
         }
 
         return ResponseEntity.status(501).body(null);
@@ -105,9 +105,6 @@ public class MemberApiController {
     @PatchMapping("/updatePassword")
     public ResponseEntity<Integer> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
-
-        System.out.println(session);
-        System.out.println(request.isRequestedSessionIdValid());
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
             member = memberService.findMember(memberUpdateDto.getEmail());

@@ -19,12 +19,15 @@ if (button) {
             })
             .then((response) => response.json())
             .then((json) => {
-                alert(json.name + "님 환영합니다!")
+                if (json.role != "DENIED")
+                    alert(json.name + "님 환영합니다!")
 
                 if (json.role == "USER")
                     location.replace(`/board/list`)
-                else
+                else if (json.role == "ADMIN")
                     location.replace(`/admin/administrator`)
+                else
+                    alert("Access Deny");
             })
             .catch((error) => {
                 console.error('Error during login:', error);

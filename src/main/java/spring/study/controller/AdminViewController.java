@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
 import spring.study.service.MemberService;
@@ -15,7 +16,7 @@ import spring.study.service.MemberService;
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/admin")
-public class AdminController {
+public class AdminViewController {
     private final MemberService memberService;
 
     @GetMapping("/administrator")
@@ -56,5 +57,20 @@ public class AdminController {
         model.addAttribute("member", memberService.findAll(page, size));
 
         return "admin/member_check";
+    }
+
+    @GetMapping("/member/detail")
+    public String memberDetail(Model model, MemberRequestDto requestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return "redirect:/member/login?error=true&exception=Not Found account";
+
+        if (session.getAttribute("member") == null)
+            return "redirect:/member/login?error=true&exception=Session Expired";
+
+        model.addAttribute("member", memberService.findMember(requestDto.getEmail()));
+
+        return "admin/update_member";
     }
 }

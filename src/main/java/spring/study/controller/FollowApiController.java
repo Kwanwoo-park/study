@@ -20,7 +20,6 @@ import java.util.List;
 @RequestMapping("/api/follow")
 public class FollowApiController {
     private final FollowService followService;
-    private final MemberService memberService;
 
     @PostMapping("")
     public ResponseEntity<Follow> memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
