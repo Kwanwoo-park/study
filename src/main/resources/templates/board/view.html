@@ -11,10 +11,13 @@
 	<div class="container">
 		<h1>Board View</h1>
 		<form id="frm" method="post">
-			<input type="hidden" name="id" th:value="${info.id}">
+			<input type="hidden" name="id" id="id" th:value="${info.id}">
+			<input type="hidden" id="email" th:value="${member.email}">
+			<input type="hidden" id="role" th:value="${member.role}">
+			<input type="hidden" id="board" th:value="${info.member.email}">
 			<div class="float-right">
 				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-				<button type="button" id="delete" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
+				<button type="button" id="delete" class="btn btn-danger">Delete</button>
 			</div>
 			<div class="mb-3">
 			    <label class="form-label" for="title">Title</label>
@@ -28,17 +31,13 @@
 			    <label class="form-label" for="name">Writer</label>
 			    <input type="disabled" class="form-control" id="name" name="name" th:value="${info.member.name}" disabled>
 			</div>
-			<button type="button" id="edit" class="btn btn-primary" th:onclick="fnViewEdit()">Edit</button>
-
-			<br>
+			<button type="button" id="edit" class="btn btn-primary">Edit</button>
 			<hr>
 			<div class="mb-3">
 				<label class="form-label" for="comments">Comment</label>
 				<textarea class="form-control" id="comments" rows="5" cols="" name="Comment"></textarea>
 			</div>
-			<button type="button" id="submit" class="btn btn-primary" th:onclick="fnComment()">Submit</button>
-
-			<br>
+			<button type="button" id="submit" class="btn btn-primary">Submit</button>
 			<hr>
 			<div class="card">
 				<div class="card-header bi bi-chat-dots">Comments</div>
@@ -60,83 +59,6 @@
     <!--부트스트랩 js, jquery 추가-->
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
-    <script th:inline="javascript">
-    	const member = /*[[${email}]]*/;
-    	const role = /*[[${role}]]*/;
-    	const board = /*[[${info.member.email}]]*/;
-
-    	if (role != "ADMIN") {
-			if (member != board) {
-				document.getElementById('title').disabled = true;
-				document.getElementById('content').disabled = true;
-				document.getElementById('edit').style.display = 'none';
-				document.getElementById('delete').style.display = 'none';
-			}
-    	}
-
-		function fnViewDelete() {
-			if (confirm("게시글을 삭제하시겠습니까?")) {
-				fetch(`/api/board/view/delete?id=` + /*[[${info.id}]]*/, {
-					method: 'DELETE',
-					headers: {
-						"Content-Type": "application/json; charset=utf-8",
-            		},
-				})
-				.then((response) => response.json())
-				.then((json) => {
-					alert("삭제가 완료되었습니다.");
-					location.replace(`/board/list`)
-				})
-				.catch((error) => {
-					alert("삭제에 실패했습니다.");
-				});
-			}
-		}
-
-		function fnViewEdit() {
-			const data = {
-				id : /*[[${info.id}]]*/,
-				title : $("#title").val(),
-				content : $("#content").val()
-			}
-
-			fetch(`/api/board/view?id=` + /*[[${info.id}]]*/, {
-				method: 'PATCH',
-				headers: {
-					"Content-Type": "application/json; charset=utf-8",
-            	},
-            	body: JSON.stringify(data),
-			})
-			.then((response) => response.json())
-			.then((json) => {
-				alert("게시글이 수정되었습니다.");
-				window.location.reload();
-			})
-			.catch((error) => {
-				alert("다시 시도하여주십시오.");
-			});
-		}
-
-		function fnComment() {
-			const data = {
-			 comments : $("#comments").val()
-			}
-
-			fetch(`/api/comment?id=` + /*[[${info.id}]]*/, {
-					method: 'POST',
-					headers: {
-						"Content-Type": "application/json; charset=utf-8",
-            		},
-            		body: JSON.stringify(data),
-			})
-			.then((response) => response.json())
-			.then((json) => {
-				window.location.reload();
-			})
-			.catch((error) => {
-				alert("다시 시도하여주십시오.");
-			});
-		}
-	</script>
+	<script src="/js/board/view.js"></script>
 </body>
 </html>

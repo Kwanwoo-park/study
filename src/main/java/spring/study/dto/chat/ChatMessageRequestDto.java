@@ -1,9 +1,10 @@
 package spring.study.dto.chat;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import spring.study.entity.*;
+import spring.study.service.ChatRoomService;
+import spring.study.service.MemberService;
 
 @Getter
 @Setter
@@ -12,23 +13,13 @@ public class ChatMessageRequestDto {
     private Long id;
     private String message;
     private MessageType type;
-    private Member member;
-    private ChatRoom room;
-
+    private String email;
+    private String roomId;
     @Builder
-    public ChatMessageRequestDto(String message, MessageType type, ChatRoom room, Member member) {
+    public ChatMessageRequestDto(String message, MessageType type, String roomId, String email) {
         this.message = message;
         this.type = type;
-        this.member = member;
-        this.room = room;
-    }
-
-    public ChatMessage toEntity() {
-        return ChatMessage.builder()
-                .message(message)
-                .type(type)
-                .member(member)
-                .room(room)
-                .build();
+        this.email = email;
+        this.roomId = roomId;
     }
 }

@@ -57,7 +57,7 @@ public class MemberApiController {
     }
 
     @PatchMapping("/detail/action")
-    public ResponseEntity<Member> detailAction(@RequestParam MultipartFile file, HttpServletRequest request) throws IOException {
+    public ResponseEntity<Member> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) throws IOException {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -70,12 +70,13 @@ public class MemberApiController {
             return ResponseEntity.status(501).body(null);
         }
 
-        String fileDir = "/home/ec2-user/app/step1/study/src/main/resources/static/img/";
+        //String fileDir = "/home/ec2-user/app/step1/study/src/main/resources/static/img/";
+        String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         File f = new File(fileDir + file.getOriginalFilename());
 
         if (!f.exists()) {
-            file.transferTo(new File(fileDir + file.getOriginalFilename()));
+            file.transferTo(f);
         }
 
         member.setProfile(file.getOriginalFilename());

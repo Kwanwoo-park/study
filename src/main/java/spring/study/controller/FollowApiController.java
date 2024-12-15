@@ -20,9 +20,10 @@ import java.util.List;
 @RequestMapping("/api/follow")
 public class FollowApiController {
     private final FollowService followService;
+    private final MemberService memberService;
 
     @PostMapping("")
-    public ResponseEntity<Follow> memberFollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
+    public ResponseEntity<Follow> memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -34,7 +35,7 @@ public class FollowApiController {
         }
 
         Member member = (Member) session.getAttribute("member");
-        Member search_member = followRequestDto.getFollowing();
+        Member search_member = memberService.findMember(memberRequestDto.getEmail());
 
         if (followService.existFollow(member, search_member))
             return ResponseEntity.status(501).body(null);
@@ -53,7 +54,7 @@ public class FollowApiController {
     }
 
     @DeleteMapping("")
-    public ResponseEntity<Member> memberUnfollow(@RequestBody FollowRequestDto followRequestDto, HttpServletRequest request) {
+    public ResponseEntity<Member> memberUnfollow(@RequestBody MemberRequestDto memberRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -65,7 +66,7 @@ public class FollowApiController {
         }
 
         Member member = (Member) session.getAttribute("member");
-        Member search_member = followRequestDto.getFollowing();
+        Member search_member = memberService.findMember(memberRequestDto.getEmail());
 
         if (!followService.existFollow(member, search_member))
             return ResponseEntity.status(501).body(null);

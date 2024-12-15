@@ -34,6 +34,10 @@ public class Board extends BasetimeEntity implements Serializable {
     @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
     private List<Comment> comment = new ArrayList<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
+    private List<BoardImg> img = new ArrayList<>();
+
     @Builder
     public Board(Long id, String title, String content, int readCnt, Member member) {
         this.id = id;
@@ -50,6 +54,10 @@ public class Board extends BasetimeEntity implements Serializable {
 
     public void addComment(Comment comment) {
         comment.addBoard(this);
+    }
+
+    public void addImg(BoardImg boardImg) {
+        boardImg.addBoard(this);
     }
 
     public void changeReadCnt() {

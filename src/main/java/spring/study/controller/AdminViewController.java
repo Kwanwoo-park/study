@@ -69,6 +69,13 @@ public class AdminViewController {
         if (session.getAttribute("member") == null)
             return "redirect:/member/login?error=true&exception=Session Expired";
 
+        Member member = (Member) session.getAttribute("member");
+
+        if (member.getRole() != Role.ADMIN) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
+
         model.addAttribute("member", memberService.findMember(requestDto.getEmail()));
 
         return "admin/update_member";

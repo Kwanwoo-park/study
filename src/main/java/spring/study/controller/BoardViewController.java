@@ -1,13 +1,9 @@
 package spring.study.controller;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +14,6 @@ import spring.study.entity.Comment;
 import spring.study.entity.Member;
 import spring.study.service.BoardService;
 
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,9 +25,6 @@ public class BoardViewController {
     private final BoardService boardService;
     private Member member;
     private Long previous = -1L;
-    private Board board;
-    private List<Comment> list;
-    private HashMap<String, Object> comment;
 
     @GetMapping("/list")
     public String getBoardListPage(Model model,
@@ -96,10 +88,10 @@ public class BoardViewController {
         }
 
         if (boardRequestDto.getId() != null) {
-            board = boardService.findById(boardRequestDto.getId());
+            Board board = boardService.findById(boardRequestDto.getId());
 
-            comment = new HashMap<>();
-            list = board.getComment();
+            HashMap<String, Object> comment = new HashMap<>();
+            List<Comment> list = board.getComment();
 
             comment.put("list", list.stream().map(CommentResponseDto::new).toList());
 
@@ -109,8 +101,7 @@ public class BoardViewController {
             }
 
             model.addAttribute("info", board);
-            model.addAttribute("email", member.getEmail());
-            model.addAttribute("role", member.getRole());
+            model.addAttribute("member", member);
             model.addAttribute("comment", comment);
         }
 

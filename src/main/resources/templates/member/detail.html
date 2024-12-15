@@ -16,14 +16,14 @@
       &nbsp;&nbsp;&nbsp;&nbsp;
       <h3 style="display:inline">
         <label class="form-label">Posts: </label>
-        <label class="form-label" th:text="${board}"></label>
+        <label class="form-label" th:text="${member.board.size}"></label>
         <a th:href="@{/follow/follower(email=${member.email})}" id="follower">
         <label class="form-label">Follower: </label>
-        <label class="form-label" th:text="${follower}"></label>
+        <label class="form-label" id="follower_label" th:text="${member.following.size}"></label>
       </a>
       <a th:href="@{/follow/following(email=${member.email})}" id="following">
         <label class="form-label">Following: </label>
-        <label class="form-label" th:text="${following}"></label>
+        <label class="form-label" id="following_label" th:text="${member.follower.size}"></label>
       </a>
       </h3>
       <br>
@@ -49,7 +49,7 @@
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr th:each="list, index : ${list}">
+        <tr th:each="list, index : ${member.board}">
           <td>
             <span th:text="${index.index+1}"></span>
           </td>
@@ -77,50 +77,6 @@
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script th:inline="javascript">
-    	const follower = /*[[${follower}]]*/;
-    	const following = /*[[${following}]]*/;
-
-    	const upload = document.querySelector("#upload");
-    	const profile = document.querySelector("#profile");
-
-    	profile.addEventListener('click', () => upload.click());
-
-    	let file;
-
-    	if (follower == 0)
-    	  document.querySelector("#follower").removeAttribute('href');
-
-    	if (following == 0)
-    	  document.querySelector("#following").removeAttribute('href');
-
-        function fnLoad(input) {
-          file = input.files[0];
-          let filename = file.name;
-
-          let img = document.querySelector("#profile")
-          img.src = URL.createObjectURL(file);
-
-          document.getElementById("save").style.visibility = "visible";
-        }
-
-        function fnSave() {
-          const formData = new FormData();
-          formData.append("file", file);
-
-          fetch(`/api/member/detail/action`, {
-            method: 'PATCH',
-            body: formData,
-          })
-          .then((response) => response.json())
-          .then((json) => {
-            alert("사진이 변경되었습니다.");
-            window.location.reload();
-          })
-          .catch((error) => {
-            alert("사진 변경에 실패했습니다.");
-          });
-        }
-</script>
+<script src="/js/member/detail.js"></script>
 </body>
 </html>

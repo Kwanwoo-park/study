@@ -16,8 +16,8 @@ if (button) {
                 location.replace(`/member/login`)
             }
            else {
-            console.error(response)
-            alert("다시 시도하여주십시오");
+                console.error(response)
+                alert("다시 시도하여주십시오");
            }
         })
         .catch((error) => {

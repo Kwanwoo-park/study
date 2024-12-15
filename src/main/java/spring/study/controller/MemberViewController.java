@@ -64,10 +64,6 @@ public class MemberViewController {
             }
 
             model.addAttribute("member", member);
-            model.addAttribute("board", member.getBoard().size());
-            model.addAttribute("follower", member.getFollowing().size());
-            model.addAttribute("following", member.getFollower().size());
-            model.addAttribute("list", member.getBoard());
 
             session.setAttribute("member", member);
         }
@@ -166,13 +162,7 @@ public class MemberViewController {
 
         member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
-        List<Follow> follower = member.getFollower();
-
         model.addAttribute("member", search_member);
-        model.addAttribute("board", search_member.getBoard().size());
-        model.addAttribute("follower", search_member.getFollowing().size());
-        model.addAttribute("following", search_member.getFollower().size());
-        model.addAttribute("list", search_member.getBoard());
 
         if (followService.existFollow(member, search_member))
             status = true;

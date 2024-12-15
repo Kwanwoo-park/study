@@ -65,7 +65,7 @@ public class ChatViewController {
         model.addAttribute("room", room);
         model.addAttribute("member", member);
         model.addAttribute("message", messageService.find(room));
-        model.addAttribute("flag", roomMemberService.find(member, room) == null);
+        model.addAttribute("flag", !roomMemberService.exist(member, room));
 
         return "chat/chatRoom";
     }
