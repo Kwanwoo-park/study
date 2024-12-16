@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.comment.CommentResponseDto;
 import spring.study.entity.Board;
+import spring.study.entity.BoardImg;
 import spring.study.entity.Comment;
 import spring.study.entity.Member;
+import spring.study.service.BoardImgService;
 import spring.study.service.BoardService;
 
 import java.util.HashMap;
@@ -23,6 +25,7 @@ import java.util.List;
 @Slf4j
 public class BoardViewController {
     private final BoardService boardService;
+    private final BoardImgService boardImgService;
     private Member member;
     private Long previous = -1L;
 
@@ -46,6 +49,7 @@ public class BoardViewController {
 
         try {
             model.addAttribute("resultMap", boardService.findAll(page, size));
+            model.addAttribute("member", member);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
@@ -89,6 +93,7 @@ public class BoardViewController {
 
         if (boardRequestDto.getId() != null) {
             Board board = boardService.findById(boardRequestDto.getId());
+            List<BoardImg> img = boardImgService.findBoard(board);
 
             HashMap<String, Object> comment = new HashMap<>();
             List<Comment> list = board.getComment();
@@ -103,6 +108,7 @@ public class BoardViewController {
             model.addAttribute("info", board);
             model.addAttribute("member", member);
             model.addAttribute("comment", comment);
+            model.addAttribute("img", img);
         }
 
         return "board/view";

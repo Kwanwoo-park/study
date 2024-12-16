@@ -52,11 +52,16 @@ public class MemberViewController {
     }
 
     @GetMapping("/detail")
-    public String detail(Model model, HttpServletRequest request){
+    public String detail(@RequestParam String email, Model model, HttpServletRequest request){
         HttpSession session = request.getSession();
 
         if (session != null && request.isRequestedSessionIdValid() && session.getAttribute("member") != null) {
-            member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+            if (email.equals(((Member) session.getAttribute("member")).getEmail()))
+                member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+            else {
+                session.invalidate();
+                return "redirect:/member/login?error=true&exception=Wrong Accept";
+            }
 
             if (member == null) {
                 session.invalidate();
@@ -158,7 +163,7 @@ public class MemberViewController {
             return "redirect:/member/login?error=true&exception=Not Found account";
 
         if (((Member) session.getAttribute("member")).getEmail().equals(search_member.getEmail()))
-            return "redirect:/member/detail";
+            return "redirect:/member/detail?email="+search_member.getEmail();
 
         member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 

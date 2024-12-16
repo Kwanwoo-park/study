@@ -33,7 +33,7 @@ public class BoardApiController {
         Member member = (Member) session.getAttribute("member");
         Board result = null;
 
-        if (boardRequestDto.getContent() != null){
+        if (!boardRequestDto.getTitle().equals("")){
             Board board = boardRequestDto.toEntity();
 
             board.addMember(member);

@@ -70,8 +70,8 @@ public class MemberApiController {
             return ResponseEntity.status(501).body(null);
         }
 
-        //String fileDir = "/home/ec2-user/app/step1/study/src/main/resources/static/img/";
-        String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
+        String fileDir = "/home/ec2-user/app/step1/study/src/main/resources/static/img/";
+        //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         File f = new File(fileDir + file.getOriginalFilename());
 
