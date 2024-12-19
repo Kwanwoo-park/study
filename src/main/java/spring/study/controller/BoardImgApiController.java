@@ -1,6 +1,7 @@
 package spring.study.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,16 @@ public class BoardImgApiController {
 
     @PostMapping("/save")
     public ResponseEntity<List<BoardImg>> boardImgSave(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) throws IOException {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(501).body(null);
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            return ResponseEntity.status(501).body(null);
+        }
+
         String fileDir = "/home/ec2-user/app/step1/study/src/main/resources/static/img/";
         //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
