@@ -1,5 +1,5 @@
-//let socket = new WebSocket("ws://ec2-3-34-175-237.ap-northeast-2.compute.amazonaws.com:8080/ws/chat");
-let socket = new WebSocket("ws://localhost:8080/ws/chat");
+let socket = new WebSocket("ws://ec2-3-34-175-237.ap-northeast-2.compute.amazonaws.com:8080/ws/chat");
+//let socket = new WebSocket("ws://localhost:8080/ws/chat");
 
 const roomId = document.querySelector("#room").value;
 const email = document.querySelector("#email").value;
