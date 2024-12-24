@@ -163,12 +163,4 @@ public class MemberApiController {
 
         return ResponseEntity.ok(true);
     }
-
-
-    @GetMapping("/search/{name}/action")
-    public ResponseEntity<HashMap<String, Object>> memberFindAction(@PathVariable String name, HttpSession session) {
-        HashMap<String, Object> member_search = memberService.findName(name);
-
-        return ResponseEntity.ok(member_search);
-    }
 }

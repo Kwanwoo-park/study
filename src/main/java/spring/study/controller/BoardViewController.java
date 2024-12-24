@@ -31,6 +31,7 @@ public class BoardViewController {
 
     @GetMapping("/list")
     public String getBoardListPage(Model model,
+                                   @RequestParam(required = false, defaultValue = "") String title,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size,
                                    HttpServletRequest request) throws Exception {
@@ -48,7 +49,12 @@ public class BoardViewController {
         }
 
         try {
-            model.addAttribute("resultMap", boardService.findAll(page, size));
+            if (title.equals(""))
+                model.addAttribute("resultMap", boardService.findAll(page, size));
+            else {
+                model.addAttribute("title", title);
+                model.addAttribute("resultMap", boardService.findByTitle(title, page, size));
+            }
             model.addAttribute("member", member);
         } catch (Exception e) {
             throw new Exception(e.getMessage());

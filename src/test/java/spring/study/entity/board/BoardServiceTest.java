@@ -97,6 +97,20 @@
 //    }
 //
 //    @Test
+//    void findTitle() {
+//        // given
+//        String title = "test";
+//
+//        // when
+//        HashMap<String, Object> map = boardService.findTitle(title, 0, 5);
+//
+//        // then
+//        for (String key : map.keySet()) {
+//            System.out.println(map.get(key).toString());
+//        }
+//    }
+//
+//    @Test
 //    void deleteByMember() {
 //        // given
 //        Member member = memberService.findMember("test@test.com");

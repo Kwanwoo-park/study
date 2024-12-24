@@ -11,6 +11,7 @@ import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.Follow;
 import spring.study.entity.Member;
 import spring.study.entity.Role;
+import spring.study.service.BoardService;
 import spring.study.service.FollowService;
 import spring.study.service.MemberService;
 
@@ -23,6 +24,7 @@ import java.util.List;
 @Slf4j
 public class MemberViewController {
     private final MemberService memberService;
+    private final BoardService boardService;
     private final FollowService followService;
     private Member member;
 
@@ -52,7 +54,10 @@ public class MemberViewController {
     }
 
     @GetMapping("/detail")
-    public String detail(@RequestParam String email, Model model, HttpServletRequest request){
+    public String detail(@RequestParam String email,
+                         @RequestParam(required = false, defaultValue = "0") Integer page,
+                         @RequestParam(required = false, defaultValue = "5") Integer size,
+                         Model model, HttpServletRequest request){
         HttpSession session = request.getSession();
 
         if (session != null && request.isRequestedSessionIdValid() && session.getAttribute("member") != null) {
@@ -69,6 +74,7 @@ public class MemberViewController {
             }
 
             model.addAttribute("member", member);
+            model.addAttribute("resultMap", boardService.findByMember(member, page, size));
 
             session.setAttribute("member", member);
         }
@@ -136,12 +142,37 @@ public class MemberViewController {
     }
 
     @GetMapping("/search")
-    public String memberFind(Model model) {
+    public String memberFind(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return "redirect:/member/login?error=true&exception=Not Found account";
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Not Found account";
+        }
+
         return "member/member_find";
     }
 
     @GetMapping("/search/{name}")
-    public String memberFind(@PathVariable String name, Model model) {
+    public String memberFind(@PathVariable String name,
+                             Model model, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return "redirect:/member/login?error=true&exception=Not Found account";
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Not Found account";
+        }
+
         HashMap<String, Object> resultMap = memberService.findName(name);
 
         model.addAttribute("member", resultMap);

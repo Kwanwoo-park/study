@@ -45,6 +45,32 @@ public class BoardService {
         return resultMap;
     }
 
+    public HashMap<String, Object> findByTitle(String title, Integer page, Integer size) {
+        HashMap<String, Object> resultMap = new HashMap<>();
+
+        Page<Board> list = boardRepository.findByTitle(title, PageRequest.of(page, size, Sort.by("id").descending()));
+
+        resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
+        resultMap.put("paging", list.getPageable());
+        resultMap.put("totalCnt", list.getTotalElements());
+        resultMap.put("totalPage", list.getTotalPages());
+
+        return resultMap;
+    }
+
+    public HashMap<String, Object> findByMember(Member member, Integer page, Integer size) {
+        HashMap<String, Object> resultMap = new HashMap<>();
+
+        Page<Board> list = boardRepository.findByMember(member, PageRequest.of(page, size, Sort.by("id").descending()));
+
+        resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
+        resultMap.put("paging", list.getPageable());
+        resultMap.put("totalCnt", list.getTotalElements());
+        resultMap.put("totalPage", list.getTotalPages());
+
+        return resultMap;
+    }
+
     public List<Board> findAll() {
         return boardRepository.findAll();
     }
