@@ -35,7 +35,7 @@ public class BoardImgApiController {
             return ResponseEntity.status(501).body(null);
         }
 
-        String fileDir = "/home/ec2-user/app/step1/study/src/main/resources/static/img/";
+        String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
         //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         Board board = boardService.findById(id);
