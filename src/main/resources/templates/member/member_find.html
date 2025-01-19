@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Member List</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Member List</h1>
+    <form id="frm" method="dialog">
+      <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+      <div>
+        <input type="search" class="form-control" id="name" name="name"
+               placeholder="Search member">
+      </div>
+      <div class="card">
+        <ul class="list-group-flush">
+          <li class="list-group-item" th:each="list,index : ${member?.list}">
+            <span>
+              <span th:text="${index?.index+1}"></span>
+              <img th:src="@{/img/} + ${list?.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
+              <a th:href="@{/member/search/detail(email=${list?.email})}"><span th:text="${list?.name}"></span></a>
+              <span th:text="${list?.email}"></span>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </form>
+  </div>
+
+  <script src="/js/lib/jquery.min.js"></script>
+  <script type="application/json; charset=utf-8"
+          src="/js/lib/bootstrap.min/js"></script>
+  <script src="/js/member/search.js"></script>
+</body>
+</html>

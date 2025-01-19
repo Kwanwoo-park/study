@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <title>Chatting Room</title>
+</head>
+<style type="text/css">
+    img {
+        width: 50px;
+        height: 50px;
+        border-radius: 90px;
+    }
+</style>
+<body>
+    <input type="hidden" id="room" th:value="${room.roomId}">
+    <input type="hidden" id="email" th:value="${member.email}">
+    <input type="hidden" id="flag" th:value="${flag}">
+    <div>
+        <span>메세지</span>
+        <div class="msgArea">
+            <ul class="list-group-flush">
+                <li class="list-group-item" th:each="list, index : ${message}">
+                    <img th:src="@{/img/} + ${list.member.profile}" id="profile">
+                    <span>
+                        <span th:text="${list.member.name}"></span>
+                        <pre th:text="${list.message}"></pre>
+                    </span>
+                </li>
+            </ul>
+        </div>
+        <input type="text" placeholder="보낼 메세지를 입력하세요." class="content" onkeypress="send(event)">
+        <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
+        <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
+    </div>
+</body>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/chat/chat.js"></script>
+</html>

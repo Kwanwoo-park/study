@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Administrator View</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Admin view</h1>
+      <div class="float-left">
+        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/memberCheck'">Member List</button>
+        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/board/list'">Board List</button>
+        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/book/list'">Book List</button>
+        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/search'">Member Find</button>
+        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/chat/chatList'">Chatting</button>
+        <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/logout'">Logout</button>
+      </div>
+  </div>
+
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+</body>
+</html>

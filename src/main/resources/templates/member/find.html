@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Select Method</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Select</h1>
+  <div class="mb-3">
+    <label>Do you know your email?</label>&nbsp;&nbsp;
+    <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/findByEmail'">find to email</button>
+  </div>
+  <div class="mb-3">
+    <label>You don't know your email?</label>&nbsp;&nbsp;
+    <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/findByInfo'">find to info</button>
+  </div>
+</div>
+
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+</body>
+</html>

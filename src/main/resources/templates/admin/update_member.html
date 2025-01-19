@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Administrator View</title>
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Member Role Change</h1>
+  <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+  <input type="hidden" id="mid" th:value="${member.id}">
+  <div class="mb-3">
+    <label class="form-label">Name: </label>
+    <label class="form-label" th:text="${member.name}"></label>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Email: </label>
+    <label id="email" class="form-label" th:text="${member.email}"></label>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Role: </label>
+    <label id="role" class="form-label" th:text="${member.role}"></label>
+  </div>
+
+  <button type="button" id="change" class="btn btn-success"></button>
+  <button type="button" id="delete" class="btn btn-danger">Delete</button>
+</div>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/admin/updateMember.js"></script>
+</body>
+</html>

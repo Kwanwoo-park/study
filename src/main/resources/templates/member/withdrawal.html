@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>회원 탈퇴</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Withdrawal</h1>
+  <form method="post">
+    <div class="mb-3">
+      <p th:text="${name} + '님 정말 회원 탈퇴 하시겠습니까?'">회원님 정말 회원 탈퇴 하시겠습니까?</p>
+    </div>
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+    <button type="button" class="btn btn-primary" id="submit">Submit</button>
+  </form>
+</div>
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/member/withdrawal.js"></script>
+</body>
+</html>

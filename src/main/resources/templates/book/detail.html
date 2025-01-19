@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Book Detail</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Book Detail</h1>
+  <form method="dialog">
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+    <div class="mb-3">
+      <label class="form-label">title: </label>
+      <label class="form-label" th:text="${book.title}"></label>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">author: </label>
+      <label class="form-label" th:text="${book.author}"></label>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">publisher: </label>
+      <label class="form-label" th:text="${book.publisher}"></label>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">condition: </label>
+      <label class="form-label" th:text="${book.cond}"></label>
+    </div>
+    <div class="mb-3" th:if="${#strings.equals(book.borw, '대출중')}">
+      <input type="text" class="form-control" id="email" name="email" placeholder="Input email">
+    </div>
+    <button type="button" class="btn btn-primary" id="borrow" onclick="fnBorrow()">대출</button>
+  </form>
+</div>
+<script src="/js/lib/jquery.min.js"></script>
+<script type="application/json; charset=utf-8"
+        src="/js/lib/bootstrap.min/js"></script>
+<script th:inline="javascript">
+/*<![CDATA[*/
+  const borrow = /*[[${book.borw}]]*/;
+
+  if (borrow == '대출중') {
+    document.getElementById("borrow").innerText = "반납";
+  }
+  else {
+    document.getElementById("borrow").innerText = "대출";
+  }
+
+  function fnBorrow() {
+    const data = {
+      bnum : /*[[${book.bnum}]]*/,
+      title : /*[[${book.title}]]*/,
+      email : $("#email").val()
+  }
+
+    if (borrow == '대출중') {
+      $.ajax({
+        type: 'PATCH',
+        url: '/book/return/action',
+        dataType: 'JSON',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify(data),
+        success: function() {
+          window.location.reload();
+        },
+        error: function() {
+          alert("다시 시도하여주십시오.");
+        }
+      })
+    }
+    else {
+      $.ajax({
+        type: 'PATCH',
+        url: '/book/borrow/action',
+        dataType: 'JSON',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify(data),
+        success: function() {
+          window.location.reload();
+        },
+        error: function() {
+          alert("다시 시도하여주십시오.");
+        }
+      })
+     }
+  }
+/*]]>*/
+</script>
+</body>
+</html>

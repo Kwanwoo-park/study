@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Follower List</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Follower List</h1>
+  <form action="/follower/action" method="post">
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+    <div class="card">
+      <ul class="list-group-flush">
+        <li class="list-group-item" th:each="list,index : ${follower}">
+          <span>
+            <span th:text="${index.index+1}"></span>
+            <img th:src="@{/img/} + ${list.follower.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
+            <a th:href="@{/member/search/detail(email=${list.follower.email})}">
+              <span th:text="${list.follower.name}"></span>
+            </a>
+            <span th:text="${list.follower.email}"></span>
+          </span>
+        </li>
+      </ul>
+    </div>
+  </form>
+</div>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min/js"></script>
+</body>
+</html>

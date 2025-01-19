@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Member Detail</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Member Detail</h1>
+  <form method="dialog" enctype="multipart/form-data">
+    <div class="mb-3">
+      <input type="hidden" id="status" th:value="${status}">
+      <img th:src="@{/img/} + ${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <h3 style="display:inline">
+        <label class="form-label">Posts: </label>
+        <label class="form-label" th:text="${member.board.size}"></label>
+        <a th:href="@{/follow/follower(email=${member.email})}" id="follower">
+          <label class="form-label"> Follower: </label>
+          <label class="form-label" id="follower_label" th:text="${member.following.size}"></label>
+        </a>
+        <a th:href="@{/follow/following(email=${member.email})}" id="following">
+          <label class="form-label">Following: </label>
+          <label class="form-label" id="following_label" th:text="${member.follower.size}"></label>
+        </a>
+      </h3>
+      <br>
+      <button type="button" id="follow" class="btn btn-success"></button>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Name: </label>
+      <label class="form-label" th:text="${member.name}"></label>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email: </label>
+      <label class="form-label" id="email" th:text="${member.email}"></label>
+    </div>
+    <table class="table table-striped table-horizontal table-bordered mt-3">
+      <thead class="thead-strong">
+        <tr>
+          <th width="10%">게시글 번호</th>
+          <th width="">제목</th>
+          <th width="20%">작성자</th>
+          <th width="10%">조회수</th>
+          <th width="20%">작성일</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr th:each="list, index : ${resultMap.list}">
+          <td>
+            <span th:text="${index.index+1}"></span>
+          </td>
+          <td>
+            <a th:href="@{/board/view(id=${list.id})}"><span th:text="${list.title}"></span></a>
+          </td>
+          <td>
+            <span th:text="${list.member.name}"></span>
+          </td>
+          <td>
+            <span th:text="${list.readCnt}"></span>
+          </td>
+          <td>
+            <span th:text="${#temporals.format(list.registerTime, 'yyyy-MM-dd')}"></span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="row">
+      <div class="col">
+        <ul class="pagination">
+          <li class="page-item" th:each="index : ${#numbers.sequence(1, resultMap.totalPage, 1)}" th:with="paging=${resultMap.paging}">
+            <a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./detail(email=${member.email},page=${index - 1},size=${paging.pageSize})}">
+              <span class="text-white" th:text="${index}"></span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+  </form>
+</div>
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/member/memberDetail.js"></script>
+</body>
+</html>

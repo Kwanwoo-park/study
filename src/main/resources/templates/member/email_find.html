@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>이메일 입력</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--부트스트랩 css 추가-->
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>Find</h1>
+    <form method="dialog">
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+        </div>
+        <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+        <button type="button" class="btn btn-primary" id="find">Find</button>
+    </form>
+</div>
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script type="application/json; charset=utf-8"
+        src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/member/email_find.js"></script>
+</body>
+</html>

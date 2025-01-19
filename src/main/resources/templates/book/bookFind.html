@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Book List</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>Book List</h1>
+    <form id="frm" method="dialog">
+        <div class="float-left">
+            <button type="button" class="btn btn-success" onclick="javascript:location.href='/book/list'">Previous</button>
+        </div>
+        <table class="table table-striped table-horizontal table-bordered mt-3">
+            <thead class="thead-strong">
+            <tr>
+                <th width="">책번호</th>
+                <th width="">도서명</th>
+                <th width="">저자명</th>
+                <th width="">출판사</th>
+                <th width="">대분류</th>
+                <th width="">소분류</th>
+                <th width="">책상태</th>
+                <th width="">대출현황</th>
+            </tr>
+            </thead>
+            <tbody id="tbody">
+            <tr th:each="list,index : ${book.list}" th:with="paging=${book.paging}">
+                <td>
+                    <span th:text="${list.bnum}"></span>
+                </td>
+                <td>
+                    <a th:href="@{/book/detail(title=${list.title})}"><span th:text="${list.title}"></span></a>
+                </td>
+                <td>
+                    <span th:text="${list.author}"></span>
+                </td>
+                <td>
+                    <span th:text="${list.publisher}"></span>
+                </td>
+                <td>
+                    <span th:text="${list.bsort}"></span>
+                </td>
+                <td>
+                    <span th:text="${list.ssort}"></span>
+                </td>
+                <td>
+                    <span th:text="${list.cond}"></span>
+                </td>
+                <td>
+                    <span th:text="${list.borw}"></span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="row">
+            <div class="col">
+                <ul class="pagination">
+                    <li class="page-item" th:each="index : ${#numbers.sequence(1, book.totalPage, 1)}" th:with="paging=${book.paging}">
+                        <a class="page-link" th:classappend="${paging.pageNumber == (index-1)} ? bg-primary : bg-secondary" th:href="@{./find(title=${title}, page=${index - 1}, page=${paging.pageSize})}">
+                            <span class="text-white" th:text="${index}"></span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="/js/lib/jquery.min.js"></script>
+<script type="application/json; charset=utf-8"
+        src="/js/lib/bootstrap.min/js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+	/*]]>*/
+	</script>
+</body>
+</html>

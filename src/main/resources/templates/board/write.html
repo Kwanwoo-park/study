@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>Board List</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!--부트스트랩 css 추가-->
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<style>
+	img {
+		width: 100px;
+		height: 100px;
+	}
+</style>
+<body>
+	<div class="container">
+		<h1>Board Write</h1>
+		<form method="post" enctype="multipart/form-data">
+			<div class="mb-3">
+			    <label for="title" class="form-label">Title</label>
+			    <input type="text" class="form-control" id="title" name="title">
+			</div>
+			<div class="mb-3">
+		    	<label for="content" class="form-label">Content</label>
+		    	<textarea class="form-control" rows="5" cols="" id="content" name="content"></textarea>
+				<input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
+				<button type="button" class="btn btn-primary" id="btn">이미지 등록</button>
+			</div>
+			<div class="mb-3">
+			    <label for="writer" class="form-label">Writer</label>
+			    <input type="text" class="form-control" id="writer" name="writer" th:name="name" th:value="${name}" disabled>
+			</div>
+			<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+			<button type="button" class="btn btn-primary" onclick="fnSave()">Submit</button>
+			<button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="img_btn">Image Save</button>
+		</form>
+	</div>
+    <!--부트스트랩 js, jquery 추가-->
+	<script src="/js/lib/jquery.min.js"></script>
+	<script src="/js/lib/bootstrap.min.js"></script>
+	<script src="/js/board/write.js"></script>
+</body>
+</html>

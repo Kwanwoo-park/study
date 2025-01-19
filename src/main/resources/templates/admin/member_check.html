@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Administrator View</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Member check</h1>
+  <button type="button" class="btn btn-success" onclick="javascript:location.href='/admin/administrator'">Previous</button>
+  <table class="table table-striped table-horizontal table-bordered mt-3">
+    <thead class="thead-strong">
+      <tr>
+        <th width="10%">ID</th>
+        <th width="20%">이름</th>
+        <th width="">Email</th>
+        <th width="10%">Role</th>
+        <th width="20%">최근 접속일</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <tr th:each="list,index : ${member.list}">
+        <td>
+          <span th:text="${list.id}"></span>
+        </td>
+        <td>
+          <span th:text="${list.name}"></span>
+        </td>
+        <td>
+          <a th:href="@{/admin/member/detail(email=${list.email})}"><span th:text="${list.email}"></span></a>
+        </td>
+        <td>
+          <span th:text="${list.role}"></span>
+        </td>
+        <td>
+          <span th:text="${#temporals.format(list.lastLoginTime, 'yyyy-MM-dd')}"></span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="row">
+    <div class="col">
+      <ul class="pagination">
+        <li class="page-item" th:each="index : ${#numbers.sequence(1, member.totalPage, 1)}" th:with="paging=${member.paging}">
+          <a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./memberCheck(page=${index - 1},page=${paging.pageSize})}">
+            <span class="text-white" th:text="${index}"></span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+</body>
+</html>

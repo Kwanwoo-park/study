@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>개인정보로 찾기</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Find</h1>
+  <form method="dialog">
+    <div class="mb-3">
+      <label for="phone" class="form-label">Phone</label>
+      <input type="text" class="form-control" id="phone" name="phone" placeholder="Phone Number without -" required>
+    </div>
+    <div class="mb-3">
+      <label for="birth" class="form-label">Birthday</label>
+      <input type="date" class="form-control" id="birth" name="birth" value="1900-01-01" max="9999-12-31" required>
+    </div>
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+    <button type="button" id="find" class="btn btn-primary" onclick="fnMemberFind()">Find</button>
+  </form>
+</div>
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script type="application/json; charset=utf-8"
+        src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/member/info_find.js"></script>
+</body>
+</html>

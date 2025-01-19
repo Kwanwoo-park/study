@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Logout</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!--부트스트랩 css 추가-->
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Member Detail</h1>
+  <form action="/logout/action" method="get">
+    <div class="mb-3">
+      <p th:text="${member.name} + '님 로그아웃 하시겠습니까?'">회원님 로그아웃 하시겠습니다?</p>
+    </div>
+    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+    <button type="submit" class="btn btn-primary">Logout</button>
+  </form>
+</div>
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+</body>
+</html>

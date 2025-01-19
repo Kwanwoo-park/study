@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>Board List</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<!--부트스트랩 css 추가-->
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+	<div class="container">
+		<h1>Board View</h1>
+		<form id="frm" method="post">
+			<input type="hidden" id="id" th:value="${info.id}">
+			<input type="hidden" id="email" th:value="${member.email}">
+			<input type="hidden" id="role" th:value="${member.role}">
+			<input type="hidden" id="board" th:value="${info.member.email}">
+			<div class="float-right">
+				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
+				<button type="button" id="delete" class="btn btn-danger">Delete</button>
+			</div>
+			<div class="mb-3">
+			    <label class="form-label" for="title">Title</label>
+			    <input type="text" class="form-control" id="title" name="title" th:value="${info.title}">
+			</div>
+			<div class="mb-3">
+		    	<label class="form-label" for="content">Content</label>
+		    	<textarea class="form-control" id="content" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
+				<br>
+				<img th:each="list : ${img}" th:src="@{/img/} + ${list.imgSrc}" width="200vw" height="200vw">
+			</div>
+			<div class="mb-3">
+			    <label class="form-label" for="name">Writer</label>
+			    <input type="disabled" class="form-control" id="name" name="name" th:value="${info.member.name}" disabled>
+			</div>
+			<button type="button" id="edit" class="btn btn-primary">Edit</button>
+			<hr>
+			<div class="mb-3">
+				<label class="form-label" for="comments">Comment</label>
+				<textarea class="form-control" id="comments" rows="5" cols="" name="Comment"></textarea>
+			</div>
+			<button type="button" id="submit" class="btn btn-primary">Submit</button>
+			<hr>
+			<div class="card">
+				<div class="card-header bi bi-chat-dots">Comments</div>
+				<ul class="list-group-flush">
+					<li class="list-group-item" th:each="list,index : ${comment.list}">
+						<span>
+							<span th:text="${index.index+1}"></span>
+							<img th:src="@{/img/} + ${list.member.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
+							<a th:href="@{/member/search/detail(email=${list.member.email})}">
+								<span th:text="${list.member.name}"></span>
+							</a>
+							<div class="float-right" th:if="${#strings.equals(list.member.email, member.email)}">
+								<button type="button" class="btn btn-primary" th:onclick="fnEdit([[${list.id}]])">Edit</button>
+								<button type="button" class="btn btn-danger" th:onclick="fnDelete([[${list.id}]])">Delete</button>
+							</div>
+							<pre th:id="'comment'+${list.id}" th:text="${list.comments}"></pre>
+							<textarea class="form-control" th:id="'edit_comment'+${list.id}" rows="5" cols=""
+									  name="Comment edit" th:text="${list.comments}" style="display: none;"></textarea>
+						</span>
+					</li>
+				</ul>
+			</div>
+		</form>
+	</div>
+    <!--부트스트랩 js, jquery 추가-->
+    <script src="/js/lib/jquery.min.js"></script>
+    <script src="/js/lib/bootstrap.min.js"></script>
+	<script src="/js/board/view.js"></script>
+</body>
+</html>
