@@ -1,4 +1,4 @@
-let socket = new WebSocket("ws://kwanwoo.site/ws/chat");
+let socket = new WebSocket("wss://kwanwoo.site/ws/chat");
 //let socket = new WebSocket("ws://localhost:8080/ws/chat");
 
 const roomId = document.querySelector("#room").value;
