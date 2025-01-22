@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
+import spring.study.entity.board.Board;
 import spring.study.entity.chat.ChatRoomMember;
 import spring.study.entity.member.Member;
 import spring.study.entity.member.Role;
+import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 import spring.study.service.chat.ChatMessageService;
 import spring.study.service.chat.ChatRoomMemberService;
@@ -32,6 +34,7 @@ import java.io.IOException;
 public class MemberApiController {
     private final MemberService memberService;
     private final BoardService boardService;
+    private final BoardImgService boardImgService;
     private final CommentService commentService;
     private final FollowService followService;
     private final ChatRoomMemberService roomMemberService;
@@ -146,6 +149,10 @@ public class MemberApiController {
         if (member == null) {
             session.invalidate();
             return ResponseEntity.status(501).body(null);
+        }
+
+        for (Board board : member.getBoard()) {
+            boardImgService.deleteBoard(board);
         }
 
         commentService.deleteByMember(member);
