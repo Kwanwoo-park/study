@@ -1,7 +1,9 @@
 package spring.study.service.oauth;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import spring.study.dto.oauth.OAuthAttributes;
 import spring.study.entity.member.Member;
 import spring.study.repository.member.MemberRepository;
+import spring.study.service.member.MemberService;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -21,6 +24,7 @@ import java.util.Collections;
 @Service
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
     private final HttpSession session;
 
     @Override
@@ -40,10 +44,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority(member.getRole().getValue())), attributes.getAttributes(), attributes.getNameAttributeKey());
     }
 
+    @Transactional
     private Member saveOrUpate(OAuthAttributes attributes) {
         if (memberRepository.existsByEmail(attributes.getEmail())) {
             Member member = memberRepository.findByEmail(attributes.getEmail());
-            member.changeLastLoginTime(LocalDateTime.now());
+            memberService.updateLastLoginTime(member.getId());
             return member;
         }
         else
