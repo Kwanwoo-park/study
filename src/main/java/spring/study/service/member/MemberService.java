@@ -61,7 +61,7 @@ public class MemberService implements UserDetailsService {
     }
 
     public Member findMember(String email) {
-        return memberRepository.findByEmail(email);
+        return memberRepository.findByEmail(email).orElseThrow();
     }
 
     public Member findMember(String phone, String birth) {
@@ -89,12 +89,17 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public void updatePhone(Long id, String phone) {
+    public int updatePhone(Long id, String phone) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));
 
+        String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
+        phone = phone.replaceAll(regEx, "$1-$2-$3");
+
         member.changePhone(phone);
+
+        return member.getId().intValue();
     }
 
     @Transactional
@@ -119,8 +124,7 @@ public class MemberService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return Optional
-                .ofNullable(memberRepository.findByEmail(email))
+        return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException(
                         "이메일이나 비밀번호를 확인해주세요"
                 ));

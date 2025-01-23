@@ -48,6 +48,10 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
+        if (member.getPhone().equals(" ")) {
+            return "redirect:/member/updatePhone";
+        }
+
         try {
             if (title.equals(""))
                 model.addAttribute("resultMap", boardService.findAll(page, size));

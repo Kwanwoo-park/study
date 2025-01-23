@@ -8,10 +8,11 @@ import spring.study.entity.board.Board;
 import spring.study.entity.member.Member;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    public Member findByEmail(String email);
+    public Optional<Member> findByEmail(String email);
 
     public Page<Member> findByName(String name, Pageable pageable);
 

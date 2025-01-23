@@ -128,11 +128,25 @@ public class MemberApiController {
                 return ResponseEntity.status(501).body(null);
         }
 
-        System.out.println(member.getEmail());
-
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;
+
+        return ResponseEntity.status(200).body(result);
+    }
+
+    @PatchMapping("/updatePhone")
+    public ResponseEntity<Integer> updatePhone(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(501).body(null);
+
+        member = memberService.findMember(memberUpdateDto.getEmail());
+
+        int result = memberService.updatePhone(member.getId(), memberUpdateDto.getPhone());
+
+        session.setAttribute("member", memberService.findMember(memberUpdateDto.getEmail()));
 
         return ResponseEntity.status(200).body(result);
     }

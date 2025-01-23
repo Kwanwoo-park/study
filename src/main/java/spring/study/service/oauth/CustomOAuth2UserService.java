@@ -20,8 +20,9 @@ import spring.study.service.member.MemberService;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
-@RequiredArgsConstructor
 @Service
+@Transactional
+@RequiredArgsConstructor
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final MemberRepository memberRepository;
     private final MemberService memberService;
@@ -44,11 +45,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority(member.getRole().getValue())), attributes.getAttributes(), attributes.getNameAttributeKey());
     }
 
-    @Transactional
     private Member saveOrUpate(OAuthAttributes attributes) {
         if (memberRepository.existsByEmail(attributes.getEmail())) {
-            Member member = memberRepository.findByEmail(attributes.getEmail());
-            memberService.updateLastLoginTime(member.getId());
+            Member member = memberRepository.findByEmail(attributes.getEmail()).orElseThrow(() -> new BadCredentialsException(
+                    "존재하지 않는 회원입니다."
+            ));
+
+            member.changeLastLoginTime(LocalDateTime.now());
             return member;
         }
         else

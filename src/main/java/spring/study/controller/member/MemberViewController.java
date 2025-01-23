@@ -117,6 +117,23 @@ public class MemberViewController {
         return "member/updatePassword";
     }
 
+    @GetMapping("/updatePhone")
+    public String updatePhone(Model model, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return "redirect:/member/login?error=true&exception=Not Found account";
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found account";
+
+        model.addAttribute("email", member.getEmail());
+
+        return "member/updatePhone";
+    }
+
     @GetMapping("/updatePassword/{email}")
     public String updatePassword(@PathVariable String email, Model model) throws Exception {
         model.addAttribute("email", email);
