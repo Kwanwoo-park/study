@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <title>Chatting Room</title>
 </head>
-<style type="text/css">
+<style>
     img {
         width: 50px;
         height: 50px;
@@ -22,10 +22,15 @@
         <div class="msgArea">
             <ul class="list-group-flush">
                 <li class="list-group-item" th:each="list, index : ${message}">
-                    <img th:src="@{/img/} + ${list.member.profile}" id="profile">
-                    <span>
-                        <span th:text="${list.member.name}"></span>
-                        <pre th:text="${list.message}"></pre>
+                    <span th:if="${#strings.equals(list.member.email, member.email)}">
+                        <span th:text="${list.member.name}" style="display: inline-block; width: 90%; text-align: right"></span>
+                        <img th:src="@{/img/} + ${list.member.profile}" id="profile" align="right">
+                        <pre th:text="${list.message}" style="width: 90%; text-align: right"></pre>
+                    </span>
+                    <span th:unless="${#strings.equals(list.member.email, member.email)}">
+                        <img th:src="@{/img/} + ${list.member.profile}" id="profile" align="left">
+                        <span th:text="${list.member.name}" style="display: inline-block; width: 90%; text-align: left"></span>
+                        <pre th:text="${list.message}" style="width: 90%; text-align: left"></pre>
                     </span>
                 </li>
             </ul>

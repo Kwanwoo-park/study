@@ -1,5 +1,5 @@
-let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat");
-//let socket = new WebSocket("ws://localhost:8080/ws/chat");
+//let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat");
+let socket = new WebSocket("ws://localhost:8080/ws/chat");
 
 const roomId = document.querySelector("#room").value;
 const email = document.querySelector("#email").value;
@@ -38,9 +38,34 @@ socket.onmessage = function(e) {
     name.innerText = json.member.name;
     newMsg.innerText = json.message;
 
-    newMsgArea.append(img);
-    newMsgArea.append(name);
-    newMsgArea.append(newMsg);
+    if (json.member.email == email) {
+        name.style.display = 'inline-block';
+        name.style.width = '90%';
+        name.style.textAlign = 'right';
+
+        img.align = 'right';
+
+        newMsg.style.width = '90%';
+        newMsg.style.textAlign = 'right';
+
+        newMsgArea.append(name);
+        newMsgArea.append(img);
+        newMsgArea.append(newMsg);
+    }
+    else {
+        name.style.display = 'inline-block';
+        name.style.width = '90%';
+        name.style.textAlign = 'left';
+
+        img.align = 'left';
+
+        newMsg.style.width = '90%';
+        newMsg.style.textAlign = 'left';
+
+        newMsgArea.append(img);
+        newMsgArea.append(name);
+        newMsgArea.append(newMsg);
+    }
 
     newMsgLi.append(newMsgArea);
 

@@ -68,6 +68,10 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findByPhoneAndBirth(phone, birth);
     }
 
+    public Boolean existEmail(String email) {
+        return memberRepository.existsByEmail(email);
+    }
+
     public void deleteById(Long id) { memberRepository.deleteById(id); }
 
     @Transactional

@@ -66,6 +66,11 @@ public class MemberApiController {
         return ResponseEntity.ok(userService.createUser(memberRequestDto));
     }
 
+    @GetMapping("/duplicateCheck")
+    public ResponseEntity<Integer> duplicateCheck(@RequestParam() String email) {
+        return memberService.existEmail(email) ? ResponseEntity.status(501).body(null) : ResponseEntity.status(200).body(null);
+    }
+
     @PatchMapping("/detail/action")
     public ResponseEntity<Member> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) throws IOException {
         HttpSession session = request.getSession();

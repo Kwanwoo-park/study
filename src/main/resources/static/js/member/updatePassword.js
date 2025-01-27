@@ -19,7 +19,7 @@ if (button) {
             })
             .then((response) => {
                 if (response.status == 200) {
-                    alert("비밀번호가 정상적으로 변경되었습니다.");
+                    alert("비밀번호가 정상적으로 변경되었습니다");
                     location.replace(`/member/login`)
                 }
                 else {
