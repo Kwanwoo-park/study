@@ -22,15 +22,15 @@
         <div class="msgArea">
             <ul class="list-group-flush">
                 <li class="list-group-item" th:each="list, index : ${message}">
-                    <span th:if="${#strings.equals(list.member.email, member.email)}">
-                        <span th:text="${list.member.name}" style="display: inline-block; width: 90%; text-align: right"></span>
+                    <span th:if="${#strings.equals(list.member.email, member.email)}" style="text-align: right;">
+                        <span th:text="${list.member.name}" style="display: inline-block; width: 95%;"></span>
                         <img th:src="@{/img/} + ${list.member.profile}" id="profile" align="right">
-                        <pre th:text="${list.message}" style="width: 90%; text-align: right"></pre>
+                        <pre th:text="${list.message}" style="width: 95%;"></pre>
                     </span>
-                    <span th:unless="${#strings.equals(list.member.email, member.email)}">
+                    <span th:unless="${#strings.equals(list.member.email, member.email)}" style="text-align: left;">
                         <img th:src="@{/img/} + ${list.member.profile}" id="profile" align="left">
-                        <span th:text="${list.member.name}" style="display: inline-block; width: 90%; text-align: left"></span>
-                        <pre th:text="${list.message}" style="width: 90%; text-align: left"></pre>
+                        <span th:text="${list.member.name}" style="display: inline-block; width: 95%;"></span>
+                        <pre th:text="${list.message}" style="width: 95%;"></pre>
                     </span>
                 </li>
             </ul>
