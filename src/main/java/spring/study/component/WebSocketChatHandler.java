@@ -83,9 +83,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         if (sessions != null)
-        {
             sessions.remove(session);
-        }
     }
 
     private void sendToEachSocket(Set<WebSocketSession> sessions, TextMessage message) {

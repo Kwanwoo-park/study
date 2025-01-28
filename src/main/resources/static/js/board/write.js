@@ -1,6 +1,6 @@
-let imgDiv = document.querySelector('.mb-3:nth-child(2)');
-let file;
-let id;
+var imgDiv = document.querySelector('.mb-3:nth-child(2)');
+var file;
+var id;
 
 const formData = new FormData();
 
@@ -41,7 +41,7 @@ function fnSave() {
 }
 
 function fnLoad(input) {
-    let img;
+    var img;
     imgArr = new Array(input.files.length);
 
     imgDiv.append(document.createElement('br'));

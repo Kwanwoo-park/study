@@ -6,7 +6,7 @@ const profile = document.querySelector("#profile");
 
 profile.addEventListener('click', () => upload.click());
 
-let file;
+var file;
 
 if (follower == "0")
     document.querySelector("#follower").removeAttribute('href');
@@ -16,7 +16,7 @@ if (following == "0")
 function fnLoad(input) {
     file = input.files[0];
 
-    let img = profile
+    var img = profile
     img.src = URL.createObjectURL(file);
 
     document.getElementById("save").style.visibility = 'visible';
