@@ -7,10 +7,31 @@
     <title>Chatting Room</title>
 </head>
 <style>
-    #profile {
+    pre {
+        width: 95%;
+    }
+    .profile {
         width: 50px;
         height: 50px;
         border-radius: 90px;
+    }
+    .chatimg {
+        width: 200px;
+        height: 200px;
+    }
+    .right {
+        display: inline-block;
+        width: 100%;
+        text-align: right;
+    }
+    .left {
+        display: inline-block;
+        width: 100%;
+        text-align: left;
+    }
+    .chatname {
+        display: inline-block;
+        width: 95%;
     }
 </style>
 <body>
@@ -19,30 +40,30 @@
     <input type="hidden" id="flag" th:value="${flag}">
     <div>
         <span>메세지</span>
-        <form enctype="multipart/form-data">
+        <form method="dialog" enctype="multipart/form-data">
         <div class="msgArea">
             <ul class="list-group-flush">
                 <li class="list-group-item" th:each="list, index : ${message}">
-                    <span th:if="${#strings.equals(list.member.email, member.email)}" style="text-align: right;">
-                        <span th:text="${list.member.name}" style="display: inline-block; width: 95%;"></span>
-                        <img th:src="@{/img/} + ${list.member.profile}" id="profile" align="right">
-                        <pre th:if="${#strings.equals(list.type, 'TALK')}" th:text="${list.message}" style="width: 95%;"></pre>
-                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="@{/img/} + ${list.message}" align="right">
+                    <span th:if="${#strings.equals(list.member.email, member.email)}" class="right">
+                        <span th:text="${list.member.name}" class="chatname"></span>
+                        <img th:src="@{/img/} + ${list.member.profile}" class="profile" align="right">
+                        <pre th:if="${#strings.equals(list.type, 'TALK')}" th:text="${list.message}"></pre>
+                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="@{/img/} + ${list.message}" class="chatimg" align="right">
                     </span>
-                    <span th:unless="${#strings.equals(list.member.email, member.email)}" style="text-align: left;">
-                        <img th:src="@{/img/} + ${list.member.profile}" id="profile" align="left">
-                        <span th:text="${list.member.name}" style="display: inline-block; width: 95%;"></span>
-                        <pre th:if="${#strings.equals(list.type, 'TALK')}" th:text="${list.message}" style="width: 95%;"></pre>
-                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="@{/img/} + ${list.message}" align="left">
+                    <span th:unless="${#strings.equals(list.member.email, member.email)}" class="left">
+                        <img th:src="@{/img/} + ${list.member.profile}" class="profile" align="left">
+                        <span th:text="${list.member.name}" class="chatname"></span>
+                        <pre th:if="${#strings.equals(list.type, 'TALK')}" th:text="${list.message}"></pre>
+                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="@{/img/} + ${list.message}" class="chatimg" align="left">
                     </span>
                 </li>
             </ul>
+            <input type="text" placeholder="보낼 메세지를 입력하세요." class="content" onkeypress="send(event)">
+            <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
+            <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none"/>
+            <button type="button" class="btn btn-primary" id="btn">이미지 전송</button>
+            <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
         </div>
-        <input type="text" placeholder="보낼 메세지를 입력하세요." class="content" onkeypress="send(event)">
-        <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
-        <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none"/>
-        <button type="button" class="btn btn-primary" id="btn">이미지 전송</button>
-        <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
         </form>
     </div>
 </body>
