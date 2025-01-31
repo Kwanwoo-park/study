@@ -14,7 +14,12 @@
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>
             <button type="button" id="email_check" class="btn btn-primary" style="padding-left:10px;">Duplicate Check</button>
+            <button type="button" id="email_certification" class="btn btn-primary" style="padding-left: 10px; display: none;">Email Certification</button>
             <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+            <div class="form-group last mb-4 check_input" id="check" style="display: none;">
+                <label for="memailconfirm" id="memailconfirmTxt">인증번호를 입력해주세요</label>
+                <input type="text" class="form-control" id="memailconfirm">
+            </div>
         </div>
         <div class="mb-3">
             <label for="password" class="form-label">Password</label>

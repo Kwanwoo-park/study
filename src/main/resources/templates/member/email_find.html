@@ -13,10 +13,15 @@
     <form method="dialog">
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>
+            <button type="button" id="email_certification" class="btn btn-primary" style="padding-left: 10px;">Email Certification</button>
             <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+            <div class="form-group last mb-4 check_input" id="check" style="display: none;">
+                <label for="memailconfirm" id="memailconfirmTxt">인증번호를 입력해주세요</label>
+                <input type="text" class="form-control" id="memailconfirm">
+            </div>
         </div>
         <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-        <button type="button" class="btn btn-primary" id="find">Find</button>
+        <button type="button" class="btn btn-primary" id="find" style="display: none;">Find</button>
     </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->
