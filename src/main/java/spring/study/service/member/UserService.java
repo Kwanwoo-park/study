@@ -20,7 +20,7 @@ public class UserService implements UserServiceRepository {
 
     @Override
     public MemberResponseDto createUser(MemberRequestDto memberRequestDto) {
-        if (memberRepository.findByEmail(memberRequestDto.getEmail()) != null)
+        if (memberRepository.existsByEmail(memberRequestDto.getEmail()))
             return null;
 
         String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
