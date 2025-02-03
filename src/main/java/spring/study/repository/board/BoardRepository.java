@@ -7,11 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.board.Board;
 import spring.study.entity.member.Member;
 
+import java.util.List;
+
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
     public Page<Board> findByTitle(String title, Pageable pageable);
 
     public Page<Board> findByMember(Member member, Pageable pageable);
+
+    public Page<Board> findByMemberIn(List<Member> members, Pageable pageable);
 
     @Transactional
     public void deleteByMember(Member member);

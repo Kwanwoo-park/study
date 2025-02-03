@@ -9,10 +9,12 @@ import org.springframework.stereotype.Service;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.dto.board.BoardResponseDto;
 import spring.study.entity.board.Board;
+import spring.study.entity.follow.Follow;
 import spring.study.entity.member.Member;
 import spring.study.repository.board.BoardRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,6 +64,25 @@ public class BoardService {
         HashMap<String, Object> resultMap = new HashMap<>();
 
         Page<Board> list = boardRepository.findByMember(member, PageRequest.of(page, size, Sort.by("id").descending()));
+
+        resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
+        resultMap.put("paging", list.getPageable());
+        resultMap.put("totalCnt", list.getTotalElements());
+        resultMap.put("totalPage", list.getTotalPages());
+
+        return resultMap;
+    }
+
+    public HashMap<String, Object> findByMembers(List<Follow> follows, Integer page, Integer size) {
+        HashMap<String, Object> resultMap = new HashMap<>();
+
+        List<Member> memberList = new ArrayList<>();
+
+        for (Follow follow : follows) {
+            memberList.add(follow.getFollowing());
+        }
+
+        Page<Board> list = boardRepository.findByMemberIn(memberList, PageRequest.of(page, size, Sort.by("id").descending()));
 
         resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
         resultMap.put("paging", list.getPageable());

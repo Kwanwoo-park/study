@@ -5,13 +5,17 @@
 //import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+//import org.springframework.data.domain.Page;
+//import org.springframework.data.domain.PageRequest;
 //import org.springframework.data.domain.Sort;
-//import spring.study.entity.board.Board;
+//import spring.study.entity.follow.Follow;
 //import spring.study.entity.member.Member;
 //import spring.study.entity.member.Role;
 //import spring.study.repository.board.BoardRepository;
+//import spring.study.repository.follow.FollowRepository;
 //import spring.study.repository.member.MemberRepository;
 //
+//import java.util.ArrayList;
 //import java.util.List;
 //
 //import static org.assertj.core.api.Assertions.*;
@@ -24,6 +28,8 @@
 //    BoardRepository boardRepository;
 //    @Autowired
 //    MemberRepository memberRepository;
+//    @Autowired
+//    FollowRepository followRepository;
 //
 //    @Test
 //    void save() {
@@ -121,7 +127,7 @@
 //        Board saveBoard = boardRepository.save(board);
 //
 //        // when
-//        List<Board> result = boardRepository.findByTitle(saveBoard.getTitle());
+//        Page<Board> result = boardRepository.findByTitle(saveBoard.getTitle(), PageRequest.of(0, 5, Sort.by("id").descending()));
 //
 //        // then
 //        for (Board b : result)
@@ -129,9 +135,29 @@
 //    }
 //
 //    @Test
+//    void findMemberList() {
+//        //given
+//        List<Follow> following =memberRepository.findByEmail("test@test.com").orElseThrow().getFollower();
+//
+//        List<Member> memberList = new ArrayList<>();
+//
+//        for (Follow follow : following) {
+//            memberList.add(follow.getFollowing());
+//        }
+//
+//        // when
+//        Page<Board> boards = boardRepository.findByMemberIn(memberList, PageRequest.of(0, 10, Sort.by("id").descending()));
+//
+//        // then
+//        for (Board b : boards) {
+//            System.out.println(b.getId() + " " + b.getTitle() + " " + b.getMember().getEmail());
+//        }
+//    }
+//
+//    @Test
 //    void deleteByMember() {
 //        // given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        System.out.println(boardRepository.findAll().size());
 //
 //        // when

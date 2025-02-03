@@ -29,7 +29,7 @@ public class BoardViewController {
     private Member member;
     private Long previous = -1L;
 
-    @GetMapping("/list")
+    @GetMapping("/all")
     public String getBoardListPage(Model model,
                                    @RequestParam(required = false, defaultValue = "") String title,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -59,6 +59,38 @@ public class BoardViewController {
                 model.addAttribute("title", title);
                 model.addAttribute("resultMap", boardService.findByTitle(title, page, size));
             }
+            model.addAttribute("member", member);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+
+        return "board/list";
+    }
+
+    @GetMapping("/list")
+    public String getBoardPage(Model model,
+                               @RequestParam(required = false, defaultValue = "0") Integer page,
+                               @RequestParam(required = false, defaultValue = "5") Integer size,
+                               HttpServletRequest request) throws Exception {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            return "redirect:/member/login?error=true&exception=Session Expired";
+        }
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (member.getPhone().equals(" ")) {
+            return "redirect:/member/updatePhone";
+        }
+
+        try {
+            model.addAttribute("resultMap", boardService.findByMembers(member.getFollower(), page, size));
             model.addAttribute("member", member);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
