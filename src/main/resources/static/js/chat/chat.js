@@ -47,11 +47,6 @@ socket.onmessage = function(e) {
     name.innerText = json.member.name;
     name.className = 'chatname';
 
-    newMsg.innerText = json.message;
-
-    imgTalk.src = "/img/" + json.message;
-    imgTalk.className = "chatimg";
-
     if (json.member.email == email) {
         profile.align = 'right';
         imgTalk.align = 'right';
@@ -71,10 +66,16 @@ socket.onmessage = function(e) {
         newMsgArea.append(name);
     }
 
-    if (json.type == "TALK")
+    if (json.type == "TALK") {
+        newMsg.innerText = json.message;
         newMsgArea.append(newMsg);
-    else if (json.type == "IMAGE")
+    }
+    else if (json.type == "IMAGE") {
+        imgTalk.src = "/img/" + json.message;
+        imgTalk.className = "chatimg";
+
         newMsgArea.append(imgTalk);
+    }
 
     newMsgLi.append(newMsgArea);
 

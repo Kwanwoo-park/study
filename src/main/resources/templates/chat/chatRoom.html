@@ -47,13 +47,13 @@
                     <span th:if="${#strings.equals(list.member.email, member.email)}" class="right">
                         <span th:text="${list.member.name}" class="chatname"></span>
                         <img th:src="@{/img/} + ${list.member.profile}" class="profile" align="right">
-                        <pre th:if="${#strings.equals(list.type, 'TALK')}" th:text="${list.message}"></pre>
+                        <pre th:unless="${#strings.equals(list.type, 'IMAGE')}" th:text="${list.message}"></pre>
                         <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="@{/img/} + ${list.message}" class="chatimg" align="right">
                     </span>
                     <span th:unless="${#strings.equals(list.member.email, member.email)}" class="left">
                         <img th:src="@{/img/} + ${list.member.profile}" class="profile" align="left">
                         <span th:text="${list.member.name}" class="chatname"></span>
-                        <pre th:if="${#strings.equals(list.type, 'TALK')}" th:text="${list.message}"></pre>
+                        <pre th:unless="${#strings.equals(list.type, 'IMAGE')}" th:text="${list.message}"></pre>
                         <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="@{/img/} + ${list.message}" class="chatimg" align="left">
                     </span>
                 </li>
