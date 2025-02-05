@@ -5,7 +5,7 @@ if (title) {
         if (event.key == 'Enter') {
             let temp = title.value;
             title.value = null;
-            location.href = "/board/list?title=" + temp;
+            location.href = "/board/all?title=" + temp;
         }
     })
 }

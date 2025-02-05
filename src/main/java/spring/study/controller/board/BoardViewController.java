@@ -64,7 +64,7 @@ public class BoardViewController {
             throw new Exception(e.getMessage());
         }
 
-        return "board/list";
+        return "board/all";
     }
 
     @GetMapping("/list")
