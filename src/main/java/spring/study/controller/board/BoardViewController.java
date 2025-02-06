@@ -90,7 +90,7 @@ public class BoardViewController {
         }
 
         try {
-            model.addAttribute("resultMap", boardService.findByMembers(member.getFollower(), page, size));
+            model.addAttribute("resultMap", boardService.findByMembers(member, page, size));
             model.addAttribute("member", member);
         } catch (Exception e) {
             throw new Exception(e.getMessage());

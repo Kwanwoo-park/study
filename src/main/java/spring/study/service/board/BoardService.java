@@ -73,12 +73,14 @@ public class BoardService {
         return resultMap;
     }
 
-    public HashMap<String, Object> findByMembers(List<Follow> follows, Integer page, Integer size) {
+    public HashMap<String, Object> findByMembers(Member member, Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
 
         List<Member> memberList = new ArrayList<>();
 
-        for (Follow follow : follows) {
+        memberList.add(member);
+
+        for (Follow follow : member.getFollower()) {
             memberList.add(follow.getFollowing());
         }
 
