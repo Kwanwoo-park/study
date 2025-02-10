@@ -99,6 +99,30 @@ public class BoardViewController {
         return "board/list";
     }
 
+    @GetMapping("/main")
+    public String mainPage(Model model, HttpServletRequest request) throws Exception {
+        HttpSession session = request.getSession();;
+
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            return "redirect:/member/login?error=true&exception=Session Expired";
+        }
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        try {
+            model.addAttribute("resultMap", boardService.findByMembers(member));
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+
+        return "board/main";
+    }
+
     @GetMapping("/write")
     public String getBoardWritePage(Model model, HttpServletRequest request){
         HttpSession session = request.getSession();

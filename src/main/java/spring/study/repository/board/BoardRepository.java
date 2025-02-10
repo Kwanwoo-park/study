@@ -17,6 +17,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     public Page<Board> findByMemberIn(List<Member> members, Pageable pageable);
 
+    public List<Board> findByMemberIn(List<Member> members);
+
     @Transactional
     public void deleteByMember(Member member);
 }

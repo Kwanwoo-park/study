@@ -94,6 +94,18 @@ public class BoardService {
         return resultMap;
     }
 
+    public List<Board> findByMembers(Member member) {
+        List<Member> memberList = new ArrayList<>();
+
+        memberList.add(member);
+
+        for (Follow follow : member.getFollower()) {
+            memberList.add(follow.getFollowing());
+        }
+
+        return boardRepository.findByMemberIn(memberList);
+    }
+
     public List<Board> findAll() {
         return boardRepository.findAll();
     }
