@@ -7,19 +7,49 @@
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
 <style>
-    #profile {
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 300px;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .profile {
+        display: flex;
+        align-items: center;
+        align-self: flex-start;
+    }
+    .profile-img {
         width: 50px;
         height: 50px;
-        border-radius: 90px;
+        border-radius: 50%;
+        margin-right: 10px;
     }
-    #content_img{
-        width: 300px;
-        height: 300px;
-        overflow-x: auto;
-        white-space: nowrap;
-        padding: 20px 0;
-        object-fit: cover;
-        margin: 0 10px;
+    .name {
+        font-weight: bold;
+    }
+    .main-image-wrapper {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    .main-image {
+        width: 100%;
+        max-width: 250px;
+    }
+    .info {
+        display: flex;
+        flex-direction: column;
+        align-self: flex-start;
+        margin-top: 10px;
+    }
+    .icon-box {
+        display: flex;
+        font-size: 20px;
+        gap: 10px;
     }
     .icon {
         width: 35px;
@@ -27,25 +57,28 @@
     }
 </style>
 <body>
-  <div id="wrapper">
-    <div class="container">
-      <h1 id="main_title">Kwanwoo Site</h1>
+    <h1 id="main_title">Kwanwoo Site</h1>
+    <div>
         <ul class="list-group-flush">
-            <li class="list-group-item" th:each="list, index : ${resultMap}">
-                <img th:src="@{/img/} + ${list.member.profile}" id="profile">
-                <span th:text="${list.member.name}" id="name"></span>
-                <br>
-                <img th:each="list_img : ${list.img}" th:src="@{/img/} + ${list_img.imgSrc}" id="content_img">
-                <br>
-                <img th:src="@{/img/} + ic_favorite.png" class="icon">
-                <img th:src="@{/img/} + ic_chat_black.png" class="icon">
-                <br>
-                <span th:text="${list.member.name}" id="name"></span>
-                <pre th:text="${list.content}"></pre>
+            <li th:each="list, index : ${resultMap}" class="container">
+                <div class="profile">
+                    <img th:src="@{/img/} + ${list.member.profile}" class="profile-img">
+                    <span th:text="${list.member.name}" class="name"></span>
+                </div>
+                <div class="main-image-wrapper">
+                    <img th:each="list_img : ${list.img}" th:src="@{/img/} + ${list_img.imgSrc}" class="main-image">
+                </div>
+                <div class="info">
+                    <div class="icon-box">
+                        <img th:src="@{/img/} + ic_favorite_border.png" class="icon">
+                        <img th:src="@{/img/} + ic_chat_black.png" class="icon">
+                    </div>
+                    <span th:text="${list.member.name}" class="name"></span>
+                    <pre th:text="${list.content}"></pre>
+                </div>
             </li>
         </ul>
     </div>
-  </div>
 </body>
 <footer>
     <div class="card mt-5">
