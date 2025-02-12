@@ -31,6 +31,14 @@
     .name {
         font-weight: bold;
     }
+    .like {
+        display: flex;
+        flex-direction: row;
+        align-self: flex-start;
+        margin-top: 10px;
+        font-weight: bold;
+        gap: 5px;
+    }
     .main-image-wrapper {
         display: flex;
         justify-content: center;
@@ -39,6 +47,14 @@
     .main-image {
         width: 100%;
         max-width: 250px;
+    }
+    .btn {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        font-color: black;
+        margin-top: auto;
+        margin-bottom: auto;
     }
     .info {
         display: flex;
@@ -66,19 +82,36 @@
                     <span th:text="${list.member.name}" class="name"></span>
                 </div>
                 <div class="main-image-wrapper">
-                    <img th:each="list_img : ${list.img}" th:src="@{/img/} + ${list_img.imgSrc}" class="main-image">
+                    <button type="button" class="btn" th:id="'left' + ${list.id}" style="display:none;" th:onclick="fnLeft([[${list.id}]], [[${list.img}]])">←</button>
+                    <img th:src="@{/img/} + ${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}">
+                    <input type="hidden" th:id="'img' + ${list.id}" th:value="0">
+                    <button th:unless="${list.img.size == 1}" type="button" class="btn" th:id="'right' + ${list.id}" th:onclick="fnRight([[${list.id}]], [[${list.img}]])">→</button>
                 </div>
                 <div class="info">
                     <div class="icon-box">
                         <img th:src="@{/img/} + ic_favorite_border.png" class="icon">
                         <img th:src="@{/img/} + ic_chat_black.png" class="icon">
                     </div>
+                    <div class="like">
+                        <label class="form-label">좋아요 </label>
+                        <label class="form-label" th:text="${list.readCnt}"></label>
+                        <label class="form-label">개</label>
+                    </div>
                     <span th:text="${list.member.name}" class="name"></span>
                     <pre th:text="${list.content}"></pre>
+                    <div class="comment">
+                        <label class="form-label">댓글 </label>
+                        <label class="form-label" th:text="${list.comment.size}"></label>
+                        <label class="form-label">개 모두 보기</label>
+                    </div>
                 </div>
             </li>
         </ul>
     </div>
+    <!--부트스트랩 js, jquery 추가-->
+    <script src="/js/lib/jquery.min.js"></script>
+    <script src="/js/lib/bootstrap.min.js"></script>
+    <script src="/js/board/main.js"></script>
 </body>
 <footer>
     <div class="card mt-5">
