@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import spring.study.entity.BasetimeEntity;
 import spring.study.entity.board.Board;
+import spring.study.entity.favorite.Favorite;
 import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoomMember;
 import spring.study.entity.comment.Comment;
@@ -59,6 +60,10 @@ public class Member extends BasetimeEntity implements UserDetails {
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<Board> board = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    private List<Favorite> favorites = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
@@ -143,6 +148,19 @@ public class Member extends BasetimeEntity implements UserDetails {
         for (Board b1 : board) {
             if (b1.getId().equals(b.getId())) {
                 board.remove(b);
+                break;
+            }
+        }
+    }
+
+    public void addFavorite(Favorite favorite) {
+        favorite.addMember(this);
+    }
+
+    public void removeFavorite(Favorite favorite) {
+        for (Favorite f : favorites) {
+            if (f.getId().equals(favorite.getId())) {
+                favorites.remove(f);
                 break;
             }
         }

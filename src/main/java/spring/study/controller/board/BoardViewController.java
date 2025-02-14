@@ -12,6 +12,7 @@ import spring.study.dto.comment.CommentResponseDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.board.BoardImg;
 import spring.study.entity.comment.Comment;
+import spring.study.entity.favorite.Favorite;
 import spring.study.entity.member.Member;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
@@ -114,8 +115,13 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
+        for (Favorite f : member.getFavorites()) {
+            System.out.println("Board: " + f.getBoard().getId() + " Member: " + f.getMember().getName());
+        }
+
         try {
             model.addAttribute("resultMap", boardService.findByMembers(member));
+            model.addAttribute("member", member);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

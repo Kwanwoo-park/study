@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import spring.study.entity.BasetimeEntity;
 import spring.study.entity.comment.Comment;
+import spring.study.entity.favorite.Favorite;
 import spring.study.entity.member.Member;
 
 import java.io.Serializable;
@@ -17,21 +18,31 @@ import java.util.List;
 @Setter
 @Entity(name = "board")
 public class Board extends BasetimeEntity implements Serializable {
+    private static final long serialVersionUID = 2L;
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "board_id")
     private Long id;
+
     @Column(name = "title")
     @NotNull
     private String title;
+
     @Column(name = "content")
     @NotNull
     private String content;
+
     @Column(name = "read_cnt")
     private int readCnt;
+
     @JsonIgnore
     @JoinColumn(name = "member_id")
     @ManyToOne
     private Member member;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
+    private List<Favorite> favorites = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
@@ -53,6 +64,10 @@ public class Board extends BasetimeEntity implements Serializable {
     public void addMember(Member member) {
         this.member = member;
         member.getBoard().add(this);
+    }
+
+    public void addFavorite(Favorite favorite) {
+        favorite.addBoard(this);
     }
 
     public void addComment(Comment comment) {
@@ -79,6 +94,15 @@ public class Board extends BasetimeEntity implements Serializable {
         for (Comment c : comment) {
             if (c.getId().equals(cmt.getId())) {
                 comment.remove(c);
+                break;
+            }
+        }
+    }
+
+    public void removeFavorite(Favorite favorite) {
+        for (Favorite f : favorites) {
+            if (f.getId().equals(favorite.getId())) {
+                favorites.remove(f);
                 break;
             }
         }
