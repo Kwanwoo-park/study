@@ -121,7 +121,7 @@ public class BoardViewController {
 
         try {
             model.addAttribute("resultMap", boardService.findByMembers(member));
-            model.addAttribute("member", member);
+            model.addAttribute("member", member.getFavorites());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

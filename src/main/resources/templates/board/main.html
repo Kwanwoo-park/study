@@ -89,8 +89,14 @@
                 </div>
                 <div class="info">
                     <div class="icon-box">
-                        <img th:unless="${#lists.containsAll(list.favorites, member.favorites)}" th:id="'like' + ${list.id}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${list.id}]])">
-                        <img th:if="${#lists.containsAll(list.favorites, member.favorites)}" th:id="'like' + ${list.id}" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${list.id}]])">
+                        <th:block th:with="flag=true">
+                            <th:block th:each="favorite : ${list.favorites}">
+                                <th:block th:each="members : ${member}">
+                                    <img th:id="'like' + ${list.id}" th:if="${favorite.id == members.id}" th:with="flag=false" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${list.id}]])">
+                                </th:block>
+                            </th:block>
+                            <img th:id="'like' + ${list.id}" th:if="${flag}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${list.id}]])">
+                        </th:block>
                         <img th:id="'comment' + ${list.id}" th:src="@{/img/} + ic_chat_black.png" class="icon">
                     </div>
                     <div class="like">

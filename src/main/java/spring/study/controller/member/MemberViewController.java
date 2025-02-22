@@ -37,8 +37,8 @@ public class MemberViewController {
         if (session.getAttribute("member") != null) {
             member = (Member) request.getSession().getAttribute("member");
 
-            if (member.getRole() == Role.USER) return "redirect:/board/list";
-            else if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
+            if (member.getRole() == Role.USER) return "redirect:board/list";
+            else if (member.getRole() == Role.ADMIN) return "redirect:admin/administrator";
             else request.getSession().invalidate();
         }
 

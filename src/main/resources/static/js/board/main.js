@@ -70,3 +70,19 @@ function fnLike(listId) {
     }
 }
 
+function fnImg(listId, list, member) {
+    const like = document.getElementById('like' + listId)
+    var flag = false
+
+    for (var i = 0; i < list.length; i++) {
+        for (var j = 0; j < member.length; j++) {
+            if (list[i].id == member[j].id) {
+                flag = true;
+                break;
+            }
+        }
+    }
+
+    if (flag) like.src = "/img/" + "ic_favorite.png"
+    else like.src = "/img/" + "ic_favorite_border.png"
+}
