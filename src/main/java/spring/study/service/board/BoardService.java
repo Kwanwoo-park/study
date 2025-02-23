@@ -32,7 +32,7 @@ public class BoardService {
     @Transactional
     public Board save(Board board) {
         return boardRepository.save(board);
-    };
+    }
 
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
@@ -103,7 +103,7 @@ public class BoardService {
             memberList.add(follow.getFollowing());
         }
 
-        return boardRepository.findByMemberIn(memberList);
+        return boardRepository.findByMemberIn(memberList, Sort.by("id").descending());
     }
 
     public List<Board> findAll() {

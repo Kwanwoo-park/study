@@ -166,6 +166,23 @@ public class Member extends BasetimeEntity implements UserDetails {
         }
     }
 
+    public HashMap<Long, Boolean> checkFavorite(List<Board> boards) {
+        HashMap<Long, Boolean> map = new HashMap<>();
+        for (Board b : boards) {
+            map.put(b.getId(), false);
+            for (Favorite fb : b.getFavorites()) {
+                for (Favorite fm : favorites) {
+                    if (Objects.equals(fm.getId(), fb.getId())) {
+                        map.put(b.getId(), true);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return map;
+    }
+
     public void addComment(Comment comment) {
         comment.addMember(this);
     }

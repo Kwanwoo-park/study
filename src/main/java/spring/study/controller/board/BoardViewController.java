@@ -17,6 +17,7 @@ import spring.study.entity.member.Member;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -120,8 +121,9 @@ public class BoardViewController {
         }
 
         try {
-            model.addAttribute("resultMap", boardService.findByMembers(member));
-            model.addAttribute("member", member.getFavorites());
+            List<Board> list = boardService.findByMembers(member);
+            model.addAttribute("resultMap", list);
+            model.addAttribute("like", member.checkFavorite(list));
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

@@ -2,6 +2,7 @@ package spring.study.repository.board;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.entity.board.Board;
@@ -16,6 +17,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     public Page<Board> findByMember(Member member, Pageable pageable);
 
     public Page<Board> findByMemberIn(List<Member> members, Pageable pageable);
+
+    public List<Board> findByMemberIn(List<Member> members, Sort sort);
 
     public List<Board> findByMemberIn(List<Member> members);
 
