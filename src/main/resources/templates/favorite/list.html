@@ -8,19 +8,17 @@
 </head>
 <body>
 <div class="container">
-  <h1>Follower List</h1>
   <form method="dialog">
-    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
     <div class="card">
       <ul class="list-group-flush">
-        <li class="list-group-item" th:each="list,index : ${follower}">
+        <li class="list-group-item" th:each="list,index : ${favorites}">
           <span>
             <span th:text="${index.index+1}"></span>
-            <img th:src="@{/img/} + ${list.follower.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
-            <a th:href="@{/member/search/detail(email=${list.follower.email})}">
-              <span th:text="${list.follower.name}"></span>
+            <img th:src="@{/img/} + ${list.member.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
+            <a th:href="@{/member/search/detail(email=${list.member.email})}">
+              <span th:text="${list.member.name}"></span>
             </a>
-            <span th:text="${list.follower.email}"></span>
+            <span th:text="${list.member.email}"></span>
           </span>
         </li>
       </ul>

@@ -83,7 +83,7 @@
                 </div>
                 <div class="main-image-wrapper">
                     <button type="button" class="btn" th:id="'left' + ${list.id}" style="display:none;" th:onclick="fnLeft([[${list.id}]], [[${list.img}]])">←</button>
-                    <img th:src="@{/img/} + ${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}">
+                    <img th:src="@{/img/} + ${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
                     <input type="hidden" th:id="'img' + ${list.id}" th:value="0">
                     <button th:unless="${list.img.size == 1}" type="button" class="btn" th:id="'right' + ${list.id}" th:onclick="fnRight([[${list.id}]], [[${list.img}]])">→</button>
                 </div>
@@ -93,7 +93,7 @@
                         <img th:id="'like' + ${list.id}" th:unless="${like[list.id]}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${list.id}]])">
                         <img th:id="'comment' + ${list.id}" th:src="@{/img/} + ic_chat_black.png" class="icon">
                     </div>
-                    <div class="like">
+                    <div class="like" th:onclick="fnHref([[${list.id}]])">
                         <label class="form-label">좋아요 </label>
                         <label class="form-label" th:id="'like_cnt' + ${list.id}" th:text="${list.favorites.size}"></label>
                         <label class="form-label">개</label>

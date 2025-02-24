@@ -28,6 +28,9 @@ public class FavoriteApiController {
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
 
+        if (favoriteService.existFavorite(member, board))
+            return ResponseEntity.status(201).body(null);
+
         Favorite favorite = Favorite.builder()
                 .board(board)
                 .member(member)
@@ -52,6 +55,9 @@ public class FavoriteApiController {
         Board board = boardService.findById(id);
 
         Favorite favorite = favoriteService.findByMemberAndBoard(member, board);
+
+        if (favorite == null)
+            return ResponseEntity.status(201).body(null);
 
         member.removeFavorite(favorite);
         board.removeFavorite(favorite);

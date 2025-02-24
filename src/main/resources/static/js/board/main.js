@@ -43,10 +43,11 @@ function fnLike(listId) {
                 "Content-Type": "application/json; charset=utf-8",
             },
         })
-        .then((response) => response.json())
-        .then((json) => {
-             like_cnt.innerText = parseInt(like_cnt.innerText) + 1
-             like.src = "/img/" + "ic_favorite.png"
+        .then((response) => {
+            if (response.status == 200) {
+                like_cnt.innerText = parseInt(like_cnt.innerText) + 1
+                like.src = "/img/" + "ic_favorite.png"
+            }
         })
         .catch((error) => {
             alert("다시 시도하여주십시오.");
@@ -59,10 +60,11 @@ function fnLike(listId) {
                 "Content-Type": "application/json; charset=utf-8",
             },
         })
-        .then((response) => response.json())
-        .then((json) => {
-            like_cnt.innerText = parseInt(like_cnt.innerText) - 1
-            like.src = "/img/" + "ic_favorite_border.png"
+        .then((response) => {
+            if (response.status == 200) {
+                like_cnt.innerText = parseInt(like_cnt.innerText) - 1
+                like.src = "/img/" + "ic_favorite_border.png"
+            }
         })
         .catch((error) => {
             alert("다시 시도하여주십시오.");
@@ -70,19 +72,27 @@ function fnLike(listId) {
     }
 }
 
-function fnImg(listId, list, member) {
-    const like = document.getElementById('like' + listId)
-    var flag = false
+function fnOnlyLike(listId) {
+    const like = document.getElementById('like' + listId);
+    const like_cnt = document.getElementById('like_cnt' + listId);
 
-    for (var i = 0; i < list.length; i++) {
-        for (var j = 0; j < member.length; j++) {
-            if (list[i].id == member[j].id) {
-                flag = true;
-                break;
-            }
+    fetch(`/api/favorite/like?id=` + listId, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+    })
+    .then((response) => {
+        if (response.status == 200) {
+            like_cnt.innerText = parseInt(like_cnt.innerText) + 1
+             like.src = "/img/" + "ic_favorite.png"
         }
-    }
+    })
+    .catch((error) => {
+        alert("다시 시도하여주십시오");
+    })
+}
 
-    if (flag) like.src = "/img/" + "ic_favorite.png"
-    else like.src = "/img/" + "ic_favorite_border.png"
+function fnHref(listId) {
+    location.href = "/favorites?id=" + listId;
 }

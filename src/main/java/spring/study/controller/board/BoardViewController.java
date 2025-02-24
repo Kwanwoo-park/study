@@ -116,10 +116,6 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        for (Favorite f : member.getFavorites()) {
-            System.out.println("Board: " + f.getBoard().getId() + " Member: " + f.getMember().getName());
-        }
-
         try {
             List<Board> list = boardService.findByMembers(member);
             model.addAttribute("resultMap", list);

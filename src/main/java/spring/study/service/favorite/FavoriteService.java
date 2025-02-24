@@ -22,6 +22,10 @@ public class FavoriteService {
         return favoriteRepository.findByMemberAndBoard(member, board);
     }
 
+    public Boolean existFavorite(Member member, Board board) {
+        return favoriteRepository.existsByMemberAndBoard(member, board);
+    }
+
     @Transactional
     public void deleteById(Long id) {
         favoriteRepository.deleteById(id);

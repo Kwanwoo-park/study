@@ -8,4 +8,6 @@ import spring.study.entity.member.Member;
 
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     public Favorite findByMemberAndBoard(Member member, Board board);
+
+    public Boolean existsByMemberAndBoard(Member member, Board board);
 }
