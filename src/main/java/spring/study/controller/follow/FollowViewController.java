@@ -36,9 +36,11 @@ public class FollowViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        List<Follow> follower = memberService.findMember(memberRequestDto.getEmail()).getFollowing();
+        Member follower = memberService.findMember(memberRequestDto.getEmail());
 
-        model.addAttribute("follower", follower);
+        model.addAttribute("follower", follower.getFollowing());
+        model.addAttribute("follow", member.checkFollowing1(follower));
+        model.addAttribute("email", member.getEmail());
 
         return "follow/follower";
     }
@@ -58,9 +60,11 @@ public class FollowViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        List<Follow> following = memberService.findMember(memberRequestDto.getEmail()).getFollower();
+        Member following = memberService.findMember(memberRequestDto.getEmail());
 
-        model.addAttribute("following", following);
+        model.addAttribute("following", following.getFollower());
+        model.addAttribute("email", member.getEmail());
+        model.addAttribute("follow", member.checkFollowing2(following));
 
         return "follow/following";
     }

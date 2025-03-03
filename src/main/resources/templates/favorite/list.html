@@ -6,9 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
+<style>
+    h4 {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+</style>
 <body>
 <div class="container">
-  <form method="dialog">
+  <h4>좋아요 누른 사람들</h4>
     <div class="card">
       <ul class="list-group-flush">
         <li class="list-group-item" th:each="list,index : ${favorites}">
@@ -19,13 +26,17 @@
               <span th:text="${list.member.name}"></span>
             </a>
             <span th:text="${list.member.email}"></span>
+            <div class="float-right" th:unless="${#strings.equals(list.member.email, email)}">
+              <button type="button" th:id="'follow' + ${list.id}" th:if="${following[list.id]}" class="btn btn-success" th:onclick="fnFollow([[${list.id}]], [[${list.member.email}]])">Unfollow</button>
+              <button type="button" th:id="'follow' + ${list.id}" th:unless="${following[list.id]}" class="btn btn-success"th:onclick="fnFollow([[${list.id}]], [[${list.member.email}]])">Follow</button>
+            </div>
           </span>
         </li>
       </ul>
     </div>
-  </form>
 </div>
 <script src="/js/lib/jquery.min.js"></script>
-<script src="/js/lib/bootstrap.min/js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/favorite/list.js"></script>
 </body>
 </html>

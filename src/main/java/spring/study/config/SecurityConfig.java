@@ -45,7 +45,7 @@ public class SecurityConfig{
                 .loginPage("/member/login")
                 .successHandler(authSuccessHandler)
                 .failureHandler(authFailureHandler)
-                .defaultSuccessUrl("/board/list")
+                .defaultSuccessUrl("/board/main")
                 .and()
                 .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/member/logout"))

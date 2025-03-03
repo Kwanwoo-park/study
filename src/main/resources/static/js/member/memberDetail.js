@@ -36,7 +36,7 @@ if (btn) {
             window.location.reload();
         })
         .catch((error) => {
-            alert("다시 시도하여주십시오.");
+            alert("다시 시도하여주십시오");
         })
     })
 }

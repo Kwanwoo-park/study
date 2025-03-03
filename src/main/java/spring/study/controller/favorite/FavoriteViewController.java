@@ -39,6 +39,8 @@ public class FavoriteViewController {
         List<Favorite> favorites = boardService.findById(id).getFavorites();
 
         model.addAttribute("favorites", favorites);
+        model.addAttribute("email", member.getEmail());
+        model.addAttribute("following", member.checkFollowing(favorites));
 
         return "favorite/list";
     }

@@ -23,7 +23,7 @@ if (button) {
                     alert(json.name + "님 환영합니다!")
 
                 if (json.role == "USER")
-                    location.replace(`/board/list`)
+                    location.replace(`/board/main`)
                 else if (json.role == "ADMIN")
                     location.replace(`/admin/administrator`)
                 else

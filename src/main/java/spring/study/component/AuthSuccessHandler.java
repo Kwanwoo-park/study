@@ -15,7 +15,7 @@ import java.io.IOException;
 public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
-        setDefaultTargetUrl("/board/list");
+        setDefaultTargetUrl("/board/main");
         super.onAuthenticationSuccess(request, response, chain, authentication);
     }
 }

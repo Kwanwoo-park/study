@@ -21,6 +21,10 @@
                         <span th:text="${list.following.name}"></span>
                       </a>
                       <span th:text="${list.following.email}"></span>
+                      <div class="float-right" th:unless="${#strings.equals(list.following.email, email)}">
+                          <button type="button" th:id="'follow' + ${list.id}" th:if="${follow[list.id]}" class="btn btn-success" th:onclick="fnFollow([[${list.id}]], [[${list.following.email}]])">Unfollow</button>
+                          <button type="button" th:id="'follow' + ${list.id}" th:unless="${follow[list.id]}" class="btn btn-success"th:onclick="fnFollow([[${list.id}]], [[${list.following.email}]])">Follow</button>
+                      </div>
                   </span>
                 </li>
             </ul>
@@ -28,6 +32,7 @@
     </form>
 </div>
 <script src="/js/lib/jquery.min.js"></script>
-<script src="/js/lib/bootstrap.min/js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/follow/follow.js"></script>
 </body>
 </html>
