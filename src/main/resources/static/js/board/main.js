@@ -93,6 +93,14 @@ function fnOnlyLike(listId) {
     })
 }
 
+function fnComment(listId) {
+    location.href = "/comment?id=" + listId;
+}
+
 function fnHref(listId) {
     location.href = "/favorites?id=" + listId;
+}
+
+function fnProfile(email) {
+    location.href = "/member/search/detail?email=" + email;
 }

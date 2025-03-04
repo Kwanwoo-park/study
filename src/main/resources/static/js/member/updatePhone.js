@@ -1,5 +1,6 @@
 const phone = document.getElementById('phone')
 const email = document.getElementById('email')
+const birth = document.getElementById('birth')
 const button = document.getElementById('update')
 
 if (button) {
@@ -14,13 +15,14 @@ if (button) {
                 },
                 body: JSON.stringify({
                     email: email.value,
-                    phone: phone.value
+                    phone: phone.value,
+                    birth: birth.value,
                 }),
             })
             .then((response) => {
                 if (response.status == 200) {
-                    alert("전화번호가 정상적으로 저장되었습니다.");
-                    location.replace(`/board/list`)
+                    alert("회원 정보가 정상적으로 저장되었습니다");
+                    location.replace(`/board/main`)
                 }
                 else {
                     alert("가입된 전화번호 입니다");

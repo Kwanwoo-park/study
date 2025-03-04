@@ -116,6 +116,10 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
+        if (member.getPhone().equals(" ") || member.getBirth().equals("1900-01-01")) {
+            return "redirect:/member/updatePhone";
+        }
+
         try {
             List<Board> list = boardService.findByMembers(member);
             model.addAttribute("resultMap", list);

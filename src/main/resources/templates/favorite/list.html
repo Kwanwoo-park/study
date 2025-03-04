@@ -7,16 +7,27 @@
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
 <style>
+    html {
+      scroll-behavior: smooth;
+    }
     h4 {
         display: flex;
         flex-direction: column;
         align-items: center;
     }
+    .container {
+        height: 400px;
+        overflow: auto;
+        padding: 10px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
 </style>
 <body>
-<div class="container">
+<div>
   <h4>좋아요 누른 사람들</h4>
-    <div class="card">
+    <div class="container">
       <ul class="list-group-flush">
         <li class="list-group-item" th:each="list,index : ${favorites}">
           <span>
@@ -39,4 +50,11 @@
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/favorite/list.js"></script>
 </body>
+<footer>
+  <div class="card mt-5">
+    <div class="card-body text-center">
+      <p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
+    </div>
+  </div>
+</footer>
 </html>

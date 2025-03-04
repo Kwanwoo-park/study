@@ -107,12 +107,14 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public void updatePhoneAndBirth(Long id, String phone, String birth) {
+    public int updatePhoneAndBirth(Long id, String phone, String birth) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));
 
         member.changePhoneAndBirth(phone, birth);
+
+        return member.getId().intValue();
     }
 
     @Transactional

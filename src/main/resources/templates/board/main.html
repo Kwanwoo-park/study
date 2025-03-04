@@ -7,11 +7,15 @@
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
 <style>
+    html {
+        scroll-behavior: smooth;
+    }
     .container {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 300px;
+        height: 400px;
+        overflow: auto;
         background: white;
         padding: 20px;
         border-radius: 10px;
@@ -73,10 +77,11 @@
     }
 </style>
 <body>
-    <div>
+    <h1>Kwanwoo site</h1>
+    <div class="container">
         <ul class="list-group-flush">
-            <li th:each="list, index : ${resultMap}" class="container">
-                <div class="profile">
+            <li th:each="list, index : ${resultMap}" class="list-group-item">
+                <div class="profile" th:onclick="fnProfile([[${list.member.email}]])">
                     <img th:src="@{/img/} + ${list.member.profile}" class="profile-img">
                     <span th:text="${list.member.name}" class="name"></span>
                 </div>
@@ -90,7 +95,7 @@
                     <div class="icon-box">
                         <img th:id="'like' + ${list.id}" th:if="${like[list.id]}" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${list.id}]])">
                         <img th:id="'like' + ${list.id}" th:unless="${like[list.id]}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${list.id}]])">
-                        <img th:id="'comment' + ${list.id}" th:src="@{/img/} + ic_chat_black.png" class="icon">
+                        <img th:id="'comment' + ${list.id}" th:src="@{/img/} + ic_chat_black.png" class="icon" th:onclick="fnComment([[${list.id}]])">
                     </div>
                     <div class="like" th:onclick="fnHref([[${list.id}]])">
                         <label class="form-label">좋아요 </label>
@@ -99,7 +104,7 @@
                     </div>
                     <span th:text="${list.member.name}" class="name"></span>
                     <pre th:text="${list.content}"></pre>
-                    <div class="comment">
+                    <div class="comment" th:onclick="fnComment([[${list.id}]])">
                         <label class="form-label">댓글 </label>
                         <label class="form-label" th:id="'comment_cnt' + ${list.id}" th:text="${list.comment.size}"></label>
                         <label class="form-label">개 모두 보기</label>

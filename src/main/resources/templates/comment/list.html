@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Comment List</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+  h4 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+  }
+  .container {
+      height: 400px;
+      overflow: auto;
+      padding: 10px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+</style>
+<body>
+<div>
+  <h4>댓글</h4>
+  <div class="container">
+    <ul class="list-group-flush">
+      <li class="list-group-item" th:each="list,index : ${comment.list}">
+          <span>
+            <span th:text="${index.index+1}"></span>
+            <img th:src="@{/img/} + ${list.member.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
+            <a th:href="@{/member/search/detail(email=${list.member.email})}">
+              <span th:text="${list.member.name}"></span>
+            </a>
+            <div class="float-right" th:if="${#strings.equals(list.member.email, member)}">
+              <button type="button" class="btn btn-primary" th:onclick="fnEdit([[${list.id}]])">Edit</button>
+              <button type="button" class="btn btn-danger" th:onclick="fnDelete([[${list.id}]])">Delete</button>
+            </div>
+            <pre th:id="'comment'+${list.id}" th:text="${list.comments}"></pre>
+            <textarea class="form-control" th:id="'edit_comment'+${list.id}" rows="5" cols=""
+                      name="Comment edit" th:text="${list.comments}" style="display: none;"></textarea>
+          </span>
+      </li>
+    </ul>
+  </div>
+  <div>
+    <textarea class="form-control" id="comments" rows="1" cols="" name="Comment" placeholder="Comment"></textarea>
+    <button type="button" id="submit" class="btn btn-primary">Submit</button>
+  </div>
+</div>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/comment/list.js"></script>
+</body>
+<footer>
+  <div class="card mt-5">
+    <div class="card-body text-center">
+      <p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
+    </div>
+  </div>
+</footer>
+</html>

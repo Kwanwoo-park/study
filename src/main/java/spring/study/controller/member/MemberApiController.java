@@ -149,7 +149,7 @@ public class MemberApiController {
 
         member = memberService.findMember(memberUpdateDto.getEmail());
 
-        int result = memberService.updatePhone(member.getId(), memberUpdateDto.getPhone());
+        int result = memberService.updatePhoneAndBirth(member.getId(), memberUpdateDto.getPhone(), memberUpdateDto.getBirth());
 
         session.setAttribute("member", memberService.findMember(memberUpdateDto.getEmail()));
 
