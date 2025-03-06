@@ -9,13 +9,17 @@
 </head>
 <body>
 <div class="container">
-  <h1>Member Detail</h1>
   <form method="dialog" enctype="multipart/form-data">
     <div class="mb-3">
       <input type="hidden" id="status" th:value="${status}">
       <img th:src="@{/img/} + ${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
       &nbsp;&nbsp;&nbsp;&nbsp;
-      <h3 style="display:inline">
+      <h4 style="display:inline-block">
+        <label class="form-label" th:text="${member.name}" style="margin-right: 10px;"></label>
+        <button type="button" id="follow" class="btn btn-success"></button>
+        <button type="button" id="chatting" class="btn btn-success">Chatting</button>
+        <br>
+        <br>
         <label class="form-label">Posts: </label>
         <label class="form-label" th:text="${member.board.size}"></label>
         <a th:href="@{/follow/follower(email=${member.email})}" id="follower">
@@ -26,17 +30,7 @@
           <label class="form-label">Following: </label>
           <label class="form-label" id="following_label" th:text="${member.follower.size}"></label>
         </a>
-      </h3>
-      <br>
-      <button type="button" id="follow" class="btn btn-success"></button>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Name: </label>
-      <label class="form-label" th:text="${member.name}"></label>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Email: </label>
-      <label class="form-label" id="email" th:text="${member.email}"></label>
+      </h4>
     </div>
     <table class="table table-striped table-horizontal table-bordered mt-3">
       <thead class="thead-strong">

@@ -39,6 +39,7 @@ public class SecurityConfig{
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .and()
                 .oauth2Login()
+                .defaultSuccessUrl("/board/main", true)
                 .userInfoEndpoint()
                 .userService(customOAuth2UserService)
                 .and()
