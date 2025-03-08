@@ -124,7 +124,7 @@ function quit() {
     };
 
     socket.send(JSON.stringify(quitMsg));
-    location.replace(`/chat/chatList`);
+    history.back(-1);
 }
 
 function fnLoad(input) {

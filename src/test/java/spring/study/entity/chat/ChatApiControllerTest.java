@@ -18,6 +18,7 @@
 //import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 //import org.springframework.web.context.WebApplicationContext;
 //import spring.study.dto.chat.ChatRoomRequestDto;
+//import spring.study.dto.member.MemberRequestDto;
 //import spring.study.entity.chat.ChatRoomMember;
 //import spring.study.entity.member.Member;
 //import spring.study.service.chat.ChatRoomMemberService;
@@ -86,6 +87,32 @@
 //        String roomId = list.get(list.size()-1).getRoom().getRoomId();
 //
 //        assertThat(roomService.find(roomId), is(notNullValue()));
+//    }
+//
+//    @WithMockUser
+//    @Test
+//    void create() throws Exception {
+//        //given
+//        mvc = MockMvcBuilders
+//                .webAppContextSetup(context)
+//                .apply(springSecurity())
+//                .build();
+//
+//        MockHttpSession session = new MockHttpSession();
+//        Member member = memberService.findMember("test@test.com");
+//        session.setAttribute("member", member);
+//
+//        url += "/create";
+//
+//        MemberRequestDto memberRequestDto = MemberRequestDto.builder()
+//                .email("akakslslzz@naver.com")
+//                .build();
+//
+//        //when
+//        mvc.perform(post(url).session(session)
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(new ObjectMapper().writeValueAsString(memberRequestDto))
+//        ).andExpect(status().isOk()).andDo(print());
 //    }
 //
 //    @WithMockUser

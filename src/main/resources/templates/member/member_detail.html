@@ -16,7 +16,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp;
       <h4 style="display:inline-block">
         <label class="form-label" th:text="${member.name}" style="margin-right: 10px;"></label>
-        <button type="button" id="follow" class="btn btn-success"></button>
+        <button type="button" th:if="${status}" id="follow" class="btn btn-success">Unfollow</button>
+        <button type="button" th:unless="${status}" id="follow" class="btn btn-success">Follow</button>
         <button type="button" id="chatting" class="btn btn-success">Chatting</button>
         <br>
         <br>

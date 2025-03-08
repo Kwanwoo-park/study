@@ -31,13 +31,13 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public ChatRoom createRoom(String name) {
+    public ChatRoom createRoom(String name, Long count) {
         String randomId = UUID.randomUUID().toString();
 
         ChatRoom room = ChatRoom.builder()
                 .roomId(randomId)
                 .name(name)
-                .count(1L)
+                .count(count)
                 .build();
 
         ChatRoom save = chatRoomRepository.save(room);
@@ -62,6 +62,10 @@ public class ChatRoomService {
 
     public ChatRoom find(String roomId) {
         return chatRoomRepository.findByRoomId(roomId);
+    }
+
+    public ChatRoom findByName(String name) {
+        return chatRoomRepository.findByName(name);
     }
 
     public void delete(String roomId) {

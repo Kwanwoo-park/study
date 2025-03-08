@@ -204,7 +204,6 @@ public class MemberViewController {
                                MemberRequestDto memberRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
-        boolean status = false;
         Member search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -221,10 +220,7 @@ public class MemberViewController {
         model.addAttribute("member", search_member);
         model.addAttribute("resultMap", boardService.findByMember(search_member, page, size));
 
-        if (followService.existFollow(member, search_member))
-            status = true;
-
-        model.addAttribute("status", status);
+        model.addAttribute("status", followService.existFollow(member, search_member));
 
         session.setAttribute("member", member);
 
