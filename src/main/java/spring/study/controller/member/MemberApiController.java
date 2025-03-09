@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
@@ -26,6 +27,7 @@ import spring.study.service.member.UserService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 @RequiredArgsConstructor
 @RestController
@@ -49,6 +51,9 @@ public class MemberApiController {
         if (member == null)
             return ResponseEntity.status(501).body(null);
 
+        if ( dto.getEmail().isEmpty() || dto.getEmail().isBlank() ||dto.getPassword().isEmpty() || dto.getPassword().isBlank() )
+            return ResponseEntity.status(501).body(null);
+
         if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())) {
             if (member.getRole() != Role.DENIED) {
                 memberService.updateLastLoginTime(member.getId());
@@ -63,11 +68,21 @@ public class MemberApiController {
 
     @PostMapping("/register")
     public ResponseEntity<MemberResponseDto> registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
+        if (memberRequestDto.getEmail().isEmpty() || memberRequestDto.getEmail().isBlank() ||
+                memberRequestDto.getPassword().isEmpty() || memberRequestDto.getPassword().isBlank() ||
+                memberRequestDto.getName().isEmpty() || memberRequestDto.getName().isBlank() ||
+                memberRequestDto.getPhone().isEmpty() || memberRequestDto.getPhone().isBlank() ||
+                memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())
+            return ResponseEntity.status(501).body(null);
+
         return ResponseEntity.ok(userService.createUser(memberRequestDto));
     }
 
     @GetMapping("/duplicateCheck")
     public ResponseEntity<Integer> duplicateCheck(@RequestParam() String email) {
+        if (email.isBlank())
+            return ResponseEntity.status(501).body(null);
+
         return memberService.existEmail(email) ? ResponseEntity.status(501).body(null) : ResponseEntity.status(200).body(null);
     }
 
@@ -84,6 +99,12 @@ public class MemberApiController {
             session.invalidate();
             return ResponseEntity.status(501).body(null);
         }
+
+        String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
+
+        if (!Arrays.stream(formatArr).toList().contains(format))
+            return ResponseEntity.status(501).body(null);
 
         String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
         //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
@@ -104,6 +125,9 @@ public class MemberApiController {
 
     @GetMapping("/find/email")
     public ResponseEntity<Member> findAction(@RequestParam() String email) {
+        if (email.isBlank())
+            return ResponseEntity.status(501).body(null);
+
         member = memberService.findMember(email);
 
         return ResponseEntity.ok(member);
@@ -111,6 +135,9 @@ public class MemberApiController {
 
     @GetMapping("/find/info")
     public ResponseEntity<Member> findAction(@RequestParam String birth, @RequestParam String phone) {
+        if (birth.isBlank() || phone.isBlank())
+            return ResponseEntity.status(501).body(null);
+
         String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
         phone = phone.replaceAll(regEx, "$1-$2-$3");
         member = memberService.findMember(phone, birth);
@@ -133,6 +160,9 @@ public class MemberApiController {
                 return ResponseEntity.status(501).body(null);
         }
 
+        if (memberUpdateDto.getPassword().isEmpty() || memberUpdateDto.getPassword().isBlank())
+            return ResponseEntity.status(501).body(null);
+
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;
@@ -146,6 +176,10 @@ public class MemberApiController {
 
         if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(501).body(null);
+
+        if (memberUpdateDto.getEmail().isEmpty() || memberUpdateDto.getEmail().isBlank() ||
+                memberUpdateDto.getPhone().isEmpty() || memberUpdateDto.getPhone().isBlank() ||
+                memberUpdateDto.getBirth().isEmpty() || memberUpdateDto.getBirth().isBlank())
 
         member = memberService.findMember(memberUpdateDto.getEmail());
 
