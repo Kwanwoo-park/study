@@ -60,6 +60,10 @@ public class ChatRoomService {
         return resultMap;
     }
 
+    public List<ChatRoom> findAll() {
+        return chatRoomRepository.findAll(Sort.by("id").descending());
+    }
+
     public ChatRoom find(String roomId) {
         return chatRoomRepository.findByRoomId(roomId);
     }

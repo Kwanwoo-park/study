@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.entity.chat.ChatRoom;
 import spring.study.entity.member.Member;
+import spring.study.entity.member.Role;
 import spring.study.service.chat.ChatMessageService;
 import spring.study.service.chat.ChatRoomMemberService;
 import spring.study.service.chat.ChatRoomService;
@@ -22,7 +23,7 @@ public class ChatViewController {
     private final ChatRoomMemberService roomMemberService;
     private Member member;
 
-    @GetMapping(value = "/chatList")
+    @GetMapping("/chatList")
     public String chatList(Model model,
                            @RequestParam(required = false, defaultValue = "0") Integer page,
                            @RequestParam(required = false, defaultValue = "5") Integer size,
@@ -40,7 +41,10 @@ public class ChatViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        model.addAttribute("roomList", roomService.findAll(page, size));
+        if (member.getRole().equals(Role.ADMIN))
+            model.addAttribute("roomList", roomService.findAll());
+        else
+            model.addAttribute("roomList", roomMemberService.findRoom(member));
 
         return "chat/chatList";
     }

@@ -7,11 +7,6 @@
     <title>Chat List</title>
 </head>
 <body>
-    <form method="dialog">
-        <input type="text" id="name" name="name" placeholder="채팅방 이름">
-        <button type="button" id="create" class="btn btn-primary">방 만들기</button>
-    </form>
-
     <table class="table table-striped table-horizontal table-bordered mt-3">
         <thead class="thead-strong">
             <tr>
@@ -21,7 +16,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr th:each="room,index : ${roomList.list}" th:with="paging=${roomList.paging}">
+            <tr th:each="room,index : ${roomList}">
                 <td>
                     <span th:text="${index.index+1}"></span>
                 </td>
@@ -35,17 +30,6 @@
             </tr>
         </tbody>
     </table>
-    <div class="row">
-        <div class="col">
-            <ul class="pagination">
-                <li class="page-item" th:each="index : ${#numbers.sequence(1, roomList.totalPage, 1)}" th:with="paging=${roomList.paging}">
-                    <a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./chatList(page=${index - 1},page=${paging.pageSize})}">
-                        <span class="text-white" th:text="${index}"></span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/chat/createRoom.js"></script>

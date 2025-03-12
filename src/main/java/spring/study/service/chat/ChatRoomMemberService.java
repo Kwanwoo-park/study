@@ -9,6 +9,7 @@ import spring.study.entity.chat.ChatRoomMember;
 import spring.study.entity.member.Member;
 import spring.study.repository.chat.ChatRoomMemberRepository;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -32,6 +33,10 @@ public class ChatRoomMemberService {
 
     public ChatRoomMember find(Member member, ChatRoom room) {
         return chatRoomMemberRepository.findByMemberAndRoom(member, room);
+    }
+
+    public List<ChatRoom> findRoom(Member member) {
+        return chatRoomMemberRepository.findByMember(member).stream().map(ChatRoomMember::getRoom).sorted(Comparator.comparingLong(ChatRoom::getId).reversed()).toList();
     }
 
     public List<ChatRoomMember> find(Member member) {

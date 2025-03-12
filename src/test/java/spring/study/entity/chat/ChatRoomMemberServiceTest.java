@@ -60,6 +60,22 @@
 //    }
 //
 //    @Test
+//    void findRoom() {
+//        // given
+//        Member member = memberService.findMember("test@test.com");
+//
+//        // when
+//        List<ChatRoom> list = chatRoomMemberService.findRoom(member);
+//
+//        // then
+//        assertThat(list, is(notNullValue()));
+//
+//        for (ChatRoom room : list) {
+//            System.out.println(room.getRoomId() + " " + room.getName());
+//        }
+//    }
+//
+//    @Test
 //    void findByMem() {
 //        //given
 //        Member member = memberService.findMember("test@test.com");
