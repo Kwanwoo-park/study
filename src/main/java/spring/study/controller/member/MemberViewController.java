@@ -74,7 +74,7 @@ public class MemberViewController {
             }
 
             model.addAttribute("member", member);
-            model.addAttribute("resultMap", boardService.findByMember(member, page, size));
+            model.addAttribute("resultMap", boardService.findByMember(member));
 
             session.setAttribute("member", member);
         }
@@ -130,6 +130,8 @@ public class MemberViewController {
             return "redirect:/member/login?error=true&exception=Not Found account";
 
         model.addAttribute("email", member.getEmail());
+        model.addAttribute("phone", member.getPhone());
+        model.addAttribute("birth", member.getBirth());
 
         return "member/updatePhone";
     }
@@ -218,7 +220,7 @@ public class MemberViewController {
         member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
 
         model.addAttribute("member", search_member);
-        model.addAttribute("resultMap", boardService.findByMember(search_member, page, size));
+        model.addAttribute("resultMap", boardService.findByMember(search_member));
 
         model.addAttribute("status", followService.existFollow(member, search_member));
 

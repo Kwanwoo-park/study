@@ -7,6 +7,20 @@
   <!--부트스트랩 css 추가-->
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
+<style>
+  .imgDiv {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(100px, auto));
+    grid-gap: 10px;
+    grid-auto-flow: row dense;
+    width: 100%;
+  }
+  .main-image {
+    object-fit: contain;
+    width: 100%;
+    max-width: 250px;
+  }
+</style>
 <body>
 <div class="container">
   <form method="dialog" enctype="multipart/form-data">
@@ -33,48 +47,11 @@
         </a>
       </h4>
     </div>
-    <table class="table table-striped table-horizontal table-bordered mt-3">
-      <thead class="thead-strong">
-        <tr>
-          <th width="10%">게시글 번호</th>
-          <th width="">제목</th>
-          <th width="20%">작성자</th>
-          <th width="10%">조회수</th>
-          <th width="20%">작성일</th>
-        </tr>
-      </thead>
-      <tbody id="tbody">
-        <tr th:each="list, index : ${resultMap.list}">
-          <td>
-            <span th:text="${index.index+1}"></span>
-          </td>
-          <td>
-            <a th:href="@{/board/view(id=${list.id})}"><span th:text="${list.title}"></span></a>
-          </td>
-          <td>
-            <span th:text="${list.member.name}"></span>
-          </td>
-          <td>
-            <span th:text="${list.readCnt}"></span>
-          </td>
-          <td>
-            <span th:text="${#temporals.format(list.registerTime, 'yyyy-MM-dd')}"></span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="row">
-      <div class="col">
-        <ul class="pagination">
-          <li class="page-item" th:each="index : ${#numbers.sequence(1, resultMap.totalPage, 1)}" th:with="paging=${resultMap.paging}">
-            <a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./detail(email=${member.email},page=${index - 1},size=${paging.pageSize})}">
-              <span class="text-white" th:text="${index}"></span>
-            </a>
-          </li>
-        </ul>
+    <div class="imgDiv">
+      <div th:each="list, index : ${resultMap}">
+        <img class="main-image" th:src="@{/img/} + ${list.img[0].imgSrc}" th:id="'main_img'+${list.id}">
       </div>
     </div>
-    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
   </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->

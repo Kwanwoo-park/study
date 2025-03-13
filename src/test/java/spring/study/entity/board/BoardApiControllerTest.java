@@ -1,5 +1,6 @@
 //package spring.study.entity.board;
 //
+//import com.fasterxml.jackson.core.type.TypeReference;
 //import com.fasterxml.jackson.databind.ObjectMapper;
 //import jakarta.transaction.Transactional;
 //import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@
 //import org.springframework.security.test.context.support.WithMockUser;
 //import org.springframework.test.context.junit.jupiter.SpringExtension;
 //import org.springframework.test.web.servlet.MockMvc;
+//import org.springframework.test.web.servlet.MvcResult;
 //import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 //import org.springframework.web.context.WebApplicationContext;
 //import spring.study.dto.board.BoardRequestDto;
@@ -21,9 +23,12 @@
 //import spring.study.service.board.BoardService;
 //import spring.study.service.member.MemberService;
 //
+//import java.util.List;
+//
 //import static org.assertj.core.api.Assertions.*;
 //import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+//import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 //import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 //
 //@ExtendWith(SpringExtension.class)
@@ -32,7 +37,7 @@
 //    @LocalServerPort
 //    private int port;
 //
-//    String url = "http://localhost:" + port + "/board";
+//    String url = "http://localhost:" + port + "/api/board";
 //
 //    @Autowired
 //    private TestRestTemplate testTemplate;

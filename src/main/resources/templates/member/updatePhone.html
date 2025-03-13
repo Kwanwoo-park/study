@@ -17,11 +17,11 @@
     </div>
     <div class="mb-3">
       <label for="phone" class="form-label">Phone Number</label>
-      <input type="text" class="form-control" id="phone" name="phone" placeholder="Phone Number without -" required>
+      <input type="text" class="form-control" id="phone" name="phone" th:value="${phone}" placeholder="Phone Number without -" required>
     </div>
     <div class="mb-3">
       <label for="birth" class="form-label">Birth</label>
-      <input type="date" class="form-control" id="birth" name="birth" value="1900-01-01" max="9999-12-31" required>
+      <input type="date" class="form-control" id="birth" name="birth" th:value="${birth}" max="9999-12-31" required>
     </div>
     <button type="button" id="update" class="btn btn-primary">Submit</button>
   </form>

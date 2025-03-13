@@ -180,6 +180,7 @@ public class MemberApiController {
         if (memberUpdateDto.getEmail().isEmpty() || memberUpdateDto.getEmail().isBlank() ||
                 memberUpdateDto.getPhone().isEmpty() || memberUpdateDto.getPhone().isBlank() ||
                 memberUpdateDto.getBirth().isEmpty() || memberUpdateDto.getBirth().isBlank())
+            return ResponseEntity.status(501).body(null);
 
         member = memberService.findMember(memberUpdateDto.getEmail());
 

@@ -8,7 +8,7 @@ const url = new URL(window.location.href)
 const urlParams = url.searchParams
 const email = urlParams.get('email')
 
-var method;
+let method;
 
 if (btn.innerText == 'Follow')
     method = "POST"
