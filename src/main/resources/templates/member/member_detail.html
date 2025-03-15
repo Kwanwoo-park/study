@@ -8,27 +8,34 @@
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
 <style>
-  .imgDiv {
+  .profileDiv {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 30px;
+  }
+  .imgGrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(100px, auto));
-    grid-gap: 10px;
     grid-auto-flow: row dense;
-    width: 100%;
+  }
+  .imgDiv {
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
   }
   .main-image {
     object-fit: contain;
     width: 100%;
-    max-width: 250px;
+    max-height: 300px;
   }
 </style>
 <body>
 <div class="container">
-  <form method="dialog" enctype="multipart/form-data">
-    <div class="mb-3">
-      <input type="hidden" id="status" th:value="${status}">
+    <div class="profileDiv">
       <img th:src="@{/img/} + ${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
       &nbsp;&nbsp;&nbsp;&nbsp;
-      <h4 style="display:inline-block">
+      <h4>
         <label class="form-label" th:text="${member.name}" style="margin-right: 10px;"></label>
         <button type="button" th:if="${status}" id="follow" class="btn btn-success">Unfollow</button>
         <button type="button" th:unless="${status}" id="follow" class="btn btn-success">Follow</button>
@@ -47,12 +54,11 @@
         </a>
       </h4>
     </div>
-    <div class="imgDiv">
-      <div th:each="list, index : ${resultMap}">
+    <div class="imgGrid">
+      <div class="imgDiv" th:each="list, index : ${resultMap}">
         <img class="main-image" th:src="@{/img/} + ${list.img[0].imgSrc}" th:id="'main_img'+${list.id}">
       </div>
     </div>
-  </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>

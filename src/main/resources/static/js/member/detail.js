@@ -19,7 +19,7 @@ function fnLoad(input) {
     var img = profile
     img.src = URL.createObjectURL(file);
 
-    document.getElementById("save").style.visibility = 'visible';
+    document.getElementById("save").style.display = 'inline';
 }
 
 function fnSave() {
