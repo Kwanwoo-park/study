@@ -39,3 +39,7 @@ function fnSave() {
         alert("사진 변경에 실패했습니다.");
     })
 }
+
+function fnHref(listId) {
+    location.href = "/board/view?id=" + listId;
+}

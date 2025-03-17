@@ -1,4 +1,3 @@
-const status = document.querySelector("#status").value;
 const follower = document.querySelector("#follower_label").innerText;
 const following = document.querySelector("#following_label").innerText;
 const btn = document.querySelector("#follow");
@@ -64,4 +63,8 @@ if (chatting) {
             alert("다시 시도하여주십시오");
         })
     })
+}
+
+function fnHref(listId) {
+    location.href = "/board/view?id=" + listId;
 }

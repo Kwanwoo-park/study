@@ -1,141 +1,106 @@
-const id = document.getElementById('id').value;
-const member = document.getElementById('email').value;
-const role = document.getElementById('role').value;
-const board = document.getElementById('board').value;
+function fnLeft(listId, ImageArr) {
+    const main_image = document.getElementById('main_img' + listId);
+    const img_id = document.getElementById('img' + listId);
+    const left_arrow = document.getElementById('left' + listId);
+    const right_arrow = document.getElementById('right' + listId);
 
-const delete_btn = document.getElementById('delete');
-const edit = document.getElementById('edit');
-const submit = document.getElementById('submit');
+    main_image.src = "/img/" + ImageArr[parseInt(img_id.value) - 1].imgSrc;
+    img_id.value = parseInt(img_id.value) - 1;
 
-if (role != "ADMIN") {
-    if (member != board) {
-        document.getElementById('title').disabled = true;
-        document.getElementById('content').disabled = true;
-        edit.style.display = 'none';
-        delete_btn.style.display = 'none';
-    }
+    if (right_arrow.style.display === 'none')
+        right_arrow.style.display = 'flex'
+
+    if (parseInt(img_id.value) == 0)
+        left_arrow.style.display = 'none'
 }
 
-if (delete_btn) {
-    delete_btn.addEventListener('click', (event) => {
-        if (confirm("게시글을 삭제하시겠습니까?")) {
-            fetch(`/api/board/view/delete?id=` + id, {
-                method: 'DELETE',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                alert("삭제가 완료되었습니다.");
-                location.replace(`/board/list`);
-            })
-            .catch((error) => {
-                alert("삭제에 실패했습니다.");
-            })
-        }
-    })
+function fnRight(listId, ImageArr) {
+    const main_image = document.getElementById('main_img' + listId);
+    const img_id = document.getElementById('img' + listId);
+    const left_arrow = document.getElementById('left' + listId);
+    const right_arrow = document.getElementById('right' + listId);
+
+    main_image.src = "/img/" + ImageArr[parseInt(img_id.value)+ 1].imgSrc;
+    img_id.value = parseInt(img_id.value)+ 1;
+
+    if (left_arrow.style.display === 'none')
+        left_arrow.style.display = 'flex'
+
+    if (parseInt(img_id.value) == ImageArr.length-1)
+        right_arrow.style.display = 'none'
 }
 
-if (edit) {
-    edit.addEventListener('click', (event) => {
-        const data = {
-            id: id,
-            title: document.getElementById('title').value,
-            content: document.getElementById('content').value
-        }
+function fnLike(listId) {
+    const like = document.getElementById('like' + listId);
+    const like_cnt = document.getElementById('like_cnt' + listId);
 
-        fetch(`/api/board/view?id=` + id, {
-            method: 'PATCH',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
-            body: JSON.stringify(data),
-        })
-        .then((response) => response.json())
-        .then((json) => {
-            alert("게시글이 수정되었습니다.");
-            window.location.reload();
-        })
-        .catch((error) => {
-            alert("다시 시도하여주십시오.");
-        })
-    })
-}
+    var arr = like.src.split('/')
 
-if (submit) {
-    submit.addEventListener('click', (event) => {
-        const data = {
-            comments: document.getElementById('comments').value
-        }
-
-        fetch(`/api/comment?id=` + id, {
+    if (arr[arr.length-1] == 'ic_favorite_border.png') {
+        fetch(`/api/favorite/like?id=` + listId, {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
-            body: JSON.stringify(data),
         })
-        .then((response) => response.json())
-        .then((json) => {
-            window.location.reload();
+        .then((response) => {
+            if (response.status == 200) {
+                like_cnt.innerText = parseInt(like_cnt.innerText) + 1
+                like.src = "/img/" + "ic_favorite.png"
+            }
         })
         .catch((error) => {
             alert("다시 시도하여주십시오.");
         })
-    })
-}
-
-function fnEdit(commentId) {
-    const comment_edit = document.getElementById('edit_comment' + commentId);
-    const comment = document.getElementById('comment' + commentId);
-
-    if (comment_edit.style.display !== 'none')
-    {
-        const data = {
-            id: commentId,
-            comments: comment_edit.value
-        }
-
-        fetch(`/api/comment/update`, {
-            method: 'PATCH',
+    }
+    else if (arr[arr.length-1] == 'ic_favorite.png') {
+        fetch(`/api/favorite/delete?id=` + listId, {
+            method: 'DELETE',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
-            body: JSON.stringify(data),
         })
-        .then((response) => response.json())
-        .then((json) => {
-            window.location.reload();
+        .then((response) => {
+            if (response.status == 200) {
+                like_cnt.innerText = parseInt(like_cnt.innerText) - 1
+                like.src = "/img/" + "ic_favorite_border.png"
+            }
         })
         .catch((error) => {
             alert("다시 시도하여주십시오.");
         })
     }
-    else {
-        comment_edit.style.display = 'block';
-        comment.style.display = 'none';
-    }
 }
 
-function fnDelete(commentId) {
-    const data = {
-        id: commentId
-    }
+function fnOnlyLike(listId) {
+    const like = document.getElementById('like' + listId);
+    const like_cnt = document.getElementById('like_cnt' + listId);
 
-    fetch(`/api/comment/delete?id=` + id, {
-        method: 'DELETE',
+    fetch(`/api/favorite/like?id=` + listId, {
+        method: 'POST',
         headers: {
             "Content-Type": "application/json; charset=utf-8",
         },
-        body: JSON.stringify(data),
     })
-    .then((response) => response.json())
-    .then((json) => {
-        alert("삭제가 완료되었습니다.");
-        window.location.reload();
+    .then((response) => {
+        if (response.status == 200) {
+            like_cnt.innerText = parseInt(like_cnt.innerText) + 1
+             like.src = "/img/" + "ic_favorite.png"
+        }
     })
     .catch((error) => {
-        alert("다시 시도하여주십시오.");
+        alert("다시 시도하여주십시오");
     })
+}
+
+function fnComment(listId) {
+    location.href = "/comment?id=" + listId;
+}
+
+function fnHref(listId) {
+    location.href = "/favorites?id=" + listId;
+}
+
+function fnProfile(email) {
+    location.href = "/member/search/detail?email=" + email;
 }

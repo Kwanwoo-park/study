@@ -167,23 +167,12 @@ public class BoardViewController {
 
         if (boardRequestDto.getId() != null) {
             Board board = boardService.findById(boardRequestDto.getId());
-            List<BoardImg> img = boardImgService.findBoard(board);
+            List<Board> list = new ArrayList<>();
 
-            HashMap<String, Object> comment = new HashMap<>();
-            List<Comment> list = board.getComment();
+            list.add(board);
 
-            comment.put("list", list.stream().map(CommentResponseDto::new).toList());
-
-            if (!previous.equals(boardRequestDto.getId())) {
-                boardService.updateBoardReadCntInc(boardRequestDto.getId());
-                previous = boardRequestDto.getId();
-            }
-
-            model.addAttribute("info", board);
-            model.addAttribute("member", member);
-            model.addAttribute("comment", comment);
-            model.addAttribute("size", list.size());
-            model.addAttribute("img", img);
+            model.addAttribute("board", board);
+            model.addAttribute("like", member.checkFavorite(list));
         }
 
         return "board/view";

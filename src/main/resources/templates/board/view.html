@@ -7,66 +7,115 @@
 	<!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
+<style>
+	.container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		background: white;
+		border-radius: 10px;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		margin-bottom: 10px;
+	}
+	.profile {
+		display: flex;
+		align-items: center;
+		align-self: flex-start;
+	}
+	.profile-img {
+		width: 50px;
+		height: 50px;
+		border-radius: 50%;
+		margin-right: 10px;
+	}
+	.name {
+		font-weight: bold;
+	}
+	.like {
+		display: flex;
+		flex-direction: row;
+		align-self: flex-start;
+		margin-top: 10px;
+		font-weight: bold;
+		gap: 5px;
+	}
+	.main-image-wrapper {
+		display: flex;
+		justify-content: center;
+		width: 100%;
+	}
+	.main-image {
+		width: 100%;
+		max-width: 250px;
+	}
+	.btn {
+		width: 35px;
+		height: 35px;
+		border-radius: 50%;
+		font-color: black;
+		margin-top: auto;
+		margin-bottom: auto;
+	}
+	.info {
+		display: flex;
+		flex-direction: column;
+		align-self: flex-start;
+		margin-top: 10px;
+	}
+	.icon-box {
+		display: flex;
+		font-size: 20px;
+		gap: 10px;
+	}
+	.icon {
+		width: 35px;
+		height: 35px;
+	}
+</style>
 <body>
 	<div class="container">
-		<h1>Board View</h1>
-		<form id="frm" method="post">
-			<input type="hidden" id="id" th:value="${info.id}">
-			<input type="hidden" id="email" th:value="${member.email}">
-			<input type="hidden" id="role" th:value="${member.role}">
-			<input type="hidden" id="board" th:value="${info.member.email}">
-			<div class="float-right">
-				<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-				<button type="button" id="delete" class="btn btn-danger">Delete</button>
+		<ul class="list-group-flush"><li class="list-group-item">
+		<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
+			<img th:src="@{/img/} + ${board.member.profile}" class="profile-img">
+			<span th:text="${board.member.name}" class="name"></span>
+		</div>
+		<div class="main-image-wrapper">
+			<button type="button" class="btn" th:id="'left' + ${board.id}" style="display: none;" th:onclick="fnLeft([[${board.id}]], [[${board.img}]])">←</button>
+			<img th:src="@{/img/} + ${board.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
+			<input type="hidden" th:id="'img' + ${board.id}" th:value="0">
+			<button th:unless="${board.img.size == 1}" type="button" class="btn" th:id="'right' + ${board.id}" th:onclick="fnRight([[${board.id}]], [[${board.img}]])">→</button>
+		</div>
+		<div class="info">
+			<div class="icon-box">
+				<img th:id="'like' + ${board.id}" th:if="${like[board.id]}" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${board.id}]])">
+				<img th:id="'like' + ${board.id}" th:unless="${like[board.id]}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${board.id}]])">
+				<img th:id="'comment' + ${board.id}" th:src="@{/img/} + ic_chat_black.png" class="icon" th:onclick="fnComment([[${board.id}]])">
 			</div>
-			<div class="mb-3">
-			    <label class="form-label" for="title">Title</label>
-			    <input type="text" class="form-control" id="title" name="title" th:value="${info.title}">
+			<div class="like" th:onclick="fnHref([[${board.id}]])">
+				<label class="form-label">좋아요</label>
+				<label class="form-label" th:id="'like_cnt' + ${board.id}" th:text="${board.favorites.size}"></label>
+				<label class="form-label">개</label>
 			</div>
-			<div class="mb-3">
-		    	<label class="form-label" for="content">Content</label>
-		    	<textarea class="form-control" id="content" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
-				<br>
-				<img th:each="list : ${img}" th:src="@{/img/} + ${list.imgSrc}" width="200vw" height="200vw">
+			<span th:text="${board.member.name}" class="name"></span>
+			<pre th:text="${board.content}"></pre>
+			<div class="comment" th:onclick="fnComment([[${board.id}]])">
+				<label class="form-label">댓글</label>
+				<label class="form-label" th:id="'comment_cnt' + ${board.id}" th:text="${board.comment.size}"></label>
+				<label class="form-label">개 모두 보기</label>
 			</div>
-			<div class="mb-3">
-			    <label class="form-label" for="name">Writer</label>
-			    <input type="disabled" class="form-control" id="name" name="name" th:value="${info.member.name}" disabled>
-			</div>
-			<button type="button" id="edit" class="btn btn-primary">Edit</button>
-			<hr>
-			<div class="mb-3">
-				<label class="form-label" for="comments">Comment</label>
-				<textarea class="form-control" id="comments" rows="5" cols="" name="Comment"></textarea>
-			</div>
-			<button type="button" id="submit" class="btn btn-primary">Submit</button>
-			<hr>
-			<div class="card">
-				<div class="card-header bi bi-chat-dots">Comments</div>
-				<ul class="list-group-flush">
-					<li class="list-group-item" th:each="list,index : ${comment.list}">
-						<span>
-							<span th:text="${index.index+1}"></span>
-							<img th:src="@{/img/} + ${list.member.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
-							<a th:href="@{/member/search/detail(email=${list.member.email})}">
-								<span th:text="${list.member.name}"></span>
-							</a>
-							<div class="float-right" th:if="${#strings.equals(list.member.email, member.email)}">
-								<button type="button" class="btn btn-primary" th:onclick="fnEdit([[${list.id}]])">Edit</button>
-								<button type="button" class="btn btn-danger" th:onclick="fnDelete([[${list.id}]])">Delete</button>
-							</div>
-							<pre th:id="'comment'+${list.id}" th:text="${list.comments}"></pre>
-							<textarea class="form-control" th:id="'edit_comment'+${list.id}" rows="5" cols=""
-									  name="Comment edit" th:text="${list.comments}" style="display: none;"></textarea>
-						</span>
-					</li>
-				</ul>
-			</div>
-		</form>
+		</div>
+		</li></ul>
 	</div>
     <!--부트스트랩 js, jquery 추가-->
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
 	<script src="/js/board/view.js"></script>
 </body>
+<footer>
+	<div class="card">
+		<div class="card-body text-center">
+			<p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
+		</div>
+	</div>
+</footer>
 </html>

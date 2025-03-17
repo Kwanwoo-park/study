@@ -16,8 +16,14 @@
   }
   .imgGrid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(100px, auto));
-    grid-auto-flow: row dense;
+    width: 750px;
+    background: white;
+    boarder-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    grid-template-columns: repeat(3, minmax(100px, 750px));
+    margin-right: auto;
+    margin-left: auto;
+    margin-bottom: 10px;
   }
   .imgDiv {
     border-style: solid;
@@ -25,9 +31,8 @@
     border-color: black;
   }
   .main-image {
-    object-fit: contain;
-    width: 100%;
-    max-height: 300px;
+    width: 250px;
+    height: 300px;
   }
 </style>
 <body>
@@ -56,7 +61,7 @@
     </div>
     <div class="imgGrid">
       <div class="imgDiv" th:each="list, index : ${resultMap}">
-        <img class="main-image" th:src="@{/img/} + ${list.img[0].imgSrc}" th:id="'main_img'+${list.id}">
+        <img class="main-image" th:src="@{/img/} + ${list.img[0].imgSrc}" th:id="'main_img'+${list.id}" th:onclick="fnHref([[${list.id}]])">
       </div>
     </div>
 </div>
@@ -65,4 +70,11 @@
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/member/memberDetail.js"></script>
 </body>
+<footer>
+  <div class="card">
+    <div class="card-body text-center">
+      <p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
+    </div>
+  </div>
+</footer>
 </html>
