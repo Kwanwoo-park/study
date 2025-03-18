@@ -104,3 +104,11 @@ function fnHref(listId) {
 function fnProfile(email) {
     location.href = "/member/search/detail?email=" + email;
 }
+
+function fnPrevious(previous) {
+    location.replace(`/board/view?id=` + previous)
+}
+
+function fnNext(next) {
+    location.replace(`/board/view?id=` + next)
+}

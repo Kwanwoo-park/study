@@ -8,18 +8,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
-import spring.study.dto.comment.CommentResponseDto;
 import spring.study.entity.board.Board;
-import spring.study.entity.board.BoardImg;
-import spring.study.entity.comment.Comment;
-import spring.study.entity.favorite.Favorite;
 import spring.study.entity.member.Member;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 @Controller
@@ -29,7 +25,6 @@ public class BoardViewController {
     private final BoardService boardService;
     private final BoardImgService boardImgService;
     private Member member;
-    private Long previous = -1L;
 
     @GetMapping("/all")
     public String getBoardListPage(Model model,
@@ -55,7 +50,7 @@ public class BoardViewController {
         }
 
         try {
-            if (title.equals(""))
+            if (title.isEmpty())
                 model.addAttribute("resultMap", boardService.findAll(page, size));
             else {
                 model.addAttribute("title", title);
@@ -103,7 +98,7 @@ public class BoardViewController {
 
     @GetMapping("/main")
     public String mainPage(Model model, HttpServletRequest request) throws Exception {
-        HttpSession session = request.getSession();;
+        HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid()) {
             return "redirect:/member/login?error=true&exception=Session Expired";
@@ -167,12 +162,33 @@ public class BoardViewController {
 
         if (boardRequestDto.getId() != null) {
             Board board = boardService.findById(boardRequestDto.getId());
+            Member board_member = board.getMember();
+
+            int size = board_member.getBoard().size();
+            long previous_id = 0L;
+            long next_id = 0L;
+
+            for (int i = 0; i < size; i++) {
+                if (Objects.equals(board.getId(), board_member.getBoard().get(i).getId())) {
+                    if (i == 0) previous_id = board_member.getBoard().get(i+1).getId();
+                    else if (i == size -1) next_id = board_member.getBoard().get(i-1).getId();
+                    else {
+                        previous_id = board_member.getBoard().get(i+1).getId();
+                        next_id = board_member.getBoard().get(i-1).getId();
+                    }
+
+                    break;
+                }
+            }
+
             List<Board> list = new ArrayList<>();
 
             list.add(board);
 
             model.addAttribute("board", board);
             model.addAttribute("like", member.checkFavorite(list));
+            model.addAttribute("previous", previous_id);
+            model.addAttribute("next", next_id);
         }
 
         return "board/view";

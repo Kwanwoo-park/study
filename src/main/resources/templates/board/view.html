@@ -56,6 +56,28 @@
 		margin-top: auto;
 		margin-bottom: auto;
 	}
+	.left {
+		float: left;
+		align-items: center;
+		justify-content: center;
+		width: 50px;
+		height: 50px;
+		border-radius: 50%;
+		font-color: black;
+		margin-top: 350px;
+		margin-left: 10px;
+	}
+	.right {
+		float: right;
+		align-items: center;
+		justify-content: center;
+		width: 50px;
+		height: 50px;
+		border-radius: 50%;
+		font-color: black;
+		margin-top: 350px;
+		margin-right: 10px;
+	}
 	.info {
 		display: flex;
 		flex-direction: column;
@@ -73,6 +95,8 @@
 	}
 </style>
 <body>
+<button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
+<button type="button" th:unless="${next == 0}"id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
 	<div class="container">
 		<ul class="list-group-flush"><li class="list-group-item">
 		<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
