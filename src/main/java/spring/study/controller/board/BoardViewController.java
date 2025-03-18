@@ -23,7 +23,6 @@ import java.util.Objects;
 @Slf4j
 public class BoardViewController {
     private final BoardService boardService;
-    private final BoardImgService boardImgService;
     private Member member;
 
     @GetMapping("/all")
@@ -164,21 +163,19 @@ public class BoardViewController {
             Board board = boardService.findById(boardRequestDto.getId());
             Member board_member = board.getMember();
 
-            int size = board_member.getBoard().size();
+            List<Long> id_list = board_member.getBoard().stream().map(Board::getId).toList();
+
+            int size = id_list.size();
             long previous_id = 0L;
             long next_id = 0L;
 
-            for (int i = 0; i < size; i++) {
-                if (Objects.equals(board.getId(), board_member.getBoard().get(i).getId())) {
-                    if (i == 0) previous_id = board_member.getBoard().get(i+1).getId();
-                    else if (i == size -1) next_id = board_member.getBoard().get(i-1).getId();
-                    else {
-                        previous_id = board_member.getBoard().get(i+1).getId();
-                        next_id = board_member.getBoard().get(i-1).getId();
-                    }
+            int idx = id_list.indexOf(boardRequestDto.getId());
 
-                    break;
-                }
+            if (idx == 0) previous_id = id_list.get(idx+1);
+            else if (idx == size-1) next_id = id_list.get(idx-1);
+            else {
+                previous_id = id_list.get(idx+1);
+                next_id = id_list.get(idx-1);
             }
 
             List<Board> list = new ArrayList<>();
