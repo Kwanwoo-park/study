@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.member.Member;
+import spring.study.entity.member.Role;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 
@@ -48,19 +49,19 @@ public class BoardViewController {
             return "redirect:/member/updatePhone";
         }
 
+        if (member.getRole() != Role.ADMIN) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
+
         try {
-            if (title.isEmpty())
-                model.addAttribute("resultMap", boardService.findAll(page, size));
-            else {
-                model.addAttribute("title", title);
-                model.addAttribute("resultMap", boardService.findByTitle(title, page, size));
-            }
+            model.addAttribute("resultMap", boardService.findAll(page, size));
             model.addAttribute("member", member);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
 
-        return "board/all";
+        return "board/list";
     }
 
     @GetMapping("/list")
@@ -81,18 +82,12 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        if (member.getPhone().equals(" ")) {
-            return "redirect:/member/updatePhone";
+        if (member.getRole() != Role.ADMIN) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
-        try {
-            model.addAttribute("resultMap", boardService.findByMembers(member, page, size));
-            model.addAttribute("member", member);
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-
-        return "board/list";
+        return "redirect:/board/all";
     }
 
     @GetMapping("/main")
@@ -169,13 +164,15 @@ public class BoardViewController {
             long previous_id = 0L;
             long next_id = 0L;
 
-            int idx = id_list.indexOf(boardRequestDto.getId());
+            if (size > 1) {
+                int idx = id_list.indexOf(boardRequestDto.getId());
 
-            if (idx == 0) previous_id = id_list.get(idx+1);
-            else if (idx == size-1) next_id = id_list.get(idx-1);
-            else {
-                previous_id = id_list.get(idx+1);
-                next_id = id_list.get(idx-1);
+                if (idx == 0) previous_id = id_list.get(idx+1);
+                else if (idx == size-1) next_id = id_list.get(idx-1);
+                else {
+                    previous_id = id_list.get(idx+1);
+                    next_id = id_list.get(idx-1);
+                }
             }
 
             List<Board> list = new ArrayList<>();

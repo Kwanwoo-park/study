@@ -25,25 +25,17 @@
 			            <thead class="thead-strong">
 			                <tr>
 			                    <th width="10%">게시글 번호</th>
-			                    <th width="">제목</th>
 			                    <th width="20%">작성자</th>
-			                    <th width="10%">조회수</th>
 			                    <th width="20%">작성일</th>
 			                </tr>
 			            </thead>
 			            <tbody id="tbody">
 			            	<tr th:each="list,index : ${resultMap.list}" th:with="paging=${resultMap.paging}">
 								<td>
-									<span th:text="${(resultMap.totalCnt - index.index) - (paging.pageNumber * paging.pageSize)}"></span>
-								</td>
-								<td>
-									<a th:href="@{./view(id=${list.id})}"><span th:text="${list.title}"></span></a>
+									<a th:href="@{./view(id=${list.id})}"><span th:text="${(resultMap.totalCnt - index.index) - (paging.pageNumber * paging.pageSize)}"></span></a>
 								</td>
 								<td>
 									<a th:href="@{/member/search/detail(email=${list.member.email})}"><span th:text="${list.member.name}"></span></a>
-								</td>
-								<td>
-									<span th:text="${list.readCnt}"></span>
 								</td>
 								<td>
 									<span th:text="${#temporals.format(list.registerTime, 'yyyy-MM-dd')}"></span>

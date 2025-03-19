@@ -24,16 +24,9 @@ public class Board extends BasetimeEntity implements Serializable {
     @Column(name = "board_id")
     private Long id;
 
-    @Column(name = "title")
-    @NotNull
-    private String title;
-
     @Column(name = "content")
     @NotNull
     private String content;
-
-    @Column(name = "read_cnt")
-    private int readCnt;
 
     @JsonIgnore
     @JoinColumn(name = "member_id")
@@ -55,9 +48,7 @@ public class Board extends BasetimeEntity implements Serializable {
     @Builder
     public Board(Long id, String title, String content, int readCnt, Member member) {
         this.id = id;
-        this.title = title;
         this.content = content;
-        this.readCnt = readCnt;
         this.member = member;
     }
 
@@ -78,16 +69,8 @@ public class Board extends BasetimeEntity implements Serializable {
         boardImg.addBoard(this);
     }
 
-    public void changeReadCnt() {
-        this.readCnt++;
-    }
-
     public void changeContent(String content) {
         this.content = content;
-    }
-
-    public void changeTitle(String title) {
-        this.title = title;
     }
 
     public void removeComment(Comment cmt) {

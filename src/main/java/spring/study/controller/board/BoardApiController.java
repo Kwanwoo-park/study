@@ -38,7 +38,7 @@ public class BoardApiController {
         Member member = (Member) session.getAttribute("member");
         Board result = null;
 
-        if (!boardRequestDto.getTitle().isBlank() || !boardRequestDto.getTitle().isEmpty()){
+        if (!boardRequestDto.getContent().isBlank() || !boardRequestDto.getContent().isEmpty()){
             Board board = boardRequestDto.toEntity();
 
             board.addMember(member);
@@ -69,7 +69,7 @@ public class BoardApiController {
             return ResponseEntity.status(501).body(null);
         }
 
-        return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getTitle(), boardRequestDto.getContent()));
+        return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getContent()));
     }
 
     @DeleteMapping("/view/delete")

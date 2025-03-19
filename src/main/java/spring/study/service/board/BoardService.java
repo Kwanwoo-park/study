@@ -47,19 +47,6 @@ public class BoardService {
         return resultMap;
     }
 
-    public HashMap<String, Object> findByTitle(String title, Integer page, Integer size) {
-        HashMap<String, Object> resultMap = new HashMap<>();
-
-        Page<Board> list = boardRepository.findByTitle(title, PageRequest.of(page, size, Sort.by("id").descending()));
-
-        resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
-        resultMap.put("paging", list.getPageable());
-        resultMap.put("totalCnt", list.getTotalElements());
-        resultMap.put("totalPage", list.getTotalPages());
-
-        return resultMap;
-    }
-
     public List<Board> findByMember(Member member) {
         return boardRepository.findByMember(member, Sort.by("id").descending());
     }
@@ -106,25 +93,15 @@ public class BoardService {
     }
 
     @Transactional
-    public int updateBoard(Long id, String title, String content) {
+    public int updateBoard(Long id, String content) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(
                 "존재하지 않는 게시글입니다."
         ));
 
         board.changeContent(content);
-        board.changeTitle(title);
         board.changeUpdateTime(LocalDateTime.now());
 
         return board.getId().intValue();
-    }
-
-    @Transactional
-    public void updateBoardReadCntInc(Long id) {
-        Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(
-                "존재하지 않는 게시글입니다."
-        ));
-
-        board.changeReadCnt();
     }
 
     public void deleteById(Long id) {
