@@ -8,31 +8,44 @@
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
 <style>
-	img {
-		width: 100px;
-		height: 100px;
+	.container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		height: 600px;
+		background: white;
+		border-radius: 10px;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		margin-bottom: 10px;
 	}
+	.imgDiv {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 300px;
+	}
+	img {
+		width: 500px;
+		height: 500px;
+	}
+	.arrow {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        font-color: black;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
 </style>
 <body>
 	<div class="container">
-		<h1>Board Write</h1>
 		<form method="post" enctype="multipart/form-data">
-			<div class="mb-3">
-			    <label for="title" class="form-label">Title</label>
-			    <input type="text" class="form-control" id="title" name="title">
-			</div>
-			<div class="mb-3">
-		    	<label for="content" class="form-label">Content</label>
-		    	<textarea class="form-control" rows="5" cols="" id="content" name="content"></textarea>
+			<div class="imgDiv">
 				<input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
 				<button type="button" class="btn btn-primary" id="btn">이미지 등록</button>
 			</div>
-			<div class="mb-3">
-			    <label for="writer" class="form-label">Writer</label>
-			    <input type="text" class="form-control" id="writer" name="writer" th:name="name" th:value="${name}" disabled>
-			</div>
-			<button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-			<button type="button" class="btn btn-primary" onclick="fnSave()">Submit</button>
+			<button type="button" class="btn btn-success" onclick="fnPrevious()" style="display: none" id="previous">Previous</button>
+			<button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Submit</button>
 			<button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="img_btn">Image Save</button>
 		</form>
 	</div>
@@ -41,4 +54,11 @@
 	<script src="/js/lib/bootstrap.min.js"></script>
 	<script src="/js/board/write.js"></script>
 </body>
+<footer>
+	<div class="card">
+		<div class="card-body text-center">
+			<p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
+		</div>
+	</div>
+</footer>
 </html>
