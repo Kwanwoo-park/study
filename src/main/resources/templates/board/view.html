@@ -14,7 +14,7 @@
 		align-items: center;
 		background: white;
 		border-radius: 10px;
-		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 0 0px rgba(0, 0, 0, 0.1);
 		margin-bottom: 10px;
 	}
 	.profile {
@@ -45,7 +45,8 @@
 		width: 100%;
 	}
 	.main-image {
-		width: 250px;
+		width: 500px;
+		height: 600px;
 	}
 	.btn {
 		width: 35px;
@@ -59,23 +60,34 @@
 		float: left;
 		align-items: center;
 		justify-content: center;
-		width: 50px;
-		height: 50px;
+		position: fixed;
+		top: 350px;
+		left: 0px;
+		width: 40px;
+		height: 40px;
 		border-radius: 50%;
 		font-color: black;
-		margin-top: 350px;
 		margin-left: 10px;
 	}
 	.right {
 		float: right;
 		align-items: center;
 		justify-content: center;
-		width: 50px;
-		height: 50px;
+		position: fixed;
+		top: 350px;
+		right: 0px;
+		width: 40px;
+		height: 40px;
 		border-radius: 50%;
 		font-color: black;
-		margin-top: 350px;
 		margin-right: 10px;
+	}
+	.editDiv {
+		position: fixed;
+		top: 0px;
+		right: 50px;
+		align-items: center;
+		justify-content: center;
 	}
 	.info {
 		display: flex;
@@ -97,13 +109,17 @@
 <button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
 <button type="button" th:unless="${next == 0}"id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
 	<div class="container">
-		<ul class="list-group-flush"><li class="list-group-item">
+		<div class="editDiv" th:if="${#strings.equals(board.member.email, member)}">
+			<span th:onclick="fnEdit([[${board.id}]])">Edit</span>
+			<br>
+			<span th:onclick="fnDelete([[${board.id}]])">Delete</span>
+		</div>
 		<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
 			<img th:src="@{/img/} + ${board.member.profile}" class="profile-img">
 			<span th:text="${board.member.name}" class="name"></span>
 		</div>
 		<div class="main-image-wrapper">
-			<button type="button" class="btn" th:id="'left' + ${board.id}" style="display: none;" th:onclick="fnLeft([[${board.id}]], [[${board.img}]])">←</button>
+			<button type="button" class="btn" th:id="'left' + ${board.id}" style="visibility:hidden;" th:onclick="fnLeft([[${board.id}]], [[${board.img}]])">←</button>
 			<img th:src="@{/img/} + ${board.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
 			<input type="hidden" th:id="'img' + ${board.id}" th:value="0">
 			<button th:unless="${board.img.size == 1}" type="button" class="btn" th:id="'right' + ${board.id}" th:onclick="fnRight([[${board.id}]], [[${board.img}]])">→</button>
@@ -127,7 +143,6 @@
 				<label class="form-label">개 모두 보기</label>
 			</div>
 		</div>
-		</li></ul>
 	</div>
     <!--부트스트랩 js, jquery 추가-->
     <script src="/js/lib/jquery.min.js"></script>

@@ -21,6 +21,11 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         margin-bottom: 10px;
     }
+    .main {
+        width: 250px;
+        border-bottom: 1px solid;
+        margin-bottom: 10px;
+    }
     .profile {
         display: flex;
         align-items: center;
@@ -45,8 +50,9 @@
     }
     .main-image-wrapper {
         display: flex;
+        flex-direction: row;
+        align-items: center;
         justify-content: center;
-        width: 100%;
     }
     .main-image {
         width: 100%;
@@ -77,16 +83,14 @@
     }
 </style>
 <body>
-    <h1>Kwanwoo site</h1>
     <div class="container">
-        <ul class="list-group-flush">
-            <li th:each="list, index : ${resultMap}" class="list-group-item">
+            <div th:each="list, index : ${resultMap}" class="main">
                 <div class="profile" th:onclick="fnProfile([[${list.member.email}]])">
                     <img th:src="@{/img/} + ${list.member.profile}" class="profile-img">
                     <span th:text="${list.member.name}" class="name"></span>
                 </div>
                 <div class="main-image-wrapper">
-                    <button type="button" class="btn" th:id="'left' + ${list.id}" style="display:none;" th:onclick="fnLeft([[${list.id}]], [[${list.img}]])">←</button>
+                    <button type="button" th:unless="${list.img.size == 1}" class="btn" th:id="'left' + ${list.id}" style="visibility:hidden;" th:onclick="fnLeft([[${list.id}]], [[${list.img}]])">←</button>
                     <img th:src="@{/img/} + ${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
                     <input type="hidden" th:id="'img' + ${list.id}" th:value="0">
                     <button th:unless="${list.img.size == 1}" type="button" class="btn" th:id="'right' + ${list.id}" th:onclick="fnRight([[${list.id}]], [[${list.img}]])">→</button>
@@ -110,8 +114,7 @@
                         <label class="form-label">개 모두 보기</label>
                     </div>
                 </div>
-            </li>
-        </ul>
+            </div>
     </div>
     <!--부트스트랩 js, jquery 추가-->
     <script src="/js/lib/jquery.min.js"></script>

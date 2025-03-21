@@ -12,7 +12,8 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		height: 600px;
+		height: 700px;
+		overflow: auto;
 		background: white;
 		border-radius: 10px;
 		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -29,6 +30,7 @@
 		height: 500px;
 	}
 	.arrow {
+		justify-content: center;
         width: 35px;
         height: 35px;
         border-radius: 50%;
@@ -42,8 +44,9 @@
 		<form method="post" enctype="multipart/form-data">
 			<div class="imgDiv">
 				<input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
-				<button type="button" class="btn btn-primary" id="btn">이미지 등록</button>
+				<button type="button" class="btn btn-primary" id="btn">Image</button>
 			</div>
+			<textarea class="form-control" rows="5" cols="" id="content" name="content" style="display: none"></textarea>
 			<button type="button" class="btn btn-success" onclick="fnPrevious()" style="display: none" id="previous">Previous</button>
 			<button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Submit</button>
 			<button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="img_btn">Image Save</button>

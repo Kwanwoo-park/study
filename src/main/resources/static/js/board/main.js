@@ -7,11 +7,11 @@ function fnLeft(listId, ImageArr) {
     main_image.src = "/img/" + ImageArr[parseInt(img_id.value) - 1].imgSrc;
     img_id.value = parseInt(img_id.value) - 1;
 
-    if (right_arrow.style.display === 'none')
-        right_arrow.style.display = 'flex'
+    if (right_arrow.style.visibility === 'hidden')
+        right_arrow.style.visibility = 'visible'
 
     if (parseInt(img_id.value) == 0)
-        left_arrow.style.display = 'none'
+        left_arrow.style.visibility = 'hidden'
 }
 
 function fnRight(listId, ImageArr) {
@@ -23,11 +23,11 @@ function fnRight(listId, ImageArr) {
     main_image.src = "/img/" + ImageArr[parseInt(img_id.value)+ 1].imgSrc;
     img_id.value = parseInt(img_id.value)+ 1;
 
-    if (left_arrow.style.display === 'none')
-        left_arrow.style.display = 'flex'
+    if (left_arrow.style.visibility === 'hidden')
+        left_arrow.style.visibility = 'visible'
 
     if (parseInt(img_id.value) == ImageArr.length-1)
-        right_arrow.style.display = 'none'
+        right_arrow.style.visibility = 'hidden'
 }
 
 function fnLike(listId) {

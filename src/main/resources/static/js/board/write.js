@@ -1,7 +1,7 @@
 let imgDiv = document.querySelector('.imgDiv');
-let file;
+let file, fidx = 0;
 let id;
-
+let img;
 let left, right, size;
 
 const formData = new FormData();
@@ -11,14 +11,14 @@ const btn = document.getElementById("btn");
 const img_btn = document.getElementById("img_btn");
 const previous = document.getElementById('previous');
 const submit = document.getElementById('submit');
+const content = document.getElementById('content')
 
 if (btn)
     btn.addEventListener('click', () => upload.click());
 
 function fnSave() {
     const data = {
-        title: document.getElementById('title').value,
-        content: document.getElementById('content').value
+        content: content.value
     }
 
     fetch(`/api/board/write`, {
@@ -57,8 +57,38 @@ function fnImgSave() {
     })
 }
 
+function fnLeft() {
+    img.src = URL.createObjectURL(file[--fidx]);
+
+    if (right.style.display === 'none')
+        right.style.display = 'flex';
+
+    if (fidx == 0)
+        left.style.display = 'none';
+}
+
+function fnRight() {
+    img.src = URL.createObjectURL(file[++fidx]);
+
+    if (left.style.display === 'none')
+        left.style.display = 'flex';
+
+    if (fidx == size - 1)
+        right.style.display = 'none';
+}
+
+function fnPrevious() {
+    btn.style.display = 'inline';
+    imgDiv.style.marginTop = '300px';
+
+    previous.style.display = 'none';
+    submit.style.display = 'none';
+
+    img.remove();
+    formData = new FormData();
+}
+
 function fnLoad(input) {
-    let img;
     imgArr = new Array(input.files.length);
 
     imgDiv.append(document.createElement('br'));
@@ -69,14 +99,13 @@ function fnLoad(input) {
     btn.style.display = 'none';
     previous.style.display = 'inline';
     submit.style.display = 'inline';
+    content.style.display = 'inline';
 
     file = input.files;
     size = input.files.length;
 
     img = document.createElement('img');
-    img.src = URL.createObjectURL(file[0]);
-
-    imgDiv.append(img);
+    img.src = URL.createObjectURL(file[fidx]);
 
     if (size > 1) {
         left = document.createElement('button');
@@ -88,19 +117,22 @@ function fnLoad(input) {
             fnLeft();
         };
         left.textContent = '←';
-        imgDiv.append(left);
 
         right = document.createElement('button');
         right.type = "button";
         right.className = "arrow";
         right.id = 'left';
         right.onclick = function () {
-            fnLeft();
+            fnRight();
         };
         right.textContent = '→';
 
+        imgDiv.append(left);
+        imgDiv.append(img);
         imgDiv.append(right);
     }
+    else imgDiv.append(img);
+
 
     for (let i = 0; i < size; i++) {
             formData.append("file", file[i]);

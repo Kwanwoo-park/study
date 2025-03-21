@@ -181,6 +181,7 @@ public class BoardViewController {
 
             model.addAttribute("board", board);
             model.addAttribute("like", member.checkFavorite(list));
+            model.addAttribute("member", member.getEmail());
             model.addAttribute("previous", previous_id);
             model.addAttribute("next", next_id);
         }
