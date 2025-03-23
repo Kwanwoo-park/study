@@ -113,6 +113,7 @@ public class BoardViewController {
             List<Board> list = boardService.findByMembers(member);
             model.addAttribute("resultMap", list);
             model.addAttribute("like", member.checkFavorite(list));
+            model.addAttribute("profile", member.getProfile());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
