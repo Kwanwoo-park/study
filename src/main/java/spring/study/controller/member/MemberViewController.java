@@ -54,18 +54,14 @@ public class MemberViewController {
     }
 
     @GetMapping("/detail")
-    public String detail(@RequestParam String email,
-                         @RequestParam(required = false, defaultValue = "0") Integer page,
-                         @RequestParam(required = false, defaultValue = "5") Integer size,
-                         Model model, HttpServletRequest request){
+    public String detail(@RequestParam String email, Model model, HttpServletRequest request){
         HttpSession session = request.getSession();
 
         if (session != null && request.isRequestedSessionIdValid() && session.getAttribute("member") != null) {
             if (email.equals(((Member) session.getAttribute("member")).getEmail()))
                 member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
             else {
-                session.invalidate();
-                return "redirect:/member/login?error=true&exception=Wrong Accept";
+                return "redirect:/member/search/detail?email=" + email;
             }
 
             if (member == null) {
@@ -200,10 +196,7 @@ public class MemberViewController {
     }
 
     @GetMapping("/search/detail")
-    public String memberDetail(Model model,
-                               @RequestParam(required = false, defaultValue = "0") Integer page,
-                               @RequestParam(required = false, defaultValue = "5") Integer size,
-                               MemberRequestDto memberRequestDto, HttpServletRequest request) {
+    public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         Member search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());

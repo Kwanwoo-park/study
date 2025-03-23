@@ -81,7 +81,7 @@
         width: 35px;
         height: 35px;
     }
-    .nav {
+    .navi {
         display: flex;
         flex-direction: column;
         align-self: flex-start;
@@ -102,13 +102,13 @@
     }
 </style>
 <body>
-    <aside class="nav">
-        <img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"><br>
-        <img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"><br>
-        <img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"><br>
-        <img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"><br>
-        <img th:src="@{/img/} + ${profile}" class="profile-icon">
-    </aside>
+    <nav class="navi">
+        <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
+        <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
+        <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
+        <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
+        <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+    </nav>
     <div class="container">
             <div th:each="list, index : ${resultMap}" class="main">
                 <div class="profile" th:onclick="fnProfile([[${list.member.email}]])">

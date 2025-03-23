@@ -114,6 +114,7 @@ public class BoardViewController {
             model.addAttribute("resultMap", list);
             model.addAttribute("like", member.checkFavorite(list));
             model.addAttribute("profile", member.getProfile());
+            model.addAttribute("email", member.getEmail());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
