@@ -107,12 +107,13 @@
 </style>
 <body>
 <button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
-<button type="button" th:unless="${next == 0}"id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
+<button type="button" th:unless="${next == 0}" id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
 	<div class="container">
 		<div class="editDiv" th:if="${#strings.equals(board.member.email, member)}">
-			<span th:onclick="fnEdit([[${board.id}]])">Edit</span>
+			<span th:onclick="fnEdit()" id="edit">Edit</span>
+			<span th:onclick="fnEditComplete([[${board.id}]])" id="complete" style="display: none;">Complete</span>
 			<br>
-			<span th:onclick="fnDelete([[${board.id}]])">Delete</span>
+			<span th:onclick="fnDelete([[${board.id}]])" id="delete">Delete</span>
 		</div>
 		<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
 			<img th:src="@{/img/} + ${board.member.profile}" class="profile-img">
@@ -136,7 +137,8 @@
 				<label class="form-label">개</label>
 			</div>
 			<span th:text="${board.member.name}" class="name"></span>
-			<pre th:text="${board.content}"></pre>
+			<pre th:text="${board.content}" id="content"></pre>
+			<textarea th:text="${board.content}" class="form-control" rows="5" cols="" id="editContent" name="content" style="display: none"></textarea>
 			<div class="comment" th:onclick="fnComment([[${board.id}]])">
 				<label class="form-label">댓글</label>
 				<label class="form-label" th:id="'comment_cnt' + ${board.id}" th:text="${board.comment.size}"></label>

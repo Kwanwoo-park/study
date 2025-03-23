@@ -93,36 +93,43 @@ function fnOnlyLike(listId) {
     })
 }
 
-function fnEdit(commentId) {
-    const comment_edit = document.getElementById('edit_comment' + commentId);
-    const comment = document.getElementById('comment' + commentId);
+function fnEdit() {
+    const edit = document.getElementById('edit');
+    const complete = document.getElementById('complete');
+    const del = document.getElementById('delete');
+    const content = document.getElementById('content');
+    const editContent = document.getElementById('editContent');
 
-    if (comment_edit.style.display !== 'none')
-    {
-        const data = {
-            id: commentId,
-            comments: comment_edit.value
-        }
+    edit.style.display = 'none';
+    del.style.display = 'none';
+    content.style.display = 'none';
 
-        fetch(`/api/comment/update`, {
-            method: 'PATCH',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
-            body: JSON.stringify(data),
-        })
-        .then((response) => response.json())
-        .then((json) => {
-            window.location.reload();
-        })
-        .catch((error) => {
-            alert("다시 시도하여주십시오.");
-        })
+    complete.style.display = 'inline';
+    editContent.style.display = 'inline';
+}
+
+function fnEditComplete(boardId) {
+    const editContent = document.getElementById('editContent');
+
+    const data = {
+        id: boardId,
+        content: editContent.value
     }
-    else {
-        comment_edit.style.display = 'block';
-        comment.style.display = 'none';
-    }
+
+    fetch(`/api/board/view`, {
+        method: 'PATCH',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify(data),
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        window.location.reload();
+    })
+    .catch((error) => {
+        alert("다시 시도하여주십시오");
+    })
 }
 
 function fnDelete(boardId) {
