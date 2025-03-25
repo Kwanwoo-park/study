@@ -36,7 +36,7 @@ function fnSave() {
             img_btn.click();
 
         alert("게시글이 저장되었습니다.");
-        location.replace(`/board/list`);
+        location.replace(`/board/main`);
     })
     .catch((error) => {
         alert("다시 시도하여주십시오.");
