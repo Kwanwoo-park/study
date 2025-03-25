@@ -2,6 +2,7 @@ const role = document.getElementById('role')
 const change = document.getElementById('change')
 const del = document.getElementById('delete')
 const id = document.getElementById('mid')
+const email = document.getElementById('email')
 
 let url = `/api/admin/member`
 let msg;
@@ -45,7 +46,7 @@ if (del) {
     del.addEventListener('click', (event) => {
         event.preventDefault();
 
-        fetch(`/api/member/withdrawal`, {
+        fetch(`/api/member/withdrawal?email=` + email.innerText, {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",

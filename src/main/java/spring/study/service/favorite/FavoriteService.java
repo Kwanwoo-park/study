@@ -30,4 +30,14 @@ public class FavoriteService {
     public void deleteById(Long id) {
         favoriteRepository.deleteById(id);
     }
+
+    @Transactional
+    public void deleteByMember(Member member) {
+        favoriteRepository.deleteByMember(member);
+    }
+
+    @Transactional
+    public void deleteByBoard(Board board) {
+        favoriteRepository.deleteByBoard(board);
+    }
 }

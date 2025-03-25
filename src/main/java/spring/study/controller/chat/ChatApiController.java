@@ -67,13 +67,19 @@ public class ChatApiController {
 
         Member search_Member = memberService.findMember(memberRequestDto.getEmail());
 
-        Long id = member.getId() + search_Member.getId();
-        ChatRoom search = roomService.findByName(String.valueOf(id));
+        String name1 = member.getEmail() + " " + search_Member.getEmail();
+        String name2 = search_Member.getEmail() + " " + member.getEmail();
 
-        if (search != null)
-            return ResponseEntity.ok(search);
+        ChatRoom search1 = roomService.findByName(name1);
+        ChatRoom search2 = roomService.findByName(name2);
 
-        ChatRoom room = roomService.createRoom(String.valueOf(id), 2L);
+        if (search1 != null)
+            return ResponseEntity.ok(search1);
+
+        if (search2 != null)
+            return ResponseEntity.ok(search2);
+
+        ChatRoom room = roomService.createRoom(name1, 2L);
 
         roomMemberService.save(member, room);
         roomMemberService.save(search_Member, room);

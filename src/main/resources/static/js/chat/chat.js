@@ -66,15 +66,15 @@ socket.onmessage = function(e) {
         newMsgArea.append(name);
     }
 
-    if (json.type == "TALK") {
-        newMsg.innerText = json.message;
-        newMsgArea.append(newMsg);
-    }
-    else if (json.type == "IMAGE") {
+    if (json.type == "IMAGE") {
         imgTalk.src = "/img/" + json.message;
         imgTalk.className = "chatimg";
 
         newMsgArea.append(imgTalk);
+    }
+    else {
+        newMsg.innerText = json.message;
+        newMsgArea.append(newMsg);
     }
 
     newMsgLi.append(newMsgArea);

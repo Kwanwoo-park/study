@@ -157,7 +157,7 @@ public class MemberViewController {
     }
 
     @GetMapping("/search")
-    public String memberFind(HttpServletRequest request) {
+    public String memberFind(Model model, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -169,6 +169,9 @@ public class MemberViewController {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Not Found account";
         }
+
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
 
         return "member/member_find";
     }
@@ -191,6 +194,8 @@ public class MemberViewController {
         HashMap<String, Object> resultMap = memberService.findName(name);
 
         model.addAttribute("member", resultMap);
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
 
         return "member/member_find";
     }
@@ -214,8 +219,9 @@ public class MemberViewController {
 
         model.addAttribute("member", search_member);
         model.addAttribute("resultMap", boardService.findByMember(search_member));
-
         model.addAttribute("status", followService.existFollow(member, search_member));
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
 
         session.setAttribute("member", member);
 

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
 </head>
 <style>
     html {
@@ -81,24 +82,8 @@
         width: 35px;
         height: 35px;
     }
-    .navi {
-        display: flex;
-        flex-direction: column;
-        align-self: flex-start;
-        align-items: center;
-        justify-content: center;
-        position: fixed;
-		top: 0px;
-		left: 10px;
-    }
-    .nav-icon {
-        width: 50px;
-        height: 50px;
-    }
-    .profile-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
+    .date {
+        color: gray;
     }
 </style>
 <body>
@@ -139,6 +124,7 @@
                         <label class="form-label" th:id="'comment_cnt' + ${list.id}" th:text="${list.comment.size}"></label>
                         <label class="form-label">개 모두 보기</label>
                     </div>
+                    <label th:text="${#temporals.format(list.registerTime, 'yyyy년 M월 dd일')}" class="date"></label>
                 </div>
             </div>
     </div>
@@ -146,6 +132,7 @@
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/board/main.js"></script>
+    <script src="/js/common/common.js"></script>
 </body>
 <footer>
     <div class="card">

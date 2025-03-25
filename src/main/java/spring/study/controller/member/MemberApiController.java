@@ -21,6 +21,7 @@ import spring.study.service.board.BoardService;
 import spring.study.service.chat.ChatMessageService;
 import spring.study.service.chat.ChatRoomMemberService;
 import spring.study.service.comment.CommentService;
+import spring.study.service.favorite.FavoriteService;
 import spring.study.service.follow.FollowService;
 import spring.study.service.member.MemberService;
 import spring.study.service.member.UserService;
@@ -39,6 +40,7 @@ public class MemberApiController {
     private final BoardImgService boardImgService;
     private final CommentService commentService;
     private final FollowService followService;
+    private final FavoriteService favoriteService;
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
     private final UserService userService;
@@ -192,7 +194,7 @@ public class MemberApiController {
     }
 
     @DeleteMapping("/withdrawal")
-    public ResponseEntity<Boolean> withdrawalAction(HttpServletRequest request) {
+    public ResponseEntity<Boolean> withdrawalAction(@RequestParam(required = false) String email, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -205,29 +207,58 @@ public class MemberApiController {
             return ResponseEntity.status(501).body(null);
         }
 
-        for (Board board : member.getBoard()) {
-            boardImgService.deleteBoard(board);
+        if (email == null) {
+            for (Board board : member.getBoard()) {
+                boardImgService.deleteBoard(board);
+                favoriteService.deleteByBoard(board);
+            }
+
+            favoriteService.deleteByMember(member);
+            commentService.deleteByMember(member);
+            boardService.deleteByMember(member);
+
+            followService.deleteByFollower(member);
+            followService.deleteByFollowing(member);
+
+            for (ChatRoomMember roomMember : roomMemberService.find(member)) {
+                roomMember.getRoom().subCount();
+            }
+
+            messageService.deleteByMember(member);
+
+            roomMemberService.delete(member);
+
+            memberService.deleteById(member.getId());
+
+            member = null;
+
+            session.invalidate();
         }
+        else {
+            Member deleteMember = memberService.findMember(email);
 
-        commentService.deleteByMember(member);
-        boardService.deleteByMember(member);
+            for (Board board : deleteMember.getBoard()) {
+                boardImgService.deleteBoard(board);
+                favoriteService.deleteByBoard(board);
+            }
 
-        followService.deleteByFollower(member);
-        followService.deleteByFollowing(member);
+            favoriteService.deleteByMember(deleteMember);
+            commentService.deleteByMember(deleteMember);
+            boardService.deleteByMember(deleteMember);
 
-        for (ChatRoomMember roomMember : roomMemberService.find(member)) {
-            roomMember.getRoom().subCount();
+            followService.deleteByFollower(deleteMember);
+            followService.deleteByFollowing(deleteMember);
+
+            for (ChatRoomMember roomMember : roomMemberService.find(deleteMember)) {
+                roomMember.getRoom().subCount();
+            }
+
+            messageService.deleteByMember(deleteMember);
+
+            roomMemberService.delete(deleteMember);
+
+            memberService.deleteById(deleteMember.getId());
         }
-
-        messageService.deleteByMember(member);
-
-        roomMemberService.delete(member);
-
-        memberService.deleteById(member.getId());
-
-        member = null;
-
-        session.invalidate();
 
         return ResponseEntity.ok(true);
     }

@@ -6,8 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!--부트스트랩 css 추가-->
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
 </head>
 <style>
+  .container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		height: 700px;
+		overflow: auto;
+		background: white;
+		border-radius: 10px;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		margin-bottom: 10px;
+	}
   .profileDiv {
     display: flex;
     align-items: center;
@@ -36,6 +48,13 @@
   }
 </style>
 <body>
+<nav class="navi">
+  <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
+  <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
+  <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
+  <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
+  <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+</nav>
 <div class="container">
     <div class="profileDiv">
       <img th:src="@{/img/} + ${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
@@ -69,6 +88,7 @@
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/member/memberDetail.js"></script>
+<script src="/js/common/common.js"></script>
 </body>
 <footer>
   <div class="card">

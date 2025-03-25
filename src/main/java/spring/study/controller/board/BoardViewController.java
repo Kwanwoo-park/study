@@ -138,6 +138,9 @@ public class BoardViewController {
         }
 
         model.addAttribute("name", member.getName());
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
+
         return "board/write";
     }
 

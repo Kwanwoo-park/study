@@ -7,7 +7,6 @@
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 //import org.springframework.data.domain.Sort;
 //import spring.study.entity.board.Board;
-//import spring.study.entity.comment.Comment;
 //import spring.study.entity.member.Member;
 //import spring.study.repository.comment.CommentRepository;
 //import spring.study.repository.member.MemberRepository;
@@ -28,7 +27,7 @@
 //    @Test
 //    void save() {
 //        // given
-//        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+//        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 //
 //        Board board = member.getBoard().get(0);
 //
@@ -52,7 +51,7 @@
 //    @Test
 //    void findAll() {
 //        // given
-//        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+//        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 //
 //        Board board = member.getBoard().get(0);
 //
@@ -89,7 +88,7 @@
 //    @Test
 //    void find() {
 //        // given
-//        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+//        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 //
 //        Board board= member.getBoard().get(0);
 //
@@ -114,7 +113,7 @@
 //    @Test
 //    void delete() {
 //        // given
-//        Member member = memberRepository.findByEmail("akakslslzz@naver.com");
+//        Member member = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 //        Board board = member.getBoard().get(0);
 //
 //        Comment comment = board.getComment().get(0);
@@ -133,7 +132,7 @@
 //    @Test
 //    void deleteByMember() {
 //        // given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        System.out.println(commentRepository.findAll().size());
 //
 //        // when

@@ -46,6 +46,9 @@ public class ChatViewController {
         else
             model.addAttribute("roomList", roomMemberService.findRoom(member));
 
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
+
         return "chat/chatList";
     }
 
