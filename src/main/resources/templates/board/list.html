@@ -47,7 +47,7 @@
 						<div class="col">
 							<ul class="pagination">
 								<li class="page-item" th:each="index : ${#numbers.sequence(1, resultMap.totalPage, 1)}" th:with="paging=${resultMap.paging}">
-									<a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./list(page=${index - 1},size=${paging.pageSize})}">
+									<a class="page-link" th:classappend="${paging.pageNumber ==  (index-1)} ? bg-primary : bg-secondary" th:href="@{./all(page=${index - 1},size=${paging.pageSize})}">
 										<span class="text-white" th:text="${index}"></span>
 									</a>
 								</li>

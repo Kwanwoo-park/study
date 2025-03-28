@@ -13,6 +13,8 @@ import spring.study.service.chat.ChatMessageService;
 import spring.study.service.chat.ChatRoomMemberService;
 import spring.study.service.chat.ChatRoomService;
 
+import java.util.List;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -41,15 +43,21 @@ public class ChatViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        if (member.getRole().equals(Role.ADMIN))
-            model.addAttribute("roomList", roomService.findAll());
-        else
-            model.addAttribute("roomList", roomMemberService.findRoom(member));
-
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
 
-        return "chat/chatList";
+        if (member.getRole().equals(Role.ADMIN)) {
+            model.addAttribute("roomList", roomService.findAll());
+            return "chat/adminChatList";
+        }
+        else {
+            List<ChatRoom> list = roomMemberService.findRoom(member);
+
+            model.addAttribute("roomList", list);
+            model.addAttribute("member", roomMemberService.findMember(list, member));
+
+            return "chat/chatList";
+        }
     }
 
     @GetMapping("/chatRoom")

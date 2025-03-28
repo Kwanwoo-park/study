@@ -5,8 +5,6 @@
 //import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import spring.study.entity.chat.ChatRoom;
-//import spring.study.entity.chat.ChatRoomMember;
 //import spring.study.entity.member.Member;
 //import spring.study.repository.chat.ChatRoomMemberRepository;
 //import spring.study.repository.chat.ChatRoomRepository;
@@ -34,7 +32,7 @@
 //    @Test
 //    void save() {
 //        //given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 //
 //        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
@@ -53,7 +51,7 @@
 //    @Test
 //    void find() {
 //        //given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 //
 //        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
@@ -73,9 +71,24 @@
 //    }
 //
 //    @Test
+//    void findByMember() {
+//        //given
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+//        List<ChatRoom> room = chatRoomMemberRepository.findByMember(member).stream().map(ChatRoomMember::getRoom).toList();
+//
+//        //when
+//        List<ChatRoomMember> result = chatRoomMemberRepository.findByRoomInAndMemberNot(room, member);
+//
+//        //then
+//        for (ChatRoomMember cm : result) {
+//            System.out.println(cm.getMember().getEmail());
+//        }
+//    }
+//
+//    @Test
 //    void findByMem() {
 //        //given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 //
 //        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
@@ -98,7 +111,7 @@
 //    @Test
 //    void findByRoom() {
 //        //given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 //
 //        ChatRoomMember chatRoomMember = ChatRoomMember.builder()
@@ -121,7 +134,7 @@
 //    @Test
 //    void delete() {
 //        //given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 //
 //        ChatRoomMember chatRoomMember = ChatRoomMember.builder()

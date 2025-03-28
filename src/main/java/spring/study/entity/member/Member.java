@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import spring.study.entity.BasetimeEntity;
 import spring.study.entity.board.Board;
+import spring.study.entity.chat.ChatRoom;
 import spring.study.entity.favorite.Favorite;
 import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoomMember;

@@ -9,8 +9,7 @@ import spring.study.entity.chat.ChatRoomMember;
 import spring.study.entity.member.Member;
 import spring.study.repository.chat.ChatRoomMemberRepository;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -36,7 +35,19 @@ public class ChatRoomMemberService {
     }
 
     public List<ChatRoom> findRoom(Member member) {
-        return chatRoomMemberRepository.findByMember(member).stream().map(ChatRoomMember::getRoom).sorted(Comparator.comparingLong(ChatRoom::getId).reversed()).toList();
+        List<ChatRoom> list = new ArrayList<>(chatRoomMemberRepository.findByMember(member).stream().map(ChatRoomMember::getRoom).sorted(Comparator.comparing(c -> c.getMessages().get(c.getMessages().size() - 1).getRegisterTime())).toList());
+        Collections.reverse(list);
+        return list;
+    }
+
+    public HashMap<String, Member> findMember(List<ChatRoom> rooms, Member member) {
+        HashMap<String, Member> map = new HashMap<>();
+
+        for (ChatRoom room : rooms) {
+            map.put(room.getRoomId(), chatRoomMemberRepository.findByRoomAndMemberNot(room, member).getMember());
+        }
+
+        return map;
     }
 
     public List<ChatRoomMember> find(Member member) {
@@ -46,6 +57,8 @@ public class ChatRoomMemberService {
     public List<ChatRoomMember> find(ChatRoom room) {
         return chatRoomMemberRepository.findByRoom(room);
     }
+
+
 
     public void delete(Member member, ChatRoom room) {
         chatRoomMemberRepository.deleteByMemberAndRoom(member, room);

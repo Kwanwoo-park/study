@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <title>Chat List</title>
+</head>
+<style>
+  .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 700px;
+      overflow: auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 10px;
+  }
+  .navi {
+      display: flex;
+      flex-direction: column;
+      align-self: flex-start;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 0px;
+      left: 10px;
+  }
+  .nav-icon {
+      width: 50px;
+      height: 50px;
+  }
+  .profile-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+  }
+</style>
+<body>
+<nav class="navi">
+  <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
+  <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
+  <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
+  <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
+  <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+</nav>
+<div class="container">
+  <table class="table table-striped table-horizontal table-bordered mt-3">
+    <thead class="thead-strong">
+    <tr>
+      <th width="20%">방 번호</th>
+      <th width="50%">방 이름</th>
+      <th width="">참여 인원</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="room,index : ${roomList}">
+      <td>
+        <span th:text="${index.index+1}"></span>
+      </td>
+      <td>
+        <a th:href="@{chatRoom(roomId=${room.roomId})}"
+           th:text="${room.name}"></a>
+      </td>
+      <td>
+        <span th:text="${room.count}"></span>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+</html>
