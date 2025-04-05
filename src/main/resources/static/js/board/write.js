@@ -4,7 +4,8 @@ let id;
 let img;
 let left, right, size;
 
-const formData = new FormData();
+let formData = new FormData();
+let imgArr;
 
 const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
@@ -13,8 +14,7 @@ const previous = document.getElementById('previous');
 const submit = document.getElementById('submit');
 const content = document.getElementById('content')
 
-if (btn)
-    btn.addEventListener('click', () => upload.click());
+btn.addEventListener('click', () => upload.click());
 
 function fnSave() {
     const data = {
@@ -44,13 +44,20 @@ function fnSave() {
 }
 
 function fnImgSave() {
+    var status;
+
     fetch(`/api/boardImg/save?id=` + id, {
         method: 'POST',
         body: formData,
     })
     .then((response) => response.json())
     .then((json) => {
-        alert("게시글 사진 등록 완료");
+        status = json['status'];
+
+        if (status == 500)
+            alert("게시글 사진 등록 실패");
+        else
+            alert("게시글 사진 등록 완료");
     })
     .catch((error) => {
         alert("게시글 사진 등록 실패");
@@ -83,8 +90,13 @@ function fnPrevious() {
 
     previous.style.display = 'none';
     submit.style.display = 'none';
+    content.style.display = 'none';
+
+    file = null;
+    size = 0;
 
     img.remove();
+    imgArr = null;
     formData = new FormData();
 }
 
@@ -133,8 +145,9 @@ function fnLoad(input) {
     }
     else imgDiv.append(img);
 
-
     for (let i = 0; i < size; i++) {
-            formData.append("file", file[i]);
+        formData.append("file", file[i]);
     }
+
+    input.value = null;
 }

@@ -84,7 +84,8 @@
   </form>
   <div class="imgGrid">
     <div class="imgDiv" th:each="list, index : ${resultMap}">
-      <img class="main-image" th:src="@{/img/} + ${list.img[0].imgSrc}" th:id="'main_img' + ${list.id}" th:onclick="fnHref([[${list.id}]])">
+      <img th:if="${list.img.size == 0}" class="main-image" th:src="@{/img/} + 'IMG_0111.jpeg'" th:id="'main_img'+${list.id}" th:onclick="fnHref([[${list.id}]])">
+      <img th:unless="${list.img.size == 0}" class="main-image" th:src="@{/img/} + ${list.img[0].imgSrc}" th:id="'main_img'+${list.id}" th:onclick="fnHref([[${list.id}]])">
     </div>
   </div>
 </div>

@@ -35,6 +35,7 @@ import spring.study.service.member.MemberService;
 import spring.study.service.member.UserService;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -99,7 +100,7 @@ public class MemberApiController {
     }
 
     @PatchMapping("/detail/action")
-    public ResponseEntity<Member> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) throws IOException {
+    public ResponseEntity<Member> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) throws IOException, FileNotFoundException {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -122,9 +123,17 @@ public class MemberApiController {
         //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         File f = new File(fileDir + file.getOriginalFilename());
+        try {
+            if (!f.exists()) {
+                file.transferTo(f);
 
-        if (!f.exists()) {
-            file.transferTo(f);
+                if (!f.exists())
+                    return ResponseEntity.status(500).body(null);
+            }
+        }
+        catch (FileNotFoundException e) {
+            log.debug(e.getMessage());
+            return ResponseEntity.status(500).body(null);
         }
 
         member.setProfile(file.getOriginalFilename());

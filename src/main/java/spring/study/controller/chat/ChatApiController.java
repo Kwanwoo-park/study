@@ -2,7 +2,9 @@ package spring.study.controller.chat;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,12 +18,14 @@ import spring.study.service.chat.ChatRoomService;
 import spring.study.service.member.MemberService;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
+@Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
 public class ChatApiController {
@@ -88,7 +92,7 @@ public class ChatApiController {
     }
 
     @PostMapping("/sendImage")
-    public ResponseEntity<HashMap<String, String>> sendImage(@RequestPart MultipartFile file, HttpServletRequest request) throws IOException {
+    public ResponseEntity<HashMap<String, String>> sendImage(@RequestPart MultipartFile file, HttpServletRequest request) throws IOException, FileNotFoundException {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -104,14 +108,23 @@ public class ChatApiController {
         String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
         //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
-        File f = new File(fileDir + file.getOriginalFilename());
-
-        if (!f.exists()) {
-            file.transferTo(f);
-        }
-
         HashMap<String, String> map = new HashMap<>();
-        map.put("name", file.getOriginalFilename());
+
+        File f = new File(fileDir + file.getOriginalFilename());
+        try {
+            if (!f.exists()) {
+                file.transferTo(f);
+
+                if (!f.exists())
+                    return ResponseEntity.status(500).body(null);
+            }
+
+            map.put("name", file.getOriginalFilename());
+        }
+        catch (FileNotFoundException e) {
+            log.debug(e.getMessage());
+            return ResponseEntity.status(500).body(null);
+        }
 
         return ResponseEntity.ok(map);
     }

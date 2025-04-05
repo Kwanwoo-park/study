@@ -102,9 +102,10 @@
                 </div>
                 <div class="main-image-wrapper">
                     <button type="button" th:unless="${list.img.size == 1}" class="btn" th:id="'left' + ${list.id}" style="visibility:hidden;" th:onclick="fnLeft([[${list.id}]], [[${list.img}]])">←</button>
-                    <img th:src="@{/img/} + ${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
+                    <img th:if="${list.img.size == 0}" th:src="@{/img/} + 'IMG_0111.jpeg'" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
+                    <img th:unless="${list.img.size == 0}" th:src="@{/img/} + ${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
                     <input type="hidden" th:id="'img' + ${list.id}" th:value="0">
-                    <button th:unless="${list.img.size == 1}" type="button" class="btn" th:id="'right' + ${list.id}" th:onclick="fnRight([[${list.id}]], [[${list.img}]])">→</button>
+                    <button th:if="${list.img.size > 1}" type="button" class="btn" th:id="'right' + ${list.id}" th:onclick="fnRight([[${list.id}]], [[${list.img}]])">→</button>
                 </div>
                 <div class="info">
                     <div class="icon-box">

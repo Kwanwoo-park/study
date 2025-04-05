@@ -130,6 +130,7 @@ function quit() {
 function fnLoad(input) {
     var file = input.files[0];
     var imgName;
+    var status;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -140,16 +141,22 @@ function fnLoad(input) {
     })
     .then((response) => response.json())
     .then((json) => {
-        imgName = json['name'];
+        status = json['status']
 
-        var talkMsg = {
-            type : "IMAGE",
-            roomId : roomId,
-            email : email,
-            message : imgName
-        };
+        if (status == 500)
+            alert("이미지 전송 실패");
+        else {
+            imgName = json['name'];
 
-        socket.send(JSON.stringify(talkMsg));
+            var talkMsg = {
+                type : "IMAGE",
+                roomId : roomId,
+                email : email,
+                message : imgName
+            };
+
+            socket.send(JSON.stringify(talkMsg));
+        }
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

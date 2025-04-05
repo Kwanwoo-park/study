@@ -32,11 +32,17 @@ function fnSave() {
     })
     .then((response) => response.json())
     .then((json) => {
-        alert("사진이 변경되었습니다.");
-        window.location.reload();
+        status = json['status'];
+
+        if (status == 500)
+            alert("사진 변경에 실패했습니다");
+        else {
+            alert("사진이 변경되었습니다.");
+            window.location.reload();
+        }
     })
     .catch((error) => {
-        alert("사진 변경에 실패했습니다.");
+        alert("사진 변경에 실패했습니다");
     })
 }
 
