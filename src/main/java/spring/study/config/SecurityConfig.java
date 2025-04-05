@@ -1,6 +1,8 @@
 package spring.study.config;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -19,16 +21,20 @@ import spring.study.service.oauth.CustomOAuth2UserService;
 @RequiredArgsConstructor
 @EnableWebSecurity
 @EnableMethodSecurity
+@ConditionalOnWebApplication
 @Configuration
+@ComponentScan(basePackages = {"spring.study"})
 public class SecurityConfig{
     private final MemberService memberService;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final AuthSuccessHandler authSuccessHandler;
     private final AuthFailureHandler authFailureHandler;
+
     @Bean
     public BCryptPasswordEncoder encryptPassword() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -61,6 +67,7 @@ public class SecurityConfig{
 
         return http.build();
     }
+
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity httpSecurity, BCryptPasswordEncoder bCryptPasswordEncoder) throws Exception{
         AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);

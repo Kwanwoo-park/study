@@ -2,14 +2,22 @@ package spring.study.controller.member;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.core.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.ContextLoader;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.config.SecurityConfig;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.board.Board;
@@ -44,11 +52,13 @@ public class MemberApiController {
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
     private final UserService userService;
+    private final BCryptPasswordEncoder encoder;
     private Member member;
 
     @PostMapping("/login")
     public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
         member = (Member) memberService.loadUserByUsername(dto.getEmail());
+        HttpSession session = request.getSession();
 
         if (member == null)
             return ResponseEntity.status(501).body(null);
@@ -56,10 +66,10 @@ public class MemberApiController {
         if ( dto.getEmail().isEmpty() || dto.getEmail().isBlank() ||dto.getPassword().isEmpty() || dto.getPassword().isBlank() )
             return ResponseEntity.status(501).body(null);
 
-        if (new BCryptPasswordEncoder().matches(dto.getPassword(), member.getPassword())) {
+        if (encoder.matches(dto.getPassword(), member.getPassword())) {
             if (member.getRole() != Role.DENIED) {
                 memberService.updateLastLoginTime(member.getId());
-                request.getSession().setAttribute("member", member);
+                session.setAttribute("member", member);
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(member);
