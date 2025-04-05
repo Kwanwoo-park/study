@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.entity.board.Board;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -38,8 +40,11 @@ public class BoardImgApiController {
             return ResponseEntity.status(501).body(null);
         }
 
-        //String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
-        String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
+        String format;
+        String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
+
+        String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
+        //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         Board board = boardService.findById(id);
 
@@ -48,6 +53,11 @@ public class BoardImgApiController {
         File[] files = new File[file.size()];
         try {
             for (int i = 0; i < file.size(); i++) {
+                format = StringUtils.getFilenameExtension(file.get(i).getOriginalFilename());
+
+                if (!Arrays.stream(formatArr).toList().contains(format))
+                    return ResponseEntity.status(500).body(null);
+
                 files[i] = new File(fileDir + file.get(i).getOriginalFilename());
 
                 if (!files[i].exists()) {

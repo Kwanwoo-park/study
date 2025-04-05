@@ -117,7 +117,7 @@ public class MemberApiController {
         String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
 
         if (!Arrays.stream(formatArr).toList().contains(format))
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(500).body(null);
 
         String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
         //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";

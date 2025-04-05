@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
@@ -20,6 +21,7 @@ import spring.study.service.member.MemberService;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +106,12 @@ public class ChatApiController {
             session.invalidate();
             return ResponseEntity.status(501).body(null);
         }
+
+        String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
+
+        if (!Arrays.stream(formatArr).toList().contains(format))
+            return ResponseEntity.status(500).body(null);
 
         String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
         //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
