@@ -82,17 +82,17 @@ public class MemberViewController {
     }
 
     @GetMapping("/find")
-    public String find(Model model) {
+    public String find() {
         return "member/find";
     }
 
     @GetMapping("/findByEmail")
-    public String findByEmail(Model model) {
+    public String findByEmail() {
         return "member/email_find";
     }
 
     @GetMapping("/findByInfo")
-    public String findByInfo(Model model) {
+    public String findByInfo() {
         return "member/info_find";
     }
 

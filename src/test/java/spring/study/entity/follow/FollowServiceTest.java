@@ -4,7 +4,6 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.follow.Follow;
 //import spring.study.entity.member.Member;
 //import spring.study.entity.member.Role;
 //import spring.study.service.follow.FollowService;

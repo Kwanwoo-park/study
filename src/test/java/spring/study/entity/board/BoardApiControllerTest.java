@@ -1,8 +1,6 @@
 //package spring.study.entity.board;
 //
-//import com.fasterxml.jackson.core.type.TypeReference;
 //import com.fasterxml.jackson.databind.ObjectMapper;
-//import jakarta.transaction.Transactional;
 //import org.junit.jupiter.api.Test;
 //import org.junit.jupiter.api.extension.ExtendWith;
 //import org.springframework.beans.factory.annotation.Autowired;
@@ -14,21 +12,15 @@
 //import org.springframework.security.test.context.support.WithMockUser;
 //import org.springframework.test.context.junit.jupiter.SpringExtension;
 //import org.springframework.test.web.servlet.MockMvc;
-//import org.springframework.test.web.servlet.MvcResult;
 //import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 //import org.springframework.web.context.WebApplicationContext;
 //import spring.study.dto.board.BoardRequestDto;
-//import spring.study.entity.board.Board;
-//import spring.study.entity.member.Member;
 //import spring.study.service.board.BoardService;
 //import spring.study.service.member.MemberService;
-//
-//import java.util.List;
 //
 //import static org.assertj.core.api.Assertions.*;
 //import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-//import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 //import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 //
 //@ExtendWith(SpringExtension.class)
@@ -62,7 +54,6 @@
 //        session.setAttribute("member", memberService.findMember("test@test.com"));
 //
 //        BoardRequestDto boardRequestDto = BoardRequestDto.builder()
-//                .title("test")
 //                .content("test")
 //                .build();
 //
@@ -71,13 +62,12 @@
 //        // when
 //        mvc.perform(post(url).session(session)
 //                .content(new ObjectMapper().writeValueAsString(boardRequestDto))
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //        ).andExpect(status().isOk());
 //
 //        // then
 //        Board board = boardService.findById(39L);
 //
-//        assertThat(board.getTitle()).isEqualTo("test");
 //        assertThat(board.getContent()).isEqualTo("test");
 //        assertThat(board.getMember().getEmail()).isEqualTo("test@test.com");
 //
@@ -95,7 +85,6 @@
 //
 //        BoardRequestDto boardRequestDto = BoardRequestDto.builder()
 //                .id(39L)
-//                .title("test")
 //                .content("test2")
 //                .build();
 //
@@ -103,14 +92,13 @@
 //
 //        // when
 //        mvc.perform(patch(url)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //                .content(new ObjectMapper().writeValueAsString(boardRequestDto))
 //        ).andExpect(status().isOk());
 //
 //        // then
 //        Board board = boardService.findById(39L);
 //
-//        assertThat(board.getTitle()).isEqualTo(boardRequestDto.getTitle());
 //        assertThat(board.getContent()).isEqualTo(boardRequestDto.getContent());
 //    }
 //
@@ -130,7 +118,7 @@
 //
 //        // when
 //        mvc.perform(delete(url).session(session)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //        ).andExpect(status().isOk());
 //    }
 //}

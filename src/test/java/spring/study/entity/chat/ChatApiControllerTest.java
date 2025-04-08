@@ -19,7 +19,6 @@
 //import org.springframework.web.context.WebApplicationContext;
 //import spring.study.dto.chat.ChatRoomRequestDto;
 //import spring.study.dto.member.MemberRequestDto;
-//import spring.study.entity.chat.ChatRoomMember;
 //import spring.study.entity.member.Member;
 //import spring.study.service.chat.ChatRoomMemberService;
 //import spring.study.service.chat.ChatRoomService;
@@ -28,7 +27,6 @@
 //import java.io.FileInputStream;
 //import java.util.List;
 //
-//import static org.assertj.core.api.Assertions.assertThat;
 //import static org.hamcrest.MatcherAssert.assertThat;
 //import static org.hamcrest.Matchers.is;
 //import static org.hamcrest.Matchers.notNullValue;
@@ -59,7 +57,7 @@
 //
 //    @WithMockUser
 //    @Test
-//    void 채팅방생성() throws Exception {
+//    void createRoom() throws Exception {
 //        //given
 //        mvc = MockMvcBuilders
 //                .webAppContextSetup(context)
@@ -78,7 +76,7 @@
 //
 //        //when
 //        mvc.perform(post(url).session(session)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //                .content(new ObjectMapper().writeValueAsString(chatRoomRequestDto))
 //        ).andExpect(status().isOk());
 //

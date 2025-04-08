@@ -17,7 +17,6 @@
 //import org.springframework.web.context.WebApplicationContext;
 //import spring.study.dto.follow.FollowRequestDto;
 //import spring.study.dto.member.MemberRequestDto;
-//import spring.study.entity.follow.Follow;
 //import spring.study.service.member.MemberService;
 //
 //import java.util.List;
@@ -64,7 +63,7 @@
 //        // when
 //        mvc.perform(post(url).session(session)
 //                .content(new ObjectMapper().writeValueAsString(memberRequestDto))
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //        ).andExpect(status().isOk());
 //
 //        // then
@@ -75,7 +74,7 @@
 //
 //    @WithMockUser
 //    @Test
-//    void 중복체크() throws Exception {
+//    void duplicateCheck() throws Exception {
 //        // given
 //        mvc = MockMvcBuilders
 //                .webAppContextSetup(context)
@@ -92,7 +91,7 @@
 //        // when
 //        mvc.perform(post(url).session(session)
 //                .content(new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(followRequestDto))
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //        ).andExpect(status().is5xxServerError());
 //    }
 //
@@ -117,13 +116,13 @@
 //        // when
 //        mvc.perform(delete(url).session(session)
 //                .content(new ObjectMapper().writeValueAsString(memberRequestDto))
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //        ).andExpect(status().isOk());
 //
 //        // then
 //        List<Follow> follower = memberService.findMember("test@test.com").getFollower();
 //
-//        if (follower.size() == 0)
+//        if (follower.isEmpty())
 //            System.out.println("Pass!!");
 //        else
 //            System.out.println("Fail!!");
@@ -131,7 +130,7 @@
 //
 //    @WithMockUser
 //    @Test
-//    void 삭제중복체크() throws Exception {
+//    void deleteDuplicateCheck() throws Exception {
 //        // given
 //        mvc = MockMvcBuilders
 //                .webAppContextSetup(context)
@@ -148,7 +147,7 @@
 //        // when
 //        mvc.perform(delete(url).session(session)
 //                .content(new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(requestDto))
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //        ).andExpect(status().is5xxServerError());
 //    }
 //}

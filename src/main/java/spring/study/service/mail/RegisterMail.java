@@ -4,6 +4,7 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,6 +14,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
 @Service
+@Slf4j
 public class RegisterMail implements MailServiceInter {
     @Autowired
     JavaMailSender emailSender;
@@ -26,6 +28,15 @@ public class RegisterMail implements MailServiceInter {
         message.addRecipients(Message.RecipientType.TO, to);
         message.setSubject("Kwanwoo.site 회원가입 이메일 인증");
 
+        String msgg = getMsgg();
+        message.setText(msgg, "utf-8", "html");// 내용, charset 타입, subtype
+        // 보내는 사람의 이메일 주소, 보내는 사람 이름
+        message.setFrom(new InternetAddress("akakslslzz@naver.com", "Park kwan woo"));// 보내는 사람
+
+        return message;
+    }
+
+    private String getMsgg() {
         String msgg = "";
         msgg += "<div style='margin:100px;'>";
         msgg += "<h1> 안녕하세요</h1>";
@@ -39,16 +50,12 @@ public class RegisterMail implements MailServiceInter {
         msgg += "CODE : <strong>";
         msgg += ePw + "</strong><div><br/> "; // 메일에 인증번호 넣기
         msgg += "</div>";
-        message.setText(msgg, "utf-8", "html");// 내용, charset 타입, subtype
-        // 보내는 사람의 이메일 주소, 보내는 사람 이름
-        message.setFrom(new InternetAddress("akakslslzz@naver.com", "Park kwan woo"));// 보내는 사람
-
-        return message;
+        return msgg;
     }
 
     @Override
     public String createkey() {
-        StringBuffer key = new StringBuffer();
+        StringBuilder key = new StringBuilder();
         Random random = new Random();
 
         for (int i = 0; i < 8; i++) {
@@ -56,10 +63,10 @@ public class RegisterMail implements MailServiceInter {
 
             switch (index) {
                 case 0:
-                    key.append((char) ((int) (random.nextInt(26)) + 97));
+                    key.append((char) (random.nextInt(26) + 97));
                     break;
                 case 1:
-                    key.append((char) ((int) (random.nextInt(26)) + 65));
+                    key.append((char) (random.nextInt(26) + 65));
                     break;
                 case 2:
                     key.append((random.nextInt(10)));
@@ -79,7 +86,7 @@ public class RegisterMail implements MailServiceInter {
         try {
             emailSender.send(message);
         } catch (MailException es) {
-            es.printStackTrace();
+            log.debug(es.getMessage());
             throw new IllegalArgumentException();
         }
 

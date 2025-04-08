@@ -8,8 +8,8 @@ import spring.study.entity.board.BoardImg;
 import java.util.List;
 
 public interface BoardImgRepository extends JpaRepository<BoardImg, Long> {
-    public List<BoardImg> findByBoard(Board board);
+    List<BoardImg> findByBoard(Board board);
 
     @Transactional
-    public void deleteByBoard(Board board);
+    void deleteByBoard(Board board);
 }

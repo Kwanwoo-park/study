@@ -6,8 +6,6 @@
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 //import org.springframework.data.domain.Sort;
-//import spring.study.entity.member.Member;
-//import spring.study.entity.member.Role;
 //import spring.study.repository.member.MemberRepository;
 //
 //import java.util.List;
@@ -59,7 +57,7 @@
 //        Member save = memberRepository.save(member);
 //
 //        //when
-//        Member result = memberRepository.findByEmail("test@test.com");
+//        Member result = memberRepository.findByEmail("test@test.com").orElseThrow();
 //
 //        //then
 //        assertThat(result.getName()).isEqualTo(save.getName());
@@ -136,7 +134,7 @@
 //    @Test
 //    void findByPhoneAndBirth() {
 //        // given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //
 //        String phone = "010-1234-1234";
 //        String birth = "1900-01-01";

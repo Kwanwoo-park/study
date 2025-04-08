@@ -77,12 +77,11 @@
 //        List<ChatRoom> room = chatRoomMemberRepository.findByMember(member).stream().map(ChatRoomMember::getRoom).toList();
 //
 //        //when
-//        List<ChatRoomMember> result = chatRoomMemberRepository.findByRoomInAndMemberNot(room, member);
+//        ChatRoomMember result = chatRoomMemberRepository.findByRoomAndMemberNot(room.get(0), member);
 //
 //        //then
-//        for (ChatRoomMember cm : result) {
-//            System.out.println(cm.getMember().getEmail());
-//        }
+//        assertThat(result.getRoom()).isEqualTo(room.get(0));
+//        assertThat(result.getMember()).isEqualTo(member);
 //    }
 //
 //    @Test

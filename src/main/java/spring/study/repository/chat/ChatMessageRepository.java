@@ -11,11 +11,11 @@ import java.util.List;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
-    public List<ChatMessage> findByRoom(ChatRoom room);
+    List<ChatMessage> findByRoom(ChatRoom room);
 
     @Transactional
-    public void deleteByRoom(ChatRoom room);
+    void deleteByRoom(ChatRoom room);
 
     @Transactional
-    public void deleteByMember(Member member);
+    void deleteByMember(Member member);
 }

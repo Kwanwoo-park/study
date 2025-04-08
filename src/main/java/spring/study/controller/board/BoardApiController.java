@@ -11,9 +11,6 @@ import spring.study.entity.member.Member;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 import spring.study.service.comment.CommentService;
-import spring.study.service.member.MemberService;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController

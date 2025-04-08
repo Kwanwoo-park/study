@@ -12,14 +12,14 @@ import java.util.List;
 
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    public List<Board> findByMember(Member member, Sort sort);
+    List<Board> findByMember(Member member, Sort sort);
 
-    public Page<Board> findByMemberIn(List<Member> members, Pageable pageable);
+    Page<Board> findByMemberIn(List<Member> members, Pageable pageable);
 
-    public List<Board> findByMemberIn(List<Member> members, Sort sort);
+    List<Board> findByMemberIn(List<Member> members, Sort sort);
 
-    public List<Board> findByMemberIn(List<Member> members);
+    List<Board> findByMemberIn(List<Member> members);
 
     @Transactional
-    public void deleteByMember(Member member);
+    void deleteByMember(Member member);
 }

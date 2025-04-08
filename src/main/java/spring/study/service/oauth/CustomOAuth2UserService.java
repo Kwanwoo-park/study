@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import spring.study.dto.oauth.OAuthAttributes;
 import spring.study.entity.member.Member;
 import spring.study.repository.member.MemberRepository;
-import spring.study.service.member.MemberService;
 
 import java.time.LocalDateTime;
 import java.util.Collections;

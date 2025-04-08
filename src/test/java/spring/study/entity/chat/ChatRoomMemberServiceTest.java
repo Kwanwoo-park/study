@@ -4,8 +4,6 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.chat.ChatRoom;
-//import spring.study.entity.chat.ChatRoomMember;
 //import spring.study.entity.member.Member;
 //import spring.study.service.chat.ChatRoomMemberService;
 //import spring.study.service.chat.ChatRoomService;

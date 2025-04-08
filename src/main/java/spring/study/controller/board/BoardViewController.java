@@ -11,12 +11,10 @@ import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.member.Member;
 import spring.study.entity.member.Role;
-import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @RequiredArgsConstructor
 @Controller

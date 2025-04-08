@@ -12,7 +12,6 @@
 //import spring.study.entity.member.Member;
 //import spring.study.entity.member.Role;
 //import spring.study.repository.board.BoardRepository;
-//import spring.study.repository.follow.FollowRepository;
 //import spring.study.repository.member.MemberRepository;
 //
 //import java.util.ArrayList;
@@ -28,8 +27,6 @@
 //    BoardRepository boardRepository;
 //    @Autowired
 //    MemberRepository memberRepository;
-//    @Autowired
-//    FollowRepository followRepository;
 //
 //    @Test
 //    void save() {
@@ -57,7 +54,6 @@
 //        Board saveBoard = boardRepository.save(board);
 //
 //        // then
-//        assertThat(saveBoard.getTitle()).isEqualTo(board.getTitle());
 //        assertThat(saveBoard.getContent()).isEqualTo(board.getContent());
 //        assertThat(saveBoard.getMember()).isEqualTo(save);
 //        assertThat(save.getBoard().get(0)).isEqualTo(saveBoard);
@@ -79,12 +75,10 @@
 //        Member save = memberRepository.save(member);
 //
 //        Board board1 = Board.builder()
-//                .title("test")
 //                .content("test")
 //                .build();
 //
 //        Board board2 = Board.builder()
-//                .title("test")
 //                .content("test")
 //                .build();
 //
@@ -99,39 +93,7 @@
 //
 //        // then
 //        for (Board b : result)
-//            System.out.println(b.getTitle() + " " + b.getContent());
-//    }
-//
-//    @Test
-//    void find() {
-//        // given
-//        Member member = Member.builder()
-//                .email("test2@test.com")
-//                .pwd("test")
-//                .name("test")
-//                .phone("010-1234-1234")
-//                .birth("1900-01-01")
-//                .role(Role.USER)
-//                .profile("1.jpg")
-//                .build();
-//
-//        Member save = memberRepository.save(member);
-//
-//        Board board = Board.builder()
-//                .title("test")
-//                .content("test")
-//                .build();
-//
-//        save.addBoard(board);
-//
-//        Board saveBoard = boardRepository.save(board);
-//
-//        // when
-//        Page<Board> result = boardRepository.findByTitle(saveBoard.getTitle(), PageRequest.of(0, 5, Sort.by("id").descending()));
-//
-//        // then
-//        for (Board b : result)
-//            System.out.println(b.getTitle() + " " + b.getContent());
+//            System.out.println(b.getId() + " " + b.getContent());
 //    }
 //
 //    @Test
@@ -150,7 +112,7 @@
 //
 //        // then
 //        for (Board b : boards) {
-//            System.out.println(b.getId() + " " + b.getTitle() + " " + b.getMember().getEmail());
+//            System.out.println(b.getId() + " " + b.getMember().getEmail());
 //        }
 //    }
 //

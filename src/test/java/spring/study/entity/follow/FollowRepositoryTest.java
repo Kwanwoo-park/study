@@ -5,7 +5,6 @@
 //import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import spring.study.entity.follow.Follow;
 //import spring.study.entity.member.Member;
 //import spring.study.entity.member.Role;
 //import spring.study.repository.follow.FollowRepository;
@@ -88,8 +87,8 @@
 //    @Test
 //    void find() {
 //        // given
-//        Member follower = memberRepository.findByEmail("akakslsl13@naver.com");
-//        Member following = memberRepository.findByEmail("akakslslzz@naver.com");
+//        Member follower = memberRepository.findByEmail("akakslsl13@naver.com").orElseThrow();
+//        Member following = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 //
 //        // when
 //        Follow follow = followRepository.findByFollowerAndFollowing(follower, following);
@@ -102,11 +101,11 @@
 //    @Test
 //    void exist() {
 //        // given
-//        Member follower = memberRepository.findByEmail("akakslsl13@naver.com");
-//        Member following = memberRepository.findByEmail("akakslslzz@naver.com");
+//        Member follower = memberRepository.findByEmail("akakslsl13@naver.com").orElseThrow();
+//        Member following = memberRepository.findByEmail("akakslslzz@naver.com").orElseThrow();
 //
 //        // when
-//        Boolean flag = followRepository.existsByFollowerAndFollowing(follower, following);
+//        boolean flag = followRepository.existsByFollowerAndFollowing(follower, following);
 //
 //        // then
 //        if (flag)
@@ -173,7 +172,7 @@
 //    @Test
 //    void deleteByFollower() {
 //        // given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        System.out.println(followRepository.findAll().size());
 //
 //        // when
@@ -186,7 +185,7 @@
 //    @Test
 //    void deleteByFollowing() {
 //        // given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        System.out.println(followRepository.findAll().size());
 //
 //        // when

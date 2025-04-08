@@ -2,7 +2,6 @@ package spring.study.controller.chat;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.chat.ChatRoom;
-import spring.study.entity.chat.ChatRoomMember;
 import spring.study.entity.member.Member;
-import spring.study.service.chat.ChatMessageService;
 import spring.study.service.chat.ChatRoomMemberService;
 import spring.study.service.chat.ChatRoomService;
 import spring.study.service.member.MemberService;
@@ -23,8 +20,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @Slf4j

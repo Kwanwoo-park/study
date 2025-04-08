@@ -7,10 +7,10 @@ import spring.study.entity.chat.ChatRoom;
 
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
-    public ChatRoom findByRoomId(String roomId);
+    ChatRoom findByRoomId(String roomId);
 
-    public ChatRoom findByName(String name);
+    ChatRoom findByName(String name);
 
     @Transactional
-    public void deleteByRoomId(String roomId);
+    void deleteByRoomId(String roomId);
 }

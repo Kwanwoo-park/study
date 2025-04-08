@@ -1,6 +1,5 @@
 package spring.study.service.chat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class ChatRoomService {
-    private final ObjectMapper objectMapper;
     private Map<String, ChatRoom> chatRoomMap;
     private final ChatRoomRepository chatRoomRepository;
 

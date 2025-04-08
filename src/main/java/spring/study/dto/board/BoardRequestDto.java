@@ -16,9 +16,10 @@ public class BoardRequestDto {
     private Member member;
 
     @Builder
-    public BoardRequestDto(Long id, String title, String content) {
+    public BoardRequestDto(Long id, String content, Member member) {
         this.id = id;
         this.content = content;
+        this.member = member;
     }
 
     public Board toEntity() {

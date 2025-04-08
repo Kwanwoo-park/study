@@ -7,10 +7,10 @@ import spring.study.entity.favorite.Favorite;
 import spring.study.entity.member.Member;
 
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
-    public Favorite findByMemberAndBoard(Member member, Board board);
+    Favorite findByMemberAndBoard(Member member, Board board);
 
-    public void deleteByMember(Member member);
-    public void deleteByBoard(Board board);
+    void deleteByMember(Member member);
+    void deleteByBoard(Board board);
 
-    public Boolean existsByMemberAndBoard(Member member, Board board);
+    Boolean existsByMemberAndBoard(Member member, Board board);
 }

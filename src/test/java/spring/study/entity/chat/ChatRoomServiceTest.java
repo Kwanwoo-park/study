@@ -4,7 +4,6 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.chat.ChatRoom;
 //import spring.study.service.chat.ChatRoomService;
 //
 //import java.util.HashMap;
@@ -27,7 +26,7 @@
 //        String name = "test";
 //
 //        // when
-//        ChatRoom save = chatRoomService.createRoom(name);
+//        ChatRoom save = chatRoomService.createRoom(name, 1L);
 //
 //        // then
 //        assertThat(save.getName()).isEqualTo(name);

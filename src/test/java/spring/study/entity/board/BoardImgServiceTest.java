@@ -3,8 +3,6 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.board.Board;
-//import spring.study.entity.board.BoardImg;
 //import spring.study.service.board.BoardImgService;
 //import spring.study.service.board.BoardService;
 //
@@ -36,7 +34,7 @@
 //
 //        // then
 //        assertThat(boardImg.getImgSrc()).isEqualTo(saveImg.getImgSrc());
-//        assertThat(saveImg.getBoard()).isEqualTo(saveImg.getBoard());
+//        assertThat(boardImg.getBoard()).isEqualTo(saveImg.getBoard());
 //    }
 //
 //    @Test

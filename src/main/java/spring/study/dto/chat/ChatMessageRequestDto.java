@@ -12,6 +12,7 @@ public class ChatMessageRequestDto {
     private MessageType type;
     private String email;
     private String roomId;
+
     @Builder
     public ChatMessageRequestDto(String message, MessageType type, String roomId, String email) {
         this.message = message;

@@ -9,19 +9,19 @@ import spring.study.entity.member.Member;
 import java.util.List;
 
 public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, Long> {
-    public List<ChatRoomMember> findByRoom(ChatRoom room);
+    List<ChatRoomMember> findByRoom(ChatRoom room);
 
-    public ChatRoomMember findByRoomAndMemberNot(ChatRoom room, Member member);
+    ChatRoomMember findByRoomAndMemberNot(ChatRoom room, Member member);
 
-    public List<ChatRoomMember> findByMember(Member member);
+    List<ChatRoomMember> findByMember(Member member);
 
-    public ChatRoomMember findByMemberAndRoom(Member member, ChatRoom room);
+    ChatRoomMember findByMemberAndRoom(Member member, ChatRoom room);
 
-    public boolean existsByMemberAndRoom(Member member, ChatRoom room);
-
-    @Transactional
-    public void deleteByMemberAndRoom(Member member, ChatRoom room);
+    boolean existsByMemberAndRoom(Member member, ChatRoom room);
 
     @Transactional
-    public void deleteByMember(Member member);
+    void deleteByMemberAndRoom(Member member, ChatRoom room);
+
+    @Transactional
+    void deleteByMember(Member member);
 }

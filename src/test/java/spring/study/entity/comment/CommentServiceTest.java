@@ -5,7 +5,6 @@
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
 //import spring.study.entity.board.Board;
-//import spring.study.entity.comment.Comment;
 //import spring.study.entity.member.Member;
 //import spring.study.service.board.BoardService;
 //import spring.study.service.comment.CommentService;

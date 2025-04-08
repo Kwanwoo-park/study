@@ -16,7 +16,6 @@
 //import org.springframework.web.context.WebApplicationContext;
 //import spring.study.dto.comment.CommentRequestDto;
 //import spring.study.entity.member.Member;
-//import spring.study.service.board.BoardService;
 //import spring.study.service.member.MemberService;
 //
 //import static org.assertj.core.api.Assertions.*;
@@ -60,7 +59,7 @@
 //
 //        // when
 //        mvc.perform(post(url).session(session)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //                .content(new ObjectMapper().writeValueAsString(commentRequestDto))
 //        ).andExpect(status().isOk());
 //

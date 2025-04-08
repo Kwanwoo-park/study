@@ -9,6 +9,7 @@ import spring.study.entity.comment.Comment;
 import spring.study.entity.favorite.Favorite;
 import spring.study.entity.member.Member;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.List;
 @Setter
 @Entity(name = "board")
 public class Board extends BasetimeEntity implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

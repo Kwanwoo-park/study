@@ -21,8 +21,6 @@
 //import org.springframework.util.MultiValueMap;
 //import org.springframework.web.context.WebApplicationContext;
 //import spring.study.dto.member.MemberRequestDto;
-//import spring.study.entity.member.Member;
-//import spring.study.entity.member.Role;
 //import spring.study.service.member.MemberService;
 //
 //import java.io.FileInputStream;
@@ -70,7 +68,7 @@
 //        // when
 //        mvc.perform(get(url).session(session)
 //                        .params(data)
-//                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                        .contentType(MediaType.APPLICATION_JSON)
 //                ).andExpect(status().isOk());
 //    }
 //
@@ -96,7 +94,7 @@
 //
 //        // when
 //        mvc.perform(post(url)
-//                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(new ObjectMapper().writeValueAsString(memberRequestDto)))
 //                .andExpect(status().isOk())
 //                .andDo(print());
@@ -161,7 +159,7 @@
 //
 //        // when
 //        mvc.perform(get(url)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //                ).andExpect(status().isOk())
 //                .andExpect(request().sessionAttributeDoesNotExist("member"));
 //    }
@@ -184,7 +182,7 @@
 //
 //        // when
 //        mvc.perform(patch(url)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //                .content(new ObjectMapper().writeValueAsString(memberRequestDto))
 //        ).andExpect(status().isOk());
 //
@@ -212,7 +210,7 @@
 //
 //        // when
 //        mvc.perform(get(url).session(session)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //                ).andExpect(status().isOk())
 //                .andExpect(request().sessionAttributeDoesNotExist("member"));
 //    }
@@ -234,7 +232,7 @@
 //        // when
 //        mvc.perform(delete(url)
 //                .session(session)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
+//                .contentType(MediaType.APPLICATION_JSON)
 //        ).andExpect(status().isOk());
 //
 //        // then

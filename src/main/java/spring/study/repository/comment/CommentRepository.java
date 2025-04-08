@@ -9,11 +9,11 @@ import spring.study.entity.member.Member;
 import java.util.List;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-    public List<Comment> findByBoard(Board board);
+    List<Comment> findByBoard(Board board);
 
     @Transactional
-    public void deleteByBoard(Board board);
+    void deleteByBoard(Board board);
 
     @Transactional
-    public void deleteByMember(Member member);
+    void deleteByMember(Member member);
 }

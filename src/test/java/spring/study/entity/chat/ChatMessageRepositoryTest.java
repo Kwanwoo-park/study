@@ -3,10 +3,7 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.chat.ChatMessage;
-//import spring.study.entity.chat.ChatRoom;
 //import spring.study.entity.member.Member;
-//import spring.study.entity.chat.MessageType;
 //import spring.study.repository.chat.ChatMessageRepository;
 //import spring.study.repository.chat.ChatRoomRepository;
 //import spring.study.repository.member.MemberRepository;
@@ -30,7 +27,7 @@
 //    void save() {
 //        // given
 //        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //
 //        ChatMessage message = ChatMessage.builder()
 //                .message("testMessage")
@@ -56,7 +53,7 @@
 //    void find() {
 //        // given
 //        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //
 //        // when
 //        List<ChatMessage> message = chatMessageRepository.findByRoom(room);
@@ -86,7 +83,7 @@
 //    @Test
 //    void deleteByMember() {
 //        // given
-//        Member member = memberRepository.findByEmail("test@test.com");
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //        ChatRoom room = chatRoomRepository.findByRoomId("row08wr08w0");
 //
 //        // when

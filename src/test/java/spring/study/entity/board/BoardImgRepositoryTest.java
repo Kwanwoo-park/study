@@ -5,8 +5,6 @@
 //import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import spring.study.entity.board.Board;
-//import spring.study.entity.board.BoardImg;
 //import spring.study.repository.board.BoardImgRepository;
 //import spring.study.repository.board.BoardRepository;
 //

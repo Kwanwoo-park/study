@@ -11,13 +11,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import spring.study.entity.BasetimeEntity;
 import spring.study.entity.board.Board;
-import spring.study.entity.chat.ChatRoom;
 import spring.study.entity.favorite.Favorite;
 import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoomMember;
 import spring.study.entity.comment.Comment;
 import spring.study.entity.follow.Follow;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -27,6 +27,7 @@ import java.util.*;
 @DynamicUpdate
 @Entity(name = "member")
 public class Member extends BasetimeEntity implements UserDetails {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

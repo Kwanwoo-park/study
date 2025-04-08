@@ -5,7 +5,6 @@
 //import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import spring.study.entity.chat.ChatRoom;
 //import spring.study.repository.chat.ChatRoomRepository;
 //
 //import static org.assertj.core.api.Assertions.*;

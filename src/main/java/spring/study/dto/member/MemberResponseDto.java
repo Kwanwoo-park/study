@@ -5,12 +5,14 @@ import lombok.ToString;
 import spring.study.entity.member.Member;
 import spring.study.entity.member.Role;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @ToString
 @Getter
 public class MemberResponseDto implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private Long id;

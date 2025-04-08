@@ -3,17 +3,13 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.chat.ChatMessage;
-//import spring.study.entity.chat.ChatRoom;
 //import spring.study.entity.member.Member;
-//import spring.study.entity.chat.MessageType;
 //import spring.study.service.chat.ChatMessageService;
 //import spring.study.service.chat.ChatRoomService;
 //import spring.study.service.member.MemberService;
 //
 //import java.util.List;
 //
-//import static org.assertj.core.api.Assertions.as;
 //import static org.assertj.core.api.Assertions.assertThat;
 //
 //@SpringBootTest

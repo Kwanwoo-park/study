@@ -7,19 +7,15 @@
 //import spring.study.dto.member.MemberRequestDto;
 //import spring.study.dto.member.MemberResponseDto;
 //import spring.study.entity.board.Board;
-//import spring.study.entity.member.Member;
-//import spring.study.entity.member.Role;
 //import spring.study.service.member.MemberService;
 //import spring.study.service.member.UserService;
 //
 //import java.util.HashMap;
 //
-//import static org.assertj.core.api.Assertions.as;
 //import static org.assertj.core.api.Assertions.assertThat;
 //import static org.hamcrest.MatcherAssert.assertThat;
 //import static org.hamcrest.Matchers.is;
 //import static org.hamcrest.Matchers.notNullValue;
-//import static org.hamcrest.Matchers.nullValue;
 //
 //@SpringBootTest
 //public class MemberServiceTest {
@@ -148,6 +144,6 @@
 //        Member member = (Member) memberService.loadUserByUsername("akakslslzz@naver.com");
 //
 //        for (Board b : member.getBoard())
-//            System.out.println("Title = " + b.getTitle() + "\nContent = " +  b.getContent());
+//            System.out.println("Content = " +  b.getContent());
 //    }
 //}
