@@ -70,7 +70,8 @@
                 <img th:src="@{/img/} + ${member[room.roomId].profile}" class="profile">
                 <div class="text">
                     <label th:text="${member[room.roomId].name}" class="chatname"></label>
-                    <label th:text="${room.messages[room.messages.size-1].message}"></label>
+                    <label th:if="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="'사진을 보냈습니다'"></label>
+                    <label th:unless="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="${room.messages[room.messages.size-1].message}"></label>
                 </div>
             </div>
         </div>
