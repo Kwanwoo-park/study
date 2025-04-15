@@ -25,6 +25,7 @@ import spring.study.service.favorite.FavoriteService;
 import spring.study.service.follow.FollowService;
 import spring.study.service.member.MemberService;
 import spring.study.service.member.UserService;
+import spring.study.service.notification.NotificationService;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -45,10 +46,11 @@ public class MemberApiController {
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
     private final UserService userService;
+    private final NotificationService notificationService;
     private final BCryptPasswordEncoder encoder;
     private Member member;
 
-    @PostMapping("/login")
+    @PatchMapping("/login")
     public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
         member = (Member) memberService.loadUserByUsername(dto.getEmail());
         HttpSession session = request.getSession();
@@ -224,6 +226,8 @@ public class MemberApiController {
                 favoriteService.deleteByBoard(board);
             }
 
+            notificationService.deleteByMember(member);
+
             favoriteService.deleteByMember(member);
             commentService.deleteByMember(member);
             boardService.deleteByMember(member);
@@ -252,6 +256,8 @@ public class MemberApiController {
                 boardImgService.deleteBoard(board);
                 favoriteService.deleteByBoard(board);
             }
+
+            notificationService.findByMember(deleteMember);
 
             favoriteService.deleteByMember(deleteMember);
             commentService.deleteByMember(deleteMember);

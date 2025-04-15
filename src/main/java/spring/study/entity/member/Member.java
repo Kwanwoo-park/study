@@ -16,6 +16,7 @@ import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoomMember;
 import spring.study.entity.comment.Comment;
 import spring.study.entity.follow.Follow;
+import spring.study.entity.notification.Notification;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
@@ -86,6 +87,10 @@ public class Member extends BasetimeEntity implements UserDetails {
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<ChatMessage> messages = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    private List<Notification> notifications = new ArrayList<>();
 
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth) {
@@ -279,6 +284,10 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void addChatRoomMembers(ChatRoomMember chatRoomMember) {
         chatRoomMember.addMember(this);
+    }
+
+    public void addNotification(Notification notification) {
+        notification.addMember(this);
     }
 
     public void changeProfile(String profile) {

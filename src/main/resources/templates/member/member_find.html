@@ -24,14 +24,19 @@
   }
 </style>
 <body>
-  <nav class="navi">
-    <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
-    <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
-    <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
-    <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
-    <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
-  </nav>
+<nav class="navi">
+  <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
+  <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
+  <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
+  <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
+  <div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
+  <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+</nav>
   <div class="container">
+    <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
+      <span id="notification-message">새 알림</span>
+      <button type="button" class="btn-close" aria-label="Close" style="display:noe"></button>
+    </div>
         <input type="search" class="form-control" id="name" name="name"
                placeholder="Search member">
         <ul class="list-group-flush">

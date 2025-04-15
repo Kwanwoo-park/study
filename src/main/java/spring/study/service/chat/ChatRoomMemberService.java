@@ -50,6 +50,10 @@ public class ChatRoomMemberService {
         return map;
     }
 
+    public ChatRoomMember findMember(ChatRoom room, Member member) {
+        return chatRoomMemberRepository.findByRoomAndMemberNot(room, member);
+    }
+
     public List<ChatRoomMember> find(Member member) {
         return chatRoomMemberRepository.findByMember(member);
     }

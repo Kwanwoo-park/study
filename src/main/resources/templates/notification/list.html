@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>알림</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--부트스트랩 css 추가-->
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
+</head>
+<style>
+    .container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          height: 700px;
+          overflow: auto;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          margin-bottom: 10px;
+      }
+</style>
+<body>
+<nav class="navi">
+    <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
+    <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
+    <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
+    <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
+    <div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
+    <div th:onclick="fnDetail([[${member.email}]])"><img th:src="@{/img/} + ${member.profile}" class="profile-icon"></div>
+</nav>
+<div class="container">
+    <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
+        <span id="notification-message">새 알림</span>
+        <button type="button" class="btn-close" aria-label="Close" style="display:noe"></button>
+    </div>
+    <div>
+        <ul>
+            <li th:each="notification : ${notification}" class="notification-card">
+                <p class="notification-message" th:text="${notification.message}"></p>
+                <div class="notification-actions">
+                    <button th:if="${notification.isRead}" class="btn btn-outline-dark mark-as-read-button" data-id="[[${notification.id}]]"
+                            th:text="읽음" disabled></button>
+                    <button th:unless="${notification.isRead}" class="btn btn-outline-dark mark-as-read-button" data-id="[[${notification.id}]]"
+                            th:text="읽음으로 표시" th:onclick="fnClick([[${notification.id}]])"></button>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+<!--부트스트랩 js, jquery 추가-->
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/notification/list.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+<footer>
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
+        </div>
+    </div>
+</footer>
+</html>

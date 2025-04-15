@@ -13,10 +13,12 @@ import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoom;
 import spring.study.entity.chat.MessageType;
 import spring.study.entity.member.Member;
+import spring.study.entity.notification.Notification;
 import spring.study.service.chat.ChatMessageService;
 import spring.study.service.chat.ChatRoomMemberService;
 import spring.study.service.chat.ChatRoomService;
 import spring.study.service.member.MemberService;
+import spring.study.service.notification.NotificationService;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -30,6 +32,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
     private final ChatRoomService roomService;
+    private final NotificationService notificationService;
     private final MemberService memberService;
     private Set<WebSocketSession> sessions = new HashSet<>();
     private ChatMessage chatMessage;
@@ -47,6 +50,8 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
         ChatRoom room = roomService.find(requestDto.getRoomId());
         Member member = memberService.findMember(requestDto.getEmail());
+
+        Member otherMember = roomMemberService.findMember(room, member).getMember();
 
         chatMessage = ChatMessage.builder()
                 .message(requestDto.getMessage())
@@ -77,6 +82,9 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
             }
         } else {
             sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+
+            Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 메시지를 보냈습니다");
+            notification.addMember(otherMember);
         }
     }
 

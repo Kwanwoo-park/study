@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.follow.Follow;
 import spring.study.entity.member.Member;
+import spring.study.entity.notification.Notification;
 import spring.study.service.follow.FollowService;
 import spring.study.service.member.MemberService;
+import spring.study.service.notification.NotificationService;
 
 @RequiredArgsConstructor
 @RestController
@@ -17,6 +19,7 @@ import spring.study.service.member.MemberService;
 public class FollowApiController {
     private final FollowService followService;
     private final MemberService memberService;
+    private final NotificationService notificationService;
 
     @PostMapping("")
     public ResponseEntity<Follow> memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpServletRequest request) {
@@ -43,6 +46,9 @@ public class FollowApiController {
 
         member.addFollower(follow);
         search_member.addFollowing(follow);
+
+        Notification notification = notificationService.createNotification(search_member, member.getName() + "님이 팔로우하기 시작하였습니다");
+        notification.addMember(search_member);
 
         session.setAttribute("member", member);
 

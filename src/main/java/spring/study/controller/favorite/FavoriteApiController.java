@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.entity.board.Board;
 import spring.study.entity.favorite.Favorite;
 import spring.study.entity.member.Member;
+import spring.study.entity.notification.Notification;
 import spring.study.service.board.BoardService;
 import spring.study.service.favorite.FavoriteService;
+import spring.study.service.notification.NotificationService;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,6 +19,7 @@ import spring.study.service.favorite.FavoriteService;
 public class FavoriteApiController {
     private final FavoriteService favoriteService;
     private final BoardService boardService;
+    private final NotificationService notificationService;
 
     @PostMapping("/like")
     public ResponseEntity<Favorite> favoriteAction(@RequestParam Long id, HttpServletRequest request) {
@@ -28,6 +31,8 @@ public class FavoriteApiController {
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
 
+        Member otherMember = board.getMember();
+
         if (favoriteService.existFavorite(member, board))
             return ResponseEntity.status(201).body(null);
 
@@ -38,6 +43,9 @@ public class FavoriteApiController {
 
         member.addFavorite(favorite);
         board.addFavorite(favorite);
+
+        Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다");
+        notification.addMember(otherMember);
 
         session.setAttribute("member", member);
 
