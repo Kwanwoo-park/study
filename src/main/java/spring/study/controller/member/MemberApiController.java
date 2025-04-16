@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -49,6 +50,9 @@ public class MemberApiController {
     private final NotificationService notificationService;
     private final BCryptPasswordEncoder encoder;
     private Member member;
+
+    @Value("${img.path}")
+    String fileDir;
 
     @PatchMapping("/login")
     public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
@@ -112,9 +116,6 @@ public class MemberApiController {
 
         if (!Arrays.stream(formatArr).toList().contains(format))
             return ResponseEntity.status(500).body(null);
-
-        String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
-        //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         File f = new File(fileDir + file.getOriginalFilename());
         try {

@@ -43,8 +43,10 @@ public class CommentApiController {
         member.addComment(comment);
         board.addComment(comment);
 
-        Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다");
-        notification.addMember(otherMember);
+        if (!member.getId().equals(otherMember.getId())) {
+            Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다");
+            notification.addMember(otherMember);
+        }
 
         session.setAttribute("member", member);
 

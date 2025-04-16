@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,9 @@ public class BoardImgApiController {
     private final BoardService boardService;
     private final BoardImgService boardImgService;
 
+    @Value("${img.path}")
+    String fileDir;
+
     @PostMapping("/save")
     public ResponseEntity<List<BoardImg>> boardImgSave(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) throws IOException, FileNotFoundException {
         HttpSession session = request.getSession();
@@ -42,9 +46,6 @@ public class BoardImgApiController {
 
         String format;
         String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
-
-        String fileDir = "/home/ec2-user/app/step/study/src/main/resources/static/img/";
-        //String fileDir = "/Users/lg/Desktop/study/study/src/main/resources/static/img/";
 
         Board board = boardService.findById(id);
 
