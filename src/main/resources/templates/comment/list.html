@@ -23,6 +23,10 @@
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
+  .reply {
+    font-size: 12px;
+    color: gray;
+  }
 </style>
 <body>
 <div>
@@ -43,13 +47,21 @@
             <pre th:id="'comment'+${list.id}" th:text="${list.comments}"></pre>
             <textarea class="form-control" th:id="'edit_comment'+${list.id}" rows="5" cols=""
                       name="Comment edit" th:text="${list.comments}" style="display: none;"></textarea>
+            <label class="reply" th:onclick="fnReply([[${list.id}]], [[${list.member.name}]])">답글 달기</label>
+            <div class="reply" th:unless="${list.reply.size == 0}" th:onclick="fnReplyGet([[${list.id}]])">
+              <label class="form-label">답글 </label>
+              <label class="form-label" th:id="'reply_cnt' + ${list.id}" th:text="${list.reply.size}"></label>
+              <label class="form-label">개 모두 보기</label>
+            </div>
+            <div class="replyArea">
+            </div>
           </span>
       </li>
     </ul>
   </div>
   <div class="mb-3">
-    <textarea class="form-control" id="comments" rows="1" cols="" name="Comment" placeholder="Comment"></textarea>
-    <button type="button" id="submit" class="btn btn-primary">Submit</button>
+    <textarea class="form-control" id="comments" rows="1" cols="" name="Comment" placeholder="Comment" onkeydown="comment(event)"></textarea>
+    <button type="button" id="submit" class="btn btn-primary" style="display:none;">Submit</button>
   </div>
 </div>
 <script src="/js/lib/jquery.min.js"></script>

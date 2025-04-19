@@ -18,7 +18,8 @@ public class CommentRequestDto {
     private Board board;
 
     @Builder
-    public CommentRequestDto(String comments) {
+    public CommentRequestDto(Long id, String comments) {
+        this.id = id;
         this.comments = comments;
     }
 

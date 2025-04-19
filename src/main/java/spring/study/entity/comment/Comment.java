@@ -5,10 +5,13 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import spring.study.entity.BasetimeEntity;
+import spring.study.entity.comment.reply.Reply;
 import spring.study.entity.member.Member;
 import spring.study.entity.board.Board;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -32,6 +35,10 @@ public class Comment extends BasetimeEntity implements Serializable{
     @ManyToOne
     private Board board;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "comment", fetch = FetchType.EAGER)
+    private List<Reply> reply = new ArrayList<>();
+
     @Builder
     public Comment(Long id, String comments, Member member, Board board) {
         this.id = id;
@@ -48,6 +55,10 @@ public class Comment extends BasetimeEntity implements Serializable{
     public void addBoard(Board board) {
         this.board = board;
         board.getComment().add(this);
+    }
+
+    public void addReply(Reply reply) {
+        reply.addComment(this);
     }
 
     public void changeComments(String comments) {

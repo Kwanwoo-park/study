@@ -42,7 +42,7 @@ public class CommentViewController {
         HashMap<String, Object> comment = new HashMap<>();
         List<Comment> list = boardService.findById(id).getComment();
 
-        comment.put("list", list.stream().map(CommentResponseDto::new).sorted(Comparator.comparingLong(CommentResponseDto::getId).reversed()).toList());
+        comment.put("list", list.stream().sorted(Comparator.comparingLong(Comment::getId).reversed()).toList());
 
         model.addAttribute("comment", comment);
         model.addAttribute("member", member.getEmail());

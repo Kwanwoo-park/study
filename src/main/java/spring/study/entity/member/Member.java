@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import spring.study.entity.BasetimeEntity;
 import spring.study.entity.board.Board;
+import spring.study.entity.comment.reply.Reply;
 import spring.study.entity.favorite.Favorite;
 import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoomMember;
@@ -71,6 +72,10 @@ public class Member extends BasetimeEntity implements UserDetails {
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<Comment> comment = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    private List<Reply> reply = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "follower", fetch = FetchType.EAGER)
@@ -244,6 +249,10 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void addComment(Comment comment) {
         comment.addMember(this);
+    }
+
+    public void addReply(Reply reply) {
+        reply.addMember(this);
     }
 
     public void removeComments(List<Comment> list) {

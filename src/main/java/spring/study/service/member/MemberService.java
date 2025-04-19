@@ -67,6 +67,10 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findByPhoneAndBirth(phone, birth);
     }
 
+    public Member findAdministrator() {
+        return memberRepository.findByRole(Role.ADMIN);
+    }
+
     public Boolean existEmail(String email) {
         return memberRepository.existsByEmail(email);
     }

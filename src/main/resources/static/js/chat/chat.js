@@ -95,15 +95,18 @@ function enterRoom(socket) {
 }
 
  function send(e) {
-    if (e.keyCode == 13)
+    if (e.keyCode == 13 && !e.shiftKey) {
+        event.preventDefault();
+
         sendMsg();
+    }
 }
 
 function sendMsg() {
-    var content = document.querySelector('.content').value;
+    var content = document.getElementById('chat').value;
 
     if (content != '') {
-        document.querySelector('.content').value = null;
+        document.getElementById('chat').value = null;
 
         var talkMsg = {
             type : "TALK",

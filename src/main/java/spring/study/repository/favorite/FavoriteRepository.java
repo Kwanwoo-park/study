@@ -2,10 +2,12 @@ package spring.study.repository.favorite;
 
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import spring.study.entity.board.Board;
 import spring.study.entity.favorite.Favorite;
 import spring.study.entity.member.Member;
 
+@Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     Favorite findByMemberAndBoard(Member member, Board board);
 

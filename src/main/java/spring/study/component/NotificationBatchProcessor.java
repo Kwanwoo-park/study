@@ -14,10 +14,11 @@ import java.util.List;
 public class NotificationBatchProcessor {
     private final NotificationRepository notificationRepository;
 
+    // every five minutes
     @Scheduled(cron = "0 0/5 * * * ?")
     public void deleteUnReadNotifications() {
-        LocalDateTime cutOffTime = LocalDateTime.now().minusMinutes(10);
-        List<Notification> notifications = notificationRepository.findByIsReadAndRegisterTimeBefore(false, cutOffTime);
+        LocalDateTime cutOffTime = LocalDateTime.now().minusDays(1);
+        List<Notification> notifications = notificationRepository.findByIsReadAndRegisterTimeBefore(true, cutOffTime);
 
         notificationRepository.deleteAll(notifications);
     }

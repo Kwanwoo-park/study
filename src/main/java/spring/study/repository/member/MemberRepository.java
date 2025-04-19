@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import spring.study.entity.member.Member;
+import spring.study.entity.member.Role;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +19,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByName(String name);
 
     Member findByPhoneAndBirth(String phone, String birth);
+
+    Member findByRole(Role role);
 
     Boolean existsByEmail(String email);
 }

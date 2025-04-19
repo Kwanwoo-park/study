@@ -23,16 +23,14 @@ public class CommentApiController {
     private final NotificationService notificationService;
 
     @PostMapping("")
-    public ResponseEntity<Comment> commentAction(@RequestParam() Long id,
-                                                 @RequestBody CommentRequestDto commentRequestDto,
-                                                 HttpServletRequest request) {
+    public ResponseEntity<Comment> commentAction(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
             return ResponseEntity.status(501).body(null);
 
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findById(id);
+        Board board = boardService.findById(commentRequestDto.getId());
 
         Member otherMember = board.getMember();
 

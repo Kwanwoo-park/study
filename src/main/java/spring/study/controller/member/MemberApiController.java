@@ -86,6 +86,8 @@ public class MemberApiController {
                 memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())
             return ResponseEntity.status(501).body(null);
 
+        notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다");
+
         return ResponseEntity.ok(userService.createUser(memberRequestDto));
     }
 
