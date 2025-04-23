@@ -37,12 +37,14 @@ public class ReplyApiController {
 
         Member otherMember = comment.getMember();
 
-        Reply reply = Reply.builder()
+        String reply = replyRequestDto.getReply().replace("@"+comment.getMember().getName()+" ", "");
+
+        Reply result = Reply.builder()
                 .reply(replyRequestDto.getReply())
                 .build();
 
-        member.addReply(reply);
-        comment.addReply(reply);
+        member.addReply(result);
+        comment.addReply(result);
 
         if (!member.getId().equals(otherMember.getId())) {
             Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다");
@@ -51,7 +53,7 @@ public class ReplyApiController {
 
         session.setAttribute("member", member);
 
-        return ResponseEntity.ok(replyService.save(reply));
+        return ResponseEntity.ok(replyService.save(result));
     }
 
     @GetMapping("/list")

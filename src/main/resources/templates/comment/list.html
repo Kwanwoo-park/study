@@ -15,6 +15,9 @@
       flex-direction: column;
       align-items: center;
   }
+  pre {
+    padding: 0px;
+  }
   .container {
       height: 400px;
       overflow: auto;
@@ -23,9 +26,18 @@
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
+  .profile {
+    width: 30px;
+    height: 30px;
+    border-radius: 90px;
+  }
   .reply {
     font-size: 12px;
     color: gray;
+  }
+  .replyDiv {
+    display: flex;
+    flex-direction: row;
   }
 </style>
 <body>
@@ -36,7 +48,7 @@
       <li class="list-group-item" th:each="list,index : ${comment.list}">
           <span>
             <span th:text="${index.index+1}"></span>
-            <img th:src="@{/img/} + ${list.member.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
+            <img th:src="@{/img/} + ${list.member.profile}" class="profile" id="profile">
             <a th:href="@{/member/search/detail(email=${list.member.email})}">
               <span th:text="${list.member.name}"></span>
             </a>
@@ -53,13 +65,13 @@
               <label class="form-label" th:id="'reply_cnt' + ${list.id}" th:text="${list.reply.size}"></label>
               <label class="form-label">개 모두 보기</label>
             </div>
-            <div class="replyArea">
-            </div>
+            <div class="replyArea"></div>
           </span>
       </li>
     </ul>
   </div>
   <div class="mb-3">
+    <label class="form-label" id="cancel" onclick="fnCancel()" style="display: none">답글 달기 취소</label>
     <textarea class="form-control" id="comments" rows="1" cols="" name="Comment" placeholder="Comment" onkeydown="comment(event)"></textarea>
     <button type="button" id="submit" class="btn btn-primary" style="display:none;">Submit</button>
   </div>

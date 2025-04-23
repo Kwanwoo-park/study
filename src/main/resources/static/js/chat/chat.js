@@ -30,14 +30,14 @@ socket.onerror = function(e) {
 
 socket.onmessage = function(e) {
     const json = JSON.parse(e.data);
-    var msgArea = document.querySelector('.list-group-flush');
+    let msgArea = document.querySelector('.list-group-flush');
 
-    var newMsgLi = document.createElement('li');
-    var newMsgArea = document.createElement('span');
-    var name = document.createElement('span');
-    var newMsg = document.createElement('pre');
-    var profile = document.createElement('img');
-    var imgTalk = document.createElement('img');
+    let newMsgLi = document.createElement('li');
+    let newMsgArea = document.createElement('span');
+    let name = document.createElement('span');
+    let newMsg = document.createElement('pre');
+    let profile = document.createElement('img');
+    let imgTalk = document.createElement('img');
 
     newMsgLi.className = "list-group-item";
 

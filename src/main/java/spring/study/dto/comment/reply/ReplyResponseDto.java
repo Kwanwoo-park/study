@@ -10,11 +10,13 @@ public class ReplyResponseDto {
     private Long id;
     private String reply;
     private Member member;
+    private Member commentMember;
 
     public ReplyResponseDto(Reply entity) {
         this.id = entity.getId();
         this.reply = entity.getReply();
         this.member = entity.getMember();
+        this.commentMember = entity.getComment().getMember();
     }
 
     @Override
