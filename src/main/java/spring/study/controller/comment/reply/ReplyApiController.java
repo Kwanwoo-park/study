@@ -40,7 +40,7 @@ public class ReplyApiController {
         String reply = replyRequestDto.getReply().replace("@"+comment.getMember().getName()+" ", "");
 
         Reply result = Reply.builder()
-                .reply(replyRequestDto.getReply())
+                .reply(reply)
                 .build();
 
         member.addReply(result);
