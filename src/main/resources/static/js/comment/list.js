@@ -135,8 +135,6 @@ function fnCancel() {
 function fnReplyGet(commentId) {
     const replyArea = document.querySelector('.replyArea');
 
-    console.log(replyArea)
-
     if (!replyArea) {
         fetch(`/api/reply/list?id=` + commentId, {
             method: 'GET',
