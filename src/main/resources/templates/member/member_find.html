@@ -22,6 +22,11 @@
   .list-group-flush {
     align-self: flex-start;
   }
+  .profile {
+    width: 30px;
+    height: 30px;
+    border-radius: 90px;
+  }
 </style>
 <body>
 <nav class="navi">
@@ -43,7 +48,7 @@
           <li class="list-group-item" th:each="list,index : ${member?.list}">
             <span>
               <span th:text="${index?.index+1}"></span>
-              <img th:src="@{/img/} + ${list?.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
+              <img th:src="@{/img/} + ${list?.profile}" class="profile" id="profile">
               <a th:href="@{/member/search/detail(email=${list?.email})}"><span th:text="${list?.name}"></span></a>
               <span th:text="${list?.email}"></span>
             </span>

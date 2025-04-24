@@ -46,8 +46,7 @@
   <div class="container">
     <ul class="list-group-flush">
       <li class="list-group-item" th:each="list,index : ${comment.list}">
-          <span>
-            <span th:text="${index.index+1}"></span>
+          <span class="commentArea">
             <img th:src="@{/img/} + ${list.member.profile}" class="profile" id="profile">
             <a th:href="@{/member/search/detail(email=${list.member.email})}">
               <span th:text="${list.member.name}"></span>
@@ -65,7 +64,6 @@
               <label class="form-label" th:id="'reply_cnt' + ${list.id}" th:text="${list.reply.size}"></label>
               <label class="form-label">개 모두 보기</label>
             </div>
-            <div class="replyArea"></div>
           </span>
       </li>
     </ul>

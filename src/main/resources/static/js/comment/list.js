@@ -4,7 +4,7 @@ const urlParams = url.searchParams
 const submit = document.getElementById('submit');
 const comments = document.getElementById('comments');
 const cancel = document.getElementById('cancel');
-const replyArea = document.querySelector('.replyArea');
+const commentArea = document.querySelector('.commentArea');
 
 let flag = true;
 let id;
@@ -133,52 +133,67 @@ function fnCancel() {
 }
 
 function fnReplyGet(commentId) {
-    fetch(`/api/reply/list?id=` + commentId, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        json.forEach(data => {
-            let newArea = document.createElement('span');
-            let div = document.createElement('div');
-            let replyDiv = document.createElement('div');
-            let profile = document.createElement('img');
-            let memberHref = document.createElement('a');
-            let commentHref = document.createElement('a');
-            let name = document.createElement('span');
-            let reply = document.createElement('pre');
+    const replyArea = document.querySelector('.replyArea');
 
-            profile.src = "/img/" + data['member'].profile;
-            profile.className = 'profile';
+    console.log(replyArea)
 
-            memberHref.href= "/member/search/detail?email=" + data['member'].email;
-            name.innerText = data['member'].name;
-
-            memberHref.append(name);
-
-
-            commentHref.href = "/member/search/detail?email=" + data['commentMember'].email;
-            commentHref.innerText = "@"+data['commentMember'].name;
-
-            reply.innerText = data['reply'];
-
-            replyDiv.append(commentHref)
-            replyDiv.append(reply)
-
-            replyDiv.className = 'replyDiv';
-
-            newArea.append(profile);
-            newArea.append(memberHref);
-            newArea.append(replyDiv);
-
-            replyArea.append(newArea);
+    if (!replyArea) {
+        fetch(`/api/reply/list?id=` + commentId, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
         })
-    })
-    .catch((error) => {
-        console.error(error);
-        alert("다시 시도하여주십시오");
-    })
+        .then((response) => response.json())
+        .then((json) => {
+            let area = document.createElement('div')
+            area.className = 'replyArea';
+
+            commentArea.append(area)
+
+            json.forEach(data => {
+                let newArea = document.createElement('span');
+                let div = document.createElement('div');
+                let replyDiv = document.createElement('div');
+                let profile = document.createElement('img');
+                let memberHref = document.createElement('a');
+                let commentHref = document.createElement('a');
+                let name = document.createElement('span');
+                let reply = document.createElement('pre');
+
+                profile.src = "/img/" + data['member'].profile;
+                profile.className = 'profile';
+
+                memberHref.href= "/member/search/detail?email=" + data['member'].email;
+                name.innerText = data['member'].name;
+
+                memberHref.append(name);
+
+                commentHref.href = "/member/search/detail?email=" + data['commentMember'].email;
+                commentHref.innerText = "@"+data['commentMember'].name;
+
+                reply.innerText = data['reply'];
+
+                replyDiv.append(commentHref)
+                replyDiv.append(reply)
+
+                replyDiv.className = 'replyDiv';
+
+                newArea.append(profile);
+                newArea.append(memberHref);
+                newArea.append(replyDiv);
+
+                newArea.className = 'newArea';
+
+                area.append(newArea);
+            })
+        })
+        .catch((error) => {
+            console.error(error);
+            alert("다시 시도하여주십시오");
+        })
+    }
+    else {
+        replyArea.remove();
+    }
 }
