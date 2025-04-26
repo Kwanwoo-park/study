@@ -42,18 +42,7 @@
       <span id="notification-message">새 알림</span>
       <button type="button" class="btn-close" aria-label="Close" style="display:noe"></button>
     </div>
-        <input type="search" class="form-control" id="name" name="name"
-               placeholder="Search member">
-        <ul class="list-group-flush">
-          <li class="list-group-item" th:each="list,index : ${member?.list}">
-            <span>
-              <span th:text="${index?.index+1}"></span>
-              <img th:src="@{/img/} + ${list?.profile}" class="profile" id="profile">
-              <a th:href="@{/member/search/detail(email=${list?.email})}"><span th:text="${list?.name}"></span></a>
-              <span th:text="${list?.email}"></span>
-            </span>
-          </li>
-        </ul>
+    <input type="search" class="form-control" id="name" name="name" placeholder="Search member">
   </div>
 
   <script src="/js/lib/jquery.min.js"></script>

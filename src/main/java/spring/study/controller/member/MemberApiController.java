@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -207,6 +208,23 @@ public class MemberApiController {
         session.setAttribute("member", memberService.findMember(memberUpdateDto.getEmail()));
 
         return ResponseEntity.status(200).body(result);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<MemberResponseDto>> searchMember(@RequestParam() String name, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(501).body(null);
+
+        member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return ResponseEntity.status(501).body(null);
+        }
+
+        return ResponseEntity.ok(memberService.findName(name));
     }
 
     @DeleteMapping("/withdrawal")

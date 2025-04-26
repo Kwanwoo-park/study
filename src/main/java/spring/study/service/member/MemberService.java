@@ -49,14 +49,8 @@ public class MemberService implements UserDetailsService {
         return member;
     }
 
-    public HashMap<String, Object> findName(String name) {
-        HashMap<String, Object> member = new HashMap<>();
-
-        List<Member> list = memberRepository.findByName(name);
-
-        member.put("list", list.stream().map(MemberResponseDto::new).collect(Collectors.toList()));
-
-        return member;
+    public List<MemberResponseDto> findName(String name) {
+        return memberRepository.findByName(name).stream().map(MemberResponseDto::new).toList();
     }
 
     public Member findMember(String email) {
