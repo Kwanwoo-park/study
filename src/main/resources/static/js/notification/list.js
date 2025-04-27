@@ -1,6 +1,6 @@
-const button = document.querySelector('.mark-as-read-button');
-
 function fnClick(id) {
+    const button = document.getElementById(id);
+
     fetch(`/api/notification/mark-as-read?id=` + id, {
         method: 'PATCH',
         headers: {
@@ -8,7 +8,6 @@ function fnClick(id) {
         },
     })
     .then((response) => {
-        console.log(response.status)
         if (response.status == 200) {
             alert('알림이 읽음으로 표시되었습니다');
             button.innerText = '읽음';

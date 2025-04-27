@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.entity.member.Member;
 import spring.study.entity.notification.Notification;
+import spring.study.entity.notification.Status;
 import spring.study.service.member.MemberService;
 import spring.study.service.notification.NotificationService;
 
@@ -63,12 +64,12 @@ public class NotificationApiController {
 
                         if (!notifications.isEmpty()) {
                             for (Notification notification : notifications) {
-                                if (!notification.isRead()) {
+                                if (notification.getReadStatus() == Status.UNREAD) {
+                                    notificationService.updateCheck(notification.getId());
+
                                     emitter.send(SseEmitter.event()
                                             .name("notification")
                                             .data(notification.getMessage()));
-
-                                    notificationService.updateRead(notification);
                                 }
                             }
                         }

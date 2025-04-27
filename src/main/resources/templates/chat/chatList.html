@@ -68,7 +68,7 @@
     <div class="container">
         <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
             <span id="notification-message">새 알림</span>
-            <button type="button" class="btn-close" aria-label="Close" style="display:noe"></button>
+            <button type="button" class="btn-close" aria-label="Close">닫기</button>
         </div>
         <div class="room" th:each="room : ${roomList}">
             <div class="room" th:onclick="fnClick([[${room.roomId}]])">

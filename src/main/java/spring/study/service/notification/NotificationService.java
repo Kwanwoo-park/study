@@ -6,6 +6,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import spring.study.entity.member.Member;
 import spring.study.entity.notification.Notification;
+import spring.study.entity.notification.Status;
 import spring.study.repository.notification.NotificationRepository;
 
 import java.util.List;
@@ -20,22 +21,36 @@ public class NotificationService {
         return notificationRepository.save(Notification.builder()
                         .member(member)
                         .message(message)
-                        .isRead(false)
+                        .readStatus(Status.UNREAD)
                 .build());
     }
 
     @Transactional
     public void updateRead(Notification notification) {
-        notification.changeIsRead();
+        notification.changeToRead();
     }
 
     @Transactional
     public void updateRead(Long id) {
         Notification notification = notificationRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
-                "존재하지 않는 알림입니다."
+                "존재하지 않는 알림입니다"
         ));
 
-        notification.changeIsRead();
+        notification.changeToRead();
+    }
+
+    @Transactional
+    public void updateCheck(Notification notification) {
+        notification.changeToCheck();
+    }
+
+    @Transactional
+    public void updateCheck(Long id) {
+        Notification notification = notificationRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 알림입니다"
+        ));
+
+        notification.changeToCheck();
     }
 
     public Notification findById(Long id) {
@@ -47,7 +62,7 @@ public class NotificationService {
     }
 
     public List<Notification> findUnReadNotification(Member member) {
-        return notificationRepository.findByMemberAndIsRead(member, false);
+        return notificationRepository.findByMemberAndReadStatus(member, Status.UNREAD);
     }
 
     public void deleteByMember(Member member) {

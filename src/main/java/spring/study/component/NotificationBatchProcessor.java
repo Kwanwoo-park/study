@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import spring.study.entity.notification.Notification;
+import spring.study.entity.notification.Status;
 import spring.study.repository.notification.NotificationRepository;
 
 import java.time.LocalDateTime;
@@ -18,7 +19,7 @@ public class NotificationBatchProcessor {
     @Scheduled(cron = "0 0/5 * * * ?")
     public void deleteUnReadNotifications() {
         LocalDateTime cutOffTime = LocalDateTime.now().minusDays(1);
-        List<Notification> notifications = notificationRepository.findByIsReadAndRegisterTimeBefore(true, cutOffTime);
+        List<Notification> notifications = notificationRepository.findByReadStatusAndRegisterTimeBefore(Status.READ, cutOffTime);
 
         notificationRepository.deleteAll(notifications);
     }

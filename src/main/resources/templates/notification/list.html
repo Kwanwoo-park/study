@@ -33,15 +33,16 @@
 <div class="container">
     <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
         <span id="notification-message">새 알림</span>
-        <button type="button" class="btn-close" aria-label="Close" style="display:noe"></button>
+        <button type="button" class="btn-close" aria-label="Close">닫기</button>
     </div>
     <div>
         <ul>
             <li th:each="notification : ${notification}" class="notification-card">
+                <input type="hidden" th:value="${notification.readStatus}">
                 <p class="notification-message" th:text="${notification.message}"></p>
                 <div class="notification-actions">
-                    <button th:if="${notification.isRead}" class="btn btn-outline-dark mark-as-read-button" data-id="[[${notification.id}]]" disabled>읽음</button>
-                    <button th:unless="${notification.isRead}" class="btn btn-outline-dark mark-as-read-button" data-id="[[${notification.id}]]"
+                    <button th:if="${#strings.equals(notification.readStatus, 'READ')}" class="btn btn-outline-dark mark-as-read-button" th:id="${notification.id}" disabled>읽음</button>
+                    <button th:unless="${#strings.equals(notification.readStatus, 'READ')}" class="btn btn-outline-dark mark-as-read-button" th:id="${notification.id}"
                             th:onclick="fnClick([[${notification.id}]])">읽음으로 표시</button>
                 </div>
             </li>

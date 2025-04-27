@@ -27,17 +27,17 @@ public class Notification extends BasetimeEntity implements Serializable {
     private String message;
 
     @NotNull
-    private boolean isRead;
+    private Status readStatus;
 
     @JoinColumn(name = "member_id")
     @ManyToOne
     private Member member;
 
     @Builder
-    public Notification(Long id, String message, boolean isRead, Member member) {
+    public Notification(Long id, String message, Status readStatus, Member member) {
         this.id = id;
         this.message = message;
-        this.isRead = isRead;
+        this.readStatus = readStatus;
         this.member = member;
     }
 
@@ -45,7 +45,11 @@ public class Notification extends BasetimeEntity implements Serializable {
         member.getNotifications().add(this);
     }
 
-    public void changeIsRead() {
-        this.isRead = true;
+    public void changeToRead() {
+        this.readStatus = Status.READ;
+    }
+
+    public void changeToCheck() {
+        this.readStatus = Status.CHECK;
     }
 }
