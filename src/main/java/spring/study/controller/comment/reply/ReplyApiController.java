@@ -3,6 +3,7 @@ package spring.study.controller.comment.reply;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.comment.reply.ReplyRequestDto;
@@ -30,7 +31,7 @@ public class ReplyApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         Member member = (Member) session.getAttribute("member");
         Comment comment = commentService.findById(replyRequestDto.getId());
@@ -61,7 +62,7 @@ public class ReplyApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         List<ReplyResponseDto> reply = commentService.findById(id).getReply().stream().map(ReplyResponseDto::new).toList();
 

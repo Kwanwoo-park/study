@@ -3,6 +3,7 @@ package spring.study.controller.admin;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,11 +24,11 @@ public class AdminApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         int result = memberService.updateRole(requestDto.getId(), Role.USER);
 
-        return ResponseEntity.status(200).body(result);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @PatchMapping("/member/deny")
@@ -35,10 +36,10 @@ public class AdminApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         int result = memberService.updateRole(requestDto.getId(), Role.DENIED);
 
-        return ResponseEntity.status(200).body(result);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

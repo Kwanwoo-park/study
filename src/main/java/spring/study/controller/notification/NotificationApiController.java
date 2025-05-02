@@ -105,7 +105,7 @@ public class NotificationApiController {
 
         if (notification != null) {
             notificationService.updateRead(notification);
-            return ResponseEntity.status(200).body("Notification update as read");
+            return ResponseEntity.status(HttpStatus.OK).body("Notification update as read");
         }
         else  {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Notification not found");

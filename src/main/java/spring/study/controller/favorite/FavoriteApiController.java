@@ -3,6 +3,7 @@ package spring.study.controller.favorite;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.entity.board.Board;
@@ -26,7 +27,7 @@ public class FavoriteApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
@@ -34,7 +35,7 @@ public class FavoriteApiController {
         Member otherMember = board.getMember();
 
         if (favoriteService.existFavorite(member, board))
-            return ResponseEntity.status(201).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         Favorite favorite = Favorite.builder()
                 .board(board)
@@ -58,7 +59,7 @@ public class FavoriteApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
@@ -66,7 +67,7 @@ public class FavoriteApiController {
         Favorite favorite = favoriteService.findByMemberAndBoard(member, board);
 
         if (favorite == null)
-            return ResponseEntity.status(201).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         member.removeFavorite(favorite);
         board.removeFavorite(favorite);

@@ -7,6 +7,19 @@
     <title>Chatting Room</title>
 </head>
 <style>
+    html {
+        scroll-behavior: smooth;
+    }
+    .container {
+        display: flex;
+        flex-direction: column;
+        height: 700px;
+        overflow: auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+    }
     .profile {
         width: 50px;
         height: 50px;
@@ -35,8 +48,7 @@
     <input type="hidden" id="room" th:value="${room.roomId}">
     <input type="hidden" id="email" th:value="${member.email}">
     <input type="hidden" id="flag" th:value="${flag}">
-    <div>
-        <span>메세지</span>
+    <div class="container">
         <form method="dialog" enctype="multipart/form-data">
         <div class="msgArea">
             <ul class="list-group-flush">
@@ -55,16 +67,26 @@
                     </span>
                 </li>
             </ul>
-            <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>
-            <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
-            <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none"/>
-            <button type="button" class="btn btn-primary" id="btn">이미지 전송</button>
-            <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
         </div>
         </form>
     </div>
+    <div>
+        <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>
+        <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
+        <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none"/>
+        <button type="button" class="btn btn-primary" id="btn">이미지 전송</button>
+        <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
+    </div>
+
+    <script src="/js/lib/jquery.min.js"></script>
+    <script src="/js/lib/bootstrap.min.js"></script>
+    <script src="/js/chat/chat.js"></script>
 </body>
-<script src="/js/lib/jquery.min.js"></script>
-<script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/chat/chat.js"></script>
+<footer>
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
+        </div>
+    </div>
+</footer>
 </html>

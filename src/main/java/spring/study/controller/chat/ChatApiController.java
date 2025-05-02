@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -61,13 +62,13 @@ public class ChatApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         Member search_Member = memberService.findMember(memberRequestDto.getEmail());
@@ -97,20 +98,20 @@ public class ChatApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
         String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
 
         if (!Arrays.stream(formatArr).toList().contains(format))
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 
         HashMap<String, String> map = new HashMap<>();
 
@@ -120,14 +121,14 @@ public class ChatApiController {
                 file.transferTo(f);
 
                 if (!f.exists())
-                    return ResponseEntity.status(500).body(null);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
             }
 
             map.put("name", file.getOriginalFilename());
         }
         catch (FileNotFoundException e) {
             log.debug(e.getMessage());
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
         return ResponseEntity.ok(map);

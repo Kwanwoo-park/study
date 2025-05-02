@@ -3,6 +3,7 @@ package spring.study.controller.board;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
@@ -25,11 +26,11 @@ public class BoardApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         Member member = (Member) session.getAttribute("member");
@@ -59,11 +60,11 @@ public class BoardApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getContent()));
@@ -74,11 +75,11 @@ public class BoardApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         Member member = (Member) session.getAttribute("member");

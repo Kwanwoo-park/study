@@ -34,10 +34,8 @@ if (name) {
                     img.id = 'profile';
 
                     let memberHref = document.createElement('a');
-                    let name = document.createElement('span');
                     memberHref.href = "/member/search/detail?email=" + data.email;
-                    name.innerText = data.name;
-                    memberHref.append(name);
+                    memberHref.innerText = data.name;
 
                     let email = document.createElement('span');
                     email.innerText = data.email;
@@ -55,6 +53,8 @@ if (name) {
                 console.error(error);
                 alert("다시 시도하여주십시오")
             })
+
+            name.value = '';
         }
     })
 }

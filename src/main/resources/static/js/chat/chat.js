@@ -11,13 +11,16 @@ const btn = document.getElementById("btn");
 if (btn)
     btn.addEventListener('click', () => upload.click());
 
+window.onload = function() {
+    let container = document.querySelector(".container");
+    container.scrollTop = container.scrollHeight;
+}
+
 socket.onopen = function(e) {
     console.log('open server!')
 
     if (flag == 'true')
         enterRoom(socket);
-
-    window.scrollTo(0, document.body.scrollHeight);
 }
 
 socket.onclose = function(e) {

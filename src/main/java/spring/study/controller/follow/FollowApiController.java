@@ -3,6 +3,7 @@ package spring.study.controller.follow;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.dto.member.MemberRequestDto;
@@ -26,18 +27,18 @@ public class FollowApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         Member member = (Member) session.getAttribute("member");
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
 
         if (followService.existFollow(member, search_member))
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         Follow follow = Follow.builder()
                 .follower(member)
@@ -60,18 +61,18 @@ public class FollowApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         Member member = (Member) session.getAttribute("member");
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
 
         if (!followService.existFollow(member, search_member))
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         member.removeFollower(followService.findFollow(member, search_member));
 

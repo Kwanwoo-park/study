@@ -61,10 +61,10 @@ public class MemberApiController {
         HttpSession session = request.getSession();
 
         if (member == null)
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         if ( dto.getEmail().isEmpty() || dto.getEmail().isBlank() ||dto.getPassword().isEmpty() || dto.getPassword().isBlank() )
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         if (encoder.matches(dto.getPassword(), member.getPassword())) {
             if (member.getRole() != Role.DENIED) {
@@ -85,7 +85,7 @@ public class MemberApiController {
                 memberRequestDto.getName().isEmpty() || memberRequestDto.getName().isBlank() ||
                 memberRequestDto.getPhone().isEmpty() || memberRequestDto.getPhone().isBlank() ||
                 memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다");
 
@@ -95,9 +95,9 @@ public class MemberApiController {
     @GetMapping("/duplicateCheck")
     public ResponseEntity<Integer> duplicateCheck(@RequestParam() String email) {
         if (email.isBlank())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        return memberService.existEmail(email) ? ResponseEntity.status(501).body(null) : ResponseEntity.status(200).body(null);
+        return memberService.existEmail(email) ? ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null) : ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @PatchMapping("/detail/action")
@@ -105,7 +105,7 @@ public class MemberApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         member = (Member) session.getAttribute("member");
 
@@ -118,7 +118,7 @@ public class MemberApiController {
         String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
 
         if (!Arrays.stream(formatArr).toList().contains(format))
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         File f = new File(fileDir + file.getOriginalFilename());
         try {
@@ -126,12 +126,12 @@ public class MemberApiController {
                 file.transferTo(f);
 
                 if (!f.exists())
-                    return ResponseEntity.status(500).body(null);
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
             }
         }
         catch (FileNotFoundException e) {
             log.debug(e.getMessage());
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
         member.setProfile(file.getOriginalFilename());
@@ -145,7 +145,7 @@ public class MemberApiController {
     @GetMapping("/find/email")
     public ResponseEntity<Member> findAction(@RequestParam() String email) {
         if (email.isBlank())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         member = memberService.findMember(email);
 
@@ -155,7 +155,7 @@ public class MemberApiController {
     @GetMapping("/find/info")
     public ResponseEntity<Member> findAction(@RequestParam String birth, @RequestParam String phone) {
         if (birth.isBlank() || phone.isBlank())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
         phone = phone.replaceAll(regEx, "$1-$2-$3");
@@ -176,17 +176,17 @@ public class MemberApiController {
             session.invalidate();
 
             if (member == null)
-                return ResponseEntity.status(501).body(null);
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         if (memberUpdateDto.getPassword().isEmpty() || memberUpdateDto.getPassword().isBlank())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
         member = null;
 
-        return ResponseEntity.status(200).body(result);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @PatchMapping("/updatePhone")
@@ -194,12 +194,12 @@ public class MemberApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         if (memberUpdateDto.getEmail().isEmpty() || memberUpdateDto.getEmail().isBlank() ||
                 memberUpdateDto.getPhone().isEmpty() || memberUpdateDto.getPhone().isBlank() ||
                 memberUpdateDto.getBirth().isEmpty() || memberUpdateDto.getBirth().isBlank())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         member = memberService.findMember(memberUpdateDto.getEmail());
 
@@ -207,7 +207,7 @@ public class MemberApiController {
 
         session.setAttribute("member", memberService.findMember(memberUpdateDto.getEmail()));
 
-        return ResponseEntity.status(200).body(result);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @GetMapping("/search")
@@ -215,13 +215,13 @@ public class MemberApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         return ResponseEntity.ok(memberService.findName(name));
@@ -232,13 +232,13 @@ public class MemberApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         if (email == null) {
