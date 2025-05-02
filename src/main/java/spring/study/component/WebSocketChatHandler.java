@@ -22,7 +22,9 @@ import spring.study.service.notification.NotificationService;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
@@ -34,12 +36,12 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ChatRoomService roomService;
     private final NotificationService notificationService;
     private final MemberService memberService;
-    private Set<WebSocketSession> sessions = new HashSet<>();
+    private final Map<String, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        if (sessions != null)
-            sessions.add(session);
+        String roomId = getRoomIdFromSession(session);
+        sessions.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(session);
     }
 
     @Override
@@ -49,6 +51,8 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
         ChatRoom room = roomService.find(requestDto.getRoomId());
         Member member = memberService.findMember(requestDto.getEmail());
+
+        Set<WebSocketSession> set = sessions.getOrDefault(getRoomIdFromSession(session), null);
 
         Member otherMember = roomMemberService.findMember(room, member).getMember();
 
@@ -64,7 +68,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
                 roomMemberService.save(member, room);
                 roomService.addCount(room.getId());
                 chatMessage.setMessage(member.getName() + "님이 입장했습니다.");
-                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
+                sendToEachSocket(set, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
             }
         } else if (chatMessage.getType().equals(MessageType.QUIT)) {
             roomMemberService.delete(member, room);
@@ -73,14 +77,14 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
                 roomService.subCount(room.getId());
 
                 chatMessage.setMessage(chatMessage.getMember().getName() + "님이 퇴장했습니다.");
-                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
+                sendToEachSocket(set, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
             }
             else {
                 messageService.deleteByRoom(room);
                 roomService.delete(room.getRoomId());
             }
         } else {
-            sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
+            sendToEachSocket(set, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
 
             Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 메시지를 보냈습니다");
             notification.addMember(otherMember);
@@ -89,8 +93,21 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        if (sessions != null)
-            sessions.remove(session);
+        String roomId = getRoomIdFromSession(session);
+        sessions.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).remove(session);
+    }
+
+    private String getRoomIdFromSession(WebSocketSession session) {
+        String query = session.getUri().getQuery();
+        if (query == null) return null;
+
+        for (String param : query.split("&")) {
+            String[] params = param.split("=");
+
+            if (params.length == 2 && params[0].equals("roomId")) return params[1];
+        }
+
+        return null;
     }
 
     private void sendToEachSocket(Set<WebSocketSession> sessions, TextMessage message, ChatMessage chatMessage) {

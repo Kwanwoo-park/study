@@ -1,5 +1,8 @@
-//let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat");
-let socket = new WebSocket("ws://localhost:8080/ws/chat");
+const url = new URL(window.location.href)
+const urlParams = url.searchParams
+
+let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat?roomId=" + urlParams.get('roomId'));
+//let socket = new WebSocket("ws://localhost:8080/ws/chat?roomId=" + urlParams.get('roomId'));
 
 const roomId = document.querySelector("#room").value;
 const email = document.querySelector("#email").value;
@@ -8,11 +11,12 @@ const flag = document.querySelector("#flag").value;
 const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
 
+let container = document.querySelector(".container");
+
 if (btn)
     btn.addEventListener('click', () => upload.click());
 
 window.onload = function() {
-    let container = document.querySelector(".container");
     container.scrollTop = container.scrollHeight;
 }
 
@@ -84,7 +88,7 @@ socket.onmessage = function(e) {
 
     msgArea.append(newMsgLi);
 
-    window.scrollTo(0, document.body.scrollHeight);
+    container.scrollTop = container.scrollHeight;
 }
 
 function enterRoom(socket) {
