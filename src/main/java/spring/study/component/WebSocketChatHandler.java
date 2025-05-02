@@ -35,7 +35,6 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     private final NotificationService notificationService;
     private final MemberService memberService;
     private Set<WebSocketSession> sessions = new HashSet<>();
-    private ChatMessage chatMessage;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -53,7 +52,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
         Member otherMember = roomMemberService.findMember(room, member).getMember();
 
-        chatMessage = ChatMessage.builder()
+        ChatMessage chatMessage = ChatMessage.builder()
                 .message(requestDto.getMessage())
                 .type(requestDto.getType())
                 .member(member)
@@ -65,7 +64,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
                 roomMemberService.save(member, room);
                 roomService.addCount(room.getId());
                 chatMessage.setMessage(member.getName() + "님이 입장했습니다.");
-                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
             }
         } else if (chatMessage.getType().equals(MessageType.QUIT)) {
             roomMemberService.delete(member, room);
@@ -74,14 +73,14 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
                 roomService.subCount(room.getId());
 
                 chatMessage.setMessage(chatMessage.getMember().getName() + "님이 퇴장했습니다.");
-                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+                sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
             }
             else {
                 messageService.deleteByRoom(room);
                 roomService.delete(room.getRoomId());
             }
         } else {
-            sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)));
+            sendToEachSocket(sessions, new TextMessage(objectMapper.writeValueAsString(chatMessage)), chatMessage);
 
             Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 메시지를 보냈습니다");
             notification.addMember(otherMember);
@@ -94,7 +93,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
             sessions.remove(session);
     }
 
-    private void sendToEachSocket(Set<WebSocketSession> sessions, TextMessage message) {
+    private void sendToEachSocket(Set<WebSocketSession> sessions, TextMessage message, ChatMessage chatMessage) {
         sessions.parallelStream().forEach( roomSession -> {
             try {
                 roomSession.sendMessage(message);
