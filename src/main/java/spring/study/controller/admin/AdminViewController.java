@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.member.Member;
 import spring.study.entity.member.Role;
+import spring.study.service.forbidden.ForbiddenService;
 import spring.study.service.member.MemberService;
 
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ import spring.study.service.member.MemberService;
 @RequestMapping("/admin")
 public class AdminViewController {
     private final MemberService memberService;
+    private final ForbiddenService forbiddenService;
 
     @GetMapping("/administrator")
     public String admin(HttpServletRequest request){
@@ -79,5 +81,27 @@ public class AdminViewController {
         model.addAttribute("member", memberService.findMember(requestDto.getEmail()));
 
         return "admin/update_member";
+    }
+
+    @GetMapping("/forbidden/word")
+    public String forbiddenWordList(Model model, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return "redirect:/member/login?error=true&exception=Not Found account";
+
+        if (session.getAttribute("member") == null)
+            return "redirect:/member/login?error=true&exception=Session Expired";
+
+        Member member = (Member) session.getAttribute("member");
+
+        if (member.getRole() != Role.ADMIN) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
+
+        model.addAttribute("list", forbiddenService.findAll());
+
+        return "admin/forbidden_word_list";
     }
 }

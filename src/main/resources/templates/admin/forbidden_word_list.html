@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Administrator View</title>
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h1>Forbidden word list</h1>
+  <button type="button" id="btn" class="btn btn-success">Forbidden word upload</button>
+  <div id="uploadDiv" style="display: none;">
+    <input type="text" class="form-control" id="word" name="word" placeholder="Input forbidden word">
+    <label for="risk">위험도 선택</label>
+    <select id="risk">
+      <option value="HIGH">High</option>
+      <option value="MIDDLE">Middle</option>
+      <option value="LOW">Low</option>
+    </select>
+  </div>
+  <div th:each="list : ${list}">
+    <div class="mb-3">
+      <label class="form-label">Word: </label>
+      <label class="form-label" th:text="${list.word}"></label>
+      <label class="form-label">/Status: </label>
+      <label class="form-label" th:text="${list.Status}"></label>
+      <label class="form-label">/Risk: </label>
+      <label class="form-label" th:text="${list.risk}"></label>
+    </div>
+  </div>
+</div>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/admin/forbiddenWordList.js"></script>
+</body>
+</html>
