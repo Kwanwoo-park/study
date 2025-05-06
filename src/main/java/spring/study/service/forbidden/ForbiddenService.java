@@ -42,4 +42,16 @@ public class ForbiddenService {
     public List<ForbiddenResponseDto> findByStatus(Status status) {
         return forbiddenRepository.findByStatus(status).stream().map(ForbiddenResponseDto::new).toList();
     }
+
+    public List<ForbiddenResponseDto> findByStatusNot(Status status) {
+        return forbiddenRepository.findByStatusNot(status).stream().map(ForbiddenResponseDto::new).toList();
+    }
+
+    public int updateToExamine(List<Long> idList) {
+        return forbiddenRepository.updateStatusInIdList(Status.EXAMINE, idList);
+    }
+
+    public int updateToApproval(List<Long> idList) {
+        return forbiddenRepository.updateStatusInIdList(Status.APPROVAL, idList);
+    }
 }

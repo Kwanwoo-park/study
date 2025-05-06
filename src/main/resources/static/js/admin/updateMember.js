@@ -54,7 +54,7 @@ if (del) {
         })
         .then((response) => {
             if (response.status == 200) {
-                alert("삭제되었습니다");\
+                alert("삭제되었습니다");
             }
             else {
                 alert("다시 시도하여주십시오");

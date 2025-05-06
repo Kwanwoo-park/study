@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import spring.study.dto.forbidden.ForbiddenChangeRequestDto;
 import spring.study.dto.forbidden.ForbiddenRequestDto;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.forbidden.Forbidden;
@@ -13,6 +14,8 @@ import spring.study.entity.forbidden.Status;
 import spring.study.entity.member.Role;
 import spring.study.service.forbidden.ForbiddenService;
 import spring.study.service.member.MemberService;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -58,5 +61,29 @@ public class AdminApiController {
         requestDto.setStatus(Status.APPROVAL);
 
         return ResponseEntity.ok(forbiddenService.save(requestDto));
+    }
+
+    @PatchMapping("/forbidden/word/change/examine")
+    public ResponseEntity<Integer> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        int result = forbiddenService.updateToExamine(requestDto.getIdList());
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping("/forbidden/word/change/approval")
+    public ResponseEntity<Integer> changeToApporval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        int result = forbiddenService.updateToApproval(requestDto.getIdList());
+
+        return ResponseEntity.ok(result);
     }
 }

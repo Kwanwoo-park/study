@@ -16,20 +16,12 @@
 </head>
 <body>
 <div class="container">
-  <h1>Forbidden word list</h1>
-  <button type="button" id="btn" class="btn btn-success">Forbidden word upload</button>
-  <div id="uploadDiv" style="display: none;">
-    <input type="text" class="form-control" id="word" name="word" placeholder="Input forbidden word">
-    <label for="risk">위험도 선택</label>
-    <select id="risk">
-      <option value="HIGH">High</option>
-      <option value="MIDDLE">Middle</option>
-      <option value="LOW">Low</option>
-    </select>
-  </div>
-  <hr>
+  <h1>Forbidden word apply list</h1>
+  <button type="button" id="changeExamine">Change to Examine</button>
+  <button type="button" id="changeApproval">Change to Approval</button>
   <div th:each="list : ${list}">
     <div class="text">
+      <input type="checkbox" th:id="'check' + ${list.id}" tH:onclick="fnCheck([[${list.id}]])">
       <label class="form-label">Word: </label>
       <label class="form-label" th:text="${list.word}"></label>
     </div>
@@ -44,6 +36,6 @@
 </div>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/admin/forbiddenWordList.js"></script>
+<script src="/js/admin/forbiddenWordApplyList.js"></script>
 </body>
 </html>
