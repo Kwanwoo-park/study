@@ -1,0 +1,77 @@
+package spring.study.controller.forbidden;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import spring.study.dto.forbidden.ForbiddenRequestDto;
+import spring.study.dto.forbidden.ForbiddenResponseDto;
+import spring.study.entity.forbidden.Forbidden;
+import spring.study.entity.forbidden.Status;
+import spring.study.service.forbidden.ForbiddenService;
+
+import java.util.List;
+
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/api/forbidden/word")
+public class ForbiddenApiController {
+    private final ForbiddenService forbiddenService;
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ForbiddenResponseDto>> forbiddenWordSearch(@RequestParam String word, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        return ResponseEntity.ok(forbiddenService.findByWord(word));
+    }
+
+    @GetMapping("/proposal")
+    public ResponseEntity<List<ForbiddenResponseDto>> forbiddenProposalWordSearch(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        return ResponseEntity.ok(forbiddenService.findByStatus(Status.PROPOSAL));
+    }
+
+    @GetMapping("/examine")
+    public ResponseEntity<List<ForbiddenResponseDto>> forbiddenExamineWordSearch(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        return ResponseEntity.ok(forbiddenService.findByStatus(Status.EXAMINE));
+    }
+
+    @GetMapping("/approval")
+    public ResponseEntity<List<ForbiddenResponseDto>> forbiddenApprovalWordSearch(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        return ResponseEntity.ok(forbiddenService.findByStatus(Status.APPROVAL));
+    }
+
+    @PostMapping("/apply")
+    public ResponseEntity<Forbidden> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        if (requestDto.getWord().isBlank())
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+
+        requestDto.setStatus(Status.PROPOSAL);
+
+        return ResponseEntity.ok(forbiddenService.save(requestDto));
+    }
+}

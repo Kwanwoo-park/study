@@ -53,8 +53,6 @@ if (name) {
                 console.error(error);
                 alert("다시 시도하여주십시오")
             })
-
-            name.value = '';
         }
     })
 }

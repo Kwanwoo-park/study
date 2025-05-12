@@ -70,7 +70,7 @@ public class AdminApiController {
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        int result = forbiddenService.updateToExamine(requestDto.getIdList());
+        int result = forbiddenService.updateStatus(Status.EXAMINE, requestDto.getIdList());
 
         return ResponseEntity.ok(result);
     }
@@ -82,7 +82,7 @@ public class AdminApiController {
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        int result = forbiddenService.updateToApproval(requestDto.getIdList());
+        int result = forbiddenService.updateStatus(Status.APPROVAL, requestDto.getIdList());
 
         return ResponseEntity.ok(result);
     }

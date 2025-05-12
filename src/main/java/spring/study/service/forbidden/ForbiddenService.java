@@ -31,8 +31,8 @@ public class ForbiddenService {
         return forbiddenRepository.findAll();
     }
 
-    public Forbidden findByWord(String word) {
-        return forbiddenRepository.findByWord(word);
+    public List<ForbiddenResponseDto> findByWord(String word) {
+        return forbiddenRepository.findByWord(word).stream().map(ForbiddenResponseDto::new).toList();
     }
 
     public List<ForbiddenResponseDto> findByRisk(Risk risk) {
@@ -47,11 +47,7 @@ public class ForbiddenService {
         return forbiddenRepository.findByStatusNot(status).stream().map(ForbiddenResponseDto::new).toList();
     }
 
-    public int updateToExamine(List<Long> idList) {
-        return forbiddenRepository.updateStatusInIdList(Status.EXAMINE, idList);
-    }
-
-    public int updateToApproval(List<Long> idList) {
-        return forbiddenRepository.updateStatusInIdList(Status.APPROVAL, idList);
+    public int updateStatus(Status status, List<Long> idList) {
+        return forbiddenRepository.updateStatusInIdList(status, idList);
     }
 }

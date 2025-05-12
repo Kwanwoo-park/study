@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Forbidden word list</title>
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
+</head>
+<style>
+    html {
+        scroll-behavior: smooth;
+    }
+    label {
+        margin-right: 5px;
+    }
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-self: start;
+        height: 700px;
+        overflow: auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+    }
+    .btnDiv {
+        display: flex;
+        flex-direction: row;
+        align-self: start;
+        justify-content: center;
+    }
+    .text {
+      font-size: 20px;
+    }
+    .annotation {
+      color: gray;
+    }
+</style>
+<body>
+<nav class="navi">
+    <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
+    <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
+    <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
+    <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
+    <div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
+    <div onclick="fnForbidden()"><img th:src="@{/img/} + ic_chat_black.png" class="nav-icon"></div>
+    <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+</nav>
+    <div class="container">
+        <button type="button" id="btn" class="btn btn-success">Forbidden word apply</button>
+        <div id="uploadDiv" style="display: none;">
+            <hr>
+            <input type="text" class="form-control" id="word" name="word" placeholder="Input forbidden word">
+            <label for="risk">위험도 선택</label>
+            <select id="risk">
+                <option value="HIGH">High</option>
+                <option value="MIDDLE">Middle</option>
+                <option value="LOW">Low</option>
+            </select>
+            <hr>
+        </div>
+        <input type="search" class="form-control" id="search" name="search" placeholder="Search word">
+        <div class="btnDiv">
+            <button type="button" class="btn btn-primary" onclick="fnFindProposal()">Find Proposal</button>
+            <button type="button" class="btn btn-primary" onclick="fnFindExamine()">Find Examine</button>
+            <button type="button" class="btn btn-primary" onclick="fnFindApproval()">find Approval</button>
+        </div>
+        <div class="searchDiv"></div>
+    </div>
+    <script src="/js/lib/jquery.min.js"></script>
+    <script src="/js/lib/bootstrap.min.js"></script>
+    <script src="/js/forbidden/list.js"></script>
+    <script src="/js/common/common.js"></script>
+</body>
+</html>
