@@ -125,7 +125,10 @@ function fnEditComplete(boardId) {
     })
     .then((response) => response.json())
     .then((json) => {
-        window.location.reload();
+        if (json == -1)
+            alert("부적절한 내용 감지되었습니다");
+        else
+            window.location.reload();
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

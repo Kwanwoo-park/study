@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import spring.study.dto.forbidden.ForbiddenChangeRequestDto;
 import spring.study.dto.forbidden.ForbiddenRequestDto;
 import spring.study.dto.forbidden.ForbiddenResponseDto;
 import spring.study.entity.forbidden.Forbidden;
@@ -73,5 +74,44 @@ public class ForbiddenApiController {
         requestDto.setStatus(Status.PROPOSAL);
 
         return ResponseEntity.ok(forbiddenService.save(requestDto));
+    }
+
+    @PostMapping("/admin/save")
+    public ResponseEntity<Forbidden> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        if (requestDto.getWord().isBlank())
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+
+        requestDto.setStatus(Status.APPROVAL);
+
+        return ResponseEntity.ok(forbiddenService.save(requestDto));
+    }
+
+    @PatchMapping("/admin/change/examine")
+    public ResponseEntity<Integer> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        int result = forbiddenService.updateStatus(Status.EXAMINE, requestDto.getIdList());
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping("/admin/change/approval")
+    public ResponseEntity<Integer> changeToApporval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        int result = forbiddenService.updateStatus(Status.APPROVAL, requestDto.getIdList());
+
+        return ResponseEntity.ok(result);
     }
 }

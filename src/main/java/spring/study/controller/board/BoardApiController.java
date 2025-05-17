@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.forbidden.Forbidden;
+import spring.study.entity.forbidden.Status;
 import spring.study.entity.member.Member;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
@@ -27,7 +28,7 @@ public class BoardApiController {
     private final ForbiddenService forbiddenService;
 
     @PostMapping("/write")
-    public ResponseEntity<Board> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
+    public ResponseEntity<Long> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -39,32 +40,31 @@ public class BoardApiController {
         }
 
         Member member = (Member) session.getAttribute("member");
-        Board result = null;
 
         if (!boardRequestDto.getContent().isBlank() || !boardRequestDto.getContent().isEmpty()){
-            List<Forbidden> wordList = forbiddenService.findAll();
+            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
 
             for (Forbidden word : wordList) {
                 if (boardRequestDto.getContent().contains(word.getWord()))
-                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+                    return ResponseEntity.ok(-1L);
             }
 
             Board board = boardRequestDto.toEntity();
 
             board.addMember(member);
 
-            result = boardService.save(board);
+            Board result = boardService.save(board);
             session.setAttribute("member", member);
 
             if (result == null) {
-                return ResponseEntity.ok(result);
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
             }
+
+            return ResponseEntity.ok(result.getId());
         }
         else {
-            return ResponseEntity.ok(result);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-
-        return ResponseEntity.ok(result);
     }
 
     @PatchMapping("/view")
@@ -79,14 +79,19 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
-        List<Forbidden> wordList = forbiddenService.findAll();
+        if (!boardRequestDto.getContent().isBlank() | !boardRequestDto.getContent().isEmpty()) {
+            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
 
-        for (Forbidden word : wordList) {
-            if (boardRequestDto.getContent().contains(word.getWord()))
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+            for (Forbidden word : wordList) {
+                if (boardRequestDto.getContent().contains(word.getWord()))
+                    return ResponseEntity.ok(-1);
+            }
+
+            return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getContent()));
         }
-
-        return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getContent()));
+        else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 
     @DeleteMapping("/view/delete")

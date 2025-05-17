@@ -8,7 +8,7 @@ if (btn) {
         if (div.style.display === 'none')
             div.style.display = 'inline';
         else {
-            fetch(`/api/admin/forbidden/word/save`, {
+            fetch(`/api/forbidden/word/admin/save`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",

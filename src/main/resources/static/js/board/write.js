@@ -30,13 +30,18 @@ function fnSave() {
     })
     .then((response) => response.json())
     .then((json) => {
-        id = json['id'];
+        id = json;
 
-        if (file)
-            img_btn.click();
+        if (id == -1) {
+            alert("부적절한 내용 감지되었습니다");
+        }
+        else {
+            if (file)
+                img_btn.click();
 
-        alert("게시글이 저장되었습니다.");
-        location.replace(`/board/main`);
+            alert("게시글이 저장되었습니다.");
+            location.replace(`/board/main`);
+        }
     })
     .catch((error) => {
         alert("다시 시도하여주십시오.");

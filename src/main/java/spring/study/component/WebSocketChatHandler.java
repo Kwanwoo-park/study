@@ -12,17 +12,21 @@ import spring.study.dto.chat.ChatMessageRequestDto;
 import spring.study.entity.chat.ChatMessage;
 import spring.study.entity.chat.ChatRoom;
 import spring.study.entity.chat.MessageType;
+import spring.study.entity.forbidden.Forbidden;
+import spring.study.entity.forbidden.Status;
 import spring.study.entity.member.Member;
 import spring.study.entity.notification.Notification;
 import spring.study.service.chat.ChatMessageService;
 import spring.study.service.chat.ChatRoomMemberService;
 import spring.study.service.chat.ChatRoomService;
+import spring.study.service.forbidden.ForbiddenService;
 import spring.study.service.member.MemberService;
 import spring.study.service.notification.NotificationService;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,6 +40,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ChatRoomService roomService;
     private final NotificationService notificationService;
     private final MemberService memberService;
+    private final ForbiddenService forbiddenService;
     private final Map<String, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
 
     @Override
@@ -48,6 +53,14 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         ChatMessageRequestDto requestDto = objectMapper.readValue(payload, ChatMessageRequestDto.class);
+
+        List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
+
+        for (Forbidden word : wordList) {
+            if (requestDto.getMessage().contains(word.getWord())) {
+                requestDto.setMessage("<부적절한 내용이 포함되어 검열되었습니다>");
+            }
+        }
 
         ChatRoom room = roomService.find(requestDto.getRoomId());
         Member member = memberService.findMember(requestDto.getEmail());
@@ -98,7 +111,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     }
 
     private String getRoomIdFromSession(WebSocketSession session) {
-        String query = session.getUri().getQuery();
+        String query = Objects.requireNonNull(session.getUri()).getQuery();
         if (query == null) return null;
 
         for (String param : query.split("&")) {

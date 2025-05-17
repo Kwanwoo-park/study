@@ -47,43 +47,4 @@ public class AdminApiController {
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
-
-    @PostMapping("/forbidden/word/save")
-    public ResponseEntity<Forbidden> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
-
-        if (requestDto.getWord().isBlank())
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
-
-        requestDto.setStatus(Status.APPROVAL);
-
-        return ResponseEntity.ok(forbiddenService.save(requestDto));
-    }
-
-    @PatchMapping("/forbidden/word/change/examine")
-    public ResponseEntity<Integer> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
-
-        int result = forbiddenService.updateStatus(Status.EXAMINE, requestDto.getIdList());
-
-        return ResponseEntity.ok(result);
-    }
-
-    @PatchMapping("/forbidden/word/change/approval")
-    public ResponseEntity<Integer> changeToApporval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
-
-        int result = forbiddenService.updateStatus(Status.APPROVAL, requestDto.getIdList());
-
-        return ResponseEntity.ok(result);
-    }
 }

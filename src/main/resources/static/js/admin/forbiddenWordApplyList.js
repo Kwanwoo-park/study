@@ -20,7 +20,7 @@ function fnCheck(id) {
 
 examine.addEventListener("click", (event) => {
     if (idList.length > 0){
-        fetch(`/api/admin/forbidden/word/change/examine`, {
+        fetch(`/api/forbidden/word/admin/change/examine`, {
             method: 'PATCH',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
@@ -47,7 +47,7 @@ examine.addEventListener("click", (event) => {
 
 approval.addEventListener("click", (event) => {
     if (idList.length > 0) {
-        fetch(`/api/admin/forbidden/word/change/approval`, {
+        fetch(`/api/forbidden/word/admin/change/approval`, {
             method: 'PATCH',
             headers: {
                 "Content-Type": "application/json; charset-utf-8",

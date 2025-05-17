@@ -15,6 +15,8 @@ import spring.study.dto.member.MemberRequestDto;
 import spring.study.dto.member.MemberResponseDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.chat.ChatRoomMember;
+import spring.study.entity.forbidden.Forbidden;
+import spring.study.entity.forbidden.Status;
 import spring.study.entity.member.Member;
 import spring.study.entity.member.Role;
 import spring.study.service.board.BoardImgService;
@@ -24,6 +26,7 @@ import spring.study.service.chat.ChatRoomMemberService;
 import spring.study.service.comment.CommentService;
 import spring.study.service.favorite.FavoriteService;
 import spring.study.service.follow.FollowService;
+import spring.study.service.forbidden.ForbiddenService;
 import spring.study.service.member.MemberService;
 import spring.study.service.member.UserService;
 import spring.study.service.notification.NotificationService;
@@ -48,6 +51,7 @@ public class MemberApiController {
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
     private final UserService userService;
+    private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
     private final BCryptPasswordEncoder encoder;
     private Member member;
@@ -79,7 +83,7 @@ public class MemberApiController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<MemberResponseDto> registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
+    public ResponseEntity<Long> registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
         if (memberRequestDto.getEmail().isEmpty() || memberRequestDto.getEmail().isBlank() ||
                 memberRequestDto.getPassword().isEmpty() || memberRequestDto.getPassword().isBlank() ||
                 memberRequestDto.getName().isEmpty() || memberRequestDto.getName().isBlank() ||
@@ -87,9 +91,18 @@ public class MemberApiController {
                 memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
+        List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
+
+        for (Forbidden word : wordList) {
+            if (memberRequestDto.getEmail().contains(word.getWord()))
+                return ResponseEntity.ok(-1L);
+            else if (memberRequestDto.getName().contains(word.getWord()))
+                return ResponseEntity.ok(-1L);
+        }
+
         notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다");
 
-        return ResponseEntity.ok(userService.createUser(memberRequestDto));
+        return ResponseEntity.ok(userService.createUser(memberRequestDto).getId());
     }
 
     @GetMapping("/duplicateCheck")

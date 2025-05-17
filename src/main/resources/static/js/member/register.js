@@ -90,8 +90,12 @@ if (button) {
             })
             .then((response) => response.json())
             .then((json) => {
-                alert("회원가입이 완료되었습니다.");
-                location.replace(`/member/login`)
+                if (json == -1)
+                    alert("부적절한 내용 감지되었습니다");
+                else {
+                    alert("회원가입이 완료되었습니다.");
+                    location.replace(`/member/login`)
+                }
             })
             .catch((error) => {
                 alert("이미 회원가입이 된 이메일입니다.");

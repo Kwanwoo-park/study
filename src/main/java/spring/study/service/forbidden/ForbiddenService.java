@@ -39,6 +39,10 @@ public class ForbiddenService {
         return forbiddenRepository.findByRisk(risk).stream().map(ForbiddenResponseDto::new).toList();
     }
 
+    public List<Forbidden> findWordList(Status status) {
+        return forbiddenRepository.findByStatus(status);
+    }
+
     public List<ForbiddenResponseDto> findByStatus(Status status) {
         return forbiddenRepository.findByStatus(status).stream().map(ForbiddenResponseDto::new).toList();
     }

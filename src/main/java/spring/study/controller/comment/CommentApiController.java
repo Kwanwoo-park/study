@@ -9,11 +9,16 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.dto.comment.CommentRequestDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.comment.Comment;
+import spring.study.entity.forbidden.Forbidden;
+import spring.study.entity.forbidden.Status;
 import spring.study.entity.member.Member;
 import spring.study.entity.notification.Notification;
 import spring.study.service.board.BoardService;
 import spring.study.service.comment.CommentService;
+import spring.study.service.forbidden.ForbiddenService;
 import spring.study.service.notification.NotificationService;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,35 +26,48 @@ import spring.study.service.notification.NotificationService;
 public class CommentApiController {
     private final CommentService commentService;
     private final BoardService boardService;
+    private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
 
     @PostMapping("")
-    public ResponseEntity<Comment> commentAction(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
+    public ResponseEntity<Long> commentAction(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findById(commentRequestDto.getId());
 
-        Member otherMember = board.getMember();
+        if (!commentRequestDto.getComments().isBlank() || !commentRequestDto.getComments().isEmpty()) {
+            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
 
-        Comment comment = Comment.builder()
-                .comments(commentRequestDto.getComments())
-                .build();
+            for (Forbidden word : wordList) {
+                if (commentRequestDto.getComments().contains(word.getWord()))
+                    return ResponseEntity.ok(-1L);
+            }
 
-        member.addComment(comment);
-        board.addComment(comment);
+            Board board = boardService.findById(commentRequestDto.getId());
 
-        if (!member.getId().equals(otherMember.getId())) {
-            Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다");
-            notification.addMember(otherMember);
+            Member otherMember = board.getMember();
+
+            Comment comment = Comment.builder()
+                    .comments(commentRequestDto.getComments())
+                    .build();
+
+            member.addComment(comment);
+            board.addComment(comment);
+
+            if (!member.getId().equals(otherMember.getId())) {
+                Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다");
+                notification.addMember(otherMember);
+            }
+
+            session.setAttribute("member", member);
+
+            return ResponseEntity.ok(commentService.save(comment).getId());
         }
-
-        session.setAttribute("member", member);
-
-        return ResponseEntity.ok(commentService.save(comment));
+        else
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
     @PatchMapping("/update")
@@ -64,7 +82,18 @@ public class CommentApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
-        return ResponseEntity.ok(commentService.updateComments(commentRequestDto.getId(), commentRequestDto.getComments()));
+        if (!commentRequestDto.getComments().isBlank() || !commentRequestDto.getComments().isEmpty()) {
+            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
+
+            for (Forbidden word : wordList) {
+                if (commentRequestDto.getComments().contains(word.getWord()))
+                    return ResponseEntity.ok(-1);
+            }
+
+            return ResponseEntity.ok(commentService.updateComments(commentRequestDto.getId(), commentRequestDto.getComments()));
+        }
+        else
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
     @DeleteMapping("/delete")
