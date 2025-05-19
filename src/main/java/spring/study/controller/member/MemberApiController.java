@@ -79,7 +79,7 @@ public class MemberApiController {
             return ResponseEntity.status(HttpStatus.OK).body(member);
         }
 
-        return ResponseEntity.status(501).body(null);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
     }
 
     @PostMapping("/register")
@@ -94,9 +94,7 @@ public class MemberApiController {
         List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
 
         for (Forbidden word : wordList) {
-            if (memberRequestDto.getEmail().contains(word.getWord()))
-                return ResponseEntity.ok(-1L);
-            else if (memberRequestDto.getName().contains(word.getWord()))
+            if (memberRequestDto.getName().contains(word.getWord()))
                 return ResponseEntity.ok(-1L);
         }
 

@@ -51,6 +51,10 @@ public class ForbiddenService {
         return forbiddenRepository.findByStatusNot(status).stream().map(ForbiddenResponseDto::new).toList();
     }
 
+    public Boolean existWord(String word) {
+        return forbiddenRepository.existsByWord(word);
+    }
+
     public int updateStatus(Status status, List<Long> idList) {
         return forbiddenRepository.updateStatusInIdList(status, idList);
     }

@@ -62,7 +62,7 @@ public class ForbiddenApiController {
     }
 
     @PostMapping("/apply")
-    public ResponseEntity<Forbidden> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Long> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
@@ -70,14 +70,17 @@ public class ForbiddenApiController {
 
         if (requestDto.getWord().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+
+        if (!forbiddenService.existWord(requestDto.getWord()))
+            return ResponseEntity.ok(-1L);
 
         requestDto.setStatus(Status.PROPOSAL);
 
-        return ResponseEntity.ok(forbiddenService.save(requestDto));
+        return ResponseEntity.ok(forbiddenService.save(requestDto).getId());
     }
 
     @PostMapping("/admin/save")
-    public ResponseEntity<Forbidden> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Long> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
@@ -86,9 +89,12 @@ public class ForbiddenApiController {
         if (requestDto.getWord().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
+        if (!forbiddenService.existWord(requestDto.getWord()))
+            return ResponseEntity.ok(-1L);
+
         requestDto.setStatus(Status.APPROVAL);
 
-        return ResponseEntity.ok(forbiddenService.save(requestDto));
+        return ResponseEntity.ok(forbiddenService.save(requestDto).getId());
     }
 
     @PatchMapping("/admin/change/examine")
