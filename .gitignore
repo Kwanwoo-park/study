@@ -36,6 +36,8 @@ application-real.properties
 /dist/
 /nbdist/
 /.nb-gradle/
+docker-compose.yml
+Dockerfile
 
 ### VS Code ###
 .vscode/

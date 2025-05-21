@@ -131,6 +131,11 @@ public class MemberApiController {
         if (!Arrays.stream(formatArr).toList().contains(format))
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
+        File dir = new File(fileDir);
+        if (!dir.exists()) {
+            dir.mkdirs(); // 디렉토리 생성
+        }
+
         File f = new File(fileDir + file.getOriginalFilename());
         try {
             if (!f.exists()) {
