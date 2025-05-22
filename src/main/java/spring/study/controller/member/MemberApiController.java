@@ -127,6 +127,8 @@ public class MemberApiController {
             return ResponseEntity.status(501).body(null);
         }
 
+        imageS3Service.deleteImage(member.getProfile());
+
         String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
         String[] formatArr = {"jpg", "jpeg", "png", "gif"};
 

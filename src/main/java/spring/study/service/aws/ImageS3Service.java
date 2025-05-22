@@ -70,4 +70,8 @@ public class ImageS3Service {
 
         return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.OK);
     }
+
+    public void deleteImage(String name) {
+        amazonS3.deleteObject(new DeleteObjectRequest(bucketName, name));
+    }
 }
