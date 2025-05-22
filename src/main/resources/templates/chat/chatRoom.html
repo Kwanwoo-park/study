@@ -55,15 +55,15 @@
                 <li class="list-group-item" th:each="list, index : ${message}">
                     <span th:if="${#strings.equals(list.member.email, member.email)}" class="right">
                         <span th:text="${list.member.name}" class="chatname"></span>
-                        <img th:src="@{/img/} + ${list.member.profile}" class="profile" align="right">
+                        <img th:src="${list.member.profile}" class="profile" align="right">
                         <pre th:unless="${#strings.equals(list.type, 'IMAGE')}" th:text="${list.message}"></pre>
-                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="@{/img/} + ${list.message}" class="chatimg" align="right">
+                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="${list.message}" class="chatimg" align="right">
                     </span>
                     <span th:unless="${#strings.equals(list.member.email, member.email)}" class="left">
-                        <img th:src="@{/img/} + ${list.member.profile}" class="profile" align="left">
+                        <img th:src="${list.member.profile}" class="profile" align="left">
                         <span th:text="${list.member.name}" class="chatname"></span>
                         <pre th:unless="${#strings.equals(list.type, 'IMAGE')}" th:text="${list.message}"></pre>
-                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="@{/img/} + ${list.message}" class="chatimg" align="left">
+                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="${list.message}" class="chatimg" align="left">
                     </span>
                 </li>
             </ul>

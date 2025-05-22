@@ -4,7 +4,7 @@ function fnLeft(listId, ImageArr) {
     const left_arrow = document.getElementById('left' + listId);
     const right_arrow = document.getElementById('right' + listId);
 
-    main_image.src = "/img/" + ImageArr[parseInt(img_id.value) - 1].imgSrc;
+    main_image.src = ImageArr[parseInt(img_id.value) - 1].imgSrc;
     img_id.value = parseInt(img_id.value) - 1;
 
     if (right_arrow.style.visibility === 'hidden')
@@ -20,7 +20,7 @@ function fnRight(listId, ImageArr) {
     const left_arrow = document.getElementById('left' + listId);
     const right_arrow = document.getElementById('right' + listId);
 
-    main_image.src = "/img/" + ImageArr[parseInt(img_id.value)+ 1].imgSrc;
+    main_image.src = ImageArr[parseInt(img_id.value)+ 1].imgSrc;
     img_id.value = parseInt(img_id.value)+ 1;
 
     if (left_arrow.style.visibility === 'hidden')

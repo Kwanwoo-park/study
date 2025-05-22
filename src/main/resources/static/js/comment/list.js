@@ -165,7 +165,7 @@ function fnReplyGet(commentId) {
                 let name = document.createElement('span');
                 let reply = document.createElement('pre');
 
-                profile.src = "/img/" + data['member'].profile;
+                profile.src = data['member'].profile;
                 profile.className = 'profile';
 
                 memberHref.href= "/member/search/detail?email=" + data['member'].email;

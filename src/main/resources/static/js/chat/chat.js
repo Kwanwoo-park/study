@@ -48,7 +48,7 @@ socket.onmessage = function(e) {
 
     newMsgLi.className = "list-group-item";
 
-    profile.src = "/img/" + json.member.profile;
+    profile.src = json.member.profile;
     profile.className = "profile";
 
     name.innerText = json.member.name;
@@ -74,7 +74,7 @@ socket.onmessage = function(e) {
     }
 
     if (json.type == "IMAGE") {
-        imgTalk.src = "/img/" + json.message;
+        imgTalk.src = json.message;
         imgTalk.className = "chatimg";
 
         newMsgArea.append(imgTalk);

@@ -64,7 +64,7 @@
     <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
     <div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
     <div onclick="fnForbidden()"><img th:src="@{/img/} + ic_chat_black.png" class="nav-icon"></div>
-    <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+    <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
 </nav>
     <div class="container">
         <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
@@ -73,7 +73,7 @@
         </div>
         <div class="room" th:each="room : ${roomList}">
             <div class="room" th:onclick="fnClick([[${room.roomId}]])">
-                <img th:src="@{/img/} + ${member[room.roomId].profile}" class="profile">
+                <img th:src="${member[room.roomId].profile}" class="profile">
                 <div class="text">
                     <label th:text="${member[room.roomId].name}" class="chatname"></label>
                     <label th:if="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="'사진을 보냈습니다'"></label>

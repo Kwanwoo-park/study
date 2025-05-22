@@ -16,7 +16,7 @@
         <li class="list-group-item" th:each="list,index : ${follower}">
           <span>
             <span th:text="${index.index+1}"></span>
-            <img th:src="@{/img/} + ${list.follower.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
+            <img th:src="${list.follower.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
             <a th:href="@{/member/search/detail(email=${list.follower.email})}">
               <span th:text="${list.follower.name}"></span>
             </a>

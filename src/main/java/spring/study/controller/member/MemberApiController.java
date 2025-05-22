@@ -19,6 +19,7 @@ import spring.study.entity.forbidden.Forbidden;
 import spring.study.entity.forbidden.Status;
 import spring.study.entity.member.Member;
 import spring.study.entity.member.Role;
+import spring.study.service.aws.ImageS3Service;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 import spring.study.service.chat.ChatMessageService;
@@ -53,6 +54,7 @@ public class MemberApiController {
     private final UserService userService;
     private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
+    private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
     private Member member;
 
@@ -126,32 +128,15 @@ public class MemberApiController {
         }
 
         String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
-        String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
+        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
 
         if (!Arrays.stream(formatArr).toList().contains(format))
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        File dir = new File(fileDir);
-        if (!dir.exists()) {
-            dir.mkdirs(); // 디렉토리 생성
-        }
+        String imageUrl = imageS3Service.uploadImageToS3(file);
 
-        File f = new File(fileDir + file.getOriginalFilename());
-        try {
-            if (!f.exists()) {
-                file.transferTo(f);
-
-                if (!f.exists())
-                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
-            }
-        }
-        catch (FileNotFoundException e) {
-            log.debug(e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-
-        member.setProfile(file.getOriginalFilename());
-        memberService.updateProfile(member.getId(), file.getOriginalFilename());
+        member.setProfile(imageUrl);
+        memberService.updateProfile(member.getId(), imageUrl);
 
         session.setAttribute("member", member);
 

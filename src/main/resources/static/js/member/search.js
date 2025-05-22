@@ -29,7 +29,7 @@ if (name) {
                     let span = document.createElement('span');
 
                     let img = document.createElement('img');
-                    img.src = "/img/" + data.profile;
+                    img.src = data.profile;
                     img.className = 'profile';
                     img.id = 'profile';
 

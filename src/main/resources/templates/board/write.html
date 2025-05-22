@@ -67,7 +67,7 @@
 		<div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
 		<div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
 		<div onclick="fnForbidden()"><img th:src="@{/img/} + ic_chat_black.png" class="nav-icon"></div>
-		<div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+		<div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
 	</nav>
 	<div class="container">
 		<div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">

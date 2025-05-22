@@ -94,7 +94,7 @@
         <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
         <div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
         <div onclick="fnForbidden()"><img th:src="@{/img/} + ic_chat_black.png" class="nav-icon"></div>
-        <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+        <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
     </nav>
     <div class="container">
         <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
@@ -103,13 +103,13 @@
         </div>
             <div th:each="list, index : ${resultMap}" class="main">
                 <div class="profile" th:onclick="fnProfile([[${list.member.email}]])">
-                    <img th:src="@{/img/} + ${list.member.profile}" class="profile-img">
+                    <img th:src="${list.member.profile}" class="profile-img">
                     <span th:text="${list.member.name}" class="name"></span>
                 </div>
                 <div class="main-image-wrapper">
                     <button type="button" th:unless="${list.img.size == 1}" class="btn" th:id="'left' + ${list.id}" style="visibility:hidden;" th:onclick="fnLeft([[${list.id}]], [[${list.img}]])">←</button>
                     <img th:if="${list.img.size == 0}" th:src="@{/img/} + 'IMG_0111.jpeg'" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
-                    <img th:unless="${list.img.size == 0}" th:src="@{/img/} + ${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
+                    <img th:unless="${list.img.size == 0}" th:src="${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
                     <input type="hidden" th:id="'img' + ${list.id}" th:value="0">
                     <button th:if="${list.img.size > 1}" type="button" class="btn" th:id="'right' + ${list.id}" th:onclick="fnRight([[${list.id}]], [[${list.img}]])">→</button>
                 </div>

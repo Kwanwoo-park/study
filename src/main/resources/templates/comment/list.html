@@ -47,7 +47,7 @@
     <ul class="list-group-flush">
       <li class="list-group-item" th:each="list,index : ${comment.list}">
           <span class="commentArea">
-            <img th:src="@{/img/} + ${list.member.profile}" class="profile" id="profile">
+            <img th:src="${list.member.profile}" class="profile" id="profile">
             <a th:href="@{/member/search/detail(email=${list.member.email})}">
               <span th:text="${list.member.name}"></span>
             </a>

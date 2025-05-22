@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.dto.member.MemberRequestDto;
 import spring.study.entity.chat.ChatRoom;
 import spring.study.entity.member.Member;
+import spring.study.service.aws.ImageS3Service;
 import spring.study.service.chat.ChatRoomMemberService;
 import spring.study.service.chat.ChatRoomService;
 import spring.study.service.member.MemberService;
@@ -31,6 +32,7 @@ public class ChatApiController {
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
     private final MemberService memberService;
+    private final ImageS3Service imageS3Service;
     private Member member;
 
     @Value("${img.path}")
@@ -108,28 +110,16 @@ public class ChatApiController {
         }
 
         String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
-        String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
+        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
 
         if (!Arrays.stream(formatArr).toList().contains(format))
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 
         HashMap<String, String> map = new HashMap<>();
 
-        File f = new File(fileDir + file.getOriginalFilename());
-        try {
-            if (!f.exists()) {
-                file.transferTo(f);
+        String imageUrl = imageS3Service.uploadImageToS3(file);
 
-                if (!f.exists())
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-            }
-
-            map.put("name", file.getOriginalFilename());
-        }
-        catch (FileNotFoundException e) {
-            log.debug(e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+        map.put("name", imageUrl);
 
         return ResponseEntity.ok(map);
     }

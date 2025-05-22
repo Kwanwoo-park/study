@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.entity.board.Board;
 import spring.study.entity.board.BoardImg;
+import spring.study.service.aws.ImageS3Service;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 
@@ -29,6 +30,7 @@ import java.util.List;
 public class BoardImgApiController {
     private final BoardService boardService;
     private final BoardImgService boardImgService;
+    private final ImageS3Service imageS3Service;
 
     @Value("${img.path}")
     String fileDir;
@@ -46,39 +48,24 @@ public class BoardImgApiController {
         }
 
         String format;
-        String[] formatArr = {"jpg", "jpeg", "png", "gif", "tif", "tiff"};
+        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
 
         Board board = boardService.findById(id);
 
         List<BoardImg> list = new ArrayList<>();
 
-        File[] files = new File[file.size()];
-        try {
-            for (int i = 0; i < file.size(); i++) {
-                format = StringUtils.getFilenameExtension(file.get(i).getOriginalFilename());
+        for (MultipartFile multipartFile : file) {
+            format = StringUtils.getFilenameExtension(multipartFile.getOriginalFilename());
 
-                if (!Arrays.stream(formatArr).toList().contains(format))
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            if (!Arrays.stream(formatArr).toList().contains(format))
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 
-                files[i] = new File(fileDir + file.get(i).getOriginalFilename());
+            String imageUrl = imageS3Service.uploadImageToS3(multipartFile);
 
-                if (!files[i].exists()) {
-                    file.get(i).transferTo(files[i]);
-
-                    if (!files[i].exists()) {
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-                    }
-                }
-
-                list.add(boardImgService.save(BoardImg.builder()
-                        .imgSrc(file.get(i).getOriginalFilename())
-                        .board(board)
-                        .build()));
-            }
-        }
-        catch (FileNotFoundException e) {
-            log.debug(e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            list.add(boardImgService.save(BoardImg.builder()
+                    .imgSrc(imageUrl)
+                    .board(board)
+                    .build()));
         }
 
         return ResponseEntity.ok(list);

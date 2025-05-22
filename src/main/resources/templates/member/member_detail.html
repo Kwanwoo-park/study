@@ -55,7 +55,7 @@
   <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
   <div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
   <div onclick="fnForbidden()"><img th:src="@{/img/} + ic_chat_black.png" class="nav-icon"></div>
-  <div th:onclick="fnDetail([[${email}]])"><img th:src="@{/img/} + ${profile}" class="profile-icon"></div>
+  <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
 </nav>
 <div class="container">
   <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
@@ -63,7 +63,7 @@
     <button type="button" class="btn-close" aria-label="Close">닫기</button>
   </div>
     <div class="profileDiv">
-      <img th:src="@{/img/} + ${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
+      <img th:src="${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
       &nbsp;&nbsp;&nbsp;&nbsp;
       <h4>
         <label class="form-label" th:text="${member.name}" style="margin-right: 10px;"></label>
@@ -87,7 +87,7 @@
     <div class="imgGrid">
       <div class="imgDiv" th:each="list, index : ${resultMap}">
         <img th:if="${list.img.size == 0}" class="main-image" th:src="@{/img/} + 'IMG_0111.jpeg'" th:id="'main_img'+${list.id}" th:onclick="fnHref([[${list.id}]])">
-        <img th:unless="${list.img.size == 0}" class="main-image" th:src="@{/img/} + ${list.img[0].imgSrc}" th:id="'main_img'+${list.id}" th:onclick="fnHref([[${list.id}]])">
+        <img th:unless="${list.img.size == 0}" class="main-image" th:src="${list.img[0].imgSrc}" th:id="'main_img'+${list.id}" th:onclick="fnHref([[${list.id}]])">
       </div>
     </div>
 </div>

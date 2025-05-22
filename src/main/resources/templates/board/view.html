@@ -116,13 +116,13 @@
 			<span th:onclick="fnDelete([[${board.id}]])" id="delete">Delete</span>
 		</div>
 		<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
-			<img th:src="@{/img/} + ${board.member.profile}" class="profile-img">
+			<img th:src="${board.member.profile}" class="profile-img">
 			<span th:text="${board.member.name}" class="name"></span>
 		</div>
 		<div class="main-image-wrapper">
 			<button type="button" class="btn" th:id="'left' + ${board.id}" style="visibility:hidden;" th:onclick="fnLeft([[${board.id}]], [[${board.img}]])">←</button>
 			<img th:if="${board.img.size == 0}" th:src="@{/img/} + 'IMG_0111.jpeg'" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
-			<img th:unless="${board.img.size == 0}" th:src="@{/img/} + ${board.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
+			<img th:unless="${board.img.size == 0}" th:src="${board.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
 			<input type="hidden" th:id="'img' + ${board.id}" th:value="0">
 			<button th:if="${board.img.size > 1}" type="button" class="btn" th:id="'right' + ${board.id}" th:onclick="fnRight([[${board.id}]], [[${board.img}]])">→</button>
 		</div>
