@@ -267,6 +267,7 @@ public class MemberApiController {
 
             roomMemberService.delete(member);
 
+            imageS3Service.deleteImage(member.getProfile());
             memberService.deleteById(member.getId());
 
             member = null;
@@ -281,7 +282,7 @@ public class MemberApiController {
                 favoriteService.deleteByBoard(board);
             }
 
-            notificationService.findByMember(deleteMember);
+            notificationService.deleteByMember(deleteMember);
 
             favoriteService.deleteByMember(deleteMember);
             commentService.deleteByMember(deleteMember);
@@ -298,6 +299,7 @@ public class MemberApiController {
 
             roomMemberService.delete(deleteMember);
 
+            imageS3Service.deleteImage(deleteMember.getProfile());
             memberService.deleteById(deleteMember.getId());
         }
 

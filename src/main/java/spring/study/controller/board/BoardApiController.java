@@ -14,6 +14,7 @@ import spring.study.entity.member.Member;
 import spring.study.service.board.BoardImgService;
 import spring.study.service.board.BoardService;
 import spring.study.service.comment.CommentService;
+import spring.study.service.favorite.FavoriteService;
 import spring.study.service.forbidden.ForbiddenService;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class BoardApiController {
     private final BoardService boardService;
     private final CommentService commentService;
     private final BoardImgService boardImgService;
+    private final FavoriteService favoriteService;
     private final ForbiddenService forbiddenService;
 
     @PostMapping("/write")
@@ -115,6 +117,7 @@ public class BoardApiController {
 
         session.setAttribute("member", member);
 
+        favoriteService.deleteByBoard(board);
         commentService.deleteComment(board);
         boardImgService.deleteBoard(board);
         boardService.deleteById(id);

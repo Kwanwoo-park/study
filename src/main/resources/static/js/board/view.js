@@ -1,3 +1,5 @@
+const boardDel = document.getElementById("boardDel");
+
 function fnLeft(listId, ImageArr) {
     const main_image = document.getElementById('main_img' + listId);
     const img_id = document.getElementById('img' + listId);
@@ -144,11 +146,36 @@ function fnDelete(boardId) {
     })
     .then((response) => response.json())
     .then((json) => {
-        alert("삭제가 완료되었습니다.");
-        location.replace(`/board/main`);
+        if (json['status'] == 200)
+            alert("삭제가 완료되었습니다");
+        else
+            alert("삭제 실패하였습니다");
     })
     .catch((error) => {
-        alert("다시 시도하여주십시오.");
+        alert("다시 시도하여주십시오");
+    })
+}
+
+function fnImageDelete(boardId) {
+    fetch(`/api/boardImg/delete?id=` + boardId, {
+        method: 'DELETE',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        status = json['status'];
+
+        if (status == 200) {
+            boardDel.click();
+            location.replace(`/board/main`);
+        }
+        else
+            alert("이미지 삭제 실패")
+    })
+    .catch((error) => {
+        alert("다시 시도하여주십시오");
     })
 }
 

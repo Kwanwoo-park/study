@@ -51,7 +51,7 @@ public class ImageS3Service {
         return amazonS3.getUrl(bucketName, changedName).toString();
     }
 
-    public ResponseEntity<byte[]> getObject(String name, String ext) throws IOException{
+    public ResponseEntity<byte[]> getImage(String name, String ext) throws IOException{
         S3Object object = amazonS3.getObject(new GetObjectRequest(bucketName, name));
         S3ObjectInputStream objectInputStream = object.getObjectContent();
         byte[] bytes = IOUtils.toByteArray(objectInputStream);
@@ -72,6 +72,7 @@ public class ImageS3Service {
     }
 
     public void deleteImage(String name) {
-        amazonS3.deleteObject(new DeleteObjectRequest(bucketName, name));
+        if (!amazonS3.doesObjectExist(bucketName, name))
+            amazonS3.deleteObject(new DeleteObjectRequest(bucketName, name));
     }
 }
