@@ -28,6 +28,7 @@ examine.addEventListener("click", (event) => {
             body: JSON.stringify({
                 idList: idList
             }),
+            credentials: "include",
         })
         .then((response) => {
             if (response.status == 200) {
@@ -55,6 +56,7 @@ approval.addEventListener("click", (event) => {
             body: JSON.stringify({
                 idList: idList
             }),
+            credentials: "include",
         })
         .then((response) => {
             if (response.status == 200) {

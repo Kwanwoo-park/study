@@ -30,6 +30,7 @@ if (change) {
             body: JSON.stringify({
                 id: id.value
             }),
+            credentials: "include",
         })
         .then((response) => response.json())
         .then((json) => {
@@ -51,6 +52,7 @@ if (del) {
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
+            credentials: "include",
         })
         .then((response) => {
             if (response.status == 200) {

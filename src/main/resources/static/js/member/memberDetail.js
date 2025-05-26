@@ -31,6 +31,7 @@ if (btn) {
                 "Content-Type": "application/json; charset=utf-8",
             },
             body: JSON.stringify(data),
+            credentials: "include",
         })
         .then((response) => response.json())
         .then((json) => {
@@ -54,6 +55,7 @@ if (chatting) {
                 "Content-Type": "application/json; charset=utf-8",
             },
             body: JSON.stringify(data),
+            credentials: "include",
         })
         .then((response) => response.json())
         .then((json) => {

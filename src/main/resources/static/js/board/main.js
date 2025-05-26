@@ -42,6 +42,7 @@ function fnLike(listId) {
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
+            credentials: "include",
         })
         .then((response) => {
             if (response.status == 200) {
@@ -59,6 +60,7 @@ function fnLike(listId) {
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
+            credentials: "include",
         })
         .then((response) => {
             if (response.status == 200) {
@@ -81,6 +83,7 @@ function fnOnlyLike(listId) {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
         },
+        credentials: "include",
     })
     .then((response) => {
         if (response.status == 200) {

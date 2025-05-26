@@ -148,6 +148,7 @@ function fnLoad(input) {
     fetch(`/api/chat/sendImage`, {
         method: 'POST',
         body: formData,
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {

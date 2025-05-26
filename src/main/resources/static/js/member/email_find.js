@@ -20,6 +20,7 @@ if (email_certification) {
                 body: JSON.stringify({
                     email: email.value
                 }),
+                credentials: "include",
             })
             .then((response) => response.json())
             .then((json) => {
@@ -48,6 +49,7 @@ if (button) {
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
                 },
+                credentials: "include",
             })
             .then((response) => response.json())
             .then((json) => {

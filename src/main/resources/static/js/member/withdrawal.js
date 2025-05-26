@@ -9,6 +9,7 @@ if (button) {
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
+            credentials: "include",
         })
         .then((response) => {
             if (response.status == 200) {

@@ -19,6 +19,7 @@ if (btn) {
                     word: word.value,
                     risk: risk.value
                 }),
+                credentials: "include",
             })
             .then((response) => response.json())
             .then((json) => {
@@ -44,6 +45,7 @@ if (search) {
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
                 },
+                credentials: "include",
             })
             .then((response) => response.json())
             .then((json) => {
@@ -67,6 +69,7 @@ function fnFindProposal() {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
         },
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
@@ -88,6 +91,7 @@ function fnFindExamine() {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
         },
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
@@ -109,6 +113,7 @@ function fnFindApproval() {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
         },
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {

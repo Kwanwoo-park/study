@@ -71,8 +71,15 @@ public class ImageS3Service {
         return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.OK);
     }
 
-    public void deleteImage(String name) {
-        if (!amazonS3.doesObjectExist(bucketName, name))
-            amazonS3.deleteObject(new DeleteObjectRequest(bucketName, name));
+    public int deleteImage(String name) {
+        String[] splitString = name.split("/");
+        String fileName = splitString[splitString.length-1];
+
+        if (amazonS3.doesObjectExist(bucketName, fileName))
+            amazonS3.deleteObject(new DeleteObjectRequest(bucketName, fileName));
+        else
+            return 0;
+
+        return 1;
     }
 }

@@ -49,6 +49,10 @@ public class MemberService implements UserDetailsService {
         return member;
     }
 
+    public Member findById(Long id) {
+        return memberRepository.findById(id).orElseThrow();
+    }
+
     public List<MemberResponseDto> findName(String name) {
         return memberRepository.findByName(name).stream().map(MemberResponseDto::new).toList();
     }

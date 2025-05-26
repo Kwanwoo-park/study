@@ -17,6 +17,7 @@ if (btn) {
                     word: word.value,
                     risk: risk.value
                 }),
+                credentials: "include",
             })
             .then((response) => response.json())
             .then((json) => {

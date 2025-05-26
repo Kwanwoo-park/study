@@ -16,6 +16,7 @@ if (button) {
                     email: email.value,
                     password: password.value,
                 }),
+                credentials: "include",
             })
             .then((response) => response.json())
             .then((json) => {

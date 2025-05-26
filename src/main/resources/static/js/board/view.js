@@ -44,6 +44,7 @@ function fnLike(listId) {
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
+            credentials: "include",
         })
         .then((response) => {
             if (response.status == 200) {
@@ -61,6 +62,7 @@ function fnLike(listId) {
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
+            credentials: "include",
         })
         .then((response) => {
             if (response.status == 200) {
@@ -83,6 +85,7 @@ function fnOnlyLike(listId) {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
         },
+        credentials: "include",
     })
     .then((response) => {
         if (response.status == 200) {
@@ -124,6 +127,7 @@ function fnEditComplete(boardId) {
             "Content-Type": "application/json; charset=utf-8",
         },
         body: JSON.stringify(data),
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
@@ -143,36 +147,11 @@ function fnDelete(boardId) {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
         },
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json['status'] == 200)
-            alert("삭제가 완료되었습니다");
-        else
-            alert("삭제 실패하였습니다");
-    })
-    .catch((error) => {
-        alert("다시 시도하여주십시오");
-    })
-}
-
-function fnImageDelete(boardId) {
-    fetch(`/api/boardImg/delete?id=` + boardId, {
-        method: 'DELETE',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        status = json['status'];
-
-        if (status == 200) {
-            boardDel.click();
-            location.replace(`/board/main`);
-        }
-        else
-            alert("이미지 삭제 실패")
+       alert("삭제가 완료되었습니다");
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

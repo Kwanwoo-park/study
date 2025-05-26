@@ -67,25 +67,4 @@ public class BoardImgApiController {
 
         return ResponseEntity.ok(list);
     }
-
-    @DeleteMapping("/delete")
-    public ResponseEntity<Integer> boardImgDelete(@RequestParam Long id, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
-
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
-        }
-
-        List<BoardImg> images = boardService.findById(id).getImg();
-
-        for (BoardImg img : images) {
-            imageS3Service.deleteImage(img.getImgSrc());
-        }
-
-        return ResponseEntity.ok(1);
-    }
 }

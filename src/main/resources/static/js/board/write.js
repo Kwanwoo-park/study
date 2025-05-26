@@ -27,6 +27,7 @@ function fnSave() {
             "Content-Type": "application/json; charset=utf-8",
         },
         body: JSON.stringify(data),
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
@@ -54,6 +55,7 @@ function fnImgSave() {
     fetch(`/api/boardImg/save?id=` + id, {
         method: 'POST',
         body: formData,
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {

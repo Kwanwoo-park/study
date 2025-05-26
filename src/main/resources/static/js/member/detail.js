@@ -29,6 +29,7 @@ function fnSave() {
     fetch(`/api/member/detail/action`, {
         method: 'PATCH',
         body: formData,
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {

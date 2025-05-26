@@ -113,8 +113,7 @@
 			<span th:onclick="fnEdit()" id="edit">Edit</span>
 			<span th:onclick="fnEditComplete([[${board.id}]])" id="complete" style="display: none;">Complete</span>
 			<br>
-			<span th:onclick="fnImageDelete([[${board.id}]])" id="delete">Delete</span>
-			<button type="button" th:onclick="fnDeletefnImageDelete([[${board.id}]])" style="display: none" id="boardDel">Board Delete</button>
+			<span th:onclick="fnDelete([[${board.id}]])" id="delete">Delete</span>
 		</div>
 		<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
 			<img th:src="${board.member.profile}" class="profile-img">

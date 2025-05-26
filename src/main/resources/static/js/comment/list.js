@@ -45,6 +45,7 @@ if (submit) {
                 "Content-Type": "application/json; charset=utf-8",
             },
             body: JSON.stringify(data),
+            credentials: "include",
         })
         .then((response) => response.json())
         .then((json) => {
@@ -76,6 +77,7 @@ function fnEdit(commentId) {
                 "Content-Type": "application/json; charset=utf-8",
             },
             body: JSON.stringify(data),
+            credentials: "include",
         })
         .then((response) => response.json())
         .then((json) => {
@@ -105,6 +107,7 @@ function fnDelete(commentId) {
             "Content-Type": "application/json; charset=utf-8",
         },
         body: JSON.stringify(data),
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
@@ -147,6 +150,7 @@ function fnReplyGet(commentId) {
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
             },
+            credentials: "include",
         })
         .then((response) => response.json())
         .then((json) => {

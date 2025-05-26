@@ -19,6 +19,7 @@ if (name) {
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
                 },
+                credentials: "include",
             })
             .then((response) => response.json())
             .then((json) => {

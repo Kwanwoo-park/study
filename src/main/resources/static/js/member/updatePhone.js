@@ -18,6 +18,7 @@ if (button) {
                     phone: phone.value,
                     birth: birth.value,
                 }),
+                credentials: "include",
             })
             .then((response) => {
                 if (response.status == 200) {

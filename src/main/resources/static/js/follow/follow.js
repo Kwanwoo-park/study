@@ -19,6 +19,7 @@ function fnFollow(listId, member_email) {
             "Content-Type": "application/json; charset=utf-8",
         },
         body: JSON.stringify(data),
+        credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
