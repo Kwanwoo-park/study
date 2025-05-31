@@ -56,14 +56,10 @@ public class MemberApiController {
     private final NotificationService notificationService;
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
-    private Member member;
-
-    @Value("${img.path}")
-    String fileDir;
 
     @PatchMapping("/login")
     public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
-        member = (Member) memberService.loadUserByUsername(dto.getEmail());
+        Member member = (Member) memberService.loadUserByUsername(dto.getEmail());
         HttpSession session = request.getSession();
 
         if (member == null)
@@ -93,12 +89,8 @@ public class MemberApiController {
                 memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
-
-        for (Forbidden word : wordList) {
-            if (memberRequestDto.getName().contains(word.getWord()))
-                return ResponseEntity.ok(-1L);
-        }
+        if (forbiddenService.findWordList(Status.APPROVAL, memberRequestDto.getName()))
+            return ResponseEntity.ok(-1L);
 
         notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다");
 
@@ -120,20 +112,17 @@ public class MemberApiController {
         if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
             return ResponseEntity.status(501).body(null);
         }
 
+        if (imageS3Service.fileFormatCheck(file))
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+
         imageS3Service.deleteImage(member.getProfile());
-
-        String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
-        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
-
-        if (!Arrays.stream(formatArr).toList().contains(format))
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
         String imageUrl = imageS3Service.uploadImageToS3(file);
 
@@ -150,7 +139,7 @@ public class MemberApiController {
         if (email.isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        member = memberService.findMember(email);
+        Member member = memberService.findMember(email);
 
         return ResponseEntity.ok(member);
     }
@@ -160,9 +149,8 @@ public class MemberApiController {
         if (birth.isBlank() || phone.isBlank())
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
-        phone = phone.replaceAll(regEx, "$1-$2-$3");
-        member = memberService.findMember(phone, birth);
+        phone = userService.replacePhoneNumber(phone);
+        Member member = memberService.findMember(phone, birth);
 
         return ResponseEntity.ok(member);
     }
@@ -170,6 +158,8 @@ public class MemberApiController {
     @PatchMapping("/updatePassword")
     public ResponseEntity<Integer> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+
+        Member member;
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
             member = memberService.findMember(memberUpdateDto.getEmail());
@@ -187,8 +177,6 @@ public class MemberApiController {
 
         int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
 
-        member = null;
-
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
@@ -204,7 +192,7 @@ public class MemberApiController {
                 memberUpdateDto.getBirth().isEmpty() || memberUpdateDto.getBirth().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        member = memberService.findMember(memberUpdateDto.getEmail());
+        Member member = memberService.findMember(memberUpdateDto.getEmail());
 
         int result = memberService.updatePhoneAndBirth(member.getId(), memberUpdateDto.getPhone(), memberUpdateDto.getBirth());
 
@@ -220,7 +208,7 @@ public class MemberApiController {
         if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -237,7 +225,7 @@ public class MemberApiController {
         if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -269,8 +257,6 @@ public class MemberApiController {
 
             imageS3Service.deleteImage(member.getProfile());
             memberService.deleteById(member.getId());
-
-            member = null;
 
             session.invalidate();
         }

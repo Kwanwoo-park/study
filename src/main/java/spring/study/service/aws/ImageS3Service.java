@@ -11,10 +11,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,6 +32,28 @@ public class ImageS3Service {
     private String changedImageName(String originName) {
         String random = UUID.randomUUID().toString();
         return random + originName;
+    }
+
+    public boolean fileFormatCheck(MultipartFile file) {
+        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
+
+        String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
+
+        return !Arrays.stream(formatArr).toList().contains(format);
+    }
+
+    public boolean findFormatCheck(List<MultipartFile> files) {
+        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
+        String format;
+
+        for (MultipartFile file : files) {
+            format = StringUtils.getFilenameExtension(file.getOriginalFilename());
+
+            if (!Arrays.stream(formatArr).toList().contains(format))
+                return true;
+        }
+
+        return false;
     }
 
     public String uploadImageToS3(MultipartFile image) throws IOException{

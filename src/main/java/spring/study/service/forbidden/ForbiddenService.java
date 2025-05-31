@@ -2,6 +2,7 @@ package spring.study.service.forbidden;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.dto.forbidden.ForbiddenRequestDto;
 import spring.study.dto.forbidden.ForbiddenResponseDto;
@@ -39,8 +40,15 @@ public class ForbiddenService {
         return forbiddenRepository.findByRisk(risk).stream().map(ForbiddenResponseDto::new).toList();
     }
 
-    public List<Forbidden> findWordList(Status status) {
-        return forbiddenRepository.findByStatus(status);
+    public boolean findWordList(Status status, String content) {
+        List<Forbidden> wordList = forbiddenRepository.findByStatus(status);
+
+        for (Forbidden word : wordList) {
+            if (content.contains(word.getWord()))
+                return true;
+        }
+
+        return false;
     }
 
     public List<ForbiddenResponseDto> findByStatus(Status status) {

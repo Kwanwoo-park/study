@@ -44,6 +44,7 @@ public class FavoriteApiController {
 
         member.addFavorite(favorite);
         board.addFavorite(favorite);
+
         if (!member.getId().equals(otherMember.getId())) {
             Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다");
             notification.addMember(otherMember);

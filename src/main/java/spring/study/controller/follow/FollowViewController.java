@@ -16,7 +16,6 @@ import spring.study.service.member.MemberService;
 @RequestMapping("/follow")
 public class FollowViewController {
     private final MemberService memberService;
-    private Member member;
 
     @GetMapping("/follower")
     public String follower(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
@@ -26,7 +25,7 @@ public class FollowViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -50,7 +49,7 @@ public class FollowViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();

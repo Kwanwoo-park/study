@@ -37,6 +37,9 @@ public class FollowApiController {
         Member member = (Member) session.getAttribute("member");
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
 
+        if (member.getId().equals(search_member.getId()))
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+
         if (followService.existFollow(member, search_member))
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
@@ -70,6 +73,9 @@ public class FollowApiController {
 
         Member member = (Member) session.getAttribute("member");
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
+
+        if (member.getId().equals(search_member.getId()))
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 
         if (!followService.existFollow(member, search_member))
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);

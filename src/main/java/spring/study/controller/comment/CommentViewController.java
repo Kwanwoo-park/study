@@ -22,7 +22,6 @@ import java.util.List;
 @RequestMapping("/comment")
 public class CommentViewController {
     private final BoardService boardService;
-    private Member member;
 
     @GetMapping("")
     public String getComments(Model model, @RequestParam Long id, HttpServletRequest request) {
@@ -32,7 +31,7 @@ public class CommentViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();

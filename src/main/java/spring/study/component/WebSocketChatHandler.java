@@ -54,13 +54,8 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         ChatMessageRequestDto requestDto = objectMapper.readValue(payload, ChatMessageRequestDto.class);
 
-        List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
-
-        for (Forbidden word : wordList) {
-            if (requestDto.getMessage().contains(word.getWord())) {
-                requestDto.setMessage("<부적절한 내용이 포함되어 검열되었습니다>");
-            }
-        }
+        if (forbiddenService.findWordList(Status.APPROVAL, requestDto.getMessage()))
+            requestDto.setMessage("<부적절한 내용이 포함되어 검열되었습니다>");
 
         ChatRoom room = roomService.find(requestDto.getRoomId());
         Member member = memberService.findMember(requestDto.getEmail());

@@ -19,7 +19,6 @@ import java.util.List;
 @RequestMapping("/favorites")
 public class FavoriteViewController {
     private final BoardService boardService;
-    private Member member;
 
     @GetMapping("")
     public String getFavorites(Model model, @RequestParam Long id, HttpServletRequest request) throws Exception {
@@ -29,7 +28,7 @@ public class FavoriteViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();

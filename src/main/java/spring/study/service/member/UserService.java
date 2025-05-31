@@ -18,19 +18,22 @@ public class UserService implements UserServiceRepository {
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    public String replacePhoneNumber(String phone) {
+        String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
+
+        return phone.replaceAll(regEx, "$1-$2-$3");
+    }
+
     @Override
     public MemberResponseDto createUser(MemberRequestDto memberRequestDto) {
         if (memberRepository.existsByEmail(memberRequestDto.getEmail()))
             return null;
 
-        String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
-        String phone = memberRequestDto.getPhone().replaceAll(regEx, "$1-$2-$3");
-
         Member member = memberRepository.save(Member.builder()
                         .email(memberRequestDto.getEmail())
                         .pwd(bCryptPasswordEncoder.encode(memberRequestDto.getPassword()))
                         .name(memberRequestDto.getName())
-                        .phone(phone)
+                        .phone(replacePhoneNumber(memberRequestDto.getPhone()))
                         .birth(memberRequestDto.getBirth())
                         .role(Role.USER)
                         .profile("KakaoTalk_Photo_2023-04-14-21-36-15.jpeg")

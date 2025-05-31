@@ -22,7 +22,6 @@ import java.util.List;
 @Slf4j
 public class BoardViewController {
     private final BoardService boardService;
-    private Member member;
 
     @GetMapping("/all")
     public String getBoardListPage(Model model,
@@ -36,7 +35,7 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -73,7 +72,7 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -96,7 +95,7 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -128,7 +127,7 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -150,7 +149,7 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();

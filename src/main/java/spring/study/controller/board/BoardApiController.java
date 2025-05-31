@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.dto.board.BoardRequestDto;
 import spring.study.entity.board.Board;
 import spring.study.entity.board.BoardImg;
-import spring.study.entity.forbidden.Forbidden;
 import spring.study.entity.forbidden.Status;
 import spring.study.entity.member.Member;
 import spring.study.service.aws.ImageS3Service;
@@ -47,12 +46,8 @@ public class BoardApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (!boardRequestDto.getContent().isBlank() || !boardRequestDto.getContent().isEmpty()){
-            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
-
-            for (Forbidden word : wordList) {
-                if (boardRequestDto.getContent().contains(word.getWord()))
-                    return ResponseEntity.ok(-1L);
-            }
+            if (forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent()))
+                return ResponseEntity.ok(-1L);
 
             Board board = boardRequestDto.toEntity();
 
@@ -85,12 +80,8 @@ public class BoardApiController {
         }
 
         if (!boardRequestDto.getContent().isBlank() | !boardRequestDto.getContent().isEmpty()) {
-            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
-
-            for (Forbidden word : wordList) {
-                if (boardRequestDto.getContent().contains(word.getWord()))
-                    return ResponseEntity.ok(-1);
-            }
+            if (forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent()))
+                return ResponseEntity.ok(-1);
 
             return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getContent()));
         }
@@ -115,7 +106,6 @@ public class BoardApiController {
         Board board = boardService.findById(id);
 
         member.removeComments(board.getComment());
-
         member.removeBoard(board);
 
         session.setAttribute("member", member);

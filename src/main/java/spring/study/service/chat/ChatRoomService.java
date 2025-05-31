@@ -11,6 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import spring.study.dto.chat.ChatRoomResponseDto;
 import spring.study.entity.chat.ChatRoom;
+import spring.study.entity.member.Member;
 import spring.study.repository.chat.ChatRoomRepository;
 
 import java.util.*;
@@ -66,8 +67,19 @@ public class ChatRoomService {
         return chatRoomRepository.findByRoomId(roomId);
     }
 
-    public ChatRoom findByName(String name) {
-        return chatRoomRepository.findByName(name);
+    public ChatRoom findByName(Member sessionMember, Member searchMember) {
+        String name1 = sessionMember.getEmail() + " " + searchMember.getEmail();
+        String name2 = searchMember.getEmail() + " " + sessionMember.getEmail();
+
+        ChatRoom search1 = chatRoomRepository.findByName(name1);
+        ChatRoom search2 = chatRoomRepository.findByName(name2);
+
+        if (search1 != null)
+            return search1;
+        else if (search2 != null)
+            return search2;
+        else
+            return null;
     }
 
     public void delete(String roomId) {

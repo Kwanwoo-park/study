@@ -23,7 +23,6 @@ public class ChatViewController {
     private final ChatRoomService roomService;
     private final ChatMessageService messageService;
     private final ChatRoomMemberService roomMemberService;
-    private Member member;
 
     @GetMapping("/chatList")
     public String chatList(Model model,
@@ -36,7 +35,7 @@ public class ChatViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -68,7 +67,7 @@ public class ChatViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();

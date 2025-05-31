@@ -33,10 +33,6 @@ public class ChatApiController {
     private final ChatRoomMemberService roomMemberService;
     private final MemberService memberService;
     private final ImageS3Service imageS3Service;
-    private Member member;
-
-    @Value("${img.path}")
-    String fileDir;
 
     @PostMapping("/createRoom")
     public ResponseEntity<ChatRoom> createRoom(@RequestParam String name, HttpServletRequest request) {
@@ -45,7 +41,7 @@ public class ChatApiController {
         if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(501).body(null);
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -66,7 +62,7 @@ public class ChatApiController {
         if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
@@ -75,17 +71,12 @@ public class ChatApiController {
 
         Member search_Member = memberService.findMember(memberRequestDto.getEmail());
 
+        ChatRoom search = roomService.findByName(member, search_Member);
+
+        if (search != null)
+            return ResponseEntity.ok(search);
+
         String name1 = member.getEmail() + " " + search_Member.getEmail();
-        String name2 = search_Member.getEmail() + " " + member.getEmail();
-
-        ChatRoom search1 = roomService.findByName(name1);
-        ChatRoom search2 = roomService.findByName(name2);
-
-        if (search1 != null)
-            return ResponseEntity.ok(search1);
-
-        if (search2 != null)
-            return ResponseEntity.ok(search2);
 
         ChatRoom room = roomService.createRoom(name1, 2L);
 
@@ -102,17 +93,14 @@ public class ChatApiController {
         if (session == null || !request.isRequestedSessionIdValid())
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
-        member = (Member) session.getAttribute("member");
+        Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
-        String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
-        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
-
-        if (!Arrays.stream(formatArr).toList().contains(format))
+        if (imageS3Service.fileFormatCheck(file))
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 
         HashMap<String, String> map = new HashMap<>();

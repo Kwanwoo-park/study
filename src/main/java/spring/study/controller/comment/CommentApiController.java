@@ -39,12 +39,8 @@ public class CommentApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (!commentRequestDto.getComments().isBlank() || !commentRequestDto.getComments().isEmpty()) {
-            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
-
-            for (Forbidden word : wordList) {
-                if (commentRequestDto.getComments().contains(word.getWord()))
-                    return ResponseEntity.ok(-1L);
-            }
+            if (forbiddenService.findWordList(Status.APPROVAL, commentRequestDto.getComments()))
+                return ResponseEntity.ok(-1L);
 
             Board board = boardService.findById(commentRequestDto.getId());
 
@@ -83,12 +79,8 @@ public class CommentApiController {
         }
 
         if (!commentRequestDto.getComments().isBlank() || !commentRequestDto.getComments().isEmpty()) {
-            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
-
-            for (Forbidden word : wordList) {
-                if (commentRequestDto.getComments().contains(word.getWord()))
-                    return ResponseEntity.ok(-1);
-            }
+            if (forbiddenService.findWordList(Status.APPROVAL, commentRequestDto.getComments()))
+                return ResponseEntity.ok(-1);
 
             return ResponseEntity.ok(commentService.updateComments(commentRequestDto.getId(), commentRequestDto.getComments()));
         }

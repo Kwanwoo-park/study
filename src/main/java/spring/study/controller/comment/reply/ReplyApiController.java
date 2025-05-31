@@ -40,22 +40,14 @@ public class ReplyApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (!replyRequestDto.getReply().isBlank() || !replyRequestDto.getReply().isEmpty()) {
-            List<Forbidden> wordList = forbiddenService.findWordList(Status.APPROVAL);
-
-            for (Forbidden word : wordList) {
-                if (replyRequestDto.getReply().contains(word.getWord()))
-                    return ResponseEntity.ok(-1L);
-            }
+            if (forbiddenService.findWordList(Status.APPROVAL, replyRequestDto.getReply()))
+                return ResponseEntity.ok(-1L);
 
             Comment comment = commentService.findById(replyRequestDto.getId());
 
             Member otherMember = comment.getMember();
 
-            String reply = replyRequestDto.getReply().replace("@"+comment.getMember().getName()+" ", "");
-
-            Reply result = Reply.builder()
-                    .reply(reply)
-                    .build();
+            Reply result = replyService.replaceReply(replyRequestDto, comment.getMember());
 
             member.addReply(result);
             comment.addReply(result);

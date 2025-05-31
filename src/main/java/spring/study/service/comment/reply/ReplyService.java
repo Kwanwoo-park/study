@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.dto.comment.reply.ReplyRequestDto;
+import spring.study.dto.comment.reply.ReplyResponseDto;
 import spring.study.entity.comment.Comment;
 import spring.study.entity.comment.reply.Reply;
 import spring.study.entity.member.Member;
@@ -15,6 +16,11 @@ import java.util.List;
 @Service
 public class ReplyService {
     private final ReplyRepository replyRepository;
+
+    public Reply replaceReply(ReplyRequestDto dto, Member commetMember) {
+        dto.setReply(dto.getReply().replace("@"+commetMember.getName()+" ", ""));
+        return dto.toEntity();
+    }
 
     @Transactional
     public Reply save(Reply reply) {
