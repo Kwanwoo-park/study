@@ -7,7 +7,7 @@
 //import spring.study.entity.board.Board;
 //import spring.study.entity.member.Member;
 //import spring.study.service.board.BoardService;
-//import spring.study.service.comment.CommentService;
+//import spring.study.comment.service.CommentService;
 //import spring.study.service.member.MemberService;
 //
 //import java.util.HashMap;

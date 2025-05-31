@@ -15,7 +15,7 @@
 //import org.springframework.test.web.servlet.MockMvc;
 //import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 //import org.springframework.web.context.WebApplicationContext;
-//import spring.study.dto.follow.FollowRequestDto;
+//import spring.study.follow.dto.FollowRequestDto;
 //import spring.study.dto.member.MemberRequestDto;
 //import spring.study.service.member.MemberService;
 //

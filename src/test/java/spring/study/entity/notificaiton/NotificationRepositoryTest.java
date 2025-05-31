@@ -6,7 +6,7 @@
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 //import spring.study.entity.member.Member;
-//import spring.study.entity.notification.Notification;
+//import spring.study.notification.entity.Notification;
 //import spring.study.repository.member.MemberRepository;
 //import spring.study.repository.notification.NotificationRepository;
 //

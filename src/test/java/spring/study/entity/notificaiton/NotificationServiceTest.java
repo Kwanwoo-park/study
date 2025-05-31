@@ -4,7 +4,7 @@
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
 //import spring.study.entity.member.Member;
-//import spring.study.entity.notification.Notification;
+//import spring.study.notification.entity.Notification;
 //import spring.study.service.member.MemberService;
 //import spring.study.service.notification.NotificationService;
 //
