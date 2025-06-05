@@ -70,7 +70,7 @@ public class ForbiddenApiController {
         if (requestDto.getWord().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        if (!forbiddenService.existWord(requestDto.getWord()))
+        if (forbiddenService.existWord(requestDto.getWord()))
             return ResponseEntity.ok(-1L);
 
         requestDto.setStatus(Status.PROPOSAL);
@@ -88,7 +88,7 @@ public class ForbiddenApiController {
         if (requestDto.getWord().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        if (!forbiddenService.existWord(requestDto.getWord()))
+        if (forbiddenService.existWord(requestDto.getWord()))
             return ResponseEntity.ok(-1L);
 
         requestDto.setStatus(Status.APPROVAL);
