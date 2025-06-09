@@ -8,13 +8,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.forbidden.entity.Status;
+import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.member.entity.Member;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
+import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import spring.study.notification.service.NotificationService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,6 +32,8 @@ public class ChatApiController {
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
     private final MemberService memberService;
+    private final ForbiddenService forbiddenService;
+    private final NotificationService notificationService;
     private final ImageS3Service imageS3Service;
 
     @PostMapping("/createRoom")
@@ -80,6 +86,42 @@ public class ChatApiController {
         roomMemberService.save(search_Member, room);
 
         return ResponseEntity.ok(room);
+    }
+
+    @GetMapping("/message/check")
+    public ResponseEntity<Integer> messageCheck(@RequestParam String message, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        Member member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        }
+
+        if (!message.isBlank() || message.isEmpty()) {
+            int risk = forbiddenService.findWordList(Status.APPROVAL, message);
+
+            if (risk != 0) {
+                if (risk == 3) {
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    memberService.updateRole(member.getId(), Role.DENIED);
+
+                    session.invalidate();
+
+                    return ResponseEntity.ok(-3);
+                }
+
+                return ResponseEntity.ok(-1);
+            }
+
+            return ResponseEntity.ok(1);
+        }
+        else
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
     @PostMapping("/sendImage")

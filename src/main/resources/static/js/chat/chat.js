@@ -112,8 +112,13 @@ function enterRoom(socket) {
 function sendMsg() {
     var content = document.getElementById('chat').value;
 
+    let risk = msgCheck(content);
+
     if (content != '') {
         document.getElementById('chat').value = null;
+
+        if (risk == -1)
+            content = "<부적절한 내용이 포함되어 검열되었습니다>";
 
         var talkMsg = {
             type : "TALK",
@@ -135,6 +140,30 @@ function quit() {
 
     socket.send(JSON.stringify(quitMsg));
     history.back(-1);
+}
+
+function msgCheck(msg) {
+    fetch(`/api/chat/message/check?message=`+msg, {
+        method: 'GET',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        }
+        credentials: "include",
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        if (json == -1)
+            return -1
+        else if (json == -3) {
+            alert("금칙어를 사용하여 계정이 정지되었습니다");
+            window.location.reload();
+        }
+    })
+    .catch((error) => {
+        alert("다시 시도하여주십시오");
+    })
+
+    return 0;
 }
 
 function fnLoad(input) {

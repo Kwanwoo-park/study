@@ -39,15 +39,26 @@ public class ForbiddenService {
         return forbiddenRepository.findByRisk(risk).stream().map(ForbiddenResponseDto::new).toList();
     }
 
-    public boolean findWordList(Status status, String content) {
+    public int findWordList(Status status, String content) {
         List<Forbidden> wordList = forbiddenRepository.findByStatus(status);
 
         for (Forbidden word : wordList) {
-            if (content.contains(word.getWord()))
-                return true;
+            if (content.contains(word.getWord())) {
+                switch (word.getRisk()) {
+                    case HIGH -> {
+                        return 3;
+                    }
+                    case MIDDLE -> {
+                        return 2;
+                    }
+                    case LOW -> {
+                        return 1;
+                    }
+                }
+            }
         }
 
-        return false;
+        return 0;
     }
 
     public List<ForbiddenResponseDto> findByStatus(Status status) {

@@ -52,6 +52,7 @@ public class NotificationApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
+            session.invalidate();
             emitter.complete();
             return emitter;
         }

@@ -38,7 +38,6 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     private final ChatRoomService roomService;
     private final NotificationService notificationService;
     private final MemberService memberService;
-    private final ForbiddenService forbiddenService;
     private final Map<String, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
 
     @Override
@@ -51,9 +50,6 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         ChatMessageRequestDto requestDto = objectMapper.readValue(payload, ChatMessageRequestDto.class);
-
-        if (forbiddenService.findWordList(Status.APPROVAL, requestDto.getMessage()))
-            requestDto.setMessage("<부적절한 내용이 포함되어 검열되었습니다>");
 
         ChatRoom room = roomService.find(requestDto.getRoomId());
         Member member = memberService.findMember(requestDto.getEmail());

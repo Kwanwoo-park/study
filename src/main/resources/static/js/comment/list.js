@@ -4,7 +4,6 @@ const urlParams = url.searchParams
 const submit = document.getElementById('submit');
 const comments = document.getElementById('comments');
 const cancel = document.getElementById('cancel');
-const commentArea = document.querySelector('.commentArea');
 
 let flag = true;
 let id;
@@ -51,8 +50,12 @@ if (submit) {
         .then((json) => {
             if (json == -1)
                 alert("부적절한 내용 감지되었습니다");
-            else
+            else {
+                if (json == -3)
+                    alert("금칙어를 사용하여 계정이 정지되었습니다");
+
                 window.location.reload();
+            }
         })
         .catch((error) => {
             alert("다시 시도하여주십시오.");
@@ -83,8 +86,12 @@ function fnEdit(commentId) {
         .then((json) => {
             if (json == -1)
                 alert("부적절한 내용 감지되었습니다");
-            else
+            else {
+                if (json == -3)
+                    alert("금칙어를 사용하여 계정이 정지되었습니다");
+
                 window.location.reload();
+            }
         })
         .catch((error) => {
             alert("다시 시도하여주십시오.");
@@ -142,7 +149,8 @@ function fnCancel() {
 }
 
 function fnReplyGet(commentId) {
-    const replyArea = document.querySelector('.replyArea');
+    const commentArea = document.getElementById('commentArea' + commentId);
+    const replyArea = document.getElementById('replyArea' + commentId);
 
     if (!replyArea) {
         fetch(`/api/reply/list?id=` + commentId, {
@@ -155,7 +163,7 @@ function fnReplyGet(commentId) {
         .then((response) => response.json())
         .then((json) => {
             let area = document.createElement('div')
-            area.className = 'replyArea';
+            area.id = 'replyArea' + commentId;
 
             commentArea.append(area)
 

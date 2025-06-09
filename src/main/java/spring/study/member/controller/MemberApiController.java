@@ -84,8 +84,11 @@ public class MemberApiController {
                 memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        if (forbiddenService.findWordList(Status.APPROVAL, memberRequestDto.getName()))
+        int risk = forbiddenService.findWordList(Status.APPROVAL, memberRequestDto.getName());
+
+        if (risk != 0) {
             return ResponseEntity.ok(-1L);
+        }
 
         notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다");
 

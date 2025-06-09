@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.comment.dto.reply.ReplyRequestDto;
 import spring.study.comment.dto.reply.ReplyResponseDto;
 import spring.study.comment.entity.Comment;
+import spring.study.member.entity.Role;
+import spring.study.member.service.MemberService;
 import spring.study.reply.entity.Reply;
 import spring.study.forbidden.entity.Status;
 import spring.study.member.entity.Member;
@@ -27,6 +29,7 @@ public class ReplyApiController {
     private final CommentService commentService;
     private final ReplyService replyService;
     private final ForbiddenService forbiddenService;
+    private final MemberService memberService;
     private final NotificationService notificationService;
 
     @PostMapping("")
@@ -39,8 +42,20 @@ public class ReplyApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (!replyRequestDto.getReply().isBlank() || !replyRequestDto.getReply().isEmpty()) {
-            if (forbiddenService.findWordList(Status.APPROVAL, replyRequestDto.getReply()))
+            int risk = forbiddenService.findWordList(Status.APPROVAL, replyRequestDto.getReply());
+
+            if (risk != 0) {
+                if (risk == 3) {
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    memberService.updateRole(member.getId(), Role.DENIED);
+
+                    session.invalidate();
+
+                    return ResponseEntity.ok(-3L);
+                }
+
                 return ResponseEntity.ok(-1L);
+            }
 
             Comment comment = commentService.findById(replyRequestDto.getId());
 

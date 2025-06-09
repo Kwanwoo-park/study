@@ -133,8 +133,12 @@ function fnEditComplete(boardId) {
     .then((json) => {
         if (json == -1)
             alert("부적절한 내용 감지되었습니다");
-        else
+        else {
+            if (json == -3)
+                alert("금칙어를 사용하여 계정이 정지되었습니다");
+
             window.location.reload();
+        }
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

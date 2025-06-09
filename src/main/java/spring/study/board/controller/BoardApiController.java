@@ -17,6 +17,9 @@ import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.forbidden.service.ForbiddenService;
+import spring.study.member.entity.Role;
+import spring.study.member.service.MemberService;
+import spring.study.notification.service.NotificationService;
 
 import java.util.List;
 
@@ -30,6 +33,8 @@ public class BoardApiController {
     private final FavoriteService favoriteService;
     private final ImageS3Service imageS3Service;
     private final ForbiddenService forbiddenService;
+    private final MemberService memberService;
+    private final NotificationService notificationService;
 
     @PostMapping("/write")
     public ResponseEntity<Long> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
@@ -46,8 +51,20 @@ public class BoardApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (!boardRequestDto.getContent().isBlank() || !boardRequestDto.getContent().isEmpty()){
-            if (forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent()))
+            int risk = forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent());
+
+            if (risk != 0) {
+                if (risk == 3) {
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    memberService.updateRole(member.getId(), Role.DENIED);
+
+                    session.invalidate();
+
+                    return ResponseEntity.ok(-3L);
+                }
+
                 return ResponseEntity.ok(-1L);
+            }
 
             Board board = boardRequestDto.toEntity();
 
@@ -79,9 +96,23 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
+        Member member = (Member) session.getAttribute("member");
+
         if (!boardRequestDto.getContent().isBlank() | !boardRequestDto.getContent().isEmpty()) {
-            if (forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent()))
+            int risk = forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent());
+
+            if (risk != 0) {
+                if (risk == 3) {
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    memberService.updateRole(member.getId(), Role.DENIED);
+
+                    session.invalidate();
+
+                    return ResponseEntity.ok(-3);
+                }
+
                 return ResponseEntity.ok(-1);
+            }
 
             return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getContent()));
         }

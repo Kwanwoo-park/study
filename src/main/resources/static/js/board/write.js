@@ -36,6 +36,10 @@ function fnSave() {
         if (id == -1) {
             alert("부적절한 내용 감지되었습니다");
         }
+        else if (id == -3) {
+            alert("금칙어를 사용하여 계정이 정지되었습니다");
+            window.location.reload();
+        }
         else {
             if (file)
                 img_btn.click();
