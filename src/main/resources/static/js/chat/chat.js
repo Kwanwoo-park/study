@@ -1,8 +1,8 @@
 const url = new URL(window.location.href)
 const urlParams = url.searchParams
 
-//let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat?roomId=" + urlParams.get('roomId'));
-let socket = new WebSocket("ws://localhost:8080/ws/chat?roomId=" + urlParams.get('roomId'));
+let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat?roomId=" + urlParams.get('roomId'));
+//let socket = new WebSocket("ws://localhost:8080/ws/chat?roomId=" + urlParams.get('roomId'));
 
 const roomId = document.querySelector("#room").value;
 const email = document.querySelector("#email").value;
