@@ -1,8 +1,8 @@
 const url = new URL(window.location.href)
 const urlParams = url.searchParams
 
-let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat?roomId=" + urlParams.get('roomId'));
-//let socket = new WebSocket("ws://localhost:8080/ws/chat?roomId=" + urlParams.get('roomId'));
+//let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat?roomId=" + urlParams.get('roomId'));
+let socket = new WebSocket("ws://localhost:8080/ws/chat?roomId=" + urlParams.get('roomId'));
 
 const roomId = document.querySelector("#room").value;
 const email = document.querySelector("#email").value;
@@ -28,6 +28,7 @@ socket.onopen = function(e) {
 }
 
 socket.onclose = function(e) {
+    console.log(e);
     console.log('disconnect');
 }
 
@@ -127,7 +128,7 @@ function sendMsg() {
             message : content
         };
 
-        socket.send(JSON.stringify(talkMsg));
+        msgSend(talkMsg);
     }
 }
 
@@ -142,12 +143,32 @@ function quit() {
     history.back(-1);
 }
 
+function msgSend(msg) {
+    fetch(`/api/chat/message/send`, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify(msg),
+        credentials: "include",
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        if (json != 1)
+            alert("메세지 전송 실패")
+    })
+    .catch((error) => {
+        console.log(error)
+        alert("다시 시도하여주십시오");
+    })
+}
+
 function msgCheck(msg) {
     fetch(`/api/chat/message/check?message=`+msg, {
         method: 'GET',
         headers: {
             "Content-Type": "application/json; charset=utf-8",
-        }
+        },
         credentials: "include",
     })
     .then((response) => response.json())
@@ -181,9 +202,10 @@ function fnLoad(input) {
     })
     .then((response) => response.json())
     .then((json) => {
+        console.log(json)
         status = json['status']
 
-        if (status == 500)
+        if (status != 'OK')
             alert("이미지 전송 실패");
         else {
             imgName = json['name'];
@@ -195,7 +217,7 @@ function fnLoad(input) {
                 message : imgName
             };
 
-            socket.send(JSON.stringify(talkMsg));
+            msgSend(talkMsg)
         }
     })
     .catch((error) => {

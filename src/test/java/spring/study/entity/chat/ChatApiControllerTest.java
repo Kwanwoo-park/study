@@ -17,12 +17,13 @@
 //import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 //import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 //import org.springframework.web.context.WebApplicationContext;
-//import spring.study.dto.chat.ChatRoomRequestDto;
-//import spring.study.dto.member.MemberRequestDto;
-//import spring.study.entity.member.Member;
-//import spring.study.service.chat.ChatRoomMemberService;
-//import spring.study.service.chat.ChatRoomService;
-//import spring.study.service.member.MemberService;
+//import spring.study.chat.dto.ChatRoomRequestDto;
+//import spring.study.chat.entity.ChatRoomMember;
+//import spring.study.chat.service.ChatRoomMemberService;
+//import spring.study.chat.service.ChatRoomService;
+//import spring.study.member.dto.MemberRequestDto;
+//import spring.study.member.entity.Member;
+//import spring.study.member.service.MemberService;
 //
 //import java.io.FileInputStream;
 //import java.util.List;
@@ -53,7 +54,30 @@
 //    private ChatRoomMemberService roomMemberService;
 //    @Autowired
 //    private WebApplicationContext context;
+//
 //    private MockMvc mvc;
+//
+//    @Test
+//    void sendMessage() throws Exception {
+//        // given
+//        mvc = MockMvcBuilders
+//                .webAppContextSetup(context)
+//                .apply(springSecurity())
+//                .build();
+//
+//        MockHttpSession session = new MockHttpSession();
+//        Member member = memberService.findMember("akakslslzz@naver.com");
+//        session.setAttribute("member", member);
+//
+//        String message = "Hello";
+//
+//        url += "/send?message=" + message;
+//
+//        //when
+//        mvc.perform(post(url).session(session)
+//                .contentType(MediaType.APPLICATION_JSON)
+//        ).andExpect(status().isOk()).andDo(print());
+//    }
 //
 //    @WithMockUser
 //    @Test

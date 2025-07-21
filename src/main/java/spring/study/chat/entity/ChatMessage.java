@@ -9,6 +9,7 @@ import lombok.Setter;
 import spring.study.common.entity.BasetimeEntity;
 import spring.study.member.entity.Member;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 @NoArgsConstructor
@@ -16,6 +17,9 @@ import java.io.Serializable;
 @Setter
 @Entity(name = "message")
 public class ChatMessage extends BasetimeEntity implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 10L;
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
     private Long id;
