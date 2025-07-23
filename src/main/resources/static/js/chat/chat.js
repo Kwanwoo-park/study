@@ -28,7 +28,6 @@ socket.onopen = function(e) {
 }
 
 socket.onclose = function(e) {
-    console.log(e);
     console.log('disconnect');
 }
 
@@ -99,7 +98,7 @@ function enterRoom(socket) {
         email : email
     };
 
-    socket.send(JSON.stringify(enterMsg));
+    msgSend(enterMsg);
 }
 
  function send(e) {
@@ -139,7 +138,7 @@ function quit() {
         email : email
     };
 
-    socket.send(JSON.stringify(quitMsg));
+    msgSend(quitMsg)
     history.back(-1);
 }
 
