@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.kafka.service.MessageProducer;
 import spring.study.member.entity.Member;
 import spring.study.chat.repository.ChatMessageRepository;
 
@@ -16,9 +17,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
+    private final MessageProducer producer;
 
     @Transactional
     public ChatMessage save(ChatMessage message) {
+        producer.sendMessage(message);
         return chatMessageRepository.save(message);
     }
 

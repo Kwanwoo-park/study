@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import spring.study.kafka.service.MessageProducer;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Status;
@@ -15,14 +16,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationService {
     private final NotificationRepository notificationRepository;
+    private final MessageProducer producer;
 
     @Transactional
     public Notification createNotification(Member member, String message) {
-        return notificationRepository.save(Notification.builder()
-                        .member(member)
-                        .message(message)
-                        .readStatus(Status.UNREAD)
-                .build());
+        Notification notification = Notification.builder()
+                .member(member)
+                .message(message)
+                .readStatus(Status.UNREAD)
+                .build();
+
+        producer.sendNotification(notification);
+        return notificationRepository.save(notification);
     }
 
     @Transactional

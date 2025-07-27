@@ -185,7 +185,6 @@ public class ChatApiController {
             notification.addMember(otherMember);
         }
 
-        producer.sendMessage(chatMessage);
         messageService.save(chatMessage);
 
         return ResponseEntity.ok(1);

@@ -12,6 +12,7 @@ import spring.study.member.entity.Member;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Status;
 import spring.study.member.service.MemberService;
+import spring.study.notification.service.EmitterService;
 import spring.study.notification.service.NotificationService;
 
 import java.util.List;
@@ -23,69 +24,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 public class NotificationApiController {
     private final NotificationService notificationService;
-    private final MemberService memberService;
+    private final EmitterService emitterService;
 
     private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    @GetMapping("/stream")
-    public SseEmitter streamNotification(HttpServletRequest request) {
-        SseEmitter emitter = new SseEmitter(60000L);
-        emitters.add(emitter);
-
-        emitter.onCompletion(() -> emitters.remove(emitter));
-        emitter.onTimeout(() -> {
-            emitters.remove(emitter);
-            emitter.complete();
-        });
-        emitter.onError((e) -> {
-            emitters.remove(emitter);
-            emitter.completeWithError(e);
-        });
-
+    @GetMapping(value = "/stream", produces = "text/event-stream")
+    public SseEmitter streamNotification(HttpServletRequest request, @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "") String lastEventId) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid()) {
-            emitter.complete();
-            return emitter;
+            return null;
         }
 
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
-            session.invalidate();
-            emitter.complete();
-            return emitter;
+            return null;
         }
 
-        new Thread(() -> {
-            try {
-                while (true) {
-                    if (emitters.contains(emitter)) {
-                        List<Notification> notifications = notificationService.findUnReadNotification(member);
-
-                        if (!notifications.isEmpty()) {
-                            for (Notification notification : notifications) {
-                                if (notification.getReadStatus() == Status.UNREAD) {
-                                    notificationService.updateCheck(notification.getId());
-
-                                    emitter.send(SseEmitter.event()
-                                            .name("notification")
-                                            .data(notification.getMessage()));
-                                }
-                            }
-                        }
-                    } else {
-                      break;
-                    }
-
-                    Thread.sleep(10000);
-                }
-            } catch (Exception e) {
-                log.info(e.getMessage());
-            }
-        }).start();
-
-        return emitter;
+        return emitterService.addEmitter(member.getId().toString(), lastEventId);
     }
 
     @PatchMapping("/mark-as-read")
