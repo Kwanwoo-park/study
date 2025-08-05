@@ -55,7 +55,7 @@ public class SecurityConfig{
                 .defaultSuccessUrl("/board/main")
                 .and()
                 .logout()
-                .logoutRequestMatcher(new AntPathRequestMatcher("/member/logout"))
+                //.logoutRequestMatcher(new AntPathRequestMatcher("/member/logout"))
                 .logoutSuccessUrl("/member/login")
                 .invalidateHttpSession(true)
                 .deleteCookies("member").permitAll()

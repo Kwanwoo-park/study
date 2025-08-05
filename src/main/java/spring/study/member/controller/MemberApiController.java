@@ -75,6 +75,18 @@ public class MemberApiController {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
     }
 
+    @GetMapping("/logout")
+    public ResponseEntity<Integer> logoutAction(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        session.removeAttribute("member");
+
+        return ResponseEntity.ok(1);
+    }
+
     @PostMapping("/register")
     public ResponseEntity<Long> registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
         if (memberRequestDto.getEmail().isEmpty() || memberRequestDto.getEmail().isBlank() ||
@@ -114,7 +126,7 @@ public class MemberApiController {
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
         if (imageS3Service.fileFormatCheck(file))

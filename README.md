@@ -2,7 +2,7 @@
 
 Framework: Spring Boot 3.0.5<br>
 Database: MySQL 8.0.33, JPA<br>
-etc: Thymeleaf, JQuery<br>
+etc: Thymeleaf, JQuery, Kafka<br>
 
 
 해당 프로젝트에 적용된 기술
@@ -15,4 +15,6 @@ etc: Thymeleaf, JQuery<br>
     <li>RDS(MySQL), JPA</li>
     <li>AWS EC2</li>
     <li>LoadBalancer</li>
+    <li>Image S3</li>
+    <li>Kafka</li>
 </ul>

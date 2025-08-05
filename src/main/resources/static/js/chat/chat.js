@@ -1,9 +1,6 @@
 const url = new URL(window.location.href)
 const urlParams = url.searchParams
 
-let socket = new WebSocket("wss://www.kwanwoo.site/ws/chat?roomId=" + urlParams.get('roomId'));
-//let socket = new WebSocket("ws://localhost:8080/ws/chat?roomId=" + urlParams.get('roomId'));
-
 const roomId = document.querySelector("#room").value;
 const email = document.querySelector("#email").value;
 const flag = document.querySelector("#flag").value;
@@ -20,23 +17,31 @@ window.onload = function() {
     container.scrollTop = container.scrollHeight;
 }
 
-socket.onopen = function(e) {
-    console.log('open server!')
+//let socket = new SockJS("wss://www.kwanwoo.site/ws/chat?email=" + email + "&roomId=" + urlParams.get('roomId'));
+//let socket = new SockJS("ws://localhost:8080/ws/chat?email=" + email + "&roomId=" + urlParams.get('roomId'));
+//let socket = new SockJS("http://localhost:8080/ws/chat")
+let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
+const client = Stomp.over(socket)
+
+client.connect({}, onConnected, onError);
+
+function onConnected() {
     if (flag == 'true')
         enterRoom(socket);
+
+    client.subscribe("/sub/chat/room/" + roomId, onMessageReceived);
 }
 
-socket.onclose = function(e) {
-    console.log('disconnect');
+function onError(error) {
+    console.error(error);
 }
 
-socket.onerror = function(e) {
-    console.log(e);
-}
+function onMessageReceived(e) {
+    console.clear();
 
-socket.onmessage = function(e) {
-    const json = JSON.parse(e.data);
+    const json = JSON.parse(e.body);
+
     let msgArea = document.querySelector('.list-group-flush');
 
     let newMsgLi = document.createElement('li');
@@ -91,7 +96,7 @@ socket.onmessage = function(e) {
     container.scrollTop = container.scrollHeight;
 }
 
-function enterRoom(socket) {
+function enterRoom() {
     var enterMsg = {
         type : "ENTER",
         roomId : roomId,
@@ -143,23 +148,8 @@ function quit() {
 }
 
 function msgSend(msg) {
-    fetch(`/api/chat/message/send`, {
-        method: 'POST',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-        body: JSON.stringify(msg),
-        credentials: "include",
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        if (json != 1)
-            alert("메세지 전송 실패")
-    })
-    .catch((error) => {
-        console.log(error)
-        alert("다시 시도하여주십시오");
-    })
+    client.send("/api/chat/message/send", {}, JSON.stringify(msg));
+    console.clear()
 }
 
 function msgCheck(msg) {

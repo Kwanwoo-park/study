@@ -68,7 +68,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;
       <h4>
         <label class="form-label" th:text="${member.name}" style="margin-right: 10px;"></label>
-        <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/logout'">Logout</button>
+        <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
         <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
         <input type="file" accept="image/*" onchange="fnLoad(this)" style="display: none" id="upload">

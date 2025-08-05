@@ -1,8 +1,10 @@
 package spring.study.chat.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
@@ -19,10 +21,25 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final MessageProducer producer;
 
-    @Transactional
-    public ChatMessage save(ChatMessage message) {
+    private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, Object> objectRedisTemplate;
+
+    public void save(ChatMessage message) {
         producer.sendMessage(message);
-        return chatMessageRepository.save(message);
+
+        try {
+            String key = "chat:message:roomId:"+message.getRoom().getRoomId();
+            String json = objectMapper.writeValueAsString(message);
+
+            objectRedisTemplate.opsForList().rightPush(key, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Transactional
+    public List<ChatMessage> saveAll(List<ChatMessage> list) {
+        return chatMessageRepository.saveAll(list);
     }
 
     public List<ChatMessage> find(ChatRoom room) {
