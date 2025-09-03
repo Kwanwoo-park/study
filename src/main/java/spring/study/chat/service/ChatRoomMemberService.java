@@ -40,17 +40,17 @@ public class ChatRoomMemberService {
         return list;
     }
 
-    public HashMap<String, Member> findMember(List<ChatRoom> rooms, Member member) {
-        HashMap<String, Member> map = new HashMap<>();
+    public HashMap<String, List<Member>> findMember(List<ChatRoom> rooms, Member member) {
+        HashMap<String, List<Member>> map = new HashMap<>();
 
         for (ChatRoom room : rooms) {
-            map.put(room.getRoomId(), chatRoomMemberRepository.findByRoomAndMemberNot(room, member).getMember());
+            map.put(room.getRoomId(), chatRoomMemberRepository.findByRoomAndMemberNot(room, member).stream().map(ChatRoomMember::getMember).toList());
         }
 
         return map;
     }
 
-    public ChatRoomMember findMember(ChatRoom room, Member member) {
+    public List<ChatRoomMember> findMember(ChatRoom room, Member member) {
         return chatRoomMemberRepository.findByRoomAndMemberNot(room, member);
     }
 

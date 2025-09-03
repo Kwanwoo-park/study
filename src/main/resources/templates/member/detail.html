@@ -71,6 +71,7 @@
         <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
         <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
+        <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
         <input type="file" accept="image/*" onchange="fnLoad(this)" style="display: none" id="upload">
         <button type="button" class="btn btn-primary" id="save" style="display: none" onclick="fnSave()">사진 변경</button>
         <br>

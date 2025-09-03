@@ -1,7 +1,5 @@
 package spring.study.chat.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.entity.ChatRoomMember;
 import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
@@ -60,10 +59,11 @@ public class ChatWebSocketApiController {
                 roomService.delete(room.getRoomId());
             }
         } else {
-            Member otherMember = roomMemberService.findMember(room, member).getMember();
-
-            Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 메시지를 보냈습니다.");
-            notification.addMember(otherMember);
+            Notification notification;
+            for (ChatRoomMember otherMember : roomMemberService.findMember(room, member)) {
+                notification = notificationService.createNotification(otherMember.getMember(), member.getName() + "님이 메시지를 보냈습니다.");
+                notification.addMember(otherMember.getMember());
+            }
         }
 
         messageService.save(chatMessage);

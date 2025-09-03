@@ -20,13 +20,11 @@ if (button) {
             })
             .then((response) => response.json())
             .then((json) => {
-                if (json.role != "DENIED")
+                if (json.role != "DENIED") {
                     alert(json.name + "님 환영합니다!")
 
-                if (json.role == "USER")
                     location.replace(`/board/main`)
-                else if (json.role == "ADMIN")
-                    location.replace(`/admin/administrator`)
+                }
                 else
                     alert("Access Deny");
             })
