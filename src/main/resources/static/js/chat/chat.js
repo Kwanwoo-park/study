@@ -19,8 +19,8 @@ window.onload = function() {
 
 //let socket = new SockJS("wss://www.kwanwoo.site/ws/chat?email=" + email + "&roomId=" + urlParams.get('roomId'));
 //let socket = new SockJS("ws://localhost:8080/ws/chat?email=" + email + "&roomId=" + urlParams.get('roomId'));
-let socket = new SockJS("http://localhost:8080/ws/chat")
-//let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+//let socket = new SockJS("http://localhost:8080/ws/chat")
+let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
 const client = Stomp.over(socket)
 
