@@ -156,6 +156,7 @@ function fnDelete(boardId) {
     .then((response) => response.json())
     .then((json) => {
        alert("삭제가 완료되었습니다");
+       location.replace(`/member/detail?email=`+json['email']);
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

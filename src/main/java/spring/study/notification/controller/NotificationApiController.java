@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Notification;
-import spring.study.notification.entity.Status;
-import spring.study.member.service.MemberService;
 import spring.study.notification.service.EmitterService;
 import spring.study.notification.service.NotificationService;
 
@@ -50,13 +48,13 @@ public class NotificationApiController {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(501).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
         Notification notification = notificationService.findById(id);
@@ -68,5 +66,33 @@ public class NotificationApiController {
         else  {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Notification not found");
         }
+    }
+
+    @PatchMapping("/mark-all-as-read")
+    public ResponseEntity<Integer> updateAllAsRead(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        Member member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        }
+
+        int result = notificationService.updateAllRead(member);
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+
+//        List<Long> list = member.getNotifications().stream().map(Notification::getId).toList();
+//
+//        if (list.isEmpty())
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("None unread notification");
+//        else {
+//            notificationService.updateAllRead(list);
+//            return ResponseEntity.status(HttpStatus.OK).body("All notification update as read");
+//        }
     }
 }

@@ -156,7 +156,7 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        if (boardRequestDto.getId() != null) {
+        if (boardService.existBoard(boardRequestDto.getId())) {
             Board board = boardService.findById(boardRequestDto.getId());
             Member board_member = board.getMember();
 
@@ -186,6 +186,8 @@ public class BoardViewController {
             model.addAttribute("member", member.getEmail());
             model.addAttribute("previous", previous_id);
             model.addAttribute("next", next_id);
+        } else {
+            return "redirect:/member/detail?email="+member.getEmail();
         }
 
         return "board/view";

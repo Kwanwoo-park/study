@@ -4,11 +4,12 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.board.Board;
-//import spring.study.entity.member.Member;
-//import spring.study.service.board.BoardService;
+//import spring.study.board.entity.Board;
+//import spring.study.board.service.BoardService;
+//import spring.study.comment.entity.Comment;
 //import spring.study.comment.service.CommentService;
-//import spring.study.service.member.MemberService;
+//import spring.study.member.entity.Member;
+//import spring.study.member.service.MemberService;
 //
 //import java.util.HashMap;
 //import java.util.List;

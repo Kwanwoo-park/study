@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.entity.Board;
 import spring.study.board.entity.BoardImg;
+import spring.study.comment.entity.Comment;
 import spring.study.forbidden.entity.Status;
+import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.board.service.BoardImgService;
@@ -20,14 +22,18 @@ import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 import spring.study.notification.service.NotificationService;
+import spring.study.reply.service.ReplyService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/board")
 public class BoardApiController {
     private final BoardService boardService;
+    private final ReplyService replyService;
     private final CommentService commentService;
     private final BoardImgService boardImgService;
     private final FavoriteService favoriteService;
@@ -122,7 +128,7 @@ public class BoardApiController {
     }
 
     @DeleteMapping("/view/delete")
-    public ResponseEntity<Board> boardViewDeleteAction(@RequestParam() Long id, HttpServletRequest request){
+    public ResponseEntity<Map<String, String>> boardViewDeleteAction(@RequestParam() Long id, HttpServletRequest request){
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -136,12 +142,20 @@ public class BoardApiController {
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
 
+        Map<String, String> emailMap = new HashMap<>();
+        emailMap.put("email", member.getEmail());
+
         member.removeComments(board.getComment());
         member.removeBoard(board);
 
         session.setAttribute("member", member);
 
         favoriteService.deleteByBoard(board);
+
+        for (Comment comment : board.getComment()) {
+            replyService.deleteReply(comment);
+        }
+
         commentService.deleteComment(board);
 
         List<BoardImg> images = boardService.findById(id).getImg();
@@ -153,6 +167,6 @@ public class BoardApiController {
         boardImgService.deleteBoard(board);
         boardService.deleteById(id);
 
-        return ResponseEntity.ok(board);
+        return ResponseEntity.status(HttpStatus.OK).body(emailMap);
     }
 }

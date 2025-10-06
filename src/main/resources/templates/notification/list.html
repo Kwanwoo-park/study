@@ -36,6 +36,7 @@
         <span id="notification-message">새 알림</span>
         <button type="button" class="btn-close" aria-label="Close">닫기</button>
     </div>
+    <button class="btn btn-primary" onclick="fnAllRead()">모두 읽음으로 표시</button>
     <div>
         <ul>
             <li th:each="notification : ${notification}" class="notification-card">

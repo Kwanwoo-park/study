@@ -92,6 +92,10 @@ public class BoardService {
         return boardRepository.findById(id).orElseThrow();
     }
 
+    public Boolean existBoard(Long id) {
+        return boardRepository.existsById(id);
+    }
+
     @Transactional
     public int updateBoard(Long id, String content) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(

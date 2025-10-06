@@ -6,10 +6,11 @@
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 //import org.springframework.data.domain.Sort;
-//import spring.study.entity.board.Board;
-//import spring.study.entity.member.Member;
-//import spring.study.repository.comment.CommentRepository;
-//import spring.study.repository.member.MemberRepository;
+//import spring.study.board.entity.Board;
+//import spring.study.comment.entity.Comment;
+//import spring.study.comment.repository.CommentRepository;
+//import spring.study.member.entity.Member;
+//import spring.study.member.repository.MemberRepository;
 //
 //import java.util.List;
 //
@@ -121,8 +122,8 @@
 //        // when
 //        commentRepository.deleteByBoard(board);
 //
-//        member.getComment().remove(comment);
-//        board.getComment().remove(comment);
+//        member.removeComment(comment);
+//        board.removeComment(comment);
 //
 //        // then
 //        System.out.println(member.getComment().size());
