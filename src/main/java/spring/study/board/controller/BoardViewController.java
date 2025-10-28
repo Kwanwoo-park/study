@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
+import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -107,12 +108,15 @@ public class BoardViewController {
         }
 
         try {
-            List<Board> list = boardService.findByMembers(member);
+            //List<Board> list = boardService.findByMembers(member);
+            List<BoardResponseDto> list = boardService.getBoard(null, 10);
             model.addAttribute("resultMap", list);
+            model.addAttribute("nextCursor", list.isEmpty() ? null : list.get(list.size()-1).getRegisterTime());
             model.addAttribute("like", member.checkFavorite(list));
             model.addAttribute("profile", member.getProfile());
             model.addAttribute("email", member.getEmail());
         } catch (Exception e) {
+            e.printStackTrace();
             throw new Exception(e.getMessage());
         }
 
@@ -177,12 +181,8 @@ public class BoardViewController {
                 }
             }
 
-            List<Board> list = new ArrayList<>();
-
-            list.add(board);
-
             model.addAttribute("board", board);
-            model.addAttribute("like", member.checkFavorite(list));
+            model.addAttribute("like", member.checkFavorite(board));
             model.addAttribute("member", member.getEmail());
             model.addAttribute("previous", previous_id);
             model.addAttribute("next", next_id);

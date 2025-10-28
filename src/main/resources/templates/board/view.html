@@ -128,8 +128,8 @@
 		</div>
 		<div class="info">
 			<div class="icon-box">
-				<img th:id="'like' + ${board.id}" th:if="${like[board.id]}" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${board.id}]])">
-				<img th:id="'like' + ${board.id}" th:unless="${like[board.id]}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${board.id}]])">
+				<img th:id="'like' + ${board.id}" th:if="${like}" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${board.id}]])">
+				<img th:id="'like' + ${board.id}" th:unless="${like}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${board.id}]])">
 				<img th:id="'comment' + ${board.id}" th:src="@{/img/} + ic_chat_black.png" class="icon" th:onclick="fnComment([[${board.id}]])">
 			</div>
 			<div class="like" th:onclick="fnHref([[${board.id}]])">

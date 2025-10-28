@@ -3,15 +3,16 @@ package spring.study.board.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
+import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.board.entity.BoardImg;
 import spring.study.comment.entity.Comment;
 import spring.study.forbidden.entity.Status;
-import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.board.service.BoardImgService;
@@ -24,6 +25,7 @@ import spring.study.member.service.MemberService;
 import spring.study.notification.service.NotificationService;
 import spring.study.reply.service.ReplyService;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,19 @@ public class BoardApiController {
     private final ForbiddenService forbiddenService;
     private final MemberService memberService;
     private final NotificationService notificationService;
+
+    @GetMapping("/load")
+    public ResponseEntity<Map<String, Object>> getBoards(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursor,
+                                                         @RequestParam(defaultValue = "10") int limit) {
+        List<BoardResponseDto> boards = boardService.getBoard(cursor, limit);
+        LocalDateTime nextCursor = boards.isEmpty() ? null : boards.get(boards.size()-1).getRegisterTime();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("boards", boards);
+        response.put("nextCursor", nextCursor);
+
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/write")
     public ResponseEntity<Long> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {

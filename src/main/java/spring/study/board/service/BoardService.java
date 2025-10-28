@@ -2,9 +2,11 @@ package spring.study.board.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
@@ -13,8 +15,10 @@ import spring.study.follow.entity.Follow;
 import spring.study.member.entity.Member;
 import spring.study.board.repository.BoardRepository;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +26,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class BoardService {
+    @Qualifier("boardRedisTemplate")
+    private final RedisTemplate<String, BoardResponseDto> redisTemplate;
+    private static final String FEED_CACHE_KEY = "feed:recent";
+
     private final BoardRepository boardRepository;
 
     @Transactional
@@ -32,6 +40,20 @@ public class BoardService {
     @Transactional
     public Board save(Board board) {
         return boardRepository.save(board);
+    }
+
+    public List<BoardResponseDto> getBoard(LocalDateTime cursor, int limit) {
+        List<BoardResponseDto> cached = getFromCache(limit);
+
+        if (!cached.isEmpty() && (cursor == null || cursor.isAfter(cached.get(cached.size()-1).getRegisterTime())))
+            return cached;
+
+        List<BoardResponseDto> dbPosts = boardRepository.findNextBoard(cursor, PageRequest.of(0, limit));
+
+        if (cursor == null && !dbPosts.isEmpty())
+            saveToCache(dbPosts);
+
+        return dbPosts;
     }
 
     public HashMap<String, Object> findAll(Integer page, Integer size) {
@@ -114,5 +136,17 @@ public class BoardService {
 
     public void deleteByMember(Member member) {
         boardRepository.deleteByMember(member);
+    }
+
+    private void saveToCache(List<BoardResponseDto> boards) {
+        redisTemplate.delete(FEED_CACHE_KEY);
+        redisTemplate.opsForList().rightPushAll(FEED_CACHE_KEY, boards);
+        redisTemplate.expire(FEED_CACHE_KEY, Duration.ofMinutes(5));
+    }
+
+    private List<BoardResponseDto> getFromCache(int limit) {
+        List<BoardResponseDto> range = redisTemplate.opsForList().range(FEED_CACHE_KEY,0, limit-1);
+        if (range == null || range.isEmpty()) return Collections.emptyList();
+        else return range;
     }
 }

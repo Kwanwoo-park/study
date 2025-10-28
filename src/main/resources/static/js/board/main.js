@@ -1,3 +1,43 @@
+async function loadMorePosts() {
+    if (loading || !nextCursor) return;
+    loading = true;
+    document.getElementById('loading').innerText = "불러오는 중...";
+
+    try {
+        const res = await fetch(`/board/load?cursor=` + nextCursor + `&limit=10`);
+        const data = await res.json();
+
+        const container = document.getElementById('post-container');
+
+        data.boards.forEach(board => {
+            const div = document.createElement('div');
+            div.className = 'board';
+            div.innerHTML = `
+                <p>${board.content}</p>
+                <small>${board.registerTime.replace('T', ' ').split('.')[0]}</small>
+            `;
+            container.appendChild(div);
+        });
+
+        nextCursor = data.nextCursor;
+
+        if (!nextCursor)
+            document.getElementById('loading').innerText = '모든 게시물을 불러왔습니다';
+        else
+            document.getElementById('loading').innerText = '';
+    } catch (e) {
+        console.error('로드 오류', e);
+    } finally {
+        loading = false;
+    }
+}
+
+window.addEventListener('scroll', () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+        loadMorePosts();
+    }
+})
+
 function fnLeft(listId, ImageArr) {
     const main_image = document.getElementById('main_img' + listId);
     const img_id = document.getElementById('img' + listId);

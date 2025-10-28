@@ -9,6 +9,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import spring.study.board.dto.BoardResponseDto;
 import spring.study.common.entity.BasetimeEntity;
 import spring.study.board.entity.Board;
 import spring.study.reply.entity.Reply;
@@ -58,6 +59,7 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     @NotNull
     private String profile;
+
     @Column(name = "last_login_time")
     private LocalDateTime lastLoginTime;
 
@@ -178,9 +180,9 @@ public class Member extends BasetimeEntity implements UserDetails {
         }
     }
 
-    public HashMap<Long, Boolean> checkFavorite(List<Board> boards) {
+    public HashMap<Long, Boolean> checkFavorite(List<BoardResponseDto> boards) {
         HashMap<Long, Boolean> map = new HashMap<>();
-        for (Board b : boards) {
+        for (BoardResponseDto b : boards) {
             map.put(b.getId(), false);
 
             for (Favorite fb : b.getFavorites()) {
@@ -194,6 +196,18 @@ public class Member extends BasetimeEntity implements UserDetails {
         }
 
         return map;
+    }
+
+    public Boolean checkFavorite(Board board) {
+        for (Favorite fb : board.getFavorites()) {
+            for (Favorite fm : favorites) {
+                if (Objects.equals(fm.getId(), fb.getId())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public HashMap<Long, Boolean> checkFollowing (List<Favorite> favorites) {

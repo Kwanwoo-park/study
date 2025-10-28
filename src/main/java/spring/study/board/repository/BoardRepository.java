@@ -4,15 +4,22 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.member.entity.Member;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface BoardRepository extends JpaRepository<Board, Long> {
+    @Query("select b from board b where :cursor is null or b.registerTime < :cursor order by b.registerTime desc")
+    List<BoardResponseDto> findNextBoard(@Param("cursor")LocalDateTime cursor, Pageable pageable);
+
     List<Board> findByMember(Member member, Sort sort);
 
     Page<Board> findByMemberIn(List<Member> members, Pageable pageable);
