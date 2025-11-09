@@ -1,25 +1,28 @@
+const container = document.querySelector('.container')
+
+let loading = false;
+let nextCursor = new Date().toISOString();
+
 async function loadMorePosts() {
     if (loading || !nextCursor) return;
     loading = true;
     document.getElementById('loading').innerText = "불러오는 중...";
 
     try {
-        const res = await fetch(`/board/load?cursor=` + nextCursor + `&limit=10`);
+        const res = await fetch(`/api/board/load?cursor=` + encodeURIComponent(nextCursor) + `&limit=10`, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            credentials: "include",
+        });
         const data = await res.json();
 
-        const container = document.getElementById('post-container');
-
-        data.boards.forEach(board => {
-            const div = document.createElement('div');
-            div.className = 'board';
-            div.innerHTML = `
-                <p>${board.content}</p>
-                <small>${board.registerTime.replace('T', ' ').split('.')[0]}</small>
-            `;
-            container.appendChild(div);
-        });
+        fnBoard(data)
 
         nextCursor = data.nextCursor;
+
+        console.log(nextCursor)
 
         if (!nextCursor)
             document.getElementById('loading').innerText = '모든 게시물을 불러왔습니다';
@@ -32,11 +35,185 @@ async function loadMorePosts() {
     }
 }
 
-window.addEventListener('scroll', () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+container.addEventListener('scroll', () => {
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1) {
         loadMorePosts();
     }
 })
+
+function fnBoard(data) {
+    data.boards.forEach(board => {
+        console.log(board)
+        const main = document.createElement('div');
+        main.className = 'main';
+
+        const profile = document.createElement('div');
+        profile.className = 'profile';
+        profile.onclick = function() {
+            fnProfile(board.member.email)
+        };
+
+        const pro_img = document.createElement('img');
+        pro_img.className = 'profile-img';
+        pro_img.src = board.member.profile;
+
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.innerText = board.member.name;
+
+        profile.append(pro_img);
+        profile.append(name);
+
+        const main_image_div = document.createElement('div');
+        main_image_div.className = 'main-image-wrapper'
+
+        if (board.img.length != 1) {
+            const button = document.createElement('button')
+            button.class = 'btn';
+            button.type = 'button'
+            button.id = 'left' + board.id;
+            button.style.visibility = 'hidden';
+            button.onclick = function() {
+                fnLeft(board.id, board.img);
+            }
+
+            main_image_div.append(button)
+        }
+
+        const main_img = document.createElement('img')
+        main_img.className = 'main-image';
+        main_img.id = 'main_img' + board.id;
+        main_img.addEventListener('dblclick', () => {
+            fnOnlyLike(board.id)
+        })
+
+        if (board.img.length == 0)
+            main_img.src = "/img/IMG_0111.jpeg";
+        else
+            main_img.src = board.img[0].imgSrc;
+
+        main_image_div.append(main_img);
+
+        if (board.img.length > 1) {
+            const button = document.createElement('button')
+            button.class = 'btn';
+            button.type = 'button'
+            button.id = 'right' + board.id;
+            button.onclick = function() {
+                fnRight(board.id, board.img);
+            }
+            main_image_div.append(button);
+        }
+
+        const info = document.createElement('div');
+        info.className = 'info'
+
+        const icon_div = document.createElement('div')
+        icon_div.className = 'icon-box'
+
+        const img_like = document.createElement('img')
+        img_like.className = 'icon';
+        img_like.id = 'like' + board.id;
+        img_like.onclick = function() {
+            fnLike(board.id);
+        }
+
+        if (data.like[board.id])
+            img_like.src = "/img/ic_favorite.png"
+        else
+            img_like.src = "/img/ic_favorite_border.png";
+
+        const img_comment = document.createElement('img')
+        img_comment.className = 'icon';
+        img_comment.id = 'comment' + board.id;
+        img_comment.onclick = function() {
+            fnComment(board.id);
+        }
+        img_comment.src = '/img/ic_chat_black.png';
+
+        icon_div.append(img_like)
+        icon_div.append(img_comment)
+
+        const like_div = document.createElement('div')
+        like_div.className = 'like'
+        like_div.onclick = function() {
+            fnHref(board.id);
+        }
+
+        const label1 = document.createElement('label')
+        label1.className = 'form-label'
+        label1.innerText = '좋아요 ';
+
+        const label2 = document.createElement('label')
+        label2.className = 'form-label'
+        label2.id = 'like_cnt' + board.id;
+        label2.innerText = board.favorites.length
+
+        const label3 = document.createElement('label')
+        label3.className = 'form-label'
+        label3.innerText = '개';
+
+        like_div.append(label1)
+        like_div.append(label2)
+        like_div.append(label3)
+
+        info.append(icon_div)
+        info.append(like_div)
+
+        const name2 = document.createElement('span');
+        name2.className = 'name';
+        name2.innerText = board.member.name;
+
+        info.append(name2)
+
+        const pre = document.createElement('pre');
+        pre.innerText = board.content;
+
+        info.append(pre)
+
+        const comment_div = document.createElement('div')
+        comment_div.className = 'comment'
+        comment_div.onclick = function() {
+            fnComment(board.id)
+        }
+
+        const label4 = document.createElement('label')
+        label4.className = 'form-label'
+        label4.innerText = '댓글 ';
+
+        const label5 = document.createElement('label')
+        label5.className = 'form-label'
+        label5.id = 'comment_cnt' + board.id;
+        label5.innerText = board.comment.length
+
+        const label6 = document.createElement('label')
+        label6.className = 'form-label'
+        label6.innerText = '개 모두 보기';
+
+        comment_div.append(label4)
+        comment_div.append(label5)
+        comment_div.append(label6)
+
+        info.append(comment_div)
+
+        const date = new Date(board.registerTime)
+        let temp = date.getFullYear() + "년 " +
+                    (date.getMonth() + 1) + "월 " +
+                    date.getDay() + "일"
+
+        const date_label = document.createElement('label')
+        date_label.className = 'date'
+        date_label.innerText = temp;
+
+        info.append(date)
+
+        main.append(profile);
+        main.append(main_image_div);
+        main.append(info)
+
+        container.appendChild(main);
+    });
+}
 
 function fnLeft(listId, ImageArr) {
     const main_image = document.getElementById('main_img' + listId);

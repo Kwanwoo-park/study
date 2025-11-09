@@ -42,13 +42,15 @@ public class BoardService {
         return boardRepository.save(board);
     }
 
-    public List<BoardResponseDto> getBoard(LocalDateTime cursor, int limit) {
+    public List<BoardResponseDto> getBoard(LocalDateTime cursor, int limit, Member member) {
         List<BoardResponseDto> cached = getFromCache(limit);
 
-        if (!cached.isEmpty() && (cursor == null || cursor.isAfter(cached.get(cached.size()-1).getRegisterTime())))
+        if (!cached.isEmpty() && cursor.isAfter(cached.get(cached.size()-1).getRegisterTime()))
             return cached;
 
-        List<BoardResponseDto> dbPosts = boardRepository.findNextBoard(cursor, PageRequest.of(0, limit));
+        List<Member> list = getMemberList(member);
+
+        List<BoardResponseDto> dbPosts = boardRepository.findNextBoard(cursor, list, PageRequest.of(0, limit));
 
         if (cursor == null && !dbPosts.isEmpty())
             saveToCache(dbPosts);
@@ -94,7 +96,7 @@ public class BoardService {
         return resultMap;
     }
 
-    public List<Board> findByMembers(Member member) {
+    private List<Member> getMemberList(Member member) {
         List<Member> memberList = new ArrayList<>();
 
         memberList.add(member);
@@ -103,7 +105,7 @@ public class BoardService {
             memberList.add(follow.getFollowing());
         }
 
-        return boardRepository.findByMemberIn(memberList, Sort.by("id").descending());
+        return memberList;
     }
 
     public List<Board> findAll() {

@@ -45,14 +45,28 @@ public class BoardApiController {
     private final NotificationService notificationService;
 
     @GetMapping("/load")
-    public ResponseEntity<Map<String, Object>> getBoards(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursor,
-                                                         @RequestParam(defaultValue = "10") int limit) {
-        List<BoardResponseDto> boards = boardService.getBoard(cursor, limit);
-        LocalDateTime nextCursor = boards.isEmpty() ? null : boards.get(boards.size()-1).getRegisterTime();
+    public ResponseEntity<Map<String, Object>> getBoards(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
+                                                         @RequestParam(defaultValue = "10") int limit,
+                                                         HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        }
+
+        Member member = (Member) session.getAttribute("member");
+
+        List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
+        LocalDateTime nextCursor = list.isEmpty() ? null : list.get(list.size()-1).getRegisterTime();
 
         Map<String, Object> response = new HashMap<>();
-        response.put("boards", boards);
+        response.put("boards", list);
         response.put("nextCursor", nextCursor);
+        response.put("like", member.checkFavorite(list));
 
         return ResponseEntity.ok(response);
     }

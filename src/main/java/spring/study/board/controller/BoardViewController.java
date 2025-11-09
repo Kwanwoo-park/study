@@ -14,7 +14,9 @@ import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.board.service.BoardService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -109,7 +111,7 @@ public class BoardViewController {
 
         try {
             //List<Board> list = boardService.findByMembers(member);
-            List<BoardResponseDto> list = boardService.getBoard(null, 10);
+            List<BoardResponseDto> list = boardService.getBoard(LocalDateTime.now(), 10, member);
             model.addAttribute("resultMap", list);
             model.addAttribute("nextCursor", list.isEmpty() ? null : list.get(list.size()-1).getRegisterTime());
             model.addAttribute("like", member.checkFavorite(list));

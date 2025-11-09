@@ -45,7 +45,6 @@ function fnSave() {
                 img_btn.click();
 
             alert("게시글이 저장되었습니다.");
-            location.replace(`/board/main`);
         }
     })
     .catch((error) => {
@@ -63,12 +62,9 @@ function fnImgSave() {
     })
     .then((response) => response.json())
     .then((json) => {
-        status = json['status'];
+        alert("게시글 사진 등록 완료");
 
-        if (status == 500)
-            alert("게시글 사진 등록 실패");
-        else
-            alert("게시글 사진 등록 완료");
+        location.replace(`/board/main`);
     })
     .catch((error) => {
         alert("게시글 사진 등록 실패");
