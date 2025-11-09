@@ -2,8 +2,6 @@ package spring.study.notification.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.notification.entity.Notification;
@@ -16,7 +14,6 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class EmitterService {
-    private final NotificationService notificationService;
     private final EmitterRepository emitterRepository;
 
     public void save(String id, Notification notification) {
@@ -37,27 +34,30 @@ public class EmitterService {
             );
         } catch (IOException e) {
             emitterRepository.deleteById(emitterId);
-            log.error("메시지 전송 에러 : {}", e);
+            log.error("메시지 전송 에러 : {1}", e);
         }
     }
 
     public SseEmitter addEmitter(String id, String lastEventId) {
         String emitterId = id + "_" + System.currentTimeMillis();
-        SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(60000L));
+        SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(60 * 1000L));
 
-        emitter.onCompletion(() -> {
-            emitterRepository.deleteById(emitterId);
-        });
-        emitter.onTimeout(() -> {
-            emitterRepository.deleteById(emitterId);
-        });
+        emitter.onCompletion(() -> emitterRepository.deleteById(emitterId));
+        emitter.onTimeout(() -> emitterRepository.deleteById(emitterId));
+        emitter.onError(e -> emitterRepository.deleteById(emitterId));
 
-        if (lastEventId.isEmpty()) {
+        if (lastEventId != null && !lastEventId.isEmpty()) {
             Map<String, Object> events = emitterRepository.findAllEventCacheStartWithById(id);
 
             events.entrySet().stream()
                     .filter(entry -> lastEventId.compareTo(entry.getKey()) < 0)
                     .forEach(entry -> sendToClient(emitter, entry.getKey(), entry.getValue()));
+        }
+
+        try {
+            emitter.send(SseEmitter.event().name("connect").data("connected"));
+        } catch (IOException e) {
+            emitterRepository.deleteById(emitterId);
         }
 
         return emitter;

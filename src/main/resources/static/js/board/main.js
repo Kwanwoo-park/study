@@ -3,10 +3,19 @@ const container = document.querySelector('.container')
 let loading = false;
 let nextCursor = new Date().toISOString();
 
+window.onload = function() {
+    loadMorePosts();
+}
+
+container.addEventListener('scroll', () => {
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1) {
+        loadMorePosts();
+    }
+})
+
 async function loadMorePosts() {
     if (loading || !nextCursor) return;
     loading = true;
-    document.getElementById('loading').innerText = "불러오는 중...";
 
     try {
         const res = await fetch(`/api/board/load?cursor=` + encodeURIComponent(nextCursor) + `&limit=10`, {
@@ -22,12 +31,12 @@ async function loadMorePosts() {
 
         nextCursor = data.nextCursor;
 
-        console.log(nextCursor)
-
-        if (!nextCursor)
-            document.getElementById('loading').innerText = '모든 게시물을 불러왔습니다';
-        else
-            document.getElementById('loading').innerText = '';
+        if (!nextCursor){
+            const load = document.createElement('spane')
+            load.id = 'loading'
+            load.innerText = '모든 게시물을 불러왔습니다';
+            container.append(load);
+        }
     } catch (e) {
         console.error('로드 오류', e);
     } finally {
@@ -35,15 +44,8 @@ async function loadMorePosts() {
     }
 }
 
-container.addEventListener('scroll', () => {
-    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1) {
-        loadMorePosts();
-    }
-})
-
 function fnBoard(data) {
     data.boards.forEach(board => {
-        console.log(board)
         const main = document.createElement('div');
         main.className = 'main';
 
@@ -142,7 +144,7 @@ function fnBoard(data) {
 
         const label1 = document.createElement('label')
         label1.className = 'form-label'
-        label1.innerText = '좋아요 ';
+        label1.innerText = '좋아요';
 
         const label2 = document.createElement('label')
         label2.className = 'form-label'
@@ -179,7 +181,7 @@ function fnBoard(data) {
 
         const label4 = document.createElement('label')
         label4.className = 'form-label'
-        label4.innerText = '댓글 ';
+        label4.innerText = '댓글';
 
         const label5 = document.createElement('label')
         label5.className = 'form-label'
@@ -199,13 +201,13 @@ function fnBoard(data) {
         const date = new Date(board.registerTime)
         let temp = date.getFullYear() + "년 " +
                     (date.getMonth() + 1) + "월 " +
-                    date.getDay() + "일"
+                    date.getDate() + "일"
 
         const date_label = document.createElement('label')
         date_label.className = 'date'
         date_label.innerText = temp;
 
-        info.append(date)
+        info.append(date_label)
 
         main.append(profile);
         main.append(main_image_div);

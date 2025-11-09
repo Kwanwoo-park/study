@@ -85,14 +85,5 @@ public class NotificationApiController {
         int result = notificationService.updateAllRead(member);
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
-
-//        List<Long> list = member.getNotifications().stream().map(Notification::getId).toList();
-//
-//        if (list.isEmpty())
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("None unread notification");
-//        else {
-//            notificationService.updateAllRead(list);
-//            return ResponseEntity.status(HttpStatus.OK).body("All notification update as read");
-//        }
     }
 }

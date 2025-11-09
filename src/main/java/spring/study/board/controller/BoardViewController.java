@@ -110,11 +110,6 @@ public class BoardViewController {
         }
 
         try {
-            //List<Board> list = boardService.findByMembers(member);
-            List<BoardResponseDto> list = boardService.getBoard(LocalDateTime.now(), 10, member);
-            model.addAttribute("resultMap", list);
-            model.addAttribute("nextCursor", list.isEmpty() ? null : list.get(list.size()-1).getRegisterTime());
-            model.addAttribute("like", member.checkFavorite(list));
             model.addAttribute("profile", member.getProfile());
             model.addAttribute("email", member.getEmail());
         } catch (Exception e) {

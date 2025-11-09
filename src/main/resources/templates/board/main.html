@@ -49,6 +49,12 @@
         font-weight: bold;
         gap: 5px;
     }
+    .comment {
+        display: flex;
+        flex-direction: row;
+        align-self: flex-start;
+        gap: 5px;
+    }
     .main-image-wrapper {
         display: flex;
         flex-direction: row;
@@ -101,40 +107,6 @@
             <span id="notification-message">새 알림</span>
             <button type="button" class="btn-close" aria-label="Close">닫기</button>
         </div>
-        <div th:each="list, index : ${resultMap}" class="main">
-            <div class="profile" th:onclick="fnProfile([[${list.member.email}]])">
-                <img th:src="${list.member.profile}" class="profile-img">
-                <span th:text="${list.member.name}" class="name"></span>
-            </div>
-            <div class="main-image-wrapper">
-                <button type="button" th:unless="${list.img.size == 1}" class="btn" th:id="'left' + ${list.id}" style="visibility:hidden;" th:onclick="fnLeft([[${list.id}]], [[${list.img}]])">←</button>
-                <img th:if="${list.img.size == 0}" th:src="@{/img/} + 'IMG_0111.jpeg'" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
-                <img th:unless="${list.img.size == 0}" th:src="${list.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${list.id}" th:ondblclick="fnOnlyLike([[${list.id}]])">
-                <input type="hidden" th:id="'img' + ${list.id}" th:value="0">
-                <button th:if="${list.img.size > 1}" type="button" class="btn" th:id="'right' + ${list.id}" th:onclick="fnRight([[${list.id}]], [[${list.img}]])">→</button>
-            </div>
-            <div class="info">
-                <div class="icon-box">
-                    <img th:id="'like' + ${list.id}" th:if="${like[list.id]}" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${list.id}]])">
-                    <img th:id="'like' + ${list.id}" th:unless="${like[list.id]}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${list.id}]])">
-                    <img th:id="'comment' + ${list.id}" th:src="@{/img/} + ic_chat_black.png" class="icon" th:onclick="fnComment([[${list.id}]])">
-                </div>
-                <div class="like" th:onclick="fnHref([[${list.id}]])">
-                    <label class="form-label">좋아요 </label>
-                    <label class="form-label" th:id="'like_cnt' + ${list.id}" th:text="${list.favorites.size}"></label>
-                    <label class="form-label">개</label>
-                </div>
-                <span th:text="${list.member.name}" class="name"></span>
-                <pre th:text="${list.content}"></pre>
-                <div class="comment" th:onclick="fnComment([[${list.id}]])">
-                    <label class="form-label">댓글 </label>
-                    <label class="form-label" th:id="'comment_cnt' + ${list.id}" th:text="${list.comment.size}"></label>
-                    <label class="form-label">개 모두 보기</label>
-                </div>
-                <label th:text="${#temporals.format(list.registerTime, 'yyyy년 M월 d일')}" class="date"></label>
-            </div>
-        </div>
-        <span id="loading"></span>
     </div>
     <!--부트스트랩 js, jquery 추가-->
     <script src="/js/lib/jquery.min.js"></script>

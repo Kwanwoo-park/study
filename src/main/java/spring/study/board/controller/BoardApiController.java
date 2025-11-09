@@ -45,8 +45,8 @@ public class BoardApiController {
     private final NotificationService notificationService;
 
     @GetMapping("/load")
-    public ResponseEntity<Map<String, Object>> getBoards(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
-                                                         @RequestParam(defaultValue = "10") int limit,
+    public ResponseEntity<Map<String, Object>> getBoards(@RequestParam(required = false, name = "cursor") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
+                                                         @RequestParam(defaultValue = "10", name = "limit") int limit,
                                                          HttpServletRequest request) {
         HttpSession session = request.getSession();
 
