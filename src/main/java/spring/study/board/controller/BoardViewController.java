@@ -109,13 +109,8 @@ public class BoardViewController {
             return "redirect:/member/updatePhone";
         }
 
-        try {
-            model.addAttribute("profile", member.getProfile());
-            model.addAttribute("email", member.getEmail());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception(e.getMessage());
-        }
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
 
         return "board/main";
     }

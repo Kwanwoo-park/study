@@ -45,7 +45,7 @@ public class BoardApiController {
     private final NotificationService notificationService;
 
     @GetMapping("/load")
-    public ResponseEntity<Map<String, Object>> getBoards(@RequestParam(required = false, name = "cursor") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
+    public ResponseEntity<Map<String, Object>> getBoards(@RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                                          @RequestParam(defaultValue = "10", name = "limit") int limit,
                                                          HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -61,7 +61,13 @@ public class BoardApiController {
         Member member = (Member) session.getAttribute("member");
 
         List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
-        LocalDateTime nextCursor = list.isEmpty() ? null : list.get(list.size()-1).getRegisterTime();
+
+        int nextCursor;
+
+        if (list.isEmpty())
+            nextCursor = 0;
+        else
+            nextCursor = cursor+2;
 
         Map<String, Object> response = new HashMap<>();
         response.put("boards", list);

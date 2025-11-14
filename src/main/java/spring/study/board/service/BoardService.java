@@ -1,13 +1,11 @@
 package spring.study.board.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
@@ -15,10 +13,8 @@ import spring.study.follow.entity.Follow;
 import spring.study.member.entity.Member;
 import spring.study.board.repository.BoardRepository;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,9 +22,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class BoardService {
-    @Qualifier("boardRedisTemplate")
-    private final RedisTemplate<String, BoardResponseDto> redisTemplate;
-    private static final String FEED_CACHE_KEY = "feed:recent";
 
     private final BoardRepository boardRepository;
 
@@ -42,20 +35,10 @@ public class BoardService {
         return boardRepository.save(board);
     }
 
-    public List<BoardResponseDto> getBoard(LocalDateTime cursor, int limit, Member member) {
-        List<BoardResponseDto> cached = getFromCache(limit);
-
-        if (!cached.isEmpty() && cursor.isAfter(cached.get(cached.size()-1).getRegisterTime()))
-            return cached;
-
+    public List<BoardResponseDto> getBoard(int cursor, int limit, Member member) {
         List<Member> list = getMemberList(member);
 
-        List<BoardResponseDto> dbPosts = boardRepository.findNextBoard(cursor, list, PageRequest.of(0, limit));
-
-        if (cursor == null && !dbPosts.isEmpty())
-            saveToCache(dbPosts);
-
-        return dbPosts;
+        return boardRepository.findByMemberIn(list, PageRequest.of(cursor, limit, Sort.by("registerTime").descending())).stream().map(BoardResponseDto::new).toList();
     }
 
     public HashMap<String, Object> findAll(Integer page, Integer size) {
@@ -73,27 +56,6 @@ public class BoardService {
 
     public List<Board> findByMember(Member member) {
         return boardRepository.findByMember(member, Sort.by("id").descending());
-    }
-
-    public HashMap<String, Object> findByMembers(Member member, Integer page, Integer size) {
-        HashMap<String, Object> resultMap = new HashMap<>();
-
-        List<Member> memberList = new ArrayList<>();
-
-        memberList.add(member);
-
-        for (Follow follow : member.getFollower()) {
-            memberList.add(follow.getFollowing());
-        }
-
-        Page<Board> list = boardRepository.findByMemberIn(memberList, PageRequest.of(page, size, Sort.by("id").descending()));
-
-        resultMap.put("list", list.stream().map(BoardResponseDto::new).collect(Collectors.toList()));
-        resultMap.put("paging", list.getPageable());
-        resultMap.put("totalCnt", list.getTotalElements());
-        resultMap.put("totalPage", list.getTotalPages());
-
-        return resultMap;
     }
 
     private List<Member> getMemberList(Member member) {
@@ -138,17 +100,5 @@ public class BoardService {
 
     public void deleteByMember(Member member) {
         boardRepository.deleteByMember(member);
-    }
-
-    private void saveToCache(List<BoardResponseDto> boards) {
-        redisTemplate.delete(FEED_CACHE_KEY);
-        redisTemplate.opsForList().rightPushAll(FEED_CACHE_KEY, boards);
-        redisTemplate.expire(FEED_CACHE_KEY, Duration.ofMinutes(5));
-    }
-
-    private List<BoardResponseDto> getFromCache(int limit) {
-        List<BoardResponseDto> range = redisTemplate.opsForList().range(FEED_CACHE_KEY,0, limit-1);
-        if (range == null || range.isEmpty()) return Collections.emptyList();
-        else return range;
     }
 }

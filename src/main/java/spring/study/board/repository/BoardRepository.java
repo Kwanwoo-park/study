@@ -17,12 +17,9 @@ import java.util.List;
 
 @Repository
 public interface BoardRepository extends JpaRepository<Board, Long> {
-    @Query("select b from board b where (:cursor is null or b.registerTime < :cursor) and b.member in :list order by b.registerTime desc")
-    List<BoardResponseDto> findNextBoard(@Param("cursor")LocalDateTime cursor, @Param("list") List<Member> list, Pageable pageable);
+    List<Board> findByMemberIn(List<Member> list, Pageable pageable);
 
     List<Board> findByMember(Member member, Sort sort);
-
-    Page<Board> findByMemberIn(List<Member> members, Pageable pageable);
 
     List<Board> findByMemberIn(List<Member> members, Sort sort);
 

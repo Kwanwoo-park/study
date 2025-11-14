@@ -1,7 +1,6 @@
 const container = document.querySelector('.container')
 
-let loading = false;
-let nextCursor = new Date().toISOString();
+let nextCursor = 1;
 
 window.onload = function() {
     loadMorePosts();
@@ -14,11 +13,10 @@ container.addEventListener('scroll', () => {
 })
 
 async function loadMorePosts() {
-    if (loading || !nextCursor) return;
-    loading = true;
+    if (!nextCursor) return;
 
     try {
-        const res = await fetch(`/api/board/load?cursor=` + encodeURIComponent(nextCursor) + `&limit=10`, {
+        const res = await fetch(`/api/board/load?cursor=` + (nextCursor-1) + `&limit=10`, {
             method: 'GET',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
@@ -32,15 +30,13 @@ async function loadMorePosts() {
         nextCursor = data.nextCursor;
 
         if (!nextCursor){
-            const load = document.createElement('spane')
+            const load = document.createElement('span')
             load.id = 'loading'
             load.innerText = '모든 게시물을 불러왔습니다';
             container.append(load);
         }
     } catch (e) {
         console.error('로드 오류', e);
-    } finally {
-        loading = false;
     }
 }
 

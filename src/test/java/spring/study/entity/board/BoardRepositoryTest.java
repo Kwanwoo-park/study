@@ -74,9 +74,12 @@
 //    void findNextBoard() {
 //        // given
 //        LocalDateTime cursor = LocalDateTime.now();
+//        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
+//
+//        List<Member> members = getMemberList(member);
 //
 //        // when
-//        List<BoardResponseDto> list = boardRepository.findNextBoard(cursor, PageRequest.of(0, 10));
+//        List<BoardResponseDto> list = boardRepository.findNextBoard(cursor, members, PageRequest.of(0, 10));
 //
 //        // then
 //        if (!list.isEmpty()) {
@@ -85,9 +88,18 @@
 //        } else {
 //            System.out.println("List is empty");
 //        }
+//    }
 //
-//        saveToCache(list);
-//        System.out.println(getFromCache(10).get(0).getFavorites());
+//    private List<Member> getMemberList(Member member) {
+//        List<Member> memberList = new ArrayList<>();
+//
+//        memberList.add(member);
+//
+//        for (Follow follow : member.getFollower()) {
+//            memberList.add(follow.getFollowing());
+//        }
+//
+//        return memberList;
 //    }
 //
 //    private void saveToCache(List<BoardResponseDto> boards) {
