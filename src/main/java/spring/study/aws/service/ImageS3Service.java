@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.board.entity.BoardImg;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -94,6 +95,19 @@ public class ImageS3Service {
         httpHeaders.setContentDispositionFormData("attachment", fileName);
 
         return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.OK);
+    }
+
+    public void deleteImage(List<BoardImg> list) {
+        String[] splitString;
+        String fileName;
+
+        for (BoardImg img : list) {
+            splitString = img.getImgSrc().split("/");
+            fileName = splitString[splitString.length-1];
+
+            if (amazonS3.doesObjectExist(bucketName, fileName))
+                amazonS3.deleteObject(new DeleteObjectRequest(bucketName, fileName));
+        }
     }
 
     public int deleteImage(String name) {

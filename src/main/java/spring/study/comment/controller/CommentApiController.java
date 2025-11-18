@@ -58,21 +58,15 @@ public class CommentApiController {
 
             Member otherMember = board.getMember();
 
-            Comment comment = Comment.builder()
-                    .comments(commentRequestDto.getComments())
-                    .build();
-
-            member.addComment(comment);
-            board.addComment(comment);
+            Comment comment = commentService.save(commentRequestDto, member, board);
 
             if (!member.getId().equals(otherMember.getId())) {
-                Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다");
-                notification.addMember(otherMember);
+                notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다").addMember(otherMember);
             }
 
             session.setAttribute("member", member);
 
-            return ResponseEntity.ok(commentService.save(comment).getId());
+            return ResponseEntity.ok(comment.getId());
         }
         else
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -130,10 +124,7 @@ public class CommentApiController {
 
         Member member = (Member) session.getAttribute("member");
         Board board = boardService.findById(id);
-        Comment comment = commentService.findById(commentRequestDto.getId());
-
-        member.removeComment(comment);
-        board.removeComment(comment);
+        Comment comment = commentService.findById(commentRequestDto.getId(), member, board);
 
         commentService.deleteById(commentRequestDto.getId());
 

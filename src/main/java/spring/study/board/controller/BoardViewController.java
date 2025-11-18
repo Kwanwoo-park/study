@@ -8,16 +8,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
-import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.board.service.BoardService;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
@@ -154,30 +148,13 @@ public class BoardViewController {
 
         if (boardService.existBoard(boardRequestDto.getId())) {
             Board board = boardService.findById(boardRequestDto.getId());
-            Member board_member = board.getMember();
-
-            List<Long> id_list = board_member.getBoard().stream().map(Board::getId).toList();
-
-            int size = id_list.size();
-            long previous_id = 0L;
-            long next_id = 0L;
-
-            if (size > 1) {
-                int idx = id_list.indexOf(boardRequestDto.getId());
-
-                if (idx == 0) previous_id = id_list.get(idx+1);
-                else if (idx == size-1) next_id = id_list.get(idx-1);
-                else {
-                    previous_id = id_list.get(idx+1);
-                    next_id = id_list.get(idx-1);
-                }
-            }
+            long[] ids = boardService.getBoardIdList(boardRequestDto.getId(), board.getMember());
 
             model.addAttribute("board", board);
             model.addAttribute("like", member.checkFavorite(board));
             model.addAttribute("member", member.getEmail());
-            model.addAttribute("previous", previous_id);
-            model.addAttribute("next", next_id);
+            model.addAttribute("previous", ids[0]);
+            model.addAttribute("next", ids[1]);
         } else {
             return "redirect:/member/detail?email="+member.getEmail();
         }

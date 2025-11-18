@@ -37,22 +37,14 @@ public class FavoriteApiController {
         if (favoriteService.existFavorite(member, board))
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        Favorite favorite = Favorite.builder()
-                .board(board)
-                .member(member)
-                .build();
+        Favorite favorite = favoriteService.save(member, board);
 
-        member.addFavorite(favorite);
-        board.addFavorite(favorite);
-
-        if (!member.getId().equals(otherMember.getId())) {
-            Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다");
-            notification.addMember(otherMember);
-        }
+        if (!member.getId().equals(otherMember.getId()))
+            notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다").addMember(otherMember);
 
         session.setAttribute("member", member);
 
-        return ResponseEntity.ok(favoriteService.save(favorite));
+        return ResponseEntity.ok(favorite);
     }
 
     @DeleteMapping("/delete")
@@ -70,10 +62,7 @@ public class FavoriteApiController {
         if (favorite == null)
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        member.removeFavorite(favorite);
-        board.removeFavorite(favorite);
-
-        favoriteService.deleteById(favorite.getId());
+        favoriteService.deleteById(favorite, member, board);
 
         session.setAttribute("member", member);
 

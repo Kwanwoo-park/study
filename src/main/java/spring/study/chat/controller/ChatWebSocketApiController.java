@@ -44,7 +44,6 @@ public class ChatWebSocketApiController {
             if (!roomMemberService.exist(member, room)) {
                 roomMemberService.save(member, room);
                 roomService.addCount(room.getId());
-                chatMessage.setMessage(member.getName() + "님이 입장했습니다.");
             }
             else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(-1);
         } else if (chatMessage.getType().equals(MessageType.QUIT)) {
@@ -52,18 +51,14 @@ public class ChatWebSocketApiController {
 
             if (room.getCount() -1 > 0) {
                 roomService.subCount(room.getId());
-
-                chatMessage.setMessage(member.getName() + "님이 퇴장했습니다.");
             } else {
                 messageService.deleteByRoom(room);
                 roomService.delete(room.getRoomId());
+
+                return ResponseEntity.ok(1);
             }
         } else {
-            Notification notification;
-            for (ChatRoomMember otherMember : roomMemberService.findMember(room, member)) {
-                notification = notificationService.createNotification(otherMember.getMember(), member.getName() + "님이 메시지를 보냈습니다.");
-                notification.addMember(otherMember.getMember());
-            }
+            notificationService.createNotification(roomMemberService.findMember(room, member));
         }
 
         messageService.save(chatMessage);

@@ -3,6 +3,7 @@ package spring.study.follow.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import spring.study.board.entity.Board;
 import spring.study.follow.dto.FollowRequestDto;
 import spring.study.follow.entity.Follow;
 import spring.study.member.entity.Member;
@@ -19,7 +20,15 @@ public class FollowService {
     public Long save(FollowRequestDto followRequestDto) {return followRepository.save(followRequestDto.toEntity()).getId();}
 
     @Transactional
-    public Follow save(Follow follow) {
+    public Follow save(Member member, Member search_member) {
+        Follow follow = Follow.builder()
+                .follower(member)
+                .following(search_member)
+                .build();
+
+        member.addFollower(follow);
+        search_member.addFollowing(follow);
+
         return followRepository.save(follow);
     }
 
@@ -31,8 +40,11 @@ public class FollowService {
         return followRepository.existsByFollowerAndFollowing(follower, following);
     }
 
-    public void delete(Member follower, Member following) {
-        followRepository.deleteByFollowerAndFollowing(follower, following);
+    @Transactional
+    public void delete(Follow follow, Member member) {
+        member.removeFollower(follow);
+
+        followRepository.deleteById(follow.getId());
     }
 
     public void deleteByFollower(Member follower) {

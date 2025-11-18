@@ -43,20 +43,13 @@ public class FollowApiController {
         if (followService.existFollow(member, search_member))
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        Follow follow = Follow.builder()
-                .follower(member)
-                .following(search_member)
-                .build();
+        Follow follow = followService.save(member, search_member);
 
-        member.addFollower(follow);
-        search_member.addFollowing(follow);
-
-        Notification notification = notificationService.createNotification(search_member, member.getName() + "님이 팔로우하기 시작하였습니다");
-        notification.addMember(search_member);
+        notificationService.createNotification(search_member, member.getName() + "님이 팔로우하기 시작하였습니다").addMember(search_member);
 
         session.setAttribute("member", member);
 
-        return ResponseEntity.ok(followService.save(follow));
+        return ResponseEntity.ok(follow);
     }
 
     @DeleteMapping("")
@@ -80,9 +73,7 @@ public class FollowApiController {
         if (!followService.existFollow(member, search_member))
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
-        member.removeFollower(followService.findFollow(member, search_member));
-
-        followService.delete(member, search_member);
+        followService.delete(followService.findFollow(member, search_member), member);
 
         session.setAttribute("member", member);
 

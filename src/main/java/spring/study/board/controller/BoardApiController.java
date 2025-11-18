@@ -3,15 +3,12 @@ package spring.study.board.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
-import spring.study.board.entity.BoardImg;
-import spring.study.comment.entity.Comment;
 import spring.study.forbidden.entity.Status;
 import spring.study.member.entity.Member;
 import spring.study.aws.service.ImageS3Service;
@@ -25,7 +22,6 @@ import spring.study.member.service.MemberService;
 import spring.study.notification.service.NotificationService;
 import spring.study.reply.service.ReplyService;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +104,6 @@ public class BoardApiController {
             }
 
             Board board = boardRequestDto.toEntity();
-
             board.addMember(member);
 
             Board result = boardService.save(board);
@@ -187,17 +182,11 @@ public class BoardApiController {
 
         favoriteService.deleteByBoard(board);
 
-        for (Comment comment : board.getComment()) {
-            replyService.deleteReply(comment);
-        }
+        replyService.deleteReplay(board.getComment());
 
         commentService.deleteComment(board);
 
-        List<BoardImg> images = boardService.findById(id).getImg();
-
-        for (BoardImg img : images) {
-            imageS3Service.deleteImage(img.getImgSrc());
-        }
+        imageS3Service.deleteImage(board.getImg());
 
         boardImgService.deleteBoard(board);
         boardService.deleteById(id);

@@ -14,7 +14,15 @@ public class FavoriteService {
     private final FavoriteRepository favoriteRepository;
 
     @Transactional
-    public Favorite save(Favorite favorite) {
+    public Favorite save(Member member, Board board) {
+        Favorite favorite = Favorite.builder()
+                .board(board)
+                .member(member)
+                .build();
+
+        member.addFavorite(favorite);
+        board.addFavorite(favorite);
+
         return favoriteRepository.save(favorite);
     }
 
@@ -27,8 +35,11 @@ public class FavoriteService {
     }
 
     @Transactional
-    public void deleteById(Long id) {
-        favoriteRepository.deleteById(id);
+    public void deleteById(Favorite favorite, Member member, Board board) {
+        member.removeFavorite(favorite);
+        board.removeFavorite(favorite);
+
+        favoriteRepository.deleteById(favorite.getId());
     }
 
     @Transactional

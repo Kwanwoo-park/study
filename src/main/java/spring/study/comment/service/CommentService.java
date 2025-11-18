@@ -29,8 +29,13 @@ public class CommentService {
     }
 
     @Transactional
-    public Long save(CommentRequestDto commentSaveDto) {
-        return commentRepository.save(commentSaveDto.toEntity()).getId();
+    public Comment save(CommentRequestDto commentSaveDto, Member member, Board board) {
+        Comment comment = commentRepository.save(commentSaveDto.toEntity());
+
+        comment.addBoard(board);
+        comment.addMember(member);
+
+        return comment;
     }
 
     public HashMap<String, Object> findAll(Integer page, Integer size) {
@@ -48,6 +53,16 @@ public class CommentService {
 
     public Comment findById(Long id) {
         return commentRepository.findById(id).orElseThrow();
+    }
+
+    @Transactional
+    public Comment findById(Long id, Member member, Board board) {
+        Comment comment = commentRepository.findById(id).orElseThrow();
+
+        member.removeComment(comment);
+        board.removeComment(comment);
+
+        return comment;
     }
 
     public List<Comment> findAll() {

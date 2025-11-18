@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.member.dto.MemberRequestDto;
+import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.service.MemberService;
@@ -25,6 +26,13 @@ public class AdminApiController {
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
 
+        Member member = (Member) session.getAttribute("member");
+
+        if (member.getRole() != Role.ADMIN) {
+            session.invalidate();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
         int result = memberService.updateRole(requestDto.getId(), Role.USER);
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
@@ -36,6 +44,13 @@ public class AdminApiController {
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        Member member = (Member) session.getAttribute("member");
+
+        if (member.getRole() != Role.ADMIN) {
+            session.invalidate();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
 
         int result = memberService.updateRole(requestDto.getId(), Role.DENIED);
 

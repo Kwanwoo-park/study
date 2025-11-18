@@ -16,13 +16,13 @@ import java.util.List;
 public class ReplyService {
     private final ReplyRepository replyRepository;
 
-    public Reply replaceReply(ReplyRequestDto dto, Member commetMember) {
-        dto.setReply(dto.getReply().replace("@"+commetMember.getName()+" ", ""));
-        return dto.toEntity();
-    }
-
     @Transactional
-    public Reply save(Reply reply) {
+    public Reply save(ReplyRequestDto dto, Member member, Comment comment) {
+        Reply reply = replaceReply(dto, member);
+
+        member.addReply(reply);
+        comment.addReply(reply);
+
         return replyRepository.save(reply);
     }
 
@@ -43,11 +43,18 @@ public class ReplyService {
         replyRepository.deleteByMember(member);
     }
 
-    public void deleteReply(Comment comment) {
-        replyRepository.deleteByComment(comment);
+    public void deleteReplay(List<Comment> list) {
+        for (Comment comment : list) {
+            replyRepository.deleteByComment(comment);
+        }
     }
 
     public void deleteReply(Long id) {
         replyRepository.deleteById(id);
+    }
+
+    private Reply replaceReply(ReplyRequestDto dto, Member commetMember) {
+        dto.setReply(dto.getReply().replace("@"+commetMember.getName()+" ", ""));
+        return dto.toEntity();
     }
 }

@@ -257,9 +257,7 @@ public class MemberApiController {
             followService.deleteByFollower(member);
             followService.deleteByFollowing(member);
 
-            for (ChatRoomMember roomMember : roomMemberService.find(member)) {
-                roomMember.getRoom().subCount();
-            }
+            roomMemberService.subCount(member);
 
             messageService.deleteByMember(member);
 
@@ -287,9 +285,7 @@ public class MemberApiController {
             followService.deleteByFollower(deleteMember);
             followService.deleteByFollowing(deleteMember);
 
-            for (ChatRoomMember roomMember : roomMemberService.find(deleteMember)) {
-                roomMember.getRoom().subCount();
-            }
+            roomMemberService.subCount(member);
 
             messageService.deleteByMember(deleteMember);
 

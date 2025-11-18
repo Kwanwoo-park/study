@@ -14,7 +14,6 @@ import spring.study.member.service.MemberService;
 import spring.study.reply.entity.Reply;
 import spring.study.forbidden.entity.Status;
 import spring.study.member.entity.Member;
-import spring.study.notification.entity.Notification;
 import spring.study.comment.service.CommentService;
 import spring.study.reply.service.ReplyService;
 import spring.study.forbidden.service.ForbiddenService;
@@ -61,19 +60,14 @@ public class ReplyApiController {
 
             Member otherMember = comment.getMember();
 
-            Reply result = replyService.replaceReply(replyRequestDto, comment.getMember());
+            Reply result = replyService.save(replyRequestDto, member, comment);
 
-            member.addReply(result);
-            comment.addReply(result);
-
-            if (!member.getId().equals(otherMember.getId())) {
-                Notification notification = notificationService.createNotification(otherMember, member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다");
-                notification.addMember(otherMember);
-            }
+            if (!member.getId().equals(otherMember.getId()))
+                notificationService.createNotification(otherMember, member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다").addMember(otherMember);
 
             session.setAttribute("member", member);
 
-            return ResponseEntity.ok(replyService.save(result).getId());
+            return ResponseEntity.ok(result.getId());
         }
         else
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);

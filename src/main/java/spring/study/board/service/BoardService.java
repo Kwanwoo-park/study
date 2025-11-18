@@ -82,6 +82,26 @@ public class BoardService {
         return boardRepository.existsById(id);
     }
 
+    public long[] getBoardIdList(Long id, Member member) {
+        List<Long> id_list = member.getBoard().stream().map(Board::getId).toList();
+
+        int size = id_list.size();
+        long[] ids = new long[2];
+
+        if (size > 1) {
+            int idx = id_list.indexOf(id);
+
+            if (idx == 0) ids[0] = id_list.get(idx+1);
+            else if (idx == size-1) ids[1] = id_list.get(idx-1);
+            else {
+                ids[0] = id_list.get(idx+1);
+                ids[1] = id_list.get(idx-1);
+            }
+        }
+
+        return ids;
+    }
+
     @Transactional
     public int updateBoard(Long id, String content) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(

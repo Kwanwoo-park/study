@@ -18,13 +18,11 @@ public class MessageConsumer {
     @KafkaListener(topics = "topic")
     public void consume(@Payload ChatMessage message){
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoom().getRoomId(), message);
-        System.out.println("topic");
     }
 
     @KafkaListener(topics = "topic2")
     public void consume(@Payload Notification notification) {
         String id = notification.getMember().getId().toString();
         emitterService.save(id, notification);
-        System.out.println("topic2");
     }
 }

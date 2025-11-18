@@ -54,8 +54,11 @@ public class ChatRoomMemberService {
         return chatRoomMemberRepository.findByRoomAndMemberNot(room, member);
     }
 
-    public List<ChatRoomMember> find(Member member) {
-        return chatRoomMemberRepository.findByMember(member);
+    @Transactional
+    public void subCount(Member member) {
+        for (ChatRoomMember roomMember : chatRoomMemberRepository.findByMember(member)) {
+            roomMember.getRoom().subCount();
+        }
     }
 
     public List<ChatRoomMember> find(ChatRoom room) {

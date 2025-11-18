@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import spring.study.chat.entity.ChatRoomMember;
 import spring.study.kafka.service.MessageProducer;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Notification;
@@ -30,6 +31,27 @@ public class NotificationService {
 
         producer.sendNotification(notification);
         return notificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void createNotification(List<ChatRoomMember> list) {
+        Notification notification;
+        Member member;
+
+        for (ChatRoomMember otherMember : list) {
+            member = otherMember.getMember();
+
+            notification = Notification.builder()
+                    .member(member)
+                    .message(member.getName() + "님이 메시지를 보냈습니다.")
+                    .readStatus(Status.UNREAD)
+                    .build();
+
+            notification.addMember(member);
+
+            producer.sendNotification(notification);
+            notificationRepository.save(notification);
+        }
     }
 
     @Transactional
