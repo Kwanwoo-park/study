@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function() {
     eventSource.addEventListener('notification', function(event) {
         try {
             const notificationMessage = JSON.parse(event.data)['message'];
-            console.log(JSON.parse(event.data))
 
             if (notificationMessage) {
                 const notificationElement = document.getElementById('notification-message');
