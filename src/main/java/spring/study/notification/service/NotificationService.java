@@ -12,6 +12,7 @@ import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Status;
 import spring.study.notification.repository.NotificationRepository;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -23,49 +24,39 @@ public class NotificationService {
 
     @Transactional
     public Notification createNotification(Member member, String message) {
-        Notification notification = Notification.builder()
+        Notification notification = notificationRepository.save(Notification.builder()
                 .member(member)
                 .message(message)
                 .readStatus(Status.UNREAD)
-                .build();
+                .build());
 
         producer.sendNotification(notification);
-        return notificationRepository.save(notification);
+        return notification;
     }
 
     @Transactional
-    public void createNotification(List<ChatRoomMember> list) {
+    public void createNotification(List<ChatRoomMember> list, Member member) {
         Notification notification;
-        Member member;
+        Member otherMember;
 
-        for (ChatRoomMember otherMember : list) {
-            member = otherMember.getMember();
+        for (ChatRoomMember roomMember : list) {
+            otherMember = roomMember.getMember();
 
-            notification = Notification.builder()
-                    .member(member)
+            notification = notificationRepository.save(Notification.builder()
+                    .member(otherMember)
                     .message(member.getName() + "님이 메시지를 보냈습니다.")
                     .readStatus(Status.UNREAD)
-                    .build();
+                    .build());
 
-            notification.addMember(member);
+            notification.addMember(otherMember);
 
             producer.sendNotification(notification);
-            notificationRepository.save(notification);
         }
     }
 
     @Transactional
     public void updateRead(Notification notification) {
         notification.changeToRead();
-    }
-
-    @Transactional
-    public void updateAllRead(List<Long> list) {
-        for (Long id : list) {
-            notificationRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
-                    "존재하지 않는 알림입니다"
-            )).changeToRead();
-        }
     }
 
     @Transactional
@@ -82,26 +73,12 @@ public class NotificationService {
         notification.changeToRead();
     }
 
-    @Transactional
-    public void updateCheck(Notification notification) {
-        notification.changeToCheck();
-    }
-
-    @Transactional
-    public void updateCheck(Long id) {
-        Notification notification = notificationRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
-                "존재하지 않는 알림입니다"
-        ));
-
-        notification.changeToCheck();
-    }
-
     public Notification findById(Long id) {
         return notificationRepository.findById(id).orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다"));
     }
 
     public List<Notification> findByMember(Member member) {
-        return notificationRepository.findByMember(member);
+        return notificationRepository.findByMember(member).stream().sorted(Comparator.comparing(Notification::getId).reversed()).toList();
     }
 
     public List<Notification> findUnReadNotification(Member member) {

@@ -18,8 +18,9 @@ public class EmitterRepository {
         return sseEmitter;
     }
 
-    public void saveEventCache(String emitterId, Object event) {
-        eventCache.put(emitterId, event);
+    public void saveEventCache(String memberId, Object event) {
+        String eventId = memberId + ":" + System.currentTimeMillis();
+        eventCache.put(eventId, event);
     }
 
     public Map<String, SseEmitter> findAllEmitters() {
@@ -34,11 +35,15 @@ public class EmitterRepository {
 
     public Map<String, Object> findAllEventCacheStartWithById(String memberId) {
         return eventCache.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(memberId))
+                .filter(entry -> entry.getKey().startsWith(memberId + ":"))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public void deleteById(String emitterId) {
         emitters.remove(emitterId);
+    }
+
+    public void deleteAllEventCacheByMemberId(String memberId) {
+        eventCache.keySet().removeIf(key -> key.startsWith(memberId + ":"));
     }
 }

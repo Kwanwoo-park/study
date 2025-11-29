@@ -9,14 +9,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
-import spring.study.chat.entity.ChatRoomMember;
 import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
-import spring.study.notification.entity.Notification;
 import spring.study.notification.service.NotificationService;
 
 @Controller
@@ -58,7 +56,7 @@ public class ChatWebSocketApiController {
                 return ResponseEntity.ok(1);
             }
         } else {
-            notificationService.createNotification(roomMemberService.findMember(room, member));
+            notificationService.createNotification(roomMemberService.findMember(room, member), member);
         }
 
         messageService.save(chatMessage);

@@ -13,9 +13,6 @@ import spring.study.notification.entity.Notification;
 import spring.study.notification.service.EmitterService;
 import spring.study.notification.service.NotificationService;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/notification")
@@ -24,10 +21,8 @@ public class NotificationApiController {
     private final NotificationService notificationService;
     private final EmitterService emitterService;
 
-    private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
-
     @GetMapping(value = "/stream", produces = "text/event-stream")
-    public SseEmitter streamNotification(HttpServletRequest request, @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "") String lastEventId) {
+    public SseEmitter streamNotification(HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid()) {
@@ -40,7 +35,7 @@ public class NotificationApiController {
             return null;
         }
 
-        return emitterService.addEmitter(member.getId().toString(), lastEventId);
+        return emitterService.addEmitter(member.getId().toString());
     }
 
     @PatchMapping("/mark-as-read")

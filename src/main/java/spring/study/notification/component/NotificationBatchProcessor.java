@@ -11,6 +11,7 @@ import spring.study.notification.repository.NotificationRepository;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,13 +30,16 @@ public class NotificationBatchProcessor {
         notificationRepository.deleteAll(notifications);
     }
 
-    @Scheduled(fixedRate = 180000)
+    @Scheduled(fixedRate = 15000)
     public void sendHeartBeat() {
         Map<String, SseEmitter> sseEmitters = emitterRepository.findAllEmitters();
+        Map<String, String> data = new HashMap<>();
+
+        data.put("message", null);
 
         sseEmitters.forEach((key, emitter) -> {
             try {
-                emitter.send(SseEmitter.event().id(key).name("notification").data(""));
+                emitter.send(SseEmitter.event().reconnectTime(3000).id(key).name("notification").data(data));
             } catch (IOException e) {
                 emitterRepository.deleteById(key);
             }

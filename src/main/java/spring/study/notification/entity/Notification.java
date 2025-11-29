@@ -48,8 +48,4 @@ public class Notification extends BasetimeEntity implements Serializable {
     public void changeToRead() {
         this.readStatus = Status.READ;
     }
-
-    public void changeToCheck() {
-        this.readStatus = Status.CHECK;
-    }
 }

@@ -13,16 +13,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import spring.study.board.dto.BoardResponseDto;
-import spring.study.board.entity.Board;
 import spring.study.chat.component.RedisSubscriber;
 
 @Configuration
-@EnableRedisRepositories
 public class RedisConfig {
     @Value("${spring.data.redis.host}")
     private String redisHost;
