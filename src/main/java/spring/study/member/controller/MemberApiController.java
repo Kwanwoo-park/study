@@ -27,6 +27,7 @@ import spring.study.follow.service.FollowService;
 import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
+import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.io.FileNotFoundException;
@@ -102,7 +103,7 @@ public class MemberApiController {
             return ResponseEntity.ok(-1L);
         }
 
-        notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다");
+        notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
 
         return ResponseEntity.ok(userService.createUser(memberRequestDto).getId());
     }

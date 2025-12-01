@@ -9,9 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.member.entity.Member;
+import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.service.EmitterService;
 import spring.study.notification.service.NotificationService;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -36,6 +41,28 @@ public class NotificationApiController {
         }
 
         return emitterService.addEmitter(member.getId().toString());
+    }
+
+    @GetMapping("/sort/{group}")
+    public ResponseEntity<Map<String, List<Notification>>> sortGroup(@PathVariable Group group, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        Member member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        }
+
+        List<Notification> list = notificationService.findByMember(member).stream().filter(noti -> noti.getNotiGroup().equals(group)).toList();
+
+        Map<String, List<Notification>> map = new HashMap<>();
+        map.put("list", list);
+
+        return ResponseEntity.ok(map);
     }
 
     @PatchMapping("/mark-as-read")

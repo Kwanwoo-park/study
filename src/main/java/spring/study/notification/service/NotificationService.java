@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import spring.study.chat.entity.ChatRoomMember;
 import spring.study.kafka.service.MessageProducer;
 import spring.study.member.entity.Member;
+import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Status;
 import spring.study.notification.repository.NotificationRepository;
@@ -23,11 +24,12 @@ public class NotificationService {
     private final MessageProducer producer;
 
     @Transactional
-    public Notification createNotification(Member member, String message) {
+    public Notification createNotification(Member member, String message, Group group) {
         Notification notification = notificationRepository.save(Notification.builder()
                 .member(member)
                 .message(message)
                 .readStatus(Status.UNREAD)
+                .notiGroup(group)
                 .build());
 
         producer.sendNotification(notification);
@@ -35,7 +37,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public void createNotification(List<ChatRoomMember> list, Member member) {
+    public void createNotification(List<ChatRoomMember> list, Member member, Group group) {
         Notification notification;
         Member otherMember;
 
@@ -46,6 +48,7 @@ public class NotificationService {
                     .member(otherMember)
                     .message(member.getName() + "님이 메시지를 보냈습니다.")
                     .readStatus(Status.UNREAD)
+                    .notiGroup(group)
                     .build());
 
             notification.addMember(otherMember);

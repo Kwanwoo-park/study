@@ -15,6 +15,7 @@ import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
+import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 @Controller
@@ -56,7 +57,7 @@ public class ChatWebSocketApiController {
                 return ResponseEntity.ok(1);
             }
         } else {
-            notificationService.createNotification(roomMemberService.findMember(room, member), member);
+            notificationService.createNotification(roomMemberService.findMember(room, member), member, Group.CHAT);
         }
 
         messageService.save(chatMessage);

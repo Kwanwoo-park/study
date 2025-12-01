@@ -11,6 +11,7 @@ import spring.study.comment.dto.reply.ReplyResponseDto;
 import spring.study.comment.entity.Comment;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import spring.study.notification.entity.Group;
 import spring.study.reply.entity.Reply;
 import spring.study.forbidden.entity.Status;
 import spring.study.member.entity.Member;
@@ -45,7 +46,7 @@ public class ReplyApiController {
 
             if (risk != 0) {
                 if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
                     memberService.updateRole(member.getId(), Role.DENIED);
 
                     session.invalidate();
@@ -63,7 +64,7 @@ public class ReplyApiController {
             Reply result = replyService.save(replyRequestDto, member, comment);
 
             if (!member.getId().equals(otherMember.getId()))
-                notificationService.createNotification(otherMember, member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다").addMember(otherMember);
+                notificationService.createNotification(otherMember, member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다", Group.REPLY).addMember(otherMember);
 
             session.setAttribute("member", member);
 

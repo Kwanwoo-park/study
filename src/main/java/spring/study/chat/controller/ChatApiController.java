@@ -26,6 +26,7 @@ import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.service.NotificationService;
 
@@ -119,7 +120,7 @@ public class ChatApiController {
 
             if (risk != 0) {
                 if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
                     memberService.updateRole(member.getId(), Role.DENIED);
 
                     session.invalidate();

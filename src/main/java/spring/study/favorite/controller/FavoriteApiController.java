@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.board.entity.Board;
 import spring.study.favorite.entity.Favorite;
 import spring.study.member.entity.Member;
+import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.board.service.BoardService;
 import spring.study.favorite.service.FavoriteService;
@@ -40,7 +41,7 @@ public class FavoriteApiController {
         Favorite favorite = favoriteService.save(member, board);
 
         if (!member.getId().equals(otherMember.getId()))
-            notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다").addMember(otherMember);
+            notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다", Group.FAVORITE).addMember(otherMember);
 
         session.setAttribute("member", member);
 

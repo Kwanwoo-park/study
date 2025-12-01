@@ -13,6 +13,7 @@ import spring.study.forbidden.entity.Status;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
@@ -43,7 +44,7 @@ public class CommentApiController {
 
             if (risk != 0) {
                 if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
                     memberService.updateRole(member.getId(), Role.DENIED);
 
                     session.invalidate();
@@ -61,7 +62,7 @@ public class CommentApiController {
             Comment comment = commentService.save(commentRequestDto, member, board);
 
             if (!member.getId().equals(otherMember.getId())) {
-                notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다").addMember(otherMember);
+                notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다", Group.COMMENT).addMember(otherMember);
             }
 
             session.setAttribute("member", member);
@@ -91,7 +92,7 @@ public class CommentApiController {
 
             if (risk != 0) {
                 if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
                     memberService.updateRole(member.getId(), Role.DENIED);
 
                     session.invalidate();

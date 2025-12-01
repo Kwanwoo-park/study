@@ -19,6 +19,7 @@ import spring.study.favorite.service.FavoriteService;
 import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.reply.service.ReplyService;
 
@@ -92,7 +93,7 @@ public class BoardApiController {
 
             if (risk != 0) {
                 if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
                     memberService.updateRole(member.getId(), Role.DENIED);
 
                     session.invalidate();
@@ -139,7 +140,7 @@ public class BoardApiController {
 
             if (risk != 0) {
                 if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다");
+                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
                     memberService.updateRole(member.getId(), Role.DENIED);
 
                     session.invalidate();
