@@ -31,9 +31,6 @@ public class NotificationViewController {
         if (member == null)
             return "redirect:/member/login?error=true&exception=Not Found account";
 
-        List<Notification> notifications = notificationService.findByMember(member);
-
-        model.addAttribute("notification", notifications);
         model.addAttribute("member", member);
 
         return "notification/list";

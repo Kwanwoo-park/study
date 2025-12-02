@@ -43,6 +43,28 @@ public class NotificationApiController {
         return emitterService.addEmitter(member.getId().toString());
     }
 
+    @GetMapping("/load")
+    public ResponseEntity<Map<String, List<Notification>>> loadNotification(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        if (session == null || !request.isRequestedSessionIdValid())
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+
+        Member member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        }
+
+        List<Notification> list = notificationService.findByMember(member);
+
+        Map<String, List<Notification>> map = new HashMap<>();
+        map.put("list", list);
+
+        return ResponseEntity.ok(map);
+    }
+
     @GetMapping("/sort/{group}")
     public ResponseEntity<Map<String, List<Notification>>> sortGroup(@PathVariable Group group, HttpServletRequest request) {
         HttpSession session = request.getSession();

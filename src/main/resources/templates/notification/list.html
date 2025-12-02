@@ -37,18 +37,15 @@
         <button type="button" class="btn-close" aria-label="Close">닫기</button>
     </div>
     <button class="btn btn-primary" onclick="fnAllRead()">모두 읽음으로 표시</button>
-    <div>
-        <ul>
-            <li th:each="notification : ${notification}" class="notification-card">
-                <input type="hidden" th:value="${notification.readStatus}">
-                <p class="notification-message" th:text="${notification.message}"></p>
-                <div class="notification-actions">
-                    <button th:if="${#strings.equals(notification.readStatus, 'READ')}" class="btn btn-outline-dark mark-as-read-button" th:id="${notification.id}" disabled>읽음</button>
-                    <button th:unless="${#strings.equals(notification.readStatus, 'READ')}" class="btn btn-outline-dark mark-as-read-button" th:id="${notification.id}"
-                            th:onclick="fnClick([[${notification.id}]])">읽음으로 표시</button>
-                </div>
-            </li>
-        </ul>
+    <div class="noti-group">
+        <button type="button" id="admin" onclick="fnClick('ADMIN')">시스템 알림 모아보기</button>
+        <button type="button" id="follow" onclick="fnClick('FOLLOW')">팔로우 알림 모아보기</button>
+        <button type="button" id="favorite" onclick="fnClick('FAVORITE')">좋아요 알림 모아보기</button>
+        <button type="button" id="chat" onclick="fnClick('CHAT')">채팅 알림 모아보기</button>
+        <button type="button" id="comment" onclick="fnClick('COMMENT')">댓글 알림 모아보기</button>
+        <button type="button" id="reply" onclick="fnClick('REPLY')">답글 알림 모아보기</button>
+    </div>
+    <div class="noti-div">
     </div>
 </div>
 <!--부트스트랩 js, jquery 추가-->
