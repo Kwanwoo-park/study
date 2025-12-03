@@ -26,7 +26,7 @@ public class RegisterMail implements MailServiceInter {
         MimeMessage message = emailSender.createMimeMessage();
 
         message.addRecipients(Message.RecipientType.TO, to);
-        message.setSubject("Kwanwoo.site 회원가입 이메일 인증");
+        message.setSubject("Kwanwoo.site 회원가입 이메일 인증", "utf-8");
 
         String msgg = getMsgg();
         message.setText(msgg, "utf-8", "html");// 내용, charset 타입, subtype

@@ -24,9 +24,11 @@ public class NotificationBatchProcessor {
     // every five minutes
     @Scheduled(cron = "0 0/5 * * * ?")
     public void deleteUnReadNotifications() {
-        LocalDateTime cutOffTime = LocalDateTime.now().minusDays(1);
+        LocalDateTime cutOffTime = LocalDateTime.now().minusDays(1), beforeOneWeek = LocalDateTime.now().minusDays(7);
+
         List<Notification> notifications = notificationRepository.findByReadStatusAndRegisterTimeBefore(Status.READ, cutOffTime);
 
+        notificationRepository.deleteByRegisterTimeBefore(beforeOneWeek);
         notificationRepository.deleteAll(notifications);
     }
 
