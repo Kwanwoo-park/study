@@ -2,6 +2,7 @@ package spring.study.member.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.board.entity.Board;
-import spring.study.chat.entity.ChatRoomMember;
 import spring.study.forbidden.entity.Status;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -89,7 +89,7 @@ public class MemberApiController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Long> registerAction(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
+    public ResponseEntity<Long> registerAction(@RequestBody @Valid MemberRequestDto memberRequestDto) throws Exception {
         if (memberRequestDto.getEmail().isEmpty() || memberRequestDto.getEmail().isBlank() ||
                 memberRequestDto.getPassword().isEmpty() || memberRequestDto.getPassword().isBlank() ||
                 memberRequestDto.getName().isEmpty() || memberRequestDto.getName().isBlank() ||
@@ -97,15 +97,27 @@ public class MemberApiController {
                 memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
+        if (memberRequestDto.getBirth().equals("1900-01-01"))
+            return ResponseEntity.ok(-2L);
+
         int risk = forbiddenService.findWordList(Status.APPROVAL, memberRequestDto.getName());
 
         if (risk != 0) {
             return ResponseEntity.ok(-1L);
         }
 
-        notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
+        try {
+            MemberResponseDto dto = userService.createUser(memberRequestDto);
+            if (dto != null)
+                notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
+            else
+                return ResponseEntity.ok(-2L);
 
-        return ResponseEntity.ok(userService.createUser(memberRequestDto).getId());
+            return ResponseEntity.ok(dto.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(-2L);
+        }
     }
 
     @GetMapping("/duplicateCheck")
@@ -192,7 +204,7 @@ public class MemberApiController {
     }
 
     @PatchMapping("/updatePhone")
-    public ResponseEntity<Integer> updatePhone(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
+    public ResponseEntity<Integer> updatePhone(@RequestBody @Valid MemberRequestDto memberUpdateDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
         if (session == null || !request.isRequestedSessionIdValid())
@@ -203,11 +215,15 @@ public class MemberApiController {
                 memberUpdateDto.getBirth().isEmpty() || memberUpdateDto.getBirth().isBlank())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
 
+        if (memberUpdateDto.getBirth().equals("1900-01-01"))
+            return ResponseEntity.ok(-2);
+
         Member member = memberService.findMember(memberUpdateDto.getEmail());
 
         int result = memberService.updatePhoneAndBirth(member.getId(), memberUpdateDto.getPhone(), memberUpdateDto.getBirth());
 
-        session.setAttribute("member", memberService.findMember(memberUpdateDto.getEmail()));
+        if (result != -2)
+            session.setAttribute("member", memberService.findMember(memberUpdateDto.getEmail()));
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }

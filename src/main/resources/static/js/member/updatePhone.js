@@ -20,14 +20,12 @@ if (button) {
                 }),
                 credentials: "include",
             })
-            .then((response) => {
-                if (response.status == 200) {
-                    alert("회원 정보가 정상적으로 저장되었습니다");
-                    location.replace(`/board/main`)
-                }
-                else {
-                    alert("가입된 전화번호 입니다");
-                }
+            .then((response) => response.json())
+            .then((json) => {
+                if (json == -2)
+                    alert("입력 값들을 확인해주세요")
+                else
+                    alert("회원 정보 저장 완료되었습니다")
             })
             .catch((error) => {
                 console.error(error)

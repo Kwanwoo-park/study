@@ -16,9 +16,14 @@ public class MailApiController {
 
     @PostMapping("/confirm")
     public ResponseEntity<HashMap<String, String>> mailConfirm(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
-        String code = registerMail.sendSimpleMessage(memberRequestDto.getEmail());
         HashMap<String, String> map = new HashMap<>();
-        map.put("code", code);
+        try {
+            String code = registerMail.sendSimpleMessage(memberRequestDto.getEmail());
+            map.put("status", "ok");
+            map.put("code", code);
+        } catch (Exception e) {
+            map.put("status", "fail");
+        }
 
         return ResponseEntity.ok(map);
     }

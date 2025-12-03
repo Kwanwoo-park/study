@@ -10,8 +10,7 @@ const button = document.getElementById('submit');
 const memailconfirmTxt = document.getElementById('memailconfirmTxt');
 const memailconfirm = document.getElementById('memailconfirm');
 
-var flag = false;
-var code;
+let code;
 
 if (email_check) {
     email_check.addEventListener('click', (event) => {
@@ -29,7 +28,6 @@ if (email_check) {
                 if (response.status == 200) {
                     alert("사용 가능한 이메일입니다");
                     email_certification.style.display = 'inline';
-                    flag = true;
                 }
                 else {
                     alert("이미 가입된 이메일입니다");
@@ -60,10 +58,13 @@ if (email_certification) {
             })
             .then((response) => response.json())
             .then((json) => {
-                code = json['code'];
-                alert("해당 이메일로 인증번호 발송이 완료되었습니다\n 확인부탁드립니다")
-                check.style.display = 'inline';
-                email.disabled = true;
+                if (json['status'] == 'ok') {
+                    code = json['code'];
+                    alert("해당 이메일로 인증번호 발송이 완료되었습니다\n 확인부탁드립니다")
+                    check.style.display = 'inline';
+                    email.disabled = true;
+                } else
+                    alert("인증번호 발송에 실패하였습니다\n 잠시후에 시도하여 주십시오");
             })
             .catch((error) => {
                 alert("인증번호 발송에 실패하였습니다\n 다시 시도하여 주십시오");
@@ -76,7 +77,21 @@ if (button) {
     button.addEventListener('click', (event) => {
         event.preventDefault();
 
-        if (flag && password.value != '' && name.value != '' && phone.value != '' && birth.value != '') {
+        if (memailconfirm.value == '')
+            alert('메일 인증값 입력 안 함!!')
+        else if (code == null)
+            alert('메일 인증 안 함!!')
+        else if (password.value == '')
+            alert('비밀번호 입력 안 함!!')
+        else if (name.value == '')
+            alert('이름 입력 안 함!!')
+        else if (phone.value == '')
+            alert('전화번호 입력 안 함!!')
+        else if (birth.value == '')
+            alert('생년월일 입력 안 함!!')
+        else if(birth.value == '1900-01-01')
+            alert('현재 연세 100세 이상...?!?')
+        else {
             fetch(`/api/member/register`, {
                 method: 'POST',
                 headers: {
@@ -95,6 +110,8 @@ if (button) {
             .then((json) => {
                 if (json == -1)
                     alert("부적절한 내용 감지되었습니다");
+                else if (json == -2)
+                    alert("회원가입에 실패하였습니다\n입력 값들을 확인해주세요")
                 else {
                     alert("회원가입이 완료되었습니다.");
                     location.replace(`/member/login`)
@@ -104,19 +121,14 @@ if (button) {
                 alert("이미 회원가입이 된 이메일입니다.");
             });
         }
-        else {
-            alert("빈 칸 없이 모두 채워주세요");
-        }
     })
 }
 
 if (memailconfirm) {
     memailconfirm.addEventListener('keyup', function() {
         if (code != memailconfirm.value) {
-            flag = false;
             memailconfirmTxt.innerText = '인증번호가 잘못되었습니다.';
         } else {
-            flag = true;
             button.style.display = 'inline';
             memailconfirmTxt.innerText = '인증번호 확인 완료.';
         }

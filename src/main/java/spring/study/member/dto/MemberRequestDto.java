@@ -1,5 +1,6 @@
 package spring.study.member.dto;
 
+import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,8 @@ public class MemberRequestDto {
     private String name;
     private Role role;
     private String profile;
+
+    @Pattern(regexp = "^01[016789]-?\\d{3,4}-?\\d{4}$", message = "전화번호 형식이 올바르지 않습니다.")
     private String phone;
     private String birth;
 

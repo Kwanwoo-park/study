@@ -94,24 +94,17 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public int updatePhone(Long id, String phone) {
-        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
-                "존재하지 않는 회원입니다."
-        ));
-
-        String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
-        phone = phone.replaceAll(regEx, "$1-$2-$3");
-
-        member.changePhone(phone);
-
-        return member.getId().intValue();
-    }
-
-    @Transactional
     public int updatePhoneAndBirth(Long id, String phone, String birth) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));
+
+        if (memberRepository.existsByPhone(phone))
+            return -2;
+
+        String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
+        phone = phone.replaceAll("-", "");
+        phone = phone.replaceAll(regEx, "$1-$2-$3");
 
         member.changePhoneAndBirth(phone, birth);
 

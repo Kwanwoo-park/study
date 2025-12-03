@@ -19,6 +19,7 @@ public class UserService implements UserServiceRepository {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public String replacePhoneNumber(String phone) {
+        phone = phone.replaceAll("-", "");
         String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
 
         return phone.replaceAll(regEx, "$1-$2-$3");
@@ -27,6 +28,9 @@ public class UserService implements UserServiceRepository {
     @Override
     public MemberResponseDto createUser(MemberRequestDto memberRequestDto) {
         if (memberRepository.existsByEmail(memberRequestDto.getEmail()))
+            return null;
+
+        if (memberRepository.existsByPhone(memberRequestDto.getPhone()))
             return null;
 
         Member member = memberRepository.save(Member.builder()
