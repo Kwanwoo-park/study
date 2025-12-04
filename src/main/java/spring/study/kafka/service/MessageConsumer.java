@@ -7,7 +7,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.notification.entity.Notification;
-import spring.study.notification.service.EmitterService;
+import spring.study.common.service.EmitterService;
 
 @Component
 @RequiredArgsConstructor

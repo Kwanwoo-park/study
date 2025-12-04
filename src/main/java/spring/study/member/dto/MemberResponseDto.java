@@ -20,6 +20,7 @@ public class MemberResponseDto implements Serializable {
     private String password;
     private String name;
     private Role role;
+    private LocalDateTime registerTime;
     private LocalDateTime lastLoginTime;
     private String profile;
     private String phone;
@@ -31,6 +32,7 @@ public class MemberResponseDto implements Serializable {
         this.password = entity.getPassword();
         this.name = entity.getName();
         this.role = entity.getRole();
+        this.registerTime = entity.getRegisterTime();
         this.lastLoginTime = entity.getLastLoginTime();
         this.profile = entity.getProfile();
         this.phone = entity.getPhone();

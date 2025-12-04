@@ -1,4 +1,4 @@
-package spring.study.notification.repository;
+package spring.study.common.repository;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;

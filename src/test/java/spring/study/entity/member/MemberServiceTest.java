@@ -4,13 +4,17 @@
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
 //import org.springframework.transaction.annotation.Transactional;
-//import spring.study.dto.member.MemberRequestDto;
-//import spring.study.dto.member.MemberResponseDto;
-//import spring.study.entity.board.Board;
-//import spring.study.service.member.MemberService;
-//import spring.study.service.member.UserService;
+//import spring.study.board.entity.Board;
+//import spring.study.member.dto.MemberRequestDto;
+//import spring.study.member.dto.MemberResponseDto;
+//import spring.study.member.entity.Member;
+//import spring.study.member.entity.Role;
+//import spring.study.member.service.MemberService;
+//import spring.study.member.service.UserService;
 //
+//import java.util.ArrayList;
 //import java.util.HashMap;
+//import java.util.List;
 //
 //import static org.assertj.core.api.Assertions.assertThat;
 //import static org.hamcrest.MatcherAssert.assertThat;
@@ -46,7 +50,6 @@
 //        assertThat(responseDto, is(notNullValue()));
 //        assertThat(responseDto.getEmail()).isEqualTo(memberRequestDto.getEmail());
 //    }
-//
 //
 //    @Transactional
 //    @Test
@@ -137,13 +140,5 @@
 //        for (String key : map.keySet()) {
 //            System.out.println(map.get(key));
 //        }
-//    }
-//
-//    @Test
-//    void find() {
-//        Member member = (Member) memberService.loadUserByUsername("akakslslzz@naver.com");
-//
-//        for (Board b : member.getBoard())
-//            System.out.println("Content = " +  b.getContent());
 //    }
 //}

@@ -11,7 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
-import spring.study.notification.service.EmitterService;
+import spring.study.common.service.EmitterService;
 import spring.study.notification.service.NotificationService;
 
 import java.util.HashMap;

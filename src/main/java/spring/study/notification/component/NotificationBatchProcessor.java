@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Status;
-import spring.study.notification.repository.EmitterRepository;
+import spring.study.common.repository.EmitterRepository;
 import spring.study.notification.repository.NotificationRepository;
 
 import java.io.IOException;

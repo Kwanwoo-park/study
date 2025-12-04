@@ -1,20 +1,24 @@
-package spring.study.notification.service;
+package spring.study.common.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.notification.entity.Notification;
-import spring.study.notification.repository.EmitterRepository;
+import spring.study.common.repository.EmitterRepository;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class EmitterService {
     private final EmitterRepository emitterRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public void save(String id, Notification notification) {
         Map<String, SseEmitter> sseEmitters = emitterRepository.findAllEmitterStartWithById(id);
@@ -45,9 +49,14 @@ public class EmitterService {
         emitterRepository.deleteAllEventCacheByMemberId(id);
         SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L));
 
-        emitter.onCompletion(() -> emitterRepository.deleteAllEventCacheByMemberId(id));
-        emitter.onTimeout(() -> emitterRepository.deleteAllEventCacheByMemberId(id));
-        emitter.onError(e -> emitterRepository.deleteAllEventCacheByMemberId(id));
+        Boolean exist = redisTemplate.opsForValue().setIfAbsent("online:user:" + id, "1", Duration.ofMinutes(5));
+
+        if (Boolean.TRUE.equals(exist))
+            redisTemplate.opsForValue().increment("online:total");
+
+        emitter.onCompletion(() -> disconnect(id));
+        emitter.onTimeout(() -> disconnect(id));
+        emitter.onError(e -> disconnect(id));
 
         Map<String, Object> events = emitterRepository.findAllEventCacheStartWithById(id);
 
@@ -60,5 +69,14 @@ public class EmitterService {
         }
 
         return emitter;
+    }
+
+    private void disconnect(String id) {
+        emitterRepository.deleteAllEventCacheByMemberId(id);
+
+        if (redisTemplate.hasKey("online:user:" + id)) {
+            redisTemplate.opsForValue().decrement("online:total");
+            redisTemplate.delete("online:user:" + id);
+        }
     }
 }
