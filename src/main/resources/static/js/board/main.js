@@ -25,7 +25,7 @@ async function loadMorePosts() {
         });
         const data = await res.json();
 
-        fnBoard(data)
+        fnDraw(data)
 
         nextCursor = data.nextCursor;
 
@@ -40,7 +40,7 @@ async function loadMorePosts() {
     }
 }
 
-function fnBoard(data) {
+function fnDraw(data) {
     data.boards.forEach(board => {
         const main = document.createElement('div');
         main.className = 'main';

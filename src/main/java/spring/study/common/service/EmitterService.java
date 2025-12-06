@@ -11,7 +11,6 @@ import spring.study.common.repository.EmitterRepository;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 @Slf4j
@@ -49,12 +48,12 @@ public class EmitterService {
         emitterRepository.deleteAllEventCacheByMemberId(id);
         SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L));
 
-        Boolean exist = redisTemplate.opsForValue().setIfAbsent("online:user:" + id, "1", Duration.ofMinutes(5));
+        Boolean exist = redisTemplate.opsForValue().setIfAbsent("online:user:" + id, "1", Duration.ofHours(1L));
 
         if (Boolean.TRUE.equals(exist))
             redisTemplate.opsForValue().increment("online:total");
 
-        emitter.onCompletion(() -> disconnect(id));
+        emitter.onCompletion(() -> emitterRepository.deleteAllEventCacheByMemberId(id));
         emitter.onTimeout(() -> disconnect(id));
         emitter.onError(e -> disconnect(id));
 
@@ -74,8 +73,12 @@ public class EmitterService {
     private void disconnect(String id) {
         emitterRepository.deleteAllEventCacheByMemberId(id);
 
+        String value = redisTemplate.opsForValue().get("online:total");
+
         if (redisTemplate.hasKey("online:user:" + id)) {
-            redisTemplate.opsForValue().decrement("online:total");
+            if (value != null && Long.parseLong(value) > 0L)
+                redisTemplate.opsForValue().decrement("online:total");
+
             redisTemplate.delete("online:user:" + id);
         }
     }

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.comment.entity.Comment;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.board.entity.Board;
@@ -29,6 +30,7 @@ import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
+import spring.study.reply.service.ReplyService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -43,6 +45,7 @@ public class MemberApiController {
     private final BoardService boardService;
     private final BoardImgService boardImgService;
     private final CommentService commentService;
+    private final ReplyService replyService;
     private final FollowService followService;
     private final FavoriteService favoriteService;
     private final ChatRoomMemberService roomMemberService;
@@ -268,6 +271,8 @@ public class MemberApiController {
             notificationService.deleteByMember(member);
 
             favoriteService.deleteByMember(member);
+            replyService.deleteReplay(member.getComment());
+            replyService.deleteReply(member);
             commentService.deleteByMember(member);
             boardService.deleteByMember(member);
 
@@ -296,6 +301,8 @@ public class MemberApiController {
             notificationService.deleteByMember(deleteMember);
 
             favoriteService.deleteByMember(deleteMember);
+            replyService.deleteReplay(member.getComment());
+            replyService.deleteReply(member);
             commentService.deleteByMember(deleteMember);
             boardService.deleteByMember(deleteMember);
 
