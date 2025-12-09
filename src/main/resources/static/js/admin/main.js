@@ -12,7 +12,8 @@ async function loadUserStatus() {
     });
     const data = await res.json();
 
-    fnDraw(data);
+    if (data.count >= 0)
+        fnDraw(data);
 }
 
 function fnDraw(data) {

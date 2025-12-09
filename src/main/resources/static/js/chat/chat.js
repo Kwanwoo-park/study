@@ -160,11 +160,13 @@ function msgCheck(msg) {
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json == -1)
+        if (json['result'] == -1)
             return -1
-        else if (json == -3) {
+        else if (json['result'] == -3) {
             alert("금칙어를 사용하여 계정이 정지되었습니다");
             window.location.reload();
+        } else if (json['result'] == -10) {
+            alert("다시 시도하여주십시오");
         }
     })
     .catch((error) => {
@@ -189,10 +191,9 @@ function fnLoad(input) {
     })
     .then((response) => response.json())
     .then((json) => {
-        console.log(json)
-        status = json['status']
+        result = json['result']
 
-        if (status != 'OK')
+        if (result < 0)
             alert("이미지 전송 실패");
         else {
             imgName = json['name'];

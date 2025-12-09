@@ -16,8 +16,9 @@ import spring.study.board.service.BoardService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -29,33 +30,45 @@ public class BoardImgApiController {
     private final ImageS3Service imageS3Service;
 
     @PostMapping("/save")
-    public ResponseEntity<List<BoardImg>> boardImgSave(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) throws IOException, FileNotFoundException {
+    public ResponseEntity<Map<String, Integer>> boardImgSave(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) throws IOException, FileNotFoundException {
         HttpSession session = request.getSession();
+        Map<String, Integer> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (imageS3Service.findFormatCheck(file))
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-
-        Board board = boardService.findById(id);
-
-        List<BoardImg> list = new ArrayList<>();
-
-        for (MultipartFile multipartFile : file) {
-            String imageUrl = imageS3Service.uploadImageToS3(multipartFile);
-
-            list.add(boardImgService.save(BoardImg.builder()
-                    .imgSrc(imageUrl)
-                    .board(board)
-                    .build()));
+        if (imageS3Service.findFormatCheck(file)) {
+            map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
         }
 
-        return ResponseEntity.ok(list);
+        try {
+            Board board = boardService.findById(id);
+
+            for (MultipartFile multipartFile : file) {
+                String imageUrl = imageS3Service.uploadImageToS3(multipartFile);
+
+                boardImgService.save(BoardImg.builder()
+                        .imgSrc(imageUrl)
+                        .board(board)
+                        .build());
+            }
+
+            map.put("result", file.size());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
+
+        return ResponseEntity.ok(map);
     }
 }

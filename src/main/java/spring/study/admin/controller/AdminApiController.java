@@ -3,6 +3,7 @@ package spring.study.admin.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,46 +20,67 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/admin")
+@Slf4j
 public class AdminApiController {
     private final MemberService memberService;
     private final RedisTemplate<String, String> redisTemplate;
 
     @PatchMapping("/member/permit")
-    public ResponseEntity<Integer> memberPermit(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Integer>> memberPermit(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Integer> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
+            map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
 
         if (member.getRole() != Role.ADMIN) {
+            map.put("result", -1);
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
         }
 
-        int result = memberService.updateRole(requestDto.getId(), Role.USER);
+        try {
+            int result = memberService.updateRole(requestDto.getId(), Role.USER);
+            map.put("result", result);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -1);
+        }
 
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        return ResponseEntity.status(HttpStatus.OK).body(map);
     }
 
     @PatchMapping("/member/deny")
-    public ResponseEntity<Integer> memberDeny(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Integer>> memberDeny(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Integer> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
+            map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
 
         if (member.getRole() != Role.ADMIN) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
         }
 
-        int result = memberService.updateRole(requestDto.getId(), Role.DENIED);
+        try {
+            int result = memberService.updateRole(requestDto.getId(), Role.USER);
+            map.put("result", result);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -1);
+        }
 
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        return ResponseEntity.status(HttpStatus.OK).body(map);
     }
 
     @GetMapping("/member/online")
@@ -77,18 +99,23 @@ public class AdminApiController {
 
         Map<String, Object> map = new HashMap<>();
 
-        String count = redisTemplate.opsForValue().get("online:total");
+        try {
+            String count = redisTemplate.opsForValue().get("online:total");
 
-        List<Long> userIds = redisTemplate.keys("online:user:*")
-                .stream()
-                .map(k -> k.substring(k.lastIndexOf(":") + 1))
-                .map(Long::parseLong)
-                .toList();
+            List<Long> userIds = redisTemplate.keys("online:user:*")
+                    .stream()
+                    .map(k -> k.substring(k.lastIndexOf(":") + 1))
+                    .map(Long::parseLong)
+                    .toList();
 
-        List<Member> list = memberService.findMember(userIds);
+            List<Member> list = memberService.findMember(userIds);
 
-        map.put("count", count != null ? Long.parseLong(count) : 0L);
-        map.put("list", list);
+            map.put("count", count != null ? Long.parseLong(count) : 0L);
+            map.put("list", list);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("count", -1L);
+        }
 
         return ResponseEntity.ok(map);
     }

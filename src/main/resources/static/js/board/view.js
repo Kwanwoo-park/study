@@ -131,14 +131,15 @@ function fnEditComplete(boardId) {
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json == -1)
+        if (json['result'] == -1)
             alert("부적절한 내용 감지되었습니다");
-        else {
-            if (json == -3)
-                alert("금칙어를 사용하여 계정이 정지되었습니다");
-
+        else if (json['result'] == -3) {
+            alert("금칙어를 사용하여 계정이 정지되었습니다");
             window.location.reload();
-        }
+        } else if (json['result'] == -10)
+            alert("다시 시도하여주십시오");
+        else
+            window.location.reload();
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");
@@ -155,8 +156,12 @@ function fnDelete(boardId) {
     })
     .then((response) => response.json())
     .then((json) => {
-       alert("삭제가 완료되었습니다");
-       location.replace(`/member/detail?email=`+json['email']);
+        if (json['result'] != -1) {
+            alert("삭제가 완료되었습니다");
+            location.replace(`/member/detail?email=`+json['email']);
+        }
+        else
+            alert("다시 시도하여주십시오");
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

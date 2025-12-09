@@ -34,8 +34,12 @@ if (change) {
         })
         .then((response) => response.json())
         .then((json) => {
-            alert(msg);
-            window.location.reload();
+            if (json['result'] > 0) {
+                alert(msg);
+                window.location.reload();
+            }
+            else
+                alert("다시 시도하여주십시오");
         })
         .catch((error) => {
             alert("다시 시도하여주십시오");
@@ -54,8 +58,9 @@ if (del) {
             },
             credentials: "include",
         })
-        .then((response) => {
-            if (response.status == 200) {
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] >= 0) {
                 alert("삭제되었습니다");
             }
             else {

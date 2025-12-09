@@ -17,7 +17,7 @@
 //
 //import static org.assertj.core.api.Assertions.assertThat;
 //
-//@SpringBootTest()
+//@SpringBootTest
 //public class BoardServiceTest {
 //    @Autowired
 //    BoardService boardService;
@@ -28,33 +28,16 @@
 //    @Test
 //    void update() {
 //        // given
-//        Member member = Member.builder()
-//                .email("test@test.com")
-//                .pwd("test")
-//                .name("test")
-//                .role(Role.USER)
-//                .profile("1.jpg")
-//                .build();
-//
-//        Member save = memberService.save(member);
-//
-//        Board board = Board.builder()
-//                .title("test")
-//                .content("test")
-//                .build();
-//
-//        save.addBoard(board);
-//
-//        Board saveBoard = boardService.save(board);
+//        Member member = memberService.findMember("akakslslzz@naver.com");
+//        Board board = member.getBoard().get(0);
 //
 //        // when
-//        boardService.updateBoard(saveBoard.getId(), "test2");
+//        boardService.updateBoard(board.getId(), "test2");
 //
 //        // then
 //        Board result = boardService.findById(board.getId());
 //
 //        assertThat(result.getContent()).isEqualTo("test2");
-//        assertThat(result.getMember()).isEqualTo(save);
 //    }
 //
 //    @Test

@@ -59,7 +59,7 @@ if (chatting) {
         })
         .then((response) => response.json())
         .then((json) => {
-            location.href = '/chat/chatRoom?roomId=' + json['roomId']
+            location.href = '/chat/chatRoom?roomId=' + json['room'].roomId;
         })
         .catch((error) => {
             alert("다시 시도하여주십시오");

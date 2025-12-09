@@ -3,6 +3,7 @@ package spring.study.comment.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +21,12 @@ import spring.study.comment.service.CommentService;
 import spring.study.forbidden.service.ForbiddenService;
 import spring.study.notification.service.NotificationService;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/comment")
 public class CommentApiController {
     private final CommentService commentService;
@@ -31,106 +36,157 @@ public class CommentApiController {
     private final NotificationService notificationService;
 
     @PostMapping("")
-    public ResponseEntity<Long> commentAction(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> commentAction(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
 
         if (!commentRequestDto.getComments().isBlank() || !commentRequestDto.getComments().isEmpty()) {
-            int risk = forbiddenService.findWordList(Status.APPROVAL, commentRequestDto.getComments());
+            try {
+                int risk = forbiddenService.findWordList(Status.APPROVAL, commentRequestDto.getComments());
 
-            if (risk != 0) {
-                if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
-                    memberService.updateRole(member.getId(), Role.DENIED);
+                if (risk != 0) {
+                    if (risk == 3) {
+                        notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
+                        memberService.updateRole(member.getId(), Role.DENIED);
 
-                    session.invalidate();
+                        session.invalidate();
 
-                    return ResponseEntity.ok(-3L);
+                        map.put("result", -3L);
+                    } else
+                        map.put("result", -1L);
+
+                    return ResponseEntity.ok(map);
                 }
 
-                return ResponseEntity.ok(-1L);
+                Board board = boardService.findById(commentRequestDto.getId());
+
+                Member otherMember = board.getMember();
+
+                Comment comment = commentService.save(commentRequestDto, member, board);
+                map.put("result", comment.getId());
+
+                if (!member.getId().equals(otherMember.getId())) {
+                    notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다", Group.COMMENT).addMember(otherMember);
+                }
+
+                session.setAttribute("member", member);
+
+                return ResponseEntity.ok(map);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
             }
-
-            Board board = boardService.findById(commentRequestDto.getId());
-
-            Member otherMember = board.getMember();
-
-            Comment comment = commentService.save(commentRequestDto, member, board);
-
-            if (!member.getId().equals(otherMember.getId())) {
-                notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다", Group.COMMENT).addMember(otherMember);
-            }
-
-            session.setAttribute("member", member);
-
-            return ResponseEntity.ok(comment.getId());
         }
-        else
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        else {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+        }
     }
 
     @PatchMapping("/update")
-    public ResponseEntity<Integer> commentUpdate(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> commentUpdate(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
         Member member = (Member) session.getAttribute("member");
 
         if (!commentRequestDto.getComments().isBlank() || !commentRequestDto.getComments().isEmpty()) {
-            int risk = forbiddenService.findWordList(Status.APPROVAL, commentRequestDto.getComments());
+            try {
+                int risk = forbiddenService.findWordList(Status.APPROVAL, commentRequestDto.getComments());
 
-            if (risk != 0) {
-                if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
-                    memberService.updateRole(member.getId(), Role.DENIED);
+                if (risk != 0) {
+                    if (risk == 3) {
+                        notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
+                        memberService.updateRole(member.getId(), Role.DENIED);
 
-                    session.invalidate();
+                        session.invalidate();
 
-                    return ResponseEntity.ok(-3);
+                        map.put("result", -3L);
+                    } else
+                        map.put("result", -1L);
+
+                    return ResponseEntity.ok(map);
                 }
 
-                return ResponseEntity.ok(-1);
-            }
+                map.put("result", commentService.updateComments(commentRequestDto.getId(), commentRequestDto.getComments()));
 
-            return ResponseEntity.ok(commentService.updateComments(commentRequestDto.getId(), commentRequestDto.getComments()));
+                return ResponseEntity.ok(map);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+            }
         }
-        else
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        else {
+            map.put("result", -10L);
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+        }
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<Comment> commentDelete(@RequestParam Long id,
+    public ResponseEntity<Map<String, Long>> commentDelete(@RequestParam Long id,
                                                  @RequestBody CommentRequestDto commentRequestDto,
                                                  HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findById(id);
-        Comment comment = commentService.findById(commentRequestDto.getId(), member, board);
 
-        commentService.deleteById(commentRequestDto.getId());
+        try {
+            Board board = boardService.findById(id);
+            Comment comment = commentService.findById(commentRequestDto.getId(), member, board);
 
-        session.setAttribute("member", member);
+            commentService.deleteById(commentRequestDto.getId());
 
-        return ResponseEntity.ok(comment);
+            session.setAttribute("member", member);
+
+            map.put("result", comment.getId());
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 }

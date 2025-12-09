@@ -78,14 +78,14 @@ public class CommentService {
     }
 
     @Transactional
-    public int updateComments(Long id, String comments) {
+    public Long updateComments(Long id, String comments) {
         Comment comment = commentRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 댓글입니다."
         ));
 
         comment.changeComments(comments);
 
-        return comment.getId().intValue();
+        return comment.getId();
     }
 
     public void deleteById(Long id) {

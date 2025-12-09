@@ -3,6 +3,7 @@ package spring.study.board.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.reply.service.ReplyService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/board")
+@Slf4j
 public class BoardApiController {
     private final BoardService boardService;
     private final ReplyService replyService;
@@ -57,16 +60,21 @@ public class BoardApiController {
 
         Member member = (Member) session.getAttribute("member");
 
-        List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
-
+        List<BoardResponseDto> list = new ArrayList<>();
+        Map<String, Object> response = new HashMap<>();
         int nextCursor;
+
+        try {
+            list = boardService.getBoard(cursor, limit, member);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
 
         if (list.isEmpty())
             nextCursor = 0;
         else
             nextCursor = cursor+2;
 
-        Map<String, Object> response = new HashMap<>();
         response.put("boards", list);
         response.put("nextCursor", nextCursor);
         response.put("like", member.checkFavorite(list));
@@ -75,123 +83,160 @@ public class BoardApiController {
     }
 
     @PostMapping("/write")
-    public ResponseEntity<Long> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         if (session.getAttribute("member") == null) {
+            map.put("result", -10L);
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
         Member member = (Member) session.getAttribute("member");
 
         if (!boardRequestDto.getContent().isBlank() || !boardRequestDto.getContent().isEmpty()){
-            int risk = forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent());
+            try {
+                int risk = forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent());
 
-            if (risk != 0) {
-                if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
-                    memberService.updateRole(member.getId(), Role.DENIED);
+                if (risk != 0) {
+                    if (risk == 3) {
+                        notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
+                        memberService.updateRole(member.getId(), Role.DENIED);
 
-                    session.invalidate();
+                        session.invalidate();
+                        map.put("result", -3L);
+                    } else
+                        map.put("result", -1L);
 
-                    return ResponseEntity.ok(-3L);
+                    return ResponseEntity.ok(map);
                 }
 
-                return ResponseEntity.ok(-1L);
+                Board board = boardRequestDto.toEntity();
+                board.addMember(member);
+
+                Board result = boardService.save(board);
+                session.setAttribute("member", member);
+
+                if (result == null) {
+                    map.put("result", -10L);
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+                }
+
+                map.put("result", result.getId());
+
+                return ResponseEntity.ok(map);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
             }
-
-            Board board = boardRequestDto.toEntity();
-            board.addMember(member);
-
-            Board result = boardService.save(board);
-            session.setAttribute("member", member);
-
-            if (result == null) {
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
-            }
-
-            return ResponseEntity.ok(result.getId());
         }
         else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
         }
     }
 
     @PatchMapping("/view")
-    public ResponseEntity<Integer> boardViewAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request){
+    public ResponseEntity<Map<String, Long>> boardViewAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request){
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
         Member member = (Member) session.getAttribute("member");
 
         if (!boardRequestDto.getContent().isBlank() | !boardRequestDto.getContent().isEmpty()) {
-            int risk = forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent());
+            try {
+                int risk = forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent());
 
-            if (risk != 0) {
-                if (risk == 3) {
-                    notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
-                    memberService.updateRole(member.getId(), Role.DENIED);
+                if (risk != 0) {
+                    if (risk == 3) {
+                        notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
+                        memberService.updateRole(member.getId(), Role.DENIED);
 
-                    session.invalidate();
+                        session.invalidate();
+                        map.put("result", -3L);
+                    } else
+                        map.put("result", -1L);
 
-                    return ResponseEntity.ok(-3);
+                    return ResponseEntity.ok(map);
                 }
 
-                return ResponseEntity.ok(-1);
-            }
+                map.put("result", boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getContent()));
 
-            return ResponseEntity.ok(boardService.updateBoard(boardRequestDto.getId(), boardRequestDto.getContent()));
+                return ResponseEntity.ok(map);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+            }
         }
         else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
         }
     }
 
     @DeleteMapping("/view/delete")
-    public ResponseEntity<Map<String, String>> boardViewDeleteAction(@RequestParam() Long id, HttpServletRequest request){
+    public ResponseEntity<Map<String, Object>> boardViewDeleteAction(@RequestParam() Long id, HttpServletRequest request){
         HttpSession session = request.getSession();
+        Map<String, Object> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -1L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            map.put("result", -1L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findById(id);
 
-        Map<String, String> emailMap = new HashMap<>();
-        emailMap.put("email", member.getEmail());
+        try {
+            Board board = boardService.findById(id);
 
-        member.removeComments(board.getComment());
-        member.removeBoard(board);
+            map.put("email", member.getEmail());
 
-        session.setAttribute("member", member);
+            member.removeComments(board.getComment());
+            member.removeBoard(board);
 
-        favoriteService.deleteByBoard(board);
+            session.setAttribute("member", member);
 
-        replyService.deleteReplay(board.getComment());
+            favoriteService.deleteByBoard(board);
 
-        commentService.deleteComment(board);
+            replyService.deleteReplay(board.getComment());
 
-        imageS3Service.deleteImage(board.getImg());
+            commentService.deleteComment(board);
 
-        boardImgService.deleteBoard(board);
-        boardService.deleteById(id);
+            imageS3Service.deleteImage(board.getImg());
 
-        return ResponseEntity.status(HttpStatus.OK).body(emailMap);
+            boardImgService.deleteBoard(board);
+            boardService.deleteById(id);
+
+            return ResponseEntity.status(HttpStatus.OK).body(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -1L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 }
