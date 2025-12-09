@@ -35,7 +35,10 @@ if (btn) {
         })
         .then((response) => response.json())
         .then((json) => {
-            window.location.reload();
+            if (json['result'] > 0)
+                window.location.reload();
+            else
+                alert("다시 시도하여주십시오");
         })
         .catch((error) => {
             alert("다시 시도하여주십시오");

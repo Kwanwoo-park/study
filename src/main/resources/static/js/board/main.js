@@ -259,14 +259,16 @@ function fnLike(listId) {
             },
             credentials: "include",
         })
-        .then((response) => {
-            if (response.status == 200) {
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] > 0) {
                 like_cnt.innerText = parseInt(like_cnt.innerText) + 1
                 like.src = "/img/" + "ic_favorite.png"
-            }
+            } else
+                alert("다시 시도하여주십시오");
         })
         .catch((error) => {
-            alert("다시 시도하여주십시오.");
+            alert("다시 시도하여주십시오");
         })
     }
     else if (arr[arr.length-1] == 'ic_favorite.png') {
@@ -277,14 +279,16 @@ function fnLike(listId) {
             },
             credentials: "include",
         })
-        .then((response) => {
-            if (response.status == 200) {
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] > 0) {
                 like_cnt.innerText = parseInt(like_cnt.innerText) - 1
                 like.src = "/img/" + "ic_favorite_border.png"
-            }
+            } else
+                alert("다시 시도하여주십시오");
         })
         .catch((error) => {
-            alert("다시 시도하여주십시오.");
+            alert("다시 시도하여주십시오");
         })
     }
 }
@@ -300,11 +304,13 @@ function fnOnlyLike(listId) {
         },
         credentials: "include",
     })
-    .then((response) => {
-        if (response.status == 200) {
+    .then((response) => response.json())
+    .then((json) => {
+        if (json['result'] > 0) {
             like_cnt.innerText = parseInt(like_cnt.innerText) + 1
              like.src = "/img/" + "ic_favorite.png"
-        }
+        } else
+            alert("다시 시도하여주십시오");
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

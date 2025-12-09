@@ -3,6 +3,7 @@ package spring.study.favorite.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +16,12 @@ import spring.study.board.service.BoardService;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.notification.service.NotificationService;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/favorite")
 public class FavoriteApiController {
     private final FavoriteService favoriteService;
@@ -24,49 +29,89 @@ public class FavoriteApiController {
     private final NotificationService notificationService;
 
     @PostMapping("/like")
-    public ResponseEntity<Favorite> favoriteAction(@RequestParam Long id, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> favoriteAction(@RequestParam Long id, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findById(id);
 
-        Member otherMember = board.getMember();
+        try {
+            Board board = boardService.findById(id);
 
-        if (favoriteService.existFavorite(member, board))
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+            Member otherMember = board.getMember();
 
-        Favorite favorite = favoriteService.save(member, board);
+            if (favoriteService.existFavorite(member, board)) {
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+            }
 
-        if (!member.getId().equals(otherMember.getId()))
-            notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다", Group.FAVORITE).addMember(otherMember);
+            Favorite favorite = favoriteService.save(member, board);
+            map.put("result", favorite.getId());
 
-        session.setAttribute("member", member);
+            if (!member.getId().equals(otherMember.getId()))
+                notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다", Group.FAVORITE).addMember(otherMember);
 
-        return ResponseEntity.ok(favorite);
+            session.setAttribute("member", member);
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<Favorite> favoriteDelete(@RequestParam Long id, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> favoriteDelete(@RequestParam Long id, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
-        Board board = boardService.findById(id);
 
-        Favorite favorite = favoriteService.findByMemberAndBoard(member, board);
+        try {
+            Board board = boardService.findById(id);
 
-        if (favorite == null)
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+            Favorite favorite = favoriteService.findByMemberAndBoard(member, board);
 
-        favoriteService.deleteById(favorite, member, board);
+            if (favorite == null) {
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+            }
 
-        session.setAttribute("member", member);
+            map.put("result", favorite.getId());
 
-        return ResponseEntity.ok(favorite);
+            favoriteService.deleteById(favorite, member, board);
+
+            session.setAttribute("member", member);
+
+            return ResponseEntity.ok(map);
+        } catch(Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 }
