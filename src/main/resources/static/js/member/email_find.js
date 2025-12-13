@@ -53,7 +53,10 @@ if (button) {
             })
             .then((response) => response.json())
             .then((json) => {
-                location.href = "/member/updatePassword/" + json.email;
+                if (json['result'] > )
+                    location.href = "/member/updatePassword/" + json.member.email;
+                else
+                    alert("존재하지 않는 회원정보입니다.");
             })
             .catch((error) => {
                 console.error(error)

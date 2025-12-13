@@ -30,8 +30,9 @@ examine.addEventListener("click", (event) => {
             }),
             credentials: "include",
         })
-        .then((response) => {
-            if (response.status == 200) {
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] > 0) {
                 alert('변경 완료')
                 window.location.reload();
             }
@@ -58,8 +59,9 @@ approval.addEventListener("click", (event) => {
             }),
             credentials: "include",
         })
-        .then((response) => {
-            if (response.status == 200) {
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] > 0) {
                 alert('변경 완료')
                 window.location.reload();
             }

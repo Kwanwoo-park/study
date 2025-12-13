@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import spring.study.comment.entity.Comment;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.board.entity.Board;
@@ -32,9 +31,9 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.reply.service.ReplyService;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -57,134 +56,227 @@ public class MemberApiController {
     private final BCryptPasswordEncoder encoder;
 
     @PatchMapping("/login")
-    public ResponseEntity<Member> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
-        Member member = (Member) memberService.loadUserByUsername(dto.getEmail());
+    public ResponseEntity<Map<String, Object>> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
+
+        Map<String, Object> map = new HashMap<>();
         HttpSession session = request.getSession();
 
-        if (member == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        try {
+            Member member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
-        if ( dto.getEmail().isEmpty() || dto.getEmail().isBlank() ||dto.getPassword().isEmpty() || dto.getPassword().isBlank() )
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
-
-        if (encoder.matches(dto.getPassword(), member.getPassword())) {
-            if (member.getRole() != Role.DENIED) {
-                memberService.updateLastLoginTime(member.getId());
-                session.setAttribute("member", member);
+            if (member == null) {
+                map.put("result", -3L);
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
             }
 
-            return ResponseEntity.status(HttpStatus.OK).body(member);
-        }
+            if ( dto.getEmail().isEmpty() || dto.getEmail().isBlank() ||dto.getPassword().isEmpty() || dto.getPassword().isBlank()) {
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+            }
 
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+            if (encoder.matches(dto.getPassword(), member.getPassword())) {
+                if (member.getRole() != Role.DENIED) {
+                    memberService.updateLastLoginTime(member.getId());
+                    session.setAttribute("member", member);
+
+                    map.put("result", member.getId());
+                    map.put("member", member);
+                } else
+                    map.put("result", -2L);
+            } else
+                map.put("result", -1L);
+
+            return ResponseEntity.status(HttpStatus.OK).body(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+        }
     }
 
     @GetMapping("/logout")
-    public ResponseEntity<Integer> logoutAction(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> logoutAction(HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        session.removeAttribute("member");
+        if (session.getAttribute("member") == null) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        return ResponseEntity.ok(1);
+        Member member = (Member) session.getAttribute("member");
+
+        try {
+            session.removeAttribute("member");
+
+            map.put("result", member.getId());
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Long> registerAction(@RequestBody @Valid MemberRequestDto memberRequestDto) throws Exception {
-        if (memberRequestDto.getEmail().isEmpty() || memberRequestDto.getEmail().isBlank() ||
-                memberRequestDto.getPassword().isEmpty() || memberRequestDto.getPassword().isBlank() ||
-                memberRequestDto.getName().isEmpty() || memberRequestDto.getName().isBlank() ||
-                memberRequestDto.getPhone().isEmpty() || memberRequestDto.getPhone().isBlank() ||
-                memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+    public ResponseEntity<Map<String, Long>> registerAction(@RequestBody @Valid MemberRequestDto memberRequestDto) throws Exception {
+        Map<String, Long> map = new HashMap<>();
 
-        if (memberRequestDto.getBirth().equals("1900-01-01"))
-            return ResponseEntity.ok(-2L);
+        if ((memberRequestDto.getEmail().isEmpty() || memberRequestDto.getEmail().isBlank()) ||
+                (memberRequestDto.getPassword().isEmpty() || memberRequestDto.getPassword().isBlank()) ||
+                (memberRequestDto.getName().isEmpty() || memberRequestDto.getName().isBlank()) ||
+                (memberRequestDto.getPhone().isEmpty() || memberRequestDto.getPhone().isBlank()) ||
+                (memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+        }
 
-        int risk = forbiddenService.findWordList(Status.APPROVAL, memberRequestDto.getName());
-
-        if (risk != 0) {
-            return ResponseEntity.ok(-1L);
+        if (memberRequestDto.getBirth().equals("1900-01-01")) {
+            map.put("result", -2L);
+            return ResponseEntity.ok(map);
         }
 
         try {
-            MemberResponseDto dto = userService.createUser(memberRequestDto);
-            if (dto != null)
-                notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
-            else
-                return ResponseEntity.ok(-2L);
+            int risk = forbiddenService.findWordList(Status.APPROVAL, memberRequestDto.getName());
 
-            return ResponseEntity.ok(dto.getId());
+            if (risk != 0) {
+                map.put("result", -1L);
+                return ResponseEntity.ok(map);
+            }
+
+            MemberResponseDto dto = userService.createUser(memberRequestDto);
+
+            if (dto != null) {
+                notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
+                map.put("result", dto.getId());
+            }
+            else
+                map.put("result", -2L);
+
+            return ResponseEntity.ok(map);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.ok(-2L);
+            log.error(e.getMessage());
+            map.put("result", -2L);
+            return ResponseEntity.ok(map);
         }
     }
 
     @GetMapping("/duplicateCheck")
-    public ResponseEntity<Integer> duplicateCheck(@RequestParam() String email) {
-        if (email.isBlank())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+    public ResponseEntity<Map<String, Long>> duplicateCheck(@RequestParam() String email) {
+        Map<String, Long> map = new HashMap<>();
 
-        return memberService.existEmail(email) ? ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null) : ResponseEntity.status(HttpStatus.OK).body(null);
+        if (email.isBlank()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.existEmail(email))
+            map.put("result", 10L);
+        else
+            map.put("result", -10L);
+
+        return ResponseEntity.ok(map);
     }
 
     @PatchMapping("/detail/action")
-    public ResponseEntity<Member> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) throws IOException, FileNotFoundException {
+    public ResponseEntity<Map<String, Long>> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
         }
 
-        if (imageS3Service.fileFormatCheck(file))
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        if (imageS3Service.fileFormatCheck(file)) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
 
-        imageS3Service.deleteImage(member.getProfile());
+        try {
+            imageS3Service.deleteImage(member.getProfile());
 
-        String imageUrl = imageS3Service.uploadImageToS3(file);
+            String imageUrl = imageS3Service.uploadImageToS3(file);
 
-        member.setProfile(imageUrl);
-        memberService.updateProfile(member.getId(), imageUrl);
+            member.setProfile(imageUrl);
+            memberService.updateProfile(member.getId(), imageUrl);
 
-        session.setAttribute("member", member);
+            session.setAttribute("member", member);
 
-        return ResponseEntity.ok(member);
+            map.put("result", member.getId());
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @GetMapping("/find/email")
-    public ResponseEntity<Member> findAction(@RequestParam() String email) {
-        if (email.isBlank())
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+    public ResponseEntity<Map<String, Object>> findAction(@RequestParam() String email) {
+        Map<String, Object> map = new HashMap<>();
 
-        Member member = memberService.findMember(email);
+        if (email.isBlank()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+        }
 
-        return ResponseEntity.ok(member);
+        try {
+            Member member = memberService.findMember(email);
+            map.put("result", member.getId());
+            map.put("member", member);
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @GetMapping("/find/info")
-    public ResponseEntity<Member> findAction(@RequestParam String birth, @RequestParam String phone) {
-        if (birth.isBlank() || phone.isBlank())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+    public ResponseEntity<Map<String, Object>> findAction(@RequestParam String birth, @RequestParam String phone) {
+        Map<String, Object> map = new HashMap<>();
 
-        phone = userService.replacePhoneNumber(phone);
-        Member member = memberService.findMember(phone, birth);
+        if (birth.isBlank() || phone.isBlank()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        return ResponseEntity.ok(member);
+        try {
+            phone = userService.replacePhoneNumber(phone);
+            Member member = memberService.findMember(phone, birth);
+
+            map.put("result", member.getId());
+            map.put("member", member);
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @PatchMapping("/updatePassword")
-    public ResponseEntity<Integer> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
-
+        Map<String, Long> map = new HashMap<>();
         Member member;
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
@@ -194,131 +286,188 @@ public class MemberApiController {
             member = (Member) session.getAttribute("member");
             session.invalidate();
 
-            if (member == null)
-                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            if (member == null) {
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+            }
         }
 
-        if (memberUpdateDto.getPassword().isEmpty() || memberUpdateDto.getPassword().isBlank())
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+        if (memberUpdateDto.getPassword().isEmpty() || memberUpdateDto.getPassword().isBlank()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+        }
 
-        int result = userService.updatePwd(member.getId(), memberUpdateDto.getPassword());
+        try {
+            map.put("result", userService.updatePwd(member.getId(), memberUpdateDto.getPassword()));
 
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @PatchMapping("/updatePhone")
-    public ResponseEntity<Integer> updatePhone(@RequestBody @Valid MemberRequestDto memberUpdateDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> updatePhone(@RequestBody @Valid MemberRequestDto memberUpdateDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         if (memberUpdateDto.getEmail().isEmpty() || memberUpdateDto.getEmail().isBlank() ||
                 memberUpdateDto.getPhone().isEmpty() || memberUpdateDto.getPhone().isBlank() ||
-                memberUpdateDto.getBirth().isEmpty() || memberUpdateDto.getBirth().isBlank())
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+                memberUpdateDto.getBirth().isEmpty() || memberUpdateDto.getBirth().isBlank()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+        }
 
-        if (memberUpdateDto.getBirth().equals("1900-01-01"))
-            return ResponseEntity.ok(-2);
+        if (memberUpdateDto.getBirth().equals("1900-01-01")) {
+            map.put("result", -2L);
+            return ResponseEntity.ok(map);
+        }
 
-        Member member = memberService.findMember(memberUpdateDto.getEmail());
+        try {
+            Member member = memberService.findMember(memberUpdateDto.getEmail());
 
-        int result = memberService.updatePhoneAndBirth(member.getId(), memberUpdateDto.getPhone(), memberUpdateDto.getBirth());
+            int result = memberService.updatePhoneAndBirth(member.getId(), memberUpdateDto.getPhone(), memberUpdateDto.getBirth());
 
-        if (result != -2)
-            session.setAttribute("member", memberService.findMember(memberUpdateDto.getEmail()));
+            if (result != -2) {
+                session.setAttribute("member", memberService.findMember(memberUpdateDto.getEmail()));
+                map.put("result", member.getId());
+            }
+            else
+                map.put("result", -2L);
 
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<MemberResponseDto>> searchMember(@RequestParam() String name, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> searchMember(@RequestParam() String name, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Object> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        return ResponseEntity.ok(memberService.findName(name));
+        try {
+            List<MemberResponseDto> list = memberService.findName(name);
+
+            map.put("result", 10L);
+            map.put("list", list);
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @DeleteMapping("/withdrawal")
-    public ResponseEntity<Boolean> withdrawalAction(@RequestParam(required = false) String email, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> withdrawalAction(@RequestParam(required = false) String email, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (email == null) {
-            for (Board board : member.getBoard()) {
-                boardImgService.deleteBoard(board);
-                favoriteService.deleteByBoard(board);
+        try {
+            if (email == null) {
+                map.put("result", member.getId());
+
+                for (Board board : member.getBoard()) {
+                    boardImgService.deleteBoard(board);
+                    favoriteService.deleteByBoard(board);
+                }
+
+                notificationService.deleteByMember(member);
+
+                favoriteService.deleteByMember(member);
+                replyService.deleteReplay(member.getComment());
+                replyService.deleteReply(member);
+                commentService.deleteByMember(member);
+                boardService.deleteByMember(member);
+
+                followService.deleteByFollower(member);
+                followService.deleteByFollowing(member);
+
+                roomMemberService.subCount(member);
+
+                messageService.deleteByMember(member);
+
+                roomMemberService.delete(member);
+
+                imageS3Service.deleteImage(member.getProfile());
+                memberService.deleteById(member.getId());
+
+                session.invalidate();
+            }
+            else {
+                Member deleteMember = memberService.findMember(email);
+
+                map.put("result", deleteMember.getId());
+
+                for (Board board : deleteMember.getBoard()) {
+                    boardImgService.deleteBoard(board);
+                    favoriteService.deleteByBoard(board);
+                }
+
+                notificationService.deleteByMember(deleteMember);
+
+                favoriteService.deleteByMember(deleteMember);
+                replyService.deleteReplay(member.getComment());
+                replyService.deleteReply(member);
+                commentService.deleteByMember(deleteMember);
+                boardService.deleteByMember(deleteMember);
+
+                followService.deleteByFollower(deleteMember);
+                followService.deleteByFollowing(deleteMember);
+
+                roomMemberService.subCount(member);
+
+                messageService.deleteByMember(deleteMember);
+
+                roomMemberService.delete(deleteMember);
+
+                imageS3Service.deleteImage(deleteMember.getProfile());
+                memberService.deleteById(deleteMember.getId());
             }
 
-            notificationService.deleteByMember(member);
-
-            favoriteService.deleteByMember(member);
-            replyService.deleteReplay(member.getComment());
-            replyService.deleteReply(member);
-            commentService.deleteByMember(member);
-            boardService.deleteByMember(member);
-
-            followService.deleteByFollower(member);
-            followService.deleteByFollowing(member);
-
-            roomMemberService.subCount(member);
-
-            messageService.deleteByMember(member);
-
-            roomMemberService.delete(member);
-
-            imageS3Service.deleteImage(member.getProfile());
-            memberService.deleteById(member.getId());
-
-            session.invalidate();
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
         }
-        else {
-            Member deleteMember = memberService.findMember(email);
-
-            for (Board board : deleteMember.getBoard()) {
-                boardImgService.deleteBoard(board);
-                favoriteService.deleteByBoard(board);
-            }
-
-            notificationService.deleteByMember(deleteMember);
-
-            favoriteService.deleteByMember(deleteMember);
-            replyService.deleteReplay(member.getComment());
-            replyService.deleteReply(member);
-            commentService.deleteByMember(deleteMember);
-            boardService.deleteByMember(deleteMember);
-
-            followService.deleteByFollower(deleteMember);
-            followService.deleteByFollowing(deleteMember);
-
-            roomMemberService.subCount(member);
-
-            messageService.deleteByMember(deleteMember);
-
-            roomMemberService.delete(deleteMember);
-
-            imageS3Service.deleteImage(deleteMember.getProfile());
-            memberService.deleteById(deleteMember.getId());
-        }
-
-        return ResponseEntity.ok(true);
     }
 }

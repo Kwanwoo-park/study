@@ -57,9 +57,10 @@ function fnLogout() {
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json == 1) {
+        if (json['result'] > 0) {
             location.replace(`/member/login`);
-        }
+        } else
+            alert("다시 시도하여주십시오");
     })
 }
 

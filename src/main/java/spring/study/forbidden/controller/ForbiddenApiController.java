@@ -3,6 +3,7 @@ package spring.study.forbidden.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +13,11 @@ import spring.study.forbidden.dto.ForbiddenResponseDto;
 import spring.study.forbidden.entity.Status;
 import spring.study.forbidden.service.ForbiddenService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/forbidden/word")
@@ -21,102 +25,260 @@ public class ForbiddenApiController {
     private final ForbiddenService forbiddenService;
 
     @GetMapping("/search")
-    public ResponseEntity<List<ForbiddenResponseDto>> forbiddenWordSearch(@RequestParam String word, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> forbiddenWordSearch(@RequestParam String word, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Object> map = new HashMap<>();
+        List<ForbiddenResponseDto> list;
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        return ResponseEntity.ok(forbiddenService.findByWord(word));
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        try {
+            list = forbiddenService.findByWord(word);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
+
+        map.put("list", list);
+        map.put("result", (long) list.size());
+
+        return ResponseEntity.ok(map);
     }
 
     @GetMapping("/proposal")
-    public ResponseEntity<List<ForbiddenResponseDto>> forbiddenProposalWordSearch(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> forbiddenProposalWordSearch(HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Object> map = new HashMap<>();
+        List<ForbiddenResponseDto> list;
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        return ResponseEntity.ok(forbiddenService.findByStatus(Status.PROPOSAL));
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        try {
+            list = forbiddenService.findByStatus(Status.PROPOSAL);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
+
+        map.put("list", list);
+        map.put("result", (long) list.size());
+
+        return ResponseEntity.ok(map);
     }
 
     @GetMapping("/examine")
-    public ResponseEntity<List<ForbiddenResponseDto>> forbiddenExamineWordSearch(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> forbiddenExamineWordSearch(HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Object> map = new HashMap<>();
+        List<ForbiddenResponseDto> list;
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        return ResponseEntity.ok(forbiddenService.findByStatus(Status.EXAMINE));
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        try {
+            list = forbiddenService.findByStatus(Status.EXAMINE);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
+
+        map.put("list", list);
+        map.put("result", (long) list.size());
+
+        return ResponseEntity.ok(map);
     }
 
     @GetMapping("/approval")
-    public ResponseEntity<List<ForbiddenResponseDto>> forbiddenApprovalWordSearch(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> forbiddenApprovalWordSearch(HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Object> map = new HashMap<>();
+        List<ForbiddenResponseDto> list;
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        return ResponseEntity.ok(forbiddenService.findByStatus(Status.APPROVAL));
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        try {
+            list = forbiddenService.findByStatus(Status.APPROVAL);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
+
+        map.put("list", list);
+        map.put("result", (long) list.size());
+
+        return ResponseEntity.ok(map);
     }
 
     @PostMapping("/apply")
-    public ResponseEntity<Long> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        if (requestDto.getWord().isBlank())
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        if (forbiddenService.existWord(requestDto.getWord()))
-            return ResponseEntity.ok(-1L);
+        if (requestDto.getWord().isBlank()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+        }
 
-        requestDto.setStatus(Status.PROPOSAL);
+        try {
+            if (forbiddenService.existWord(requestDto.getWord())) {
+                map.put("result", -1L);
+                return ResponseEntity.ok(map);
+            }
 
-        return ResponseEntity.ok(forbiddenService.save(requestDto).getId());
+            requestDto.setStatus(Status.PROPOSAL);
+            map.put("result", forbiddenService.save(requestDto).getId());
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @PostMapping("/admin/save")
-    public ResponseEntity<Long> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Long>> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Long> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        if (requestDto.getWord().isBlank())
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null);
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        if (forbiddenService.existWord(requestDto.getWord()))
-            return ResponseEntity.ok(-1L);
+        if (requestDto.getWord().isBlank()) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
+        }
 
-        requestDto.setStatus(Status.APPROVAL);
+        try {
+            if (forbiddenService.existWord(requestDto.getWord())) {
+                map.put("result", -1L);
+                return ResponseEntity.ok(map);
+            }
 
-        return ResponseEntity.ok(forbiddenService.save(requestDto).getId());
+            requestDto.setStatus(Status.APPROVAL);
+            map.put("result", forbiddenService.save(requestDto).getId());
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @PatchMapping("/admin/change/examine")
-    public ResponseEntity<Integer> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Integer>> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Integer> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        int result = forbiddenService.updateStatus(Status.EXAMINE, requestDto.getIdList());
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        return ResponseEntity.ok(result);
+        try {
+            map.put("result", forbiddenService.updateStatus(Status.EXAMINE, requestDto.getIdList()));
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 
     @PatchMapping("/admin/change/approval")
-    public ResponseEntity<Integer> changeToApporval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Integer>> changeToApporval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Integer> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        int result = forbiddenService.updateStatus(Status.APPROVAL, requestDto.getIdList());
+        if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
-        return ResponseEntity.ok(result);
+        try {
+            map.put("result", forbiddenService.updateStatus(Status.APPROVAL, requestDto.getIdList()));
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
     }
 }

@@ -24,8 +24,9 @@ if (email_check) {
                 },
                 credentials: "include",
             })
-            .then((response) => {
-                if (response.status == 200) {
+            .then((response) => response.json())
+            .then((json) => {
+                if (json['result'] > 0) {
                     alert("사용 가능한 이메일입니다");
                     email_certification.style.display = 'inline';
                 }
@@ -108,9 +109,9 @@ if (button) {
             })
             .then((response) => response.json())
             .then((json) => {
-                if (json == -1)
+                if (json['result'] == -1)
                     alert("부적절한 내용 감지되었습니다");
-                else if (json == -2)
+                else if (json['result'] == -2)
                     alert("회원가입에 실패하였습니다\n입력 값들을 확인해주세요")
                 else {
                     alert("회원가입이 완료되었습니다.");

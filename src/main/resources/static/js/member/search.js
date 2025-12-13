@@ -23,32 +23,35 @@ if (name) {
             })
             .then((response) => response.json())
             .then((json) => {
-                json.forEach(data => {
-                    let newArea = document.createElement('li');
-                    newArea.className = 'list-group-item';
+                if (json['result'] > 0) {
+                    json.list.forEach(data => {
+                        let newArea = document.createElement('li');
+                        newArea.className = 'list-group-item';
 
-                    let span = document.createElement('span');
+                        let span = document.createElement('span');
 
-                    let img = document.createElement('img');
-                    img.src = data.profile;
-                    img.className = 'profile';
-                    img.id = 'profile';
+                        let img = document.createElement('img');
+                        img.src = data.profile;
+                        img.className = 'profile';
+                        img.id = 'profile';
 
-                    let memberHref = document.createElement('a');
-                    memberHref.href = "/member/search/detail?email=" + data.email;
-                    memberHref.innerText = data.name;
+                        let memberHref = document.createElement('a');
+                        memberHref.href = "/member/search/detail?email=" + data.email;
+                        memberHref.innerText = data.name;
 
-                    let email = document.createElement('span');
-                    email.innerText = data.email;
+                        let email = document.createElement('span');
+                        email.innerText = data.email;
 
-                    span.append(img);
-                    span.append(memberHref);
-                    span.append(email);
+                        span.append(img);
+                        span.append(memberHref);
+                        span.append(email);
 
-                    newArea.append(span);
+                        newArea.append(span);
 
-                    area.append(newArea);
-                })
+                        area.append(newArea);
+                    })
+                } else
+                    alert("다시 시도하여주십시오")
             })
             .catch((error) => {
                 console.error(error);

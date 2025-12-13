@@ -20,13 +20,19 @@ if (button) {
             })
             .then((response) => response.json())
             .then((json) => {
-                if (json.role != "DENIED") {
-                    alert(json.name + "님 환영합니다!")
-
+                if (json['result'] > 0) {
+                    alert(json.member.name + "님 환영합니다!");
                     location.replace(`/board/main`)
+                } else if (json['result'] == -10) {
+                    console.error('Error during login:', error);
+                    alert('Login error occurred. Please try again later');
                 }
-                else
+                else if (json['result'] == -2)
                     alert("Access Deny");
+                else if (json['result'] == -3)
+                    alert("이메일을 확인해주세요")
+                else
+                    alert("비밀번호를 확인해주세요")
             })
             .catch((error) => {
                 console.error('Error during login:', error);

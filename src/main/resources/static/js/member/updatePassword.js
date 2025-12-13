@@ -18,8 +18,9 @@ if (button) {
                 }),
                 credentials: "include",
             })
-            .then((response) => {
-                if (response.status == 200) {
+            .then((response) => response.json())
+            .then((json) => {
+                if (json['result'] > 0) {
                     alert("비밀번호가 정상적으로 변경되었습니다");
                     location.replace(`/member/login`)
                 }

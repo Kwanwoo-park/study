@@ -47,13 +47,13 @@ public class UserService implements UserServiceRepository {
     }
 
     @Transactional
-    public int updatePwd(Long id, String pwd) {
+    public long updatePwd(Long id, String pwd) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));
 
         member.changePwd(bCryptPasswordEncoder.encode(pwd));
 
-        return member.getId().intValue();
+        return member.getId();
     }
 }

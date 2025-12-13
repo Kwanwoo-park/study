@@ -25,16 +25,19 @@ async function loadMorePosts() {
         });
         const data = await res.json();
 
-        fnDraw(data)
+        if (data['result'] > 0) {
+            fnDraw(data)
 
-        nextCursor = data.nextCursor;
+            nextCursor = data.nextCursor;
 
-        if (!nextCursor){
-            const load = document.createElement('span')
-            load.id = 'loading'
-            load.innerText = '모든 게시물을 불러왔습니다';
-            container.append(load);
-        }
+            if (!nextCursor){
+                const load = document.createElement('span')
+                load.id = 'loading'
+                load.innerText = '모든 게시물을 불러왔습니다';
+                container.append(load);
+            }
+        } else
+            alert("다시 시도하여주십시오");
     } catch (e) {
         console.error('로드 오류', e);
     }

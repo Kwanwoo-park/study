@@ -23,8 +23,10 @@ if (btn) {
             })
             .then((response) => response.json())
             .then((json) => {
-                if (json == -1)
+                if (json['result'] == -1)
                     alert("이미 신청되었거나 존재하는 단어입니다");
+                else if (json['result'] < 0)
+                    alert("다시 시도하여 주십시오");
                 else
                     window.location.reload();
             })
@@ -49,9 +51,12 @@ if (search) {
             })
             .then((response) => response.json())
             .then((json) => {
-                json.forEach(data => {
-                    fnCreate(data)
-                })
+                if (json['result'] > 0) {
+                    json.list.forEach(data => {
+                        fnCreate(data)
+                    })
+                } else
+                    alert("다시 시도하여주십시오")
             })
             .catch((error) => {
                 console.error(error);
@@ -73,9 +78,12 @@ function fnFindProposal() {
     })
     .then((response) => response.json())
     .then((json) => {
-        json.forEach(data => {
-            fnCreate(data)
-        })
+        if (json['result'] > 0) {
+            json.list.forEach(data => {
+                fnCreate(data)
+            })
+        } else
+            alert("다시 시도하여주십시오")
     })
     .catch((error) => {
         console.error(error)
@@ -95,9 +103,12 @@ function fnFindExamine() {
     })
     .then((response) => response.json())
     .then((json) => {
-        json.forEach(data => {
-            fnCreate(data)
-        })
+        if (json['result'] > 0) {
+            json.list.forEach(data => {
+                fnCreate(data)
+            })
+        } else
+            alert("다시 시도하여주십시오")
     })
     .catch((error) => {
         console.error(error)
@@ -117,9 +128,12 @@ function fnFindApproval() {
     })
     .then((response) => response.json())
     .then((json) => {
-        json.forEach(data => {
-            fnCreate(data);
-        })
+        if (json['result'] > 0) {
+            json.list.forEach(data => {
+                fnCreate(data)
+            })
+        } else
+            alert("다시 시도하여주십시오")
     })
     .catch((error) => {
         console.error(error)

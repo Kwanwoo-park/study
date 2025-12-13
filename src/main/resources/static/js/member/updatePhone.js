@@ -22,10 +22,12 @@ if (button) {
             })
             .then((response) => response.json())
             .then((json) => {
-                if (json == -2)
+                if (json['result'] == -2)
                     alert("입력 값들을 확인해주세요")
-                else
+                else if (json['result'] > 0)
                     alert("회원 정보 저장 완료되었습니다")
+                else
+                    alert("다시 시도하여주십시오");
             })
             .catch((error) => {
                 console.error(error)

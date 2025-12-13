@@ -24,7 +24,6 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.reply.service.ReplyService;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,25 +48,30 @@ public class BoardApiController {
                                                          @RequestParam(defaultValue = "10", name = "limit") int limit,
                                                          HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Object> response = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            response.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(response);
+        }
 
         if (session.getAttribute("member") == null) {
             session.invalidate();
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+            response.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(response);
         }
 
         Member member = (Member) session.getAttribute("member");
 
-        List<BoardResponseDto> list = new ArrayList<>();
-        Map<String, Object> response = new HashMap<>();
+        List<BoardResponseDto> list;
         int nextCursor;
 
         try {
             list = boardService.getBoard(cursor, limit, member);
         } catch (Exception e) {
             log.error(e.getMessage());
+            response.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
         if (list.isEmpty())
@@ -78,6 +82,7 @@ public class BoardApiController {
         response.put("boards", list);
         response.put("nextCursor", nextCursor);
         response.put("like", member.checkFavorite(list));
+        response.put("result", (long) list.size());
 
         return ResponseEntity.ok(response);
     }
@@ -161,7 +166,7 @@ public class BoardApiController {
 
         Member member = (Member) session.getAttribute("member");
 
-        if (!boardRequestDto.getContent().isBlank() | !boardRequestDto.getContent().isEmpty()) {
+        if (!boardRequestDto.getContent().isBlank() || !boardRequestDto.getContent().isEmpty()) {
             try {
                 int risk = forbiddenService.findWordList(Status.APPROVAL, boardRequestDto.getContent());
 

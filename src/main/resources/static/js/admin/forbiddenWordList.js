@@ -21,8 +21,10 @@ if (btn) {
             })
             .then((response) => response.json())
             .then((json) => {
-                if (json == -1)
+                if (json['result'] == -1)
                     alert("이미 신청되었거나 존재하는 단어입니다");
+                else if (json['result'] < 0)
+                    alert("다시 시도하여 주십시오");
                 else
                     window.location.reload();
             })
