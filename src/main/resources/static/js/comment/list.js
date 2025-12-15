@@ -172,42 +172,45 @@ function fnReplyGet(commentId) {
 
             commentArea.append(area)
 
-            json.forEach(data => {
-                let newArea = document.createElement('span');
-                let div = document.createElement('div');
-                let replyDiv = document.createElement('div');
-                let profile = document.createElement('img');
-                let memberHref = document.createElement('a');
-                let commentHref = document.createElement('a');
-                let name = document.createElement('span');
-                let reply = document.createElement('pre');
+            if (json['result'] > 0) {
+                json.list.forEach(data => {
+                    let newArea = document.createElement('span');
+                    let div = document.createElement('div');
+                    let replyDiv = document.createElement('div');
+                    let profile = document.createElement('img');
+                    let memberHref = document.createElement('a');
+                    let commentHref = document.createElement('a');
+                    let name = document.createElement('span');
+                    let reply = document.createElement('pre');
 
-                profile.src = data['member'].profile;
-                profile.className = 'profile';
+                    profile.src = data['member'].profile;
+                    profile.className = 'profile';
 
-                memberHref.href= "/member/search/detail?email=" + data['member'].email;
-                name.innerText = data['member'].name;
+                    memberHref.href= "/member/search/detail?email=" + data['member'].email;
+                    name.innerText = data['member'].name;
 
-                memberHref.append(name);
+                    memberHref.append(name);
 
-                commentHref.href = "/member/search/detail?email=" + data['commentMember'].email;
-                commentHref.innerText = "@"+data['commentMember'].name;
+                    commentHref.href = "/member/search/detail?email=" + data['commentMember'].email;
+                    commentHref.innerText = "@"+data['commentMember'].name;
 
-                reply.innerText = data['reply'];
+                    reply.innerText = data['reply'];
 
-                replyDiv.append(commentHref)
-                replyDiv.append(reply)
+                    replyDiv.append(commentHref)
+                    replyDiv.append(reply)
 
-                replyDiv.className = 'replyDiv';
+                    replyDiv.className = 'replyDiv';
 
-                newArea.append(profile);
-                newArea.append(memberHref);
-                newArea.append(replyDiv);
+                    newArea.append(profile);
+                    newArea.append(memberHref);
+                    newArea.append(replyDiv);
 
-                newArea.className = 'newArea';
+                    newArea.className = 'newArea';
 
-                area.append(newArea);
-            })
+                    area.append(newArea);
+                })
+            } else
+                alert("다시 시도하여주십시오");
         })
         .catch((error) => {
             console.error(error);

@@ -15,7 +15,10 @@ async function loadNotification() {
         });
         const data = await res.json();
 
-        fnDraw(data);
+        if (data.result > 0)
+            fnDraw(data);
+        else
+            alert('잠시 후에 다시 시도하여 주십시오');
     } catch (e) {
         console.error('로드 오류', e);
     }
@@ -35,7 +38,10 @@ async function fnClick(group) {
         });
         const data = await res.json();
 
-        fnDraw(data);
+        if (data.result > 0)
+            fnDraw(data);
+        else
+            alert('잠시 후에 다시 시도하여 주십시오');
     } catch (e) {
         console.error('로드 오류', e);
     }
@@ -92,12 +98,15 @@ function fnRead(id) {
         },
         credentials: "include",
     })
-    .then((response) => {
-        if (response.status == 200) {
+    .then((response) => response.json())
+    .then((json) => {
+        if (json['result'] > 0) {
             alert('알림이 읽음으로 표시되었습니다');
             button.innerText = '읽음';
             button.disabled = true;
         }
+        else if (json['result'] == -1)
+            alert('존재하지 않는 알림입니다');
         else {
             alert('알림 상태를 변경하는 중 오류가 발생했습니다');
         }
@@ -116,9 +125,9 @@ function fnAllRead() {
         },
         credentials: "include",
     })
-    .then((response) => {
-        console.log(response);
-        if (response.status == 200) {
+    .then((response) => response.json())
+    .then((json) => {
+        if (json['result'] > 0) {
             alert('알림이 모두 읽음으로 표시되었습니다');
             window.location.reload();
         } else {
