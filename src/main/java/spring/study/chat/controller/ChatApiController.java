@@ -187,12 +187,12 @@ public class ChatApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        try {
-            if (imageS3Service.fileFormatCheck(file)) {
-                map.put("result", -1);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-            }
+        if (imageS3Service.fileFormatCheck(file)) {
+            map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
 
+        try {
             String imageUrl = imageS3Service.uploadImageToS3(file);
 
             map.put("name", imageUrl);

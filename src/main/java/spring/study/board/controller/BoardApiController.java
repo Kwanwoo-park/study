@@ -82,7 +82,7 @@ public class BoardApiController {
         response.put("boards", list);
         response.put("nextCursor", nextCursor);
         response.put("like", member.checkFavorite(list));
-        response.put("result", (long) list.size());
+        response.put("result", 10L);
 
         return ResponseEntity.ok(response);
     }

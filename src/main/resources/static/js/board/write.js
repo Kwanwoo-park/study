@@ -1,5 +1,5 @@
 let imgDiv = document.querySelector('.imgDiv');
-let file, fidx = 0;
+let file, fidx;
 let id;
 let img;
 let left, right, size;
@@ -78,6 +78,9 @@ function fnImgSave() {
 }
 
 function fnLeft() {
+    if (fidx - 1 < 0)
+        return;
+
     img.src = URL.createObjectURL(file[--fidx]);
 
     if (right.style.display === 'none')
@@ -88,6 +91,9 @@ function fnLeft() {
 }
 
 function fnRight() {
+    if (fidx + 1 >= size)
+            return;
+
     img.src = URL.createObjectURL(file[++fidx]);
 
     if (left.style.display === 'none')
@@ -105,7 +111,11 @@ function fnPrevious() {
     submit.style.display = 'none';
     content.style.display = 'none';
 
+    left.style.display = 'none';
+    right.style.display = 'none';
+
     file = null;
+    fidx = 0;
     size = 0;
 
     img.remove();
@@ -126,7 +136,8 @@ function fnLoad(input) {
     submit.style.display = 'inline';
     content.style.display = 'inline';
 
-    file = input.files;
+    file = Array.from(input.files);
+    fidx = 0;
     size = input.files.length;
 
     img = document.createElement('img');
@@ -146,7 +157,7 @@ function fnLoad(input) {
         right = document.createElement('button');
         right.type = "button";
         right.className = "arrow";
-        right.id = 'left';
+        right.id = 'right';
         right.onclick = function () {
             fnRight();
         };

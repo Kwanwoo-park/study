@@ -52,7 +52,7 @@ public class FavoriteApiController {
             Member otherMember = board.getMember();
 
             if (favoriteService.existFavorite(member, board)) {
-                map.put("result", -10L);
+                map.put("result", -1L);
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
             }
 

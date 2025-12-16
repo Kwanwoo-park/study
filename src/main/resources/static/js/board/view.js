@@ -96,7 +96,8 @@ function fnOnlyLike(listId) {
         if (json['result'] > 0) {
             like_cnt.innerText = parseInt(like_cnt.innerText) + 1
              like.src = "/img/" + "ic_favorite.png"
-        } else
+        }
+        else if (json['result'] == -10)
             alert("다시 시도하여주십시오");
     })
     .catch((error) => {
