@@ -83,11 +83,11 @@ function fnLeft() {
 
     img.src = URL.createObjectURL(file[--fidx]);
 
-    if (right.style.display === 'none')
-        right.style.display = 'flex';
+    if (right.style.visibility === 'hidden')
+        right.style.visibility = 'visible';
 
     if (fidx == 0)
-        left.style.display = 'none';
+        left.style.visibility = 'hidden';
 }
 
 function fnRight() {
@@ -96,11 +96,11 @@ function fnRight() {
 
     img.src = URL.createObjectURL(file[++fidx]);
 
-    if (left.style.display === 'none')
-        left.style.display = 'flex';
+    if (left.style.visibility === 'hidden')
+        left.style.visibility = 'visible';
 
     if (fidx == size - 1)
-        right.style.display = 'none';
+        right.style.visibility = 'hidden';
 }
 
 function fnPrevious() {
@@ -148,7 +148,7 @@ function fnLoad(input) {
         left.type = "button";
         left.className = "arrow";
         left.id = 'left';
-        left.style.display = 'none';
+        left.style.visibility = 'hidden';
         left.onclick = function () {
             fnLeft();
         };

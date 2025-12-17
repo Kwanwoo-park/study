@@ -70,14 +70,14 @@ function fnDraw(data) {
 
         if (board.img.length != 1) {
             const button = document.createElement('button')
-            button.class = 'btn';
+            button.className = 'btn';
             button.type = 'button'
             button.id = 'left' + board.id;
             button.style.visibility = 'hidden';
             button.onclick = function() {
                 fnLeft(board.id, board.img);
             }
-
+            button.innerText = '←'
             main_image_div.append(button)
         }
 
@@ -95,14 +95,22 @@ function fnDraw(data) {
 
         main_image_div.append(main_img);
 
+        const img_idx = document.createElement('input')
+        img_idx.type = 'hidden'
+        img_idx.id = 'img' + board.id;
+        img_idx.value = 0;
+
+        main_image_div.append(img_idx)
+
         if (board.img.length > 1) {
             const button = document.createElement('button')
-            button.class = 'btn';
+            button.className = 'btn';
             button.type = 'button'
             button.id = 'right' + board.id;
             button.onclick = function() {
                 fnRight(board.id, board.img);
             }
+            button.innerText = '→'
             main_image_div.append(button);
         }
 
@@ -222,6 +230,9 @@ function fnLeft(listId, ImageArr) {
     const left_arrow = document.getElementById('left' + listId);
     const right_arrow = document.getElementById('right' + listId);
 
+    if (parseInt(img_id.value) -1 < 0)
+        return;
+
     main_image.src = ImageArr[parseInt(img_id.value) - 1].imgSrc;
     img_id.value = parseInt(img_id.value) - 1;
 
@@ -237,6 +248,9 @@ function fnRight(listId, ImageArr) {
     const img_id = document.getElementById('img' + listId);
     const left_arrow = document.getElementById('left' + listId);
     const right_arrow = document.getElementById('right' + listId);
+
+    if (parseInt(img_id.value) + 1 >= ImageArr.length)
+        return;
 
     main_image.src = ImageArr[parseInt(img_id.value)+ 1].imgSrc;
     img_id.value = parseInt(img_id.value)+ 1;
