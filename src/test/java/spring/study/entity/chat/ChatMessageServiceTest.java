@@ -3,12 +3,16 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.member.Member;
-//import spring.study.service.chat.ChatMessageService;
-//import spring.study.service.chat.ChatRoomService;
-//import spring.study.service.member.MemberService;
+//import spring.study.chat.entity.ChatMessage;
+//import spring.study.chat.entity.ChatRoom;
+//import spring.study.chat.entity.MessageType;
+//import spring.study.chat.service.ChatMessageService;
+//import spring.study.chat.service.ChatRoomService;
+//import spring.study.member.entity.Member;
+//import spring.study.member.service.MemberService;
 //
 //import java.util.List;
+//import java.util.UUID;
 //
 //import static org.assertj.core.api.Assertions.assertThat;
 //
@@ -28,6 +32,7 @@
 //        ChatRoom room = chatRoomService.find("row08wr08w0");
 //
 //        ChatMessage message = ChatMessage.builder()
+//                .id(UUID.randomUUID().toString())
 //                .message("testMessage")
 //                .type(MessageType.TALK)
 //                .room(room)
@@ -41,6 +46,7 @@
 //        ChatMessage save = chatMessageService.save(message);
 //
 //        // then
+//        assertThat(save.getId()).isEqualTo(message.getId());
 //        assertThat(save.getMessage()).isEqualTo(message.getMessage());
 //        assertThat(save.getType()).isEqualTo(message.getType());
 //        assertThat(save.getRoom().getRoomId()).isEqualTo(room.getRoomId());

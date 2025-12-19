@@ -25,10 +25,7 @@ import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @Slf4j
@@ -205,21 +202,18 @@ public class ChatApiController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
         }
 
-        List<ChatMessageImg> list = new ArrayList<>();
+        List<String> list = new ArrayList<>();
+        String messageId = UUID.randomUUID().toString();
 
         try {
-            ChatMessage message = messageService.findById(id);
-
             for (MultipartFile multipartFile : file) {
-                String imageUrl = imageS3Service.uploadImageToS3(multipartFile);
-
-                list.add(messageImgService.save(ChatMessageImg.builder()
-                        .imgSrc(imageUrl)
-                        .message(message)
-                        .build()));
+                messageImgService.save(ChatMessageImg.builder()
+                        .imgSrc(imageS3Service.uploadImageToS3(multipartFile))
+                        .message(messageId)
+                        .build());
             }
 
-            map.put("list", list);
+            map.put("messageId", messageId);
             map.put("result", 1);
 
             return ResponseEntity.ok(map);

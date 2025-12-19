@@ -21,20 +21,14 @@ public class ChatMessageImg implements Serializable {
     @NotNull
     private String imgSrc;
 
-    @JsonIgnore
-    @JoinColumn(name = "message_id")
-    @ManyToOne
-    private ChatMessage message;
+    @NotNull
+    @Column(unique = true)
+    private String message;
 
     @Builder
-    public ChatMessageImg(Long id, String imgSrc, ChatMessage message) {
+    public ChatMessageImg(Long id, String imgSrc, String message) {
         this.id = id;
         this.imgSrc = imgSrc;
         this.message = message;
-    }
-
-    public void addMessage(ChatMessage message) {
-        this.message = message;
-        message.getImg().add(this);
     }
 }

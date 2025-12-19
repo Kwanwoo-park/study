@@ -7,13 +7,15 @@ import spring.study.chat.entity.MessageType;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessageRequestDto {
+    private String id;
     private String message;
     private MessageType type;
     private String email;
     private String roomId;
 
     @Builder
-    public ChatMessageRequestDto(String message, MessageType type, String roomId, String email) {
+    public ChatMessageRequestDto(String id, String message, MessageType type, String roomId, String email) {
+        this.id = id;
         this.message = message;
         this.type = type;
         this.email = email;

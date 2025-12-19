@@ -23,9 +23,9 @@ public class ChatMessage extends BasetimeEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 10L;
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     @Column(name = "message_id")
-    private Long id;
+    private String id;
 
     @NotNull
     private String message;
@@ -46,7 +46,7 @@ public class ChatMessage extends BasetimeEntity implements Serializable {
     private List<ChatMessageImg> img = new ArrayList<>();
 
     @Builder
-    public ChatMessage(Long id, String message, MessageType type, Member member, ChatRoom room) {
+    public ChatMessage(String id, String message, MessageType type, Member member, ChatRoom room) {
         this.id = id;
         this.message = message;
         this.type = type;
@@ -66,5 +66,16 @@ public class ChatMessage extends BasetimeEntity implements Serializable {
 
     public void addImg(ChatMessageImg img) {
         img.addMessage(this);
+    }
+
+    @Override
+    public String toString() {
+        return "ChatMessage{" +
+                "id=" + id +
+                ", message='" + message + '\'' +
+                ", type=" + type +
+                ", member=" + member.getId() +
+                ", room=" + room.getRoomId() +
+                '}';
     }
 }

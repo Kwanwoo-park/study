@@ -10,7 +10,7 @@ import spring.study.member.entity.Member;
 import java.util.List;
 
 @Repository
-public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
+public interface ChatMessageRepository extends JpaRepository<ChatMessage, String> {
     List<ChatMessage> findByRoom(ChatRoom room);
 
     @Transactional

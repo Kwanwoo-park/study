@@ -22,6 +22,7 @@ import spring.study.notification.service.NotificationService;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -41,6 +42,7 @@ public class ChatWebSocketApiController {
         Member member = memberService.findMember(message.getEmail());
 
         ChatMessage chatMessage = ChatMessage.builder()
+                .id(message.getId() != null ? message.getId() : UUID.randomUUID().toString())
                 .message(message.getMessage())
                 .type(message.getType())
                 .member(member)
@@ -75,6 +77,8 @@ public class ChatWebSocketApiController {
             } else {
                 notificationService.createNotification(roomMemberService.findMember(room, member), member, Group.CHAT);
             }
+
+            System.out.println(chatMessage);
 
             producer.sendMessage(chatMessage);
 

@@ -65,8 +65,6 @@ public class ChatRoomMemberService {
         return chatRoomMemberRepository.findByRoom(room);
     }
 
-
-
     public void delete(Member member, ChatRoom room) {
         chatRoomMemberRepository.deleteByMemberAndRoom(member, room);
     }

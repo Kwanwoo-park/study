@@ -17,8 +17,8 @@ window.onload = function() {
     container.scrollTop = container.scrollHeight;
 }
 
-//let socket = new SockJS("http://localhost:8080/ws/chat")
-let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+let socket = new SockJS("http://localhost:8080/ws/chat")
+//let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
 const client = Stomp.over(socket)
 
@@ -39,57 +39,58 @@ function onMessageReceived(e) {
     console.clear();
 
     const json = JSON.parse(e.body);
+    console.log(json)
 
-    let msgArea = document.querySelector('.list-group-flush');
-
-    let newMsgLi = document.createElement('li');
-    let newMsgArea = document.createElement('span');
-    let name = document.createElement('span');
-    let newMsg = document.createElement('pre');
-    let profile = document.createElement('img');
-    let imgTalk = document.createElement('img');
-
-    newMsgLi.className = "list-group-item";
-
-    profile.src = json.member.profile;
-    profile.className = "profile";
-
-    name.innerText = json.member.name;
-    name.className = 'chatname';
-
-    if (json.member.email == email) {
-        profile.align = 'right';
-        imgTalk.align = 'right';
-
-        newMsgArea.className = 'right';
-
-        newMsgArea.append(name);
-        newMsgArea.append(profile);
-    }
-    else {
-        profile.align = 'left';
-        imgTalk.align = 'left';
-
-        newMsgArea.className = 'left';
-
-        newMsgArea.append(profile);
-        newMsgArea.append(name);
-    }
-
-    if (json.type == "IMAGE") {
-        imgTalk.src = json.message;
-        imgTalk.className = "chatimg";
-
-        newMsgArea.append(imgTalk);
-    }
-    else {
-        newMsg.innerText = json.message;
-        newMsgArea.append(newMsg);
-    }
-
-    newMsgLi.append(newMsgArea);
-
-    msgArea.append(newMsgLi);
+//    let msgArea = document.querySelector('.list-group-flush');
+//
+//    let newMsgLi = document.createElement('li');
+//    let newMsgArea = document.createElement('span');
+//    let name = document.createElement('span');
+//    let newMsg = document.createElement('pre');
+//    let profile = document.createElement('img');
+//    let imgTalk = document.createElement('img');
+//
+//    newMsgLi.className = "list-group-item";
+//
+//    profile.src = json.member.profile;
+//    profile.className = "profile";
+//
+//    name.innerText = json.member.name;
+//    name.className = 'chatname';
+//
+//    if (json.member.email == email) {
+//        profile.align = 'right';
+//        imgTalk.align = 'right';
+//
+//        newMsgArea.className = 'right';
+//
+//        newMsgArea.append(name);
+//        newMsgArea.append(profile);
+//    }
+//    else {
+//        profile.align = 'left';
+//        imgTalk.align = 'left';
+//
+//        newMsgArea.className = 'left';
+//
+//        newMsgArea.append(profile);
+//        newMsgArea.append(name);
+//    }
+//
+//    if (json.type == "IMAGE") {
+//        imgTalk.src = json.message;
+//        imgTalk.className = "chatimg";
+//
+//        newMsgArea.append(imgTalk);
+//    }
+//    else {
+//        newMsg.innerText = json.message;
+//        newMsgArea.append(newMsg);
+//    }
+//
+//    newMsgLi.append(newMsgArea);
+//
+//    msgArea.append(newMsgLi);
 
     container.scrollTop = container.scrollHeight;
 }
@@ -147,6 +148,7 @@ function quit() {
 
 function msgSend(msg) {
     client.send("/api/chat/message/send", {}, JSON.stringify(msg));
+
     console.clear()
 }
 
@@ -177,14 +179,6 @@ function msgCheck(msg) {
 }
 
 function fnLoad(input) {
-    let talkMsg = {
-        type : "IMAGE",
-        roomId : roomId,
-        email : email
-    };
-
-    msgSend(talkMsg)
-
     let file = input.files[0];
     let imgName;
     let status;
@@ -200,7 +194,14 @@ function fnLoad(input) {
     .then((response) => response.json())
     .then((json) => {
         if (json['result'] > 0) {
+            let talkMsg = {
+                id: json['messageId'],
+                type : "IMAGE",
+                roomId : roomId,
+                email : email
+            };
 
+            msgSend(talkMsg)
         }
         else
             alert("이미지 전송 실패");
