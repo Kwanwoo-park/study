@@ -8,7 +8,6 @@ import spring.study.chat.entity.MessageType;
 
 @Getter
 public class ChatMessageResponseDto {
-    private Long id;
     private String message;
     private MessageType type;
     private Member member;
@@ -24,7 +23,6 @@ public class ChatMessageResponseDto {
     @Override
     public String toString() {
         return "ChatMessageResponseDto{" +
-                "id=" + id +
                 ", message='" + message + '\'' +
                 ", type=" + type +
                 ", member=" + member +

@@ -7,7 +7,6 @@ import spring.study.chat.entity.MessageType;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessageRequestDto {
-    private Long id;
     private String message;
     private MessageType type;
     private String email;

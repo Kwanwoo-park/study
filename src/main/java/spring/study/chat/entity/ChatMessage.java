@@ -1,5 +1,6 @@
 package spring.study.chat.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -11,6 +12,8 @@ import spring.study.member.entity.Member;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -38,6 +41,10 @@ public class ChatMessage extends BasetimeEntity implements Serializable {
     @ManyToOne
     private ChatRoom room;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "message", fetch = FetchType.EAGER)
+    private List<ChatMessageImg> img = new ArrayList<>();
+
     @Builder
     public ChatMessage(Long id, String message, MessageType type, Member member, ChatRoom room) {
         this.id = id;
@@ -55,5 +62,9 @@ public class ChatMessage extends BasetimeEntity implements Serializable {
     public void addRoom(ChatRoom room) {
         this.room = room;
         room.getMessages().add(this);
+    }
+
+    public void addImg(ChatMessageImg img) {
+        img.addMessage(this);
     }
 }

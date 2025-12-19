@@ -45,6 +45,11 @@ public class BoardImgApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (file.size() > 10) {
+            map.put("result", -2);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+        }
+
         if (imageS3Service.findFormatCheck(file)) {
             map.put("result", -1);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);

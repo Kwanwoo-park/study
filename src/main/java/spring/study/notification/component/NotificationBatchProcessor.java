@@ -42,8 +42,9 @@ public class NotificationBatchProcessor {
         sseEmitters.forEach((key, emitter) -> {
             try {
                 emitter.send(SseEmitter.event().reconnectTime(3000).id(key).name("notification").data(data));
-            } catch (IOException e) {
+            } catch (Exception e) {
                 emitterRepository.deleteById(key);
+                emitter.complete();
             }
         });
     }

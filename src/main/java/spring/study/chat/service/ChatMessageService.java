@@ -20,32 +20,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
-    private final MessageProducer producer;
-
-    private final ObjectMapper objectMapper;
-    private final RedisTemplate<String, Object> objectRedisTemplate;
-
-    public void save(ChatMessage message) {
-        if (message.getType().equals(MessageType.ENTER))
-            message.setMessage(message.getMember().getName() + "님이 입장했습니다.");
-        else if (message.getType().equals(MessageType.QUIT))
-            message.setMessage(message.getMember().getName() + "님이 퇴장했습니다.");
-
-        producer.sendMessage(message);
-
-        try {
-            String key = "chat:message:roomId:"+message.getRoom().getRoomId();
-            String json = objectMapper.writeValueAsString(message);
-
-            objectRedisTemplate.opsForList().rightPush(key, json);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Transactional
     public List<ChatMessage> saveAll(List<ChatMessage> list) {
         return chatMessageRepository.saveAll(list);
+    }
+
+    public ChatMessage findById(Long id) {
+        return chatMessageRepository.findById(id).orElseThrow();
     }
 
     public List<ChatMessage> find(ChatRoom room) {

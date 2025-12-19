@@ -177,9 +177,17 @@ function msgCheck(msg) {
 }
 
 function fnLoad(input) {
-    var file = input.files[0];
-    var imgName;
-    var status;
+    let talkMsg = {
+        type : "IMAGE",
+        roomId : roomId,
+        email : email
+    };
+
+    msgSend(talkMsg)
+
+    let file = input.files[0];
+    let imgName;
+    let status;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -191,22 +199,11 @@ function fnLoad(input) {
     })
     .then((response) => response.json())
     .then((json) => {
-        result = json['result']
+        if (json['result'] > 0) {
 
-        if (result < 0)
-            alert("이미지 전송 실패");
-        else {
-            imgName = json['name'];
-
-            var talkMsg = {
-                type : "IMAGE",
-                roomId : roomId,
-                email : email,
-                message : imgName
-            };
-
-            msgSend(talkMsg)
         }
+        else
+            alert("이미지 전송 실패");
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

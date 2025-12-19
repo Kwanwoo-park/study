@@ -14,6 +14,8 @@ const previous = document.getElementById('previous');
 const submit = document.getElementById('submit');
 const content = document.getElementById('content')
 
+const maxSize = 10;
+
 btn.addEventListener('click', () => upload.click());
 
 function fnSave() {
@@ -69,7 +71,9 @@ function fnImgSave() {
             alert("게시글 사진 등록 완료");
 
             location.replace(`/board/main`);
-        } else
+        } else if (json['result'] == -2)
+            alert("게시글 사진 갯수 초과")
+        else
             alert("게시글 사진 등록 실패");
     })
     .catch((error) => {
@@ -142,6 +146,11 @@ function fnLoad(input) {
 
     img = document.createElement('img');
     img.src = URL.createObjectURL(file[fidx]);
+
+    if (size > maxSize) {
+        alert('최대 ' + maxSize + "장의 사진만 업로드가 가능합니다")
+        size = maxSize;
+    }
 
     if (size > 1) {
         left = document.createElement('button');

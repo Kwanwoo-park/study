@@ -8,6 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.chat.entity.ChatMessage;
+import spring.study.chat.entity.ChatMessageImg;
+import spring.study.chat.service.ChatMessageImgService;
+import spring.study.chat.service.ChatMessageService;
 import spring.study.forbidden.entity.Status;
 import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.dto.MemberRequestDto;
@@ -21,7 +25,9 @@ import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,6 +37,8 @@ import java.util.Map;
 public class ChatApiController {
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
+    private final ChatMessageService messageService;
+    private final ChatMessageImgService messageImgService;
     private final MemberService memberService;
     private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
@@ -170,7 +178,7 @@ public class ChatApiController {
     }
 
     @PostMapping("/sendImage")
-    public ResponseEntity<Map<String, Object>> sendImage(@RequestPart MultipartFile file, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> sendImage(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) {
         HttpSession session = request.getSession();
         Map<String, Object> map = new HashMap<>();
 
@@ -187,15 +195,31 @@ public class ChatApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (imageS3Service.fileFormatCheck(file)) {
+        if (file.size() > 10) {
+            map.put("result", -2);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+        }
+
+        if (imageS3Service.findFormatCheck(file)) {
             map.put("result", -1);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
         }
 
-        try {
-            String imageUrl = imageS3Service.uploadImageToS3(file);
+        List<ChatMessageImg> list = new ArrayList<>();
 
-            map.put("name", imageUrl);
+        try {
+            ChatMessage message = messageService.findById(id);
+
+            for (MultipartFile multipartFile : file) {
+                String imageUrl = imageS3Service.uploadImageToS3(multipartFile);
+
+                list.add(messageImgService.save(ChatMessageImg.builder()
+                        .imgSrc(imageUrl)
+                        .message(message)
+                        .build()));
+            }
+
+            map.put("list", list);
             map.put("result", 1);
 
             return ResponseEntity.ok(map);

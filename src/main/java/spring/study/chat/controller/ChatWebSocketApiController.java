@@ -14,6 +14,7 @@ import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
+import spring.study.kafka.service.MessageProducer;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
@@ -31,6 +32,7 @@ public class ChatWebSocketApiController {
     private final ChatRoomMemberService roomMemberService;
     private final MemberService memberService;
     private final NotificationService notificationService;
+    private final MessageProducer producer;
 
     @MessageMapping("/chat/message/send")
     public ResponseEntity<Map<String, Integer>> sendMessage(@RequestBody ChatMessageRequestDto message) {
@@ -47,9 +49,10 @@ public class ChatWebSocketApiController {
 
         try {
             if (chatMessage.getType().equals(MessageType.ENTER)) {
-                    if (!roomMemberService.exist(member, room)) {
+                if (!roomMemberService.exist(member, room)) {
                     roomMemberService.save(member, room);
                     roomService.addCount(room.getId());
+                    chatMessage.setMessage(chatMessage.getMember().getName() + "님이 입장했습니다.");
                 }
                 else {
                     map.put("result", -1);
@@ -60,6 +63,7 @@ public class ChatWebSocketApiController {
 
                 if (room.getCount() -1 > 0) {
                     roomService.subCount(room.getId());
+                    chatMessage.setMessage(chatMessage.getMember().getName() + "님이 퇴장했습니다.");
                 } else {
                     messageService.deleteByRoom(room);
                     roomService.delete(room.getRoomId());
@@ -72,7 +76,7 @@ public class ChatWebSocketApiController {
                 notificationService.createNotification(roomMemberService.findMember(room, member), member, Group.CHAT);
             }
 
-            messageService.save(chatMessage);
+            producer.sendMessage(chatMessage);
 
             map.put("result", 1);
 
