@@ -14,6 +14,7 @@ if (btn)
     btn.addEventListener('click', () => upload.click());
 
 window.onload = function() {
+    loadMoreChat();
     container.scrollTop = container.scrollHeight;
 }
 
@@ -39,60 +40,30 @@ function onMessageReceived(e) {
     console.clear();
 
     const json = JSON.parse(e.body);
-    console.log(json)
 
-//    let msgArea = document.querySelector('.list-group-flush');
-//
-//    let newMsgLi = document.createElement('li');
-//    let newMsgArea = document.createElement('span');
-//    let name = document.createElement('span');
-//    let newMsg = document.createElement('pre');
-//    let profile = document.createElement('img');
-//    let imgTalk = document.createElement('img');
-//
-//    newMsgLi.className = "list-group-item";
-//
-//    profile.src = json.member.profile;
-//    profile.className = "profile";
-//
-//    name.innerText = json.member.name;
-//    name.className = 'chatname';
-//
-//    if (json.member.email == email) {
-//        profile.align = 'right';
-//        imgTalk.align = 'right';
-//
-//        newMsgArea.className = 'right';
-//
-//        newMsgArea.append(name);
-//        newMsgArea.append(profile);
-//    }
-//    else {
-//        profile.align = 'left';
-//        imgTalk.align = 'left';
-//
-//        newMsgArea.className = 'left';
-//
-//        newMsgArea.append(profile);
-//        newMsgArea.append(name);
-//    }
-//
-//    if (json.type == "IMAGE") {
-//        imgTalk.src = json.message;
-//        imgTalk.className = "chatimg";
-//
-//        newMsgArea.append(imgTalk);
-//    }
-//    else {
-//        newMsg.innerText = json.message;
-//        newMsgArea.append(newMsg);
-//    }
-//
-//    newMsgLi.append(newMsgArea);
-//
-//    msgArea.append(newMsgLi);
+    fnDraw(json)
 
     container.scrollTop = container.scrollHeight;
+}
+
+async function loadMoreChat() {
+    try {
+        const res = await fetch(`/api/chat/load?roomId` + roomId, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            credentials: "include",
+        });
+        const data = await res.json();
+
+        if (data['result'] > 0)
+            fnDraw(data)
+        else
+            alert('다시 시도하여주십시오')
+    } catch (e) {
+        console.error('로드 오류', e);
+    }
 }
 
 function enterRoom() {
@@ -178,6 +149,130 @@ function msgCheck(msg) {
     return 0;
 }
 
+function fnDraw(data) {
+    let msgArea = document.querySelector('.list-group-flush');
+
+    let newMsgLi = document.createElement('li');
+    let newMsgArea = document.createElement('span');
+    let name = document.createElement('span');
+    let newMsg = document.createElement('pre');
+    let profile = document.createElement('img');
+    let imgTalk = document.createElement('img');
+
+    newMsgLi.className = "list-group-item";
+
+    profile.src = data.member.profile;
+    profile.className = "profile";
+
+    name.innerText = data.member.name;
+    name.className = 'chatname';
+
+    if (data.member.email == email) {
+        profile.align = 'right';
+        imgTalk.align = 'right';
+
+        newMsgArea.className = 'right';
+
+        newMsgArea.append(name);
+        newMsgArea.append(profile);
+    } else {
+        profile.align = 'left';
+        imgTalk.align = 'left';
+
+        newMsgArea.className = 'left';
+
+        newMsgArea.append(profile);
+        newMsgArea.append(name);
+    }
+
+    if (data.type == "IMAGE") {
+        const img_idx = document.createElement('input')
+        img_idx.type = 'hidden'
+        img_idx.id = 'idx' + data.id;
+        img_idx.value = 0;
+
+        newMsgArea.append(img_idx)
+
+        if (img[data.id].length != 1) {
+            const button = document.createElement('button')
+            button.className = 'btn'
+            button.type = 'button'
+            button.id = 'left' + data.id;
+            button.style.visibility = 'hidden'
+            button.onclick = function() {
+                fnLeft(data.id, img[data.id])
+            }
+
+            button.innerText = '←'
+            newMsgArea.append(button);
+        }
+
+        imgTalk.src = data.message;
+        imgTalk.id = 'img' + data.id;
+        imgTalk.className = "chatimg";
+
+        newMsgArea.append(imgTalk);
+
+        if (img[data.id] > 1) {
+            const button = document.createElement('button')
+            button.className = 'btn'
+            button.type = 'button'
+            button.id = 'right' + data.id
+            button.onclick = function() {
+                fnRight(data.id, img[data.id])
+            }
+
+            button.innerText = '→'
+            newMsgArea.append(button)
+        }
+    } else {
+        newMsg.innerText = data.message;
+        newMsgArea.append(newMsg);
+    }
+
+    newMsgLi.append(newMsgArea);
+
+    msgArea.append(newMsgLi);
+}
+
+function fnLeft(id, arr) {
+    const image = document.getElementById('img' + id);
+    const idx = document.getElementById('idx' + id);
+    const left_arrow = document.getElementById('left' + id);
+    const right_arrow = document.getElementById('right' + id);
+
+    if (parseInt(idx.value) -1 < 0)
+        return;
+
+    image.src = arr[parseInt(idx.value) -1].imgSrc;
+    img_id.value = parseInt(idx.value) + 1;
+
+    if (right_arrow.style.visibility == 'hidden')
+        right_arrow.style.visibility = 'visible';
+
+    if (parseInt(idx.value) == 0)
+        left_arrow.style.visibility = 'hidden';
+}
+
+function fnRight(id, arr) {
+    const image = document.getElementById('img' + id);
+    const idx = document.getElementById('idx' + id);
+    const left_arrow = document.getElementById('left' + id);
+    const right_arrow = document.getElementById('right' + id);
+
+    if (parseInt(idx.value) + 1 >= arr.length)
+        return;
+
+    image.src = arr[parseInt(idx.value) +1].imgSrc;
+    img_id.value = parseInt(idx.value) + 1;
+
+    if (left_arrow.style.visibility === 'hidden')
+        left_arrow.style.visibility = 'visible'
+
+    if (parseInt(idx.value) == arr.length-1)
+        right_arrow.style.visibility = 'hidden'
+}
+
 function fnLoad(input) {
     let file = input.files[0];
     let imgName;
@@ -198,7 +293,8 @@ function fnLoad(input) {
                 id: json['messageId'],
                 type : "IMAGE",
                 roomId : roomId,
-                email : email
+                email : email,
+                message: json['list'][0]
             };
 
             msgSend(talkMsg)

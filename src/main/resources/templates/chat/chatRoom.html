@@ -43,6 +43,14 @@
         display: inline-block;
         width: 95%;
     }
+    .btn {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        font-color: black;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
 </style>
 <body>
     <input type="hidden" id="room" th:value="${room.roomId}">
@@ -51,22 +59,7 @@
     <div class="container">
         <form method="dialog" enctype="multipart/form-data">
         <div class="msgArea">
-            <ul class="list-group-flush">
-                <li class="list-group-item" th:each="list, index : ${message}">
-                    <span th:if="${#strings.equals(list.member.email, member.email)}" class="right">
-                        <span th:text="${list.member.name}" class="chatname"></span>
-                        <img th:src="${list.member.profile}" class="profile" align="right">
-                        <pre th:unless="${#strings.equals(list.type, 'IMAGE')}" th:text="${list.message}"></pre>
-                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="${list.message}" class="chatimg" align="right">
-                    </span>
-                    <span th:unless="${#strings.equals(list.member.email, member.email)}" class="left">
-                        <img th:src="${list.member.profile}" class="profile" align="left">
-                        <span th:text="${list.member.name}" class="chatname"></span>
-                        <pre th:unless="${#strings.equals(list.type, 'IMAGE')}" th:text="${list.message}"></pre>
-                        <img th:if="${#strings.equals(list.type, 'IMAGE')}" th:src="${list.message}" class="chatimg" align="left">
-                    </span>
-                </li>
-            </ul>
+            <ul class="list-group-flush"></ul>
         </div>
         </form>
     </div>

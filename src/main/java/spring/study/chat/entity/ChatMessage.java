@@ -41,10 +41,6 @@ public class ChatMessage extends BasetimeEntity implements Serializable {
     @ManyToOne
     private ChatRoom room;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "message", fetch = FetchType.EAGER)
-    private List<ChatMessageImg> img = new ArrayList<>();
-
     @Builder
     public ChatMessage(String id, String message, MessageType type, Member member, ChatRoom room) {
         this.id = id;
@@ -62,20 +58,5 @@ public class ChatMessage extends BasetimeEntity implements Serializable {
     public void addRoom(ChatRoom room) {
         this.room = room;
         room.getMessages().add(this);
-    }
-
-    public void addImg(ChatMessageImg img) {
-        img.addMessage(this);
-    }
-
-    @Override
-    public String toString() {
-        return "ChatMessage{" +
-                "id=" + id +
-                ", message='" + message + '\'' +
-                ", type=" + type +
-                ", member=" + member.getId() +
-                ", room=" + room.getRoomId() +
-                '}';
     }
 }

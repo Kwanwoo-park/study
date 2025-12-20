@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.service.ChatMessageImgService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.chat.service.ChatMessageService;
@@ -22,6 +24,7 @@ import java.util.List;
 public class ChatViewController {
     private final ChatRoomService roomService;
     private final ChatMessageService messageService;
+    private final ChatMessageImgService imgService;
     private final ChatRoomMemberService roomMemberService;
 
     @GetMapping("/chatList")
@@ -76,9 +79,10 @@ public class ChatViewController {
 
         ChatRoom room = roomService.find(roomId);
 
+        if (room == null)
+            return "redirect:/chat/chatList";
+
         model.addAttribute("room", room);
-        model.addAttribute("member", member);
-        model.addAttribute("message", messageService.find(room));
         model.addAttribute("flag", !roomMemberService.exist(member, room));
 
         return "chat/chatRoom";

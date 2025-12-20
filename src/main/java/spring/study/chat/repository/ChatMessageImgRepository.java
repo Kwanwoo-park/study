@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface ChatMessageImgRepository extends JpaRepository<ChatMessageImg, Long> {
-    List<ChatMessageImg> findByMessage(ChatMessage message);
+    List<ChatMessageImg> findByMessageId(String messageId);
 
     @Transactional
     void deleteByMessage(ChatMessage message);

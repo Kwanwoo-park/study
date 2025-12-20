@@ -78,8 +78,6 @@ public class ChatWebSocketApiController {
                 notificationService.createNotification(roomMemberService.findMember(room, member), member, Group.CHAT);
             }
 
-            System.out.println(chatMessage);
-
             producer.sendMessage(chatMessage);
 
             map.put("result", 1);

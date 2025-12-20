@@ -41,6 +41,46 @@ public class ChatApiController {
     private final NotificationService notificationService;
     private final ImageS3Service imageS3Service;
 
+    @GetMapping("/load")
+    public ResponseEntity<Map<String, Object>> loadChatting(@RequestParam String roomId, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        Map<String, Object> map = new HashMap<>();
+
+        if (session == null || !request.isRequestedSessionIdValid()) {
+            map.put("result", -1L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        Member member = (Member) session.getAttribute("member");
+
+        if (member == null) {
+            session.invalidate();
+            map.put("result", -1L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        try {
+            ChatRoom room = roomService.find(roomId);
+
+            if (room == null) {
+                map.put("result", -10L);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+            }
+
+            List<ChatMessage> list = messageService.find(room);
+
+            map.put("member", member);
+            map.put("message", list);
+            map.put("img", messageImgService.findMessageImg(list));
+
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        }
+    }
+
     @PostMapping("/createRoom")
     public ResponseEntity<Map<String, Long>> createRoom(@RequestParam String name, HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -175,7 +215,7 @@ public class ChatApiController {
     }
 
     @PostMapping("/sendImage")
-    public ResponseEntity<Map<String, Object>> sendImage(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> sendImage(@RequestPart List<MultipartFile> file, HttpServletRequest request) {
         HttpSession session = request.getSession();
         Map<String, Object> map = new HashMap<>();
 
@@ -202,17 +242,18 @@ public class ChatApiController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
         }
 
-        List<String> list = new ArrayList<>();
+        List<ChatMessageImg> list = new ArrayList<>();
         String messageId = UUID.randomUUID().toString();
 
         try {
             for (MultipartFile multipartFile : file) {
-                messageImgService.save(ChatMessageImg.builder()
+                list.add(messageImgService.save(ChatMessageImg.builder()
                         .imgSrc(imageS3Service.uploadImageToS3(multipartFile))
-                        .message(messageId)
-                        .build());
+                        .messageId(messageId)
+                        .build()));
             }
 
+            map.put("list", list);
             map.put("messageId", messageId);
             map.put("result", 1);
 

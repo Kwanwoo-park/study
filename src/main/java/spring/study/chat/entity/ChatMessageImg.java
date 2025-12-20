@@ -1,6 +1,5 @@
 package spring.study.chat.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -23,12 +22,12 @@ public class ChatMessageImg implements Serializable {
 
     @NotNull
     @Column(unique = true)
-    private String message;
+    private String messageId;
 
     @Builder
-    public ChatMessageImg(Long id, String imgSrc, String message) {
+    public ChatMessageImg(Long id, String imgSrc, String messageId) {
         this.id = id;
         this.imgSrc = imgSrc;
-        this.message = message;
+        this.messageId = messageId;
     }
 }

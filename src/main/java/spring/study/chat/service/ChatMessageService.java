@@ -1,11 +1,9 @@
 package spring.study.chat.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.member.entity.Member;
@@ -26,8 +24,8 @@ public class ChatMessageService {
     }
 
     @Transactional
-    public List<ChatMessage> saveAll(List<ChatMessage> list) {
-        return chatMessageRepository.saveAll(list);
+    public void saveAll(List<ChatMessage> list) {
+        chatMessageRepository.saveAll(list);
     }
 
     public ChatMessage findById(String id) {
