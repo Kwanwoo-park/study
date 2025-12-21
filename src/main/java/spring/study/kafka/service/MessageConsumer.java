@@ -8,6 +8,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.notification.entity.Notification;
 import spring.study.common.service.EmitterService;
@@ -22,7 +23,7 @@ public class MessageConsumer {
     private final RedisTemplate<String, Object> objectRedisTemplate;
 
     @KafkaListener(topics = "topic")
-    public void consume(@Payload ChatMessage message){
+    public void consume(@Payload ChatMessageRequestDto message){
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoom().getRoomId(), message);
 
         try {

@@ -1,6 +1,3 @@
-const url = new URL(window.location.href)
-const urlParams = url.searchParams
-
 const roomId = document.querySelector("#room").value;
 const email = document.querySelector("#email").value;
 const flag = document.querySelector("#flag").value;
@@ -295,6 +292,7 @@ function fnLoad(input) {
                 roomId : roomId,
                 email : email,
                 message: json['list'][0]
+                list: json['list']
             };
 
             msgSend(talkMsg)

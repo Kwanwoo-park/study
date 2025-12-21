@@ -3,6 +3,7 @@ package spring.study.kafka.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.notification.entity.Notification;
 
@@ -11,7 +12,7 @@ import spring.study.notification.entity.Notification;
 public class MessageProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void sendMessage(ChatMessage message){
+    public void sendMessage(ChatMessageRequestDto message){
         kafkaTemplate.send("topic", message);
     }
 

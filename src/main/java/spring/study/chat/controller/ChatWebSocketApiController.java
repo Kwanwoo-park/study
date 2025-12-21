@@ -41,31 +41,29 @@ public class ChatWebSocketApiController {
         ChatRoom room = roomService.find(message.getRoomId());
         Member member = memberService.findMember(message.getEmail());
 
-        ChatMessage chatMessage = ChatMessage.builder()
-                .id(message.getId() != null ? message.getId() : UUID.randomUUID().toString())
-                .message(message.getMessage())
-                .type(message.getType())
-                .member(member)
-                .room(room)
-                .build();
+        if (message.getId() != null)
+            message.setId(UUID.randomUUID().toString());
+
+        message.setMember(member);
+        message.setRoom(room);
 
         try {
-            if (chatMessage.getType().equals(MessageType.ENTER)) {
+            if (message.getType().equals(MessageType.ENTER)) {
                 if (!roomMemberService.exist(member, room)) {
                     roomMemberService.save(member, room);
                     roomService.addCount(room.getId());
-                    chatMessage.setMessage(chatMessage.getMember().getName() + "님이 입장했습니다.");
+                    message.setMessage(member.getName() + "님이 입장했습니다.");
                 }
                 else {
                     map.put("result", -1);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
                 }
-            } else if (chatMessage.getType().equals(MessageType.QUIT)) {
+            } else if (message.getType().equals(MessageType.QUIT)) {
                 roomMemberService.delete(member, room);
 
                 if (room.getCount() -1 > 0) {
                     roomService.subCount(room.getId());
-                    chatMessage.setMessage(chatMessage.getMember().getName() + "님이 퇴장했습니다.");
+                    message.setMessage(member.getName() + "님이 퇴장했습니다.");
                 } else {
                     messageService.deleteByRoom(room);
                     roomService.delete(room.getRoomId());
@@ -78,7 +76,7 @@ public class ChatWebSocketApiController {
                 notificationService.createNotification(roomMemberService.findMember(room, member), member, Group.CHAT);
             }
 
-            producer.sendMessage(chatMessage);
+            producer.sendMessage(message);
 
             map.put("result", 1);
 

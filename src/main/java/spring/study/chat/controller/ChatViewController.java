@@ -82,7 +82,8 @@ public class ChatViewController {
         if (room == null)
             return "redirect:/chat/chatList";
 
-        model.addAttribute("room", room);
+        model.addAttribute("room", room.getRoomId());
+        model.addAttribute("member", member.getEmail());
         model.addAttribute("flag", !roomMemberService.exist(member, room));
 
         return "chat/chatRoom";

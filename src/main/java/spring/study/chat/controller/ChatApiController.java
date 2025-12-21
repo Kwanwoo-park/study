@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageImg;
+import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageImgService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.forbidden.entity.Status;
@@ -71,7 +72,7 @@ public class ChatApiController {
 
             map.put("member", member);
             map.put("message", list);
-            map.put("img", messageImgService.findMessageImg(list));
+            map.put("img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)). toList()));
 
             return ResponseEntity.ok(map);
         } catch (Exception e) {

@@ -1,7 +1,11 @@
 package spring.study.chat.dto;
 
 import lombok.*;
+import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.MessageType;
+import spring.study.member.entity.Member;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,13 +16,19 @@ public class ChatMessageRequestDto {
     private MessageType type;
     private String email;
     private String roomId;
+    private ChatRoom room;
+    private Member member;
+    private List<String> list;
 
     @Builder
-    public ChatMessageRequestDto(String id, String message, MessageType type, String roomId, String email) {
+    public ChatMessageRequestDto(String id, String message, MessageType type, String roomId, String email, ChatRoom room, Member member, List<String> list) {
         this.id = id;
         this.message = message;
         this.type = type;
         this.email = email;
         this.roomId = roomId;
+        this.room = room;
+        this.member = member;
+        this.list = list;
     }
 }

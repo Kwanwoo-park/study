@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageImg;
-import spring.study.chat.entity.MessageType;
 import spring.study.chat.repository.ChatMessageImgRepository;
 
 import java.util.HashMap;
@@ -29,12 +28,8 @@ public class ChatMessageImgService {
     public Map<String, Object> findMessageImg(List<ChatMessage> list) {
         Map<String, Object> map = new HashMap<>();
 
-        map.put("list", list);
-
         for (ChatMessage message : list) {
-            if (message.getType() == MessageType.IMAGE) {
-                map.put(message.getId(), messageImgRepository.findByMessageId(message.getId()));
-            }
+            map.put(message.getId(), messageImgRepository.findByMessageId(message.getId()));
         }
 
         return map;
