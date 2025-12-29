@@ -5,6 +5,8 @@ const flag = document.querySelector("#flag").value;
 const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
 
+const maxSize = 10;
+
 let container = document.querySelector(".container");
 
 if (btn)
@@ -45,7 +47,7 @@ function onMessageReceived(e) {
 
 async function loadMoreChat() {
     try {
-        const res = await fetch(`/api/chat/load?roomId` + roomId, {
+        const res = await fetch(`/api/chat/load?roomId=` + roomId, {
             method: 'GET',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
@@ -55,7 +57,7 @@ async function loadMoreChat() {
         const data = await res.json();
 
         if (data['result'] > 0)
-            fnDraw(data)
+            fnLoadDraw(data)
         else
             alert('다시 시도하여주십시오')
     } catch (e) {
@@ -162,27 +164,12 @@ function fnDraw(data) {
     profile.className = "profile";
 
     name.innerText = data.member.name;
-    name.className = 'chatname';
 
-    if (data.member.email == email) {
-        profile.align = 'right';
-        imgTalk.align = 'right';
-
-        newMsgArea.className = 'right';
-
-        newMsgArea.append(name);
-        newMsgArea.append(profile);
-    } else {
-        profile.align = 'left';
-        imgTalk.align = 'left';
-
-        newMsgArea.className = 'left';
-
-        newMsgArea.append(profile);
-        newMsgArea.append(name);
-    }
+    newMsgArea.append(profile);
+    newMsgArea.append(name);
 
     if (data.type == "IMAGE") {
+        const img_div = document.createElement('div')
         const img_idx = document.createElement('input')
         img_idx.type = 'hidden'
         img_idx.id = 'idx' + data.id;
@@ -190,38 +177,40 @@ function fnDraw(data) {
 
         newMsgArea.append(img_idx)
 
-        if (img[data.id].length != 1) {
+        if (data.list.length != 1) {
             const button = document.createElement('button')
-            button.className = 'btn'
+            button.className = 'arrow'
             button.type = 'button'
             button.id = 'left' + data.id;
             button.style.visibility = 'hidden'
             button.onclick = function() {
-                fnLeft(data.id, img[data.id])
+                fnLeft2(data.id, data.list)
             }
 
             button.innerText = '←'
-            newMsgArea.append(button);
+            img_div.append(button);
         }
 
         imgTalk.src = data.message;
         imgTalk.id = 'img' + data.id;
         imgTalk.className = "chatimg";
 
-        newMsgArea.append(imgTalk);
+        img_div.append(imgTalk);
 
-        if (img[data.id] > 1) {
+        if (data.list.length > 1) {
             const button = document.createElement('button')
-            button.className = 'btn'
+            button.className = 'arrow'
             button.type = 'button'
             button.id = 'right' + data.id
             button.onclick = function() {
-                fnRight(data.id, img[data.id])
+                fnRight2(data.id, data.list)
             }
 
             button.innerText = '→'
-            newMsgArea.append(button)
+            img_div.append(button)
         }
+
+        newMsgArea.append(img_div)
     } else {
         newMsg.innerText = data.message;
         newMsgArea.append(newMsg);
@@ -230,6 +219,81 @@ function fnDraw(data) {
     newMsgLi.append(newMsgArea);
 
     msgArea.append(newMsgLi);
+}
+
+function fnLoadDraw(json) {
+    json.message.forEach(data => {
+        let msgArea = document.querySelector('.list-group-flush');
+
+        let newMsgLi = document.createElement('li');
+        let newMsgArea = document.createElement('span');
+        let name = document.createElement('span');
+        let newMsg = document.createElement('pre');
+        let profile = document.createElement('img');
+        let imgTalk = document.createElement('img');
+
+        newMsgLi.className = "list-group-item";
+
+        profile.src = data.member.profile;
+        profile.className = "profile";
+
+        name.innerText = data.member.name;
+
+        newMsgArea.append(profile);
+        newMsgArea.append(name);
+
+        if (data.type == "IMAGE") {
+            const img_div = document.createElement('div')
+            const img_idx = document.createElement('input')
+            img_idx.type = 'hidden'
+            img_idx.id = 'idx' + data.id;
+            img_idx.value = 0;
+
+            newMsgArea.append(img_idx)
+
+            if (json.img[data.id].length > 1) {
+                const button = document.createElement('button')
+                button.className = 'arrow'
+                button.type = 'button'
+                button.id = 'left' + data.id;
+                button.style.visibility = 'hidden'
+                button.onclick = function() {
+                    fnLeft(data.id, json.img[data.id])
+                }
+
+                button.innerText = '←'
+                img_div.append(button);
+            }
+
+            imgTalk.src = data.message;
+            imgTalk.id = 'img' + data.id;
+            imgTalk.className = "chatimg";
+
+            img_div.append(imgTalk);
+
+            if (json.img[data.id].length > 1) {
+                const button = document.createElement('button')
+                button.className = 'arrow'
+                button.type = 'button'
+                button.id = 'right' + data.id
+                button.onclick = function() {
+                    fnRight(data.id, json.img[data.id])
+                }
+
+                button.innerText = '→'
+                img_div.append(button)
+            }
+
+            newMsgArea.append(img_div)
+        } else {
+            newMsg.innerText = data.message;
+            newMsgArea.append(newMsg);
+        }
+
+        newMsgLi.append(newMsgArea);
+
+        msgArea.append(newMsgLi);
+    });
 }
 
 function fnLeft(id, arr) {
@@ -242,7 +306,26 @@ function fnLeft(id, arr) {
         return;
 
     image.src = arr[parseInt(idx.value) -1].imgSrc;
-    img_id.value = parseInt(idx.value) + 1;
+    idx.value = parseInt(idx.value) - 1;
+
+    if (right_arrow.style.visibility == 'hidden')
+        right_arrow.style.visibility = 'visible';
+
+    if (parseInt(idx.value) == 0)
+        left_arrow.style.visibility = 'hidden';
+}
+
+function fnLeft2(id, arr) {
+    const image = document.getElementById('img' + id);
+    const idx = document.getElementById('idx' + id);
+    const left_arrow = document.getElementById('left' + id);
+    const right_arrow = document.getElementById('right' + id);
+
+    if (parseInt(idx.value) -1 < 0)
+        return;
+
+    image.src = arr[parseInt(idx.value) -1];
+    idx.value = parseInt(idx.value) - 1;
 
     if (right_arrow.style.visibility == 'hidden')
         right_arrow.style.visibility = 'visible';
@@ -261,7 +344,26 @@ function fnRight(id, arr) {
         return;
 
     image.src = arr[parseInt(idx.value) +1].imgSrc;
-    img_id.value = parseInt(idx.value) + 1;
+    idx.value = parseInt(idx.value) + 1;
+
+    if (left_arrow.style.visibility === 'hidden')
+        left_arrow.style.visibility = 'visible'
+
+    if (parseInt(idx.value) == arr.length-1)
+        right_arrow.style.visibility = 'hidden'
+}
+
+function fnRight2(id, arr) {
+    const image = document.getElementById('img' + id);
+    const idx = document.getElementById('idx' + id);
+    const left_arrow = document.getElementById('left' + id);
+    const right_arrow = document.getElementById('right' + id);
+
+    if (parseInt(idx.value) + 1 >= arr.length)
+        return;
+
+    image.src = arr[parseInt(idx.value) +1];
+    idx.value = parseInt(idx.value) + 1;
 
     if (left_arrow.style.visibility === 'hidden')
         left_arrow.style.visibility = 'visible'
@@ -271,12 +373,23 @@ function fnRight(id, arr) {
 }
 
 function fnLoad(input) {
-    let file = input.files[0];
-    let imgName;
-    let status;
+    let file;
+    let imgArr;
+    let size;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    let formData = new FormData();
+
+    file = Array.from(input.files);
+    size = input.files.length;
+
+    if (size > maxSize) {
+        alert('최대 ' + maxSize + "장의 사진만 업로드가 가능합니다")
+        size = maxSize;
+    }
+
+    for (let i = 0; i < size; i++) {
+        formData.append("file", file[i]);
+    }
 
     fetch(`/api/chat/sendImage`, {
         method: 'POST',
@@ -291,10 +404,9 @@ function fnLoad(input) {
                 type : "IMAGE",
                 roomId : roomId,
                 email : email,
-                message: json['list'][0]
+                message: json['list'][0],
                 list: json['list']
             };
-
             msgSend(talkMsg)
         }
         else

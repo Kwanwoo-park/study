@@ -70,6 +70,7 @@ public class ChatApiController {
 
             List<ChatMessage> list = messageService.find(room);
 
+            map.put("result", 1L);
             map.put("member", member);
             map.put("message", list);
             map.put("img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)). toList()));
@@ -248,13 +249,15 @@ public class ChatApiController {
 
         try {
             for (MultipartFile multipartFile : file) {
-                list.add(messageImgService.save(ChatMessageImg.builder()
+                list.add(ChatMessageImg.builder()
                         .imgSrc(imageS3Service.uploadImageToS3(multipartFile))
                         .messageId(messageId)
-                        .build()));
+                        .build());
             }
 
-            map.put("list", list);
+            messageImgService.saveAll(list);
+
+            map.put("list", list.stream().map(ChatMessageImg::getImgSrc).toList());
             map.put("messageId", messageId);
             map.put("result", 1);
 

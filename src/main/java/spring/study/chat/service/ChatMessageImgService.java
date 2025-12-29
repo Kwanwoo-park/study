@@ -21,6 +21,11 @@ public class ChatMessageImgService {
         return messageImgRepository.save(messageImg);
     }
 
+    @Transactional
+    public void saveAll(List<ChatMessageImg> list) {
+        messageImgRepository.saveAll(list);
+    }
+
     public List<ChatMessageImg> findMessage(String messageId) {
         return messageImgRepository.findByMessageId(messageId);
     }
@@ -35,7 +40,7 @@ public class ChatMessageImgService {
         return map;
     }
 
-    public void deleteMessage(ChatMessage message) {
-        messageImgRepository.deleteByMessage(message);
+    public void deleteMessage(String messageId) {
+        messageImgRepository.deleteByMessageId(messageId);
     }
 }

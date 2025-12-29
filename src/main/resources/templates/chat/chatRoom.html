@@ -29,27 +29,12 @@
         width: 200px;
         height: 200px;
     }
-    .right {
-        display: inline-block;
-        width: 100%;
-        text-align: right;
-    }
-    .left {
-        display: inline-block;
-        width: 100%;
-        text-align: left;
-    }
-    .chatname {
-        display: inline-block;
-        width: 95%;
-    }
-    .btn {
+    .arrow {
         width: 20px;
         height: 20px;
         border-radius: 50%;
         font-color: black;
-        margin-top: auto;
-        margin-bottom: auto;
+        font-size: 10px;
     }
 </style>
 <body>
@@ -66,7 +51,7 @@
     <div>
         <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>
         <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
-        <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none"/>
+        <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
         <button type="button" class="btn btn-primary" id="btn">이미지 전송</button>
         <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
     </div>

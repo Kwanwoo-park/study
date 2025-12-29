@@ -13,5 +13,5 @@ public interface ChatMessageImgRepository extends JpaRepository<ChatMessageImg, 
     List<ChatMessageImg> findByMessageId(String messageId);
 
     @Transactional
-    void deleteByMessage(ChatMessage message);
+    void deleteByMessageId(String messageId);
 }

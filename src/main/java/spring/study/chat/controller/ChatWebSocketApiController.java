@@ -41,11 +41,13 @@ public class ChatWebSocketApiController {
         ChatRoom room = roomService.find(message.getRoomId());
         Member member = memberService.findMember(message.getEmail());
 
-        if (message.getId() != null)
+        if (message.getId() == null)
             message.setId(UUID.randomUUID().toString());
 
         message.setMember(member);
         message.setRoom(room);
+
+        //System.out.println(message.getList().get(0).getImgSrc());
 
         try {
             if (message.getType().equals(MessageType.ENTER)) {

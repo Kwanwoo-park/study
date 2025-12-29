@@ -21,7 +21,6 @@ public class ChatMessageImg implements Serializable {
     private String imgSrc;
 
     @NotNull
-    @Column(unique = true)
     private String messageId;
 
     @Builder

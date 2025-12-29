@@ -39,7 +39,7 @@ public class KafkaConsumerConfig {
         config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
 
         config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        config.put(JsonDeserializer.TYPE_MAPPINGS, "ChatMessageRequestDto:spring.study.chat.dto.ChatMessageDto, Notification:spring.study.notification.entity.Notification");
+        config.put(JsonDeserializer.TYPE_MAPPINGS, "ChatMessageRequestDto:spring.study.chat.dto.ChatMessageRequestDto, Notification:spring.study.notification.entity.Notification");
 
         return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new ErrorHandlingDeserializer<>());
 

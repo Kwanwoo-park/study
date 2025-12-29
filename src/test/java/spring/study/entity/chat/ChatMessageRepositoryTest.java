@@ -3,12 +3,16 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.member.Member;
-//import spring.study.repository.chat.ChatMessageRepository;
-//import spring.study.repository.chat.ChatRoomRepository;
-//import spring.study.repository.member.MemberRepository;
+//import spring.study.chat.entity.ChatMessage;
+//import spring.study.chat.entity.ChatRoom;
+//import spring.study.chat.entity.MessageType;
+//import spring.study.chat.repository.ChatMessageRepository;
+//import spring.study.chat.repository.ChatRoomRepository;
+//import spring.study.member.entity.Member;
+//import spring.study.member.repository.MemberRepository;
 //
 //import java.util.List;
+//import java.util.UUID;
 //
 //import static org.assertj.core.api.Assertions.*;
 //
@@ -30,6 +34,7 @@
 //        Member member = memberRepository.findByEmail("test@test.com").orElseThrow();
 //
 //        ChatMessage message = ChatMessage.builder()
+//                .id(UUID.randomUUID().toString())
 //                .message("testMessage")
 //                .type(MessageType.TALK)
 //                .room(room)

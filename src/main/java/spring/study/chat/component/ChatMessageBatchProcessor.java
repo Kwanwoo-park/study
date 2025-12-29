@@ -24,8 +24,11 @@ public class ChatMessageBatchProcessor {
 
     @Scheduled(fixedRate = 5000)
     public void flushMessagesToDB() {
-        Cursor<byte[]> cursor = objectRedisTemplate.getConnectionFactory().getConnection()
-                .scan(ScanOptions.scanOptions().match("chat:message:roomId:*").build());
+        Cursor<byte[]> cursor = null;
+        if (objectRedisTemplate.getConnectionFactory() != null) {
+            cursor = objectRedisTemplate.getConnectionFactory().getConnection()
+                    .scan(ScanOptions.scanOptions().match("chat:message:roomId:*").build());
+        }
 
         while (cursor.hasNext()) {
             String key = new String(cursor.next());
@@ -38,10 +41,10 @@ public class ChatMessageBatchProcessor {
                 List<Object> messages = ops.range(key, 0, -1);
 
                 if (messages != null) {
-                    List<ChatMessage> entities = messages.stream()
+                    List<ChatMessageRequestDto> entities = messages.stream()
                             .map(obj -> {
                                 try {
-                                    return objectMapper.readValue(obj.toString(), ChatMessage.class);
+                                    return objectMapper.readValue(obj.toString(), ChatMessageRequestDto.class);
                                 } catch (JsonProcessingException e) {
                                     throw new RuntimeException(e);
                                 }

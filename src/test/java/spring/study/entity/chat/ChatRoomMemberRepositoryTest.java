@@ -5,10 +5,12 @@
 //import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import spring.study.entity.member.Member;
-//import spring.study.repository.chat.ChatRoomMemberRepository;
-//import spring.study.repository.chat.ChatRoomRepository;
-//import spring.study.repository.member.MemberRepository;
+//import spring.study.chat.entity.ChatRoom;
+//import spring.study.chat.entity.ChatRoomMember;
+//import spring.study.chat.repository.ChatRoomMemberRepository;
+//import spring.study.chat.repository.ChatRoomRepository;
+//import spring.study.member.entity.Member;
+//import spring.study.member.repository.MemberRepository;
 //
 //import java.util.List;
 //
@@ -77,11 +79,11 @@
 //        List<ChatRoom> room = chatRoomMemberRepository.findByMember(member).stream().map(ChatRoomMember::getRoom).toList();
 //
 //        //when
-//        ChatRoomMember result = chatRoomMemberRepository.findByRoomAndMemberNot(room.get(0), member);
+//        List<ChatRoomMember> result = chatRoomMemberRepository.findByRoomAndMemberNot(room.get(0), member);
 //
 //        //then
-//        assertThat(result.getRoom()).isEqualTo(room.get(0));
-//        assertThat(result.getMember()).isEqualTo(member);
+//        assertThat(result.get(0).getRoom()).isEqualTo(room.get(0));
+//        assertThat(result.get(0).getMember()).isEqualTo(member);
 //    }
 //
 //    @Test
