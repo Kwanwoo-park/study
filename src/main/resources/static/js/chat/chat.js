@@ -14,7 +14,6 @@ if (btn)
 
 window.onload = function() {
     loadMoreChat();
-    container.scrollTop = container.scrollHeight;
 }
 
 //let socket = new SockJS("http://localhost:8080/ws/chat")
@@ -56,8 +55,11 @@ async function loadMoreChat() {
         });
         const data = await res.json();
 
-        if (data['result'] > 0)
+        if (data['result'] > 0) {
             fnLoadDraw(data)
+
+            container.scrollTop = container.scrollHeight;
+        }
         else
             alert('다시 시도하여주십시오')
     } catch (e) {
