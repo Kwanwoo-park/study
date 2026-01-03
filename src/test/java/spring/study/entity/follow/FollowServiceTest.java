@@ -4,10 +4,11 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.member.Member;
-//import spring.study.entity.member.Role;
-//import spring.study.service.follow.FollowService;
-//import spring.study.service.member.MemberService;
+//import spring.study.follow.entity.Follow;
+//import spring.study.follow.service.FollowService;
+//import spring.study.member.entity.Member;
+//import spring.study.member.entity.Role;
+//import spring.study.member.service.MemberService;
 //
 //import static org.assertj.core.api.Assertions.*;
 //
@@ -38,16 +39,13 @@
 //                .profile("1.jpg")
 //                .build();
 //
-//        Member saveFollower = memberService.save(follower);
-//        Member saveFollowing = memberService.save(following);
+//        memberService.save(follower);
+//        memberService.save(following);
 //
 //        Follow follow = Follow.builder()
 //                .follower(follower)
 //                .following(follower)
 //                .build();
-//
-//        saveFollower.addFollower(follow);
-//        saveFollowing.addFollowing(follow);
 //
 //        // when
 //        Follow save = followService.save(follow);

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public enum Risk {
-    HIGH("HIGH"), MIDDLE("MIDDLE"), LOW("LOW");
+    HIGH(3), MIDDLE(2), LOW(1);
 
-    private String value;
+    private int value;
 }

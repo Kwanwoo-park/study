@@ -1,12 +1,13 @@
 //package spring.study.entity.forbidden;
 //
-//import jakarta.transaction.Transactional;
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-//import spring.study.repository.forbidden.ForbiddenRepository;
+//import spring.study.forbidden.entity.Forbidden;
+//import spring.study.forbidden.entity.Status;
+//import spring.study.forbidden.repository.ForbiddenRepository;
 //
 //import java.util.ArrayList;
 //import java.util.List;
