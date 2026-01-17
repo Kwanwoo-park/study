@@ -1,5 +1,7 @@
 package spring.study.member.service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.repository.MemberRepository;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -124,6 +127,27 @@ public class MemberService implements UserDetailsService {
         member.changeRole(role);
 
         return member.getId().intValue();
+    }
+
+    public String getIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+
+        if (ip == null || ip.isEmpty() || ip.equalsIgnoreCase("unknown"))
+            ip =  request.getHeader("X-Real-IP");
+
+        if (ip == null || ip.isEmpty() || ip.equalsIgnoreCase("unknown"))
+            ip = request.getRemoteAddr();
+
+        return ip.split(",")[0];
+    }
+
+    public boolean validateSession(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        String ip = getIp(request);
+        String ua = request.getHeader("User-Agent");
+
+        return ip.equals(session.getAttribute("IP")) && ua.equals(session.getAttribute("UA"));
     }
 
     @Override

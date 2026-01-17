@@ -77,6 +77,9 @@ public class MemberApiController {
             if (encoder.matches(dto.getPassword(), member.getPassword())) {
                 if (member.getRole() != Role.DENIED) {
                     memberService.updateLastLoginTime(member.getId());
+
+                    session.setAttribute("IP", memberService.getIp(request));
+                    session.setAttribute("UA", request.getHeader("User-Agent"));
                     session.setAttribute("member", member);
 
                     map.put("result", member.getId());
