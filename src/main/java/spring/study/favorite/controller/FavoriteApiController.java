@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.board.entity.Board;
 import spring.study.favorite.entity.Favorite;
 import spring.study.member.entity.Member;
+import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.board.service.BoardService;
@@ -26,6 +27,7 @@ import java.util.Map;
 public class FavoriteApiController {
     private final FavoriteService favoriteService;
     private final BoardService boardService;
+    private final MemberService memberService;
     private final NotificationService notificationService;
 
     @PostMapping("/like")
@@ -39,6 +41,12 @@ public class FavoriteApiController {
         }
 
         if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -84,6 +92,12 @@ public class FavoriteApiController {
         }
 
         if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);

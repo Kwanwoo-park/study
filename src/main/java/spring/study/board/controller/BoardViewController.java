@@ -12,6 +12,7 @@ import spring.study.board.entity.Board;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.board.service.BoardService;
+import spring.study.member.service.MemberService;
 
 @RequiredArgsConstructor
 @Controller
@@ -19,6 +20,7 @@ import spring.study.board.service.BoardService;
 @Slf4j
 public class BoardViewController {
     private final BoardService boardService;
+    private final MemberService memberService;
 
     @GetMapping("/all")
     public String getBoardListPage(Model model,
@@ -37,6 +39,11 @@ public class BoardViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         if (member.getPhone().equals(" ")) {
@@ -76,6 +83,11 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
+        }
+
         if (member.getRole() != Role.ADMIN) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Wrong Accept";
@@ -97,6 +109,11 @@ public class BoardViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         if (member.getPhone().equals(" ") || member.getBirth().equals("1900-01-01")) {
@@ -124,6 +141,11 @@ public class BoardViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
+        }
+
         model.addAttribute("name", member.getName());
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
@@ -144,6 +166,11 @@ public class BoardViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         if (boardService.existBoard(boardRequestDto.getId())) {

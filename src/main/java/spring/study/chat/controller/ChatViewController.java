@@ -14,6 +14,7 @@ import spring.study.member.entity.Role;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
+import spring.study.member.service.MemberService;
 
 import java.util.List;
 
@@ -23,9 +24,8 @@ import java.util.List;
 @RequestMapping("/chat")
 public class ChatViewController {
     private final ChatRoomService roomService;
-    private final ChatMessageService messageService;
-    private final ChatMessageImgService imgService;
     private final ChatRoomMemberService roomMemberService;
+    private final MemberService memberService;
 
     @GetMapping("/chatList")
     public String chatList(Model model,
@@ -43,6 +43,11 @@ public class ChatViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         model.addAttribute("profile", member.getProfile());
@@ -75,6 +80,11 @@ public class ChatViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         ChatRoom room = roomService.find(roomId);

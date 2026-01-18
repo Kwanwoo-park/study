@@ -51,6 +51,12 @@ public class CommentApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         Member member = (Member) session.getAttribute("member");
 
         if (!commentRequestDto.getComments().isBlank() || !commentRequestDto.getComments().isEmpty()) {
@@ -114,6 +120,12 @@ public class CommentApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         Member member = (Member) session.getAttribute("member");
 
         if (!commentRequestDto.getComments().isBlank() || !commentRequestDto.getComments().isEmpty()) {
@@ -164,6 +176,12 @@ public class CommentApiController {
         }
 
         if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);

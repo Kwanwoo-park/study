@@ -60,6 +60,12 @@ public class ChatApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         try {
             ChatRoom room = roomService.find(roomId);
 
@@ -101,6 +107,12 @@ public class ChatApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         try {
             ChatRoom room = roomService.createRoom(name, 1L);
 
@@ -131,6 +143,12 @@ public class ChatApiController {
         if (member == null) {
             session.invalidate();
             map.put("result", -1L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
@@ -179,6 +197,12 @@ public class ChatApiController {
         if (member == null) {
             session.invalidate();
             map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
@@ -231,6 +255,12 @@ public class ChatApiController {
         if (member == null) {
             session.invalidate();
             map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 

@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -69,6 +71,11 @@ public class MemberViewController {
                 return "redirect:/member/login?error=true&exception=Not Found account";
             }
 
+            if (memberService.validateSession(request)) {
+                session.invalidate();
+                return "redirect:/member/login?error=true&exception=Session Invalid";
+            }
+
             model.addAttribute("member", member);
             model.addAttribute("resultMap", boardService.findByMember(member));
         }
@@ -103,8 +110,15 @@ public class MemberViewController {
 
         Member member = (Member) session.getAttribute("member");
 
-        if (member == null)
+        if (member == null) {
+            session.invalidate();
             return "redirect:/member/login?error=true&exception=Not Found account";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
+        }
 
         model.addAttribute("email", member.getEmail());
 
@@ -120,8 +134,15 @@ public class MemberViewController {
 
         Member member = (Member) session.getAttribute("member");
 
-        if (member == null)
+        if (member == null) {
+            session.invalidate();
             return "redirect:/member/login?error=true&exception=Not Found account";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
+        }
 
         model.addAttribute("email", member.getEmail());
         model.addAttribute("phone", member.getPhone());
@@ -146,8 +167,15 @@ public class MemberViewController {
 
         Member member = (Member) session.getAttribute("member");
 
-        if (member == null)
+        if (member == null) {
+            session.invalidate();
             return "redirect:/member/login?error=true&exception=Not Found account";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
+        }
 
         model.addAttribute("name", member.getName());
 
@@ -168,6 +196,11 @@ public class MemberViewController {
             return "redirect:/member/login?error=true&exception=Not Found account";
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
+        }
+
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
 
@@ -186,6 +219,11 @@ public class MemberViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Not Found account";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         Member search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());

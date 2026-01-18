@@ -12,6 +12,7 @@ import spring.study.forbidden.dto.ForbiddenRequestDto;
 import spring.study.forbidden.dto.ForbiddenResponseDto;
 import spring.study.forbidden.entity.Status;
 import spring.study.forbidden.service.ForbiddenService;
+import spring.study.member.service.MemberService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.Map;
 @RequestMapping("/api/forbidden/word")
 public class ForbiddenApiController {
     private final ForbiddenService forbiddenService;
+    private final MemberService memberService;
 
     @GetMapping("/search")
     public ResponseEntity<Map<String, Object>> forbiddenWordSearch(@RequestParam String word, HttpServletRequest request) {
@@ -36,6 +38,12 @@ public class ForbiddenApiController {
         }
 
         if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -73,6 +81,12 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         try {
             list = forbiddenService.findByStatus(Status.PROPOSAL);
         } catch (Exception e) {
@@ -100,6 +114,12 @@ public class ForbiddenApiController {
         }
 
         if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -137,6 +157,12 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         try {
             list = forbiddenService.findByStatus(Status.APPROVAL);
         } catch (Exception e) {
@@ -163,6 +189,12 @@ public class ForbiddenApiController {
         }
 
         if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -206,6 +238,12 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         if (requestDto.getWord().isBlank()) {
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
@@ -244,6 +282,12 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         try {
             map.put("result", forbiddenService.updateStatus(Status.EXAMINE, requestDto.getIdList()));
 
@@ -256,7 +300,7 @@ public class ForbiddenApiController {
     }
 
     @PatchMapping("/admin/change/approval")
-    public ResponseEntity<Map<String, Integer>> changeToApporval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Integer>> changeToApproval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
         Map<String, Integer> map = new HashMap<>();
 
@@ -266,6 +310,12 @@ public class ForbiddenApiController {
         }
 
         if (session.getAttribute("member") == null) {
+            session.invalidate();
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);

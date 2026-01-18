@@ -61,6 +61,12 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(response);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            response.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(response);
+        }
+
         Member member = (Member) session.getAttribute("member");
 
         List<BoardResponseDto> list;
@@ -100,6 +106,12 @@ public class BoardApiController {
         if (session.getAttribute("member") == null) {
             map.put("result", -10L);
             session.invalidate();
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
@@ -164,6 +176,12 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         Member member = (Member) session.getAttribute("member");
 
         if (!boardRequestDto.getContent().isBlank() || !boardRequestDto.getContent().isEmpty()) {
@@ -211,6 +229,12 @@ public class BoardApiController {
         if (session.getAttribute("member") == null) {
             session.invalidate();
             map.put("result", -1L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 

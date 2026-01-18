@@ -13,6 +13,7 @@ import spring.study.board.entity.BoardImg;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
+import spring.study.member.service.MemberService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.util.Map;
 public class BoardImgApiController {
     private final BoardService boardService;
     private final BoardImgService boardImgService;
+    private final MemberService memberService;
     private final ImageS3Service imageS3Service;
 
     @PostMapping("/save")
@@ -42,6 +44,12 @@ public class BoardImgApiController {
         if (session.getAttribute("member") == null) {
             session.invalidate();
             map.put("result", -1);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 

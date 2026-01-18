@@ -47,8 +47,6 @@ public class ChatWebSocketApiController {
         message.setMember(member);
         message.setRoom(room);
 
-        //System.out.println(message.getList().get(0).getImgSrc());
-
         try {
             if (message.getType().equals(MessageType.ENTER)) {
                 if (!roomMemberService.exist(member, room)) {

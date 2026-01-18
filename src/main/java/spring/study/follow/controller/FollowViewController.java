@@ -32,6 +32,11 @@ public class FollowViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
+        }
+
         Member follower = memberService.findMember(memberRequestDto.getEmail());
 
         model.addAttribute("follower", follower.getFollowing());
@@ -54,6 +59,11 @@ public class FollowViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         Member following = memberService.findMember(memberRequestDto.getEmail());

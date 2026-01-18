@@ -54,6 +54,12 @@ public class ReplyApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         if (!replyRequestDto.getReply().isBlank() || !replyRequestDto.getReply().isEmpty()) {
             try {
                 int risk = forbiddenService.findWordList(Status.APPROVAL, replyRequestDto.getReply());
@@ -110,6 +116,12 @@ public class ReplyApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);

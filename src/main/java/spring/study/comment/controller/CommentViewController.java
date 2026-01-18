@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import spring.study.comment.entity.Comment;
 import spring.study.member.entity.Member;
 import spring.study.board.service.BoardService;
+import spring.study.member.service.MemberService;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import java.util.List;
 @RequestMapping("/comment")
 public class CommentViewController {
     private final BoardService boardService;
+    private final MemberService memberService;
 
     @GetMapping("")
     public String getComments(Model model, @RequestParam Long id, HttpServletRequest request) {
@@ -35,6 +37,11 @@ public class CommentViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         HashMap<String, Object> comment = new HashMap<>();

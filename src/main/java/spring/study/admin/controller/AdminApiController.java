@@ -31,14 +31,20 @@ public class AdminApiController {
         Map<String, Integer> map = new HashMap<>();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
-            map.put("result", -1);
+            map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
         Member member = (Member) session.getAttribute("member");
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         if (member.getRole() != Role.ADMIN) {
-            map.put("result", -1);
+            map.put("result", -10);
             session.invalidate();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
         }
@@ -48,7 +54,7 @@ public class AdminApiController {
             map.put("result", result);
         } catch (Exception e) {
             log.error(e.getMessage());
-            map.put("result", -1);
+            map.put("result", -10);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(map);
@@ -60,15 +66,21 @@ public class AdminApiController {
         Map<String, Integer> map = new HashMap<>();
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
-            map.put("result", -1);
+            map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
         Member member = (Member) session.getAttribute("member");
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         if (member.getRole() != Role.ADMIN) {
             session.invalidate();
-            map.put("result", -1);
+            map.put("result", -10);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
         }
 
@@ -77,7 +89,7 @@ public class AdminApiController {
             map.put("result", result);
         } catch (Exception e) {
             log.error(e.getMessage());
-            map.put("result", -1);
+            map.put("result", -10);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(map);
@@ -86,18 +98,25 @@ public class AdminApiController {
     @GetMapping("/member/online")
     public ResponseEntity<Map<String, Object>> memberOnline(HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Map<String, Object> map = new HashMap<>();
 
-        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null)
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+        if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         Member member = (Member) session.getAttribute("member");
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
 
         if (member.getRole() != Role.ADMIN) {
             session.invalidate();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-
-        Map<String, Object> map = new HashMap<>();
 
         try {
             String count = redisTemplate.opsForValue().get("online:total");
@@ -110,11 +129,13 @@ public class AdminApiController {
 
             List<Member> list = memberService.findMember(userIds);
 
+            map.put("result", 1L);
             map.put("count", count != null ? Long.parseLong(count) : 0L);
             map.put("list", list);
         } catch (Exception e) {
             log.error(e.getMessage());
             map.put("count", -1L);
+            map.put("result", -1L);
         }
 
         return ResponseEntity.ok(map);

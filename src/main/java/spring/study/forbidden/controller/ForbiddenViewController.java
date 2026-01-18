@@ -9,12 +9,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import spring.study.member.entity.Member;
 import spring.study.forbidden.service.ForbiddenService;
+import spring.study.member.service.MemberService;
 
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/forbidden")
 public class ForbiddenViewController {
-    private final ForbiddenService forbiddenService;
+    private final MemberService memberService;
 
     @GetMapping("/list")
     public String forbiddenList(Model model, HttpServletRequest request) {
@@ -29,6 +30,11 @@ public class ForbiddenViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Expired";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         model.addAttribute("email", member.getEmail());

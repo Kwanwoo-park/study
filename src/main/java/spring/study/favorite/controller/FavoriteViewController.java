@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import spring.study.favorite.entity.Favorite;
 import spring.study.member.entity.Member;
 import spring.study.board.service.BoardService;
+import spring.study.member.service.MemberService;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ import java.util.List;
 @RequestMapping("/favorites")
 public class FavoriteViewController {
     private final BoardService boardService;
+    private final MemberService memberService;
 
     @GetMapping("")
     public String getFavorites(Model model, @RequestParam Long id, HttpServletRequest request) throws Exception {
@@ -33,6 +35,11 @@ public class FavoriteViewController {
         if (member == null) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Login Please";
+        }
+
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            return "redirect:/member/login?error=true&exception=Session Invalid";
         }
 
         List<Favorite> favorites = boardService.findById(id).getFavorites();

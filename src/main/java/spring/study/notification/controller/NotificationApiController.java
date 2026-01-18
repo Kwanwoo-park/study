@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.member.entity.Member;
+import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.common.service.EmitterService;
@@ -24,6 +25,7 @@ import java.util.Map;
 @Slf4j
 public class NotificationApiController {
     private final NotificationService notificationService;
+    private final MemberService memberService;
     private final EmitterService emitterService;
 
     @GetMapping(value = "/stream", produces = "text/event-stream")
@@ -61,6 +63,12 @@ public class NotificationApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         try {
             List<Notification> list = notificationService.findByMember(member);
 
@@ -88,6 +96,12 @@ public class NotificationApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -125,6 +139,12 @@ public class NotificationApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
         }
 
+        if (memberService.validateSession(request)) {
+            session.invalidate();
+            map.put("result", -10L);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
         try {
             Notification notification = notificationService.findById(id);
 
@@ -157,6 +177,12 @@ public class NotificationApiController {
         Member member = (Member) session.getAttribute("member");
 
         if (member == null) {
+            session.invalidate();
+            map.put("result", -10);
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        }
+
+        if (memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
