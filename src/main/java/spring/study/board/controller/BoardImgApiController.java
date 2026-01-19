@@ -15,8 +15,6 @@ import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.member.service.MemberService;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +30,9 @@ public class BoardImgApiController {
     private final ImageS3Service imageS3Service;
 
     @PostMapping("/save")
-    public ResponseEntity<Map<String, Integer>> boardImgSave(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) throws IOException, FileNotFoundException {
+    public ResponseEntity<Map<String, Object>> boardImgSave(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) {
         HttpSession session = request.getSession();
-        Map<String, Integer> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
 
         if (session == null || !request.isRequestedSessionIdValid()) {
             map.put("result", -1);
@@ -47,7 +45,7 @@ public class BoardImgApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -59,7 +57,8 @@ public class BoardImgApiController {
         }
 
         if (imageS3Service.findFormatCheck(file)) {
-            map.put("result", -1);
+            map.put("result", -99);
+            map.put("message", "지원하지 않는 파일 형식");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
         }
 

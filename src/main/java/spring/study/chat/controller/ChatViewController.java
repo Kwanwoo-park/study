@@ -45,7 +45,7 @@ public class ChatViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }
@@ -82,7 +82,7 @@ public class ChatViewController {
             return "redirect:/member/login?error=true&exception=Login Please";
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }

@@ -58,8 +58,6 @@ function fnSave() {
 }
 
 function fnImgSave() {
-    var status;
-
     fetch(`/api/boardImg/save?id=` + id, {
         method: 'POST',
         body: formData,
@@ -69,12 +67,15 @@ function fnImgSave() {
     .then((json) => {
         if (json['result'] > 0) {
             alert("게시글 사진 등록 완료");
-
             location.replace(`/board/main`);
         } else if (json['result'] == -2)
             alert("게시글 사진 갯수 초과")
+        else if (json['result'] == -99)
+            alert(json['message']);
         else
             alert("게시글 사진 등록 실패");
+
+        fnDelete(id)
     })
     .catch((error) => {
         alert("게시글 사진 등록 실패");
@@ -183,4 +184,27 @@ function fnLoad(input) {
     }
 
     input.value = null;
+}
+
+function fnDelete(boardId) {
+    fetch(`/api/board/view/delete?id=` + boardId, {
+        method: 'DELETE',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        credentials: "include",
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        console.log(json);
+
+        if (json['result'] != -1) {
+            window.location.reload();
+        }
+        else
+            alert("다시 시도하여주십시오");
+    })
+    .catch((error) => {
+        alert("다시 시도하여주십시오");
+    })
 }

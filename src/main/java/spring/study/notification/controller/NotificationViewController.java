@@ -37,7 +37,7 @@ public class NotificationViewController {
             return "redirect:/member/login?error=true&exception=Not Found account";
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }

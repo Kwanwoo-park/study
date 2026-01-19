@@ -37,7 +37,7 @@ public class AdminViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }
@@ -62,7 +62,7 @@ public class AdminViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }
@@ -89,7 +89,7 @@ public class AdminViewController {
         if (session.getAttribute("member") == null)
             return "redirect:/member/login?error=true&exception=Session Expired";
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }
@@ -116,7 +116,7 @@ public class AdminViewController {
         if (session.getAttribute("member") == null)
             return "redirect:/member/login?error=true&exception=Session Expired";
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }
@@ -143,7 +143,7 @@ public class AdminViewController {
         if (session.getAttribute("member") == null)
             return "redirect:/member/login?error=true&exception=Session Expired";
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }
@@ -171,7 +171,7 @@ public class AdminViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }

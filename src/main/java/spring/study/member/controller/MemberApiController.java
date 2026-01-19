@@ -112,7 +112,7 @@ public class MemberApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -211,7 +211,7 @@ public class MemberApiController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -296,7 +296,7 @@ public class MemberApiController {
 
         if (session == null || !request.isRequestedSessionIdValid() || session.getAttribute("member") == null) {
             member = memberService.findMember(memberUpdateDto.getEmail());
-        } else if (memberService.validateSession(request)) {
+        } else if (!memberService.validateSession(request)) {
             member = memberService.findMember(memberUpdateDto.getEmail());
         }
         else {
@@ -335,7 +335,7 @@ public class MemberApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -383,7 +383,7 @@ public class MemberApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -430,7 +430,7 @@ public class MemberApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);

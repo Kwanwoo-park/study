@@ -43,7 +43,7 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -81,7 +81,7 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -119,7 +119,7 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -157,7 +157,7 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -194,7 +194,7 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -238,7 +238,7 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -282,7 +282,7 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -315,7 +315,7 @@ public class ForbiddenApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);

@@ -1,6 +1,5 @@
 package spring.study.chat.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -12,9 +11,6 @@ import spring.study.member.entity.Member;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 @NoArgsConstructor
 @Getter

@@ -61,7 +61,7 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(response);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             response.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(response);
@@ -109,7 +109,7 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -176,7 +176,7 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -232,7 +232,7 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             map.put("result", -10L);
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
@@ -244,6 +244,7 @@ public class BoardApiController {
             Board board = boardService.findById(id);
 
             map.put("email", member.getEmail());
+            map.put("result", 1L);
 
             member.removeComments(board.getComment());
             member.removeBoard(board);

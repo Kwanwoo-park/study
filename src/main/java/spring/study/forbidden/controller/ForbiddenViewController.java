@@ -32,7 +32,7 @@ public class ForbiddenViewController {
             return "redirect:/member/login?error=true&exception=Session Expired";
         }
 
-        if (memberService.validateSession(request)) {
+        if (!memberService.validateSession(request)) {
             session.invalidate();
             return "redirect:/member/login?error=true&exception=Session Invalid";
         }
