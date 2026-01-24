@@ -24,8 +24,10 @@ if (button) {
             .then((json) => {
                 if (json['result'] == -2)
                     alert("입력 값들을 확인해주세요")
-                else if (json['result'] > 0)
+                else if (json['result'] > 0) {
                     alert("회원 정보 저장 완료되었습니다")
+                    location.replace(``/board/main`)
+                }
                 else
                     alert("다시 시도하여주십시오");
             })

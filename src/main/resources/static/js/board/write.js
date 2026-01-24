@@ -68,14 +68,18 @@ function fnImgSave() {
         if (json['result'] > 0) {
             alert("게시글 사진 등록 완료");
             location.replace(`/board/main`);
-        } else if (json['result'] == -2)
+        } else if (json['result'] == -2) {
             alert("게시글 사진 갯수 초과")
-        else if (json['result'] == -99)
+            fnDelete(id)
+        }
+        else if (json['result'] == -99) {
             alert(json['message']);
-        else
+            fnDelete(id)
+        }
+        else {
             alert("게시글 사진 등록 실패");
-
-        fnDelete(id)
+            fnDelete(id)
+        }
     })
     .catch((error) => {
         alert("게시글 사진 등록 실패");

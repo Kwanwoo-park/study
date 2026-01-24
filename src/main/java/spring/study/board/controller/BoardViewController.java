@@ -30,21 +30,7 @@ public class BoardViewController {
                                    HttpServletRequest request) throws Exception {
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
         Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
 
         if (member.getPhone().equals(" ")) {
             return "redirect:/member/updatePhone";
@@ -65,56 +51,11 @@ public class BoardViewController {
         return "board/list";
     }
 
-    @GetMapping("/list")
-    public String getBoardPage(Model model,
-                               @RequestParam(required = false, defaultValue = "0") Integer page,
-                               @RequestParam(required = false, defaultValue = "5") Integer size,
-                               HttpServletRequest request) throws Exception {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
-
-        if (member.getRole() != Role.ADMIN) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        return "redirect:/board/all";
-    }
-
     @GetMapping("/main")
-    public String mainPage(Model model, HttpServletRequest request) throws Exception {
+    public String mainPage(Model model, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
         Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
 
         if (member.getPhone().equals(" ") || member.getBirth().equals("1900-01-01")) {
             return "redirect:/member/updatePhone";
@@ -130,21 +71,7 @@ public class BoardViewController {
     public String getBoardWritePage(Model model, HttpServletRequest request){
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
         Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
 
         model.addAttribute("name", member.getName());
         model.addAttribute("profile", member.getProfile());
@@ -157,21 +84,7 @@ public class BoardViewController {
     public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
         Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
 
         if (boardService.existBoard(boardRequestDto.getId())) {
             Board board = boardService.findById(boardRequestDto.getId());

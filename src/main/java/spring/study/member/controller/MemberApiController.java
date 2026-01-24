@@ -327,19 +327,8 @@ public class MemberApiController {
 
     @PatchMapping("/updatePhone")
     public ResponseEntity<Map<String, Long>> updatePhone(@RequestBody @Valid MemberRequestDto memberUpdateDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
         Map<String, Long> map = new HashMap<>();
-
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
+        HttpSession session = request.getSession();
 
         if (memberUpdateDto.getEmail().isEmpty() || memberUpdateDto.getEmail().isBlank() ||
                 memberUpdateDto.getPhone().isEmpty() || memberUpdateDto.getPhone().isBlank() ||

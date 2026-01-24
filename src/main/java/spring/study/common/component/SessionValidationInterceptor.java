@@ -19,12 +19,14 @@ public class SessionValidationInterceptor implements HandlerInterceptor {
 
         if (session == null || session.getAttribute("member") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.sendRedirect("/member/login?error=true&exception=Session Expired");
             return false;
         }
 
         if (!memberService.validateSession(request)) {
             session.invalidate();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.sendRedirect("/member/login?error=true&exception=Session Invalid");
             return false;
         }
 
