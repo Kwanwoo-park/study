@@ -338,4 +338,8 @@ public class Member extends BasetimeEntity implements UserDetails {
     public void changeRole(Role role) {
         this.role = role;
     }
+
+    public boolean checkProfile() {
+        return this.birth.equals("1900-01-01") || this.phone.equals(" ");
+    }
 }

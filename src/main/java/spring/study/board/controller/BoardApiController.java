@@ -9,6 +9,7 @@ import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.facade.BoardDeleteFacade;
 import spring.study.board.facade.BoardFacade;
+import spring.study.common.auth.LoginMember;
 import spring.study.member.entity.Member;
 import spring.study.board.service.BoardService;
 
@@ -26,10 +27,8 @@ public class BoardApiController {
 
     @GetMapping("/load")
     public ResponseEntity<?> getBoards(@RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                                         @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                                         HttpServletRequest request) {
-        Member member = (Member) request.getSession().getAttribute("member");
-
+                                       @RequestParam(defaultValue = "10", name = "limit") int limit,
+                                       @LoginMember Member member) {
         List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
 
@@ -42,27 +41,24 @@ public class BoardApiController {
     }
 
     @PostMapping("/write")
-    public ResponseEntity<?> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request) {
-        Member member = (Member) request.getSession().getAttribute("member");
-
+    public ResponseEntity<?> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto,
+                                              @LoginMember Member member) {
         long boardId = boardFacade.write(boardRequestDto, member);
 
         return ResponseEntity.ok(Map.of("result", boardId));
     }
 
     @PatchMapping("/view")
-    public ResponseEntity<?> boardViewAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request){
-        Member member = (Member) request.getSession().getAttribute("member");
-
+    public ResponseEntity<?> boardViewAction(@RequestBody BoardRequestDto boardRequestDto,
+                                             @LoginMember Member member){
         long result = boardFacade.update(boardRequestDto, member);
 
         return ResponseEntity.ok(Map.of("result", result));
     }
 
     @DeleteMapping("/view/delete")
-    public ResponseEntity<?> boardViewDeleteAction(@RequestParam() Long id, HttpServletRequest request){
-        Member member = (Member) request.getSession().getAttribute("member");
-
+    public ResponseEntity<?> boardViewDeleteAction(@RequestParam() Long id,
+                                                   @LoginMember Member member){
         boardDeleteFacade.deleteBoard(id, member);
 
         return ResponseEntity.ok(Map.of("result", 1L));

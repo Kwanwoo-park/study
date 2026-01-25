@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 
 @RequiredArgsConstructor
@@ -23,10 +24,22 @@ public class SessionValidationInterceptor implements HandlerInterceptor {
             return false;
         }
 
+        Member member = (Member) session.getAttribute("member");
+
         if (!memberService.validateSession(request)) {
             session.invalidate();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.sendRedirect("/member/login?error=true&exception=Session Invalid");
+            return false;
+        }
+
+        if (member == null) {
+            session.invalidate();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.sendRedirect("/member/login?error=true&exception=Not Found");
+            return false;
+        } else if (member.checkProfile()) {
+            response.sendRedirect("redirect:/member/updatePhone");
             return false;
         }
 
