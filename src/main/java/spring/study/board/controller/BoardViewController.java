@@ -1,5 +1,6 @@
 package spring.study.board.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -8,7 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.entity.Board;
-import spring.study.common.auth.LoginMember;
+import spring.study.common.service.SessionService;
 import spring.study.member.entity.Member;
 import spring.study.board.service.BoardService;
 
@@ -18,13 +19,17 @@ import spring.study.board.service.BoardService;
 @Slf4j
 public class BoardViewController {
     private final BoardService boardService;
+    private final SessionService sessionService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
     public String getBoardListPage(Model model,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size,
-                                   @LoginMember Member member) {
+                                   HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+
         model.addAttribute("resultMap", boardService.findAll(page, size));
         model.addAttribute("member", member);
 
@@ -32,7 +37,10 @@ public class BoardViewController {
     }
 
     @GetMapping("/main")
-    public String mainPage(Model model, @LoginMember Member member) {
+    public String mainPage(Model model, HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
 
@@ -40,7 +48,10 @@ public class BoardViewController {
     }
 
     @GetMapping("/write")
-    public String getBoardWritePage(Model model, @LoginMember Member member){
+    public String getBoardWritePage(Model model, HttpServletRequest request){
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+
         model.addAttribute("name", member.getName());
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
@@ -49,7 +60,10 @@ public class BoardViewController {
     }
 
     @GetMapping("/view")
-    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, @LoginMember Member member) {
+    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+
         if (boardService.existBoard(boardRequestDto.getId())) {
             Board board = boardService.findById(boardRequestDto.getId());
             long[] ids = boardService.getBoardIdList(boardRequestDto.getId(), board.getMember());

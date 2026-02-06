@@ -9,7 +9,7 @@ import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.facade.BoardDeleteFacade;
 import spring.study.board.facade.BoardFacade;
-import spring.study.common.auth.LoginMember;
+import spring.study.common.service.SessionService;
 import spring.study.member.entity.Member;
 import spring.study.board.service.BoardService;
 
@@ -24,11 +24,15 @@ public class BoardApiController {
     private final BoardService boardService;
     private final BoardFacade boardFacade;
     private final BoardDeleteFacade boardDeleteFacade;
+    private final SessionService sessionService;
 
     @GetMapping("/load")
     public ResponseEntity<?> getBoards(@RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                        @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                       @LoginMember Member member) {
+                                       HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) throw new IllegalArgumentException("인식되지 않는 Session");
+
         List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
 
@@ -42,7 +46,10 @@ public class BoardApiController {
 
     @PostMapping("/write")
     public ResponseEntity<?> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto,
-                                              @LoginMember Member member) {
+                                              HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) throw new IllegalArgumentException("인식되지 않는 Session");
+
         long boardId = boardFacade.write(boardRequestDto, member);
 
         return ResponseEntity.ok(Map.of("result", boardId));
@@ -50,7 +57,10 @@ public class BoardApiController {
 
     @PatchMapping("/view")
     public ResponseEntity<?> boardViewAction(@RequestBody BoardRequestDto boardRequestDto,
-                                             @LoginMember Member member){
+                                             HttpServletRequest request){
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) throw new IllegalArgumentException("인식되지 않는 Session");
+
         long result = boardFacade.update(boardRequestDto, member);
 
         return ResponseEntity.ok(Map.of("result", result));
@@ -58,7 +68,10 @@ public class BoardApiController {
 
     @DeleteMapping("/view/delete")
     public ResponseEntity<?> boardViewDeleteAction(@RequestParam() Long id,
-                                                   @LoginMember Member member){
+                                                   HttpServletRequest request){
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) throw new IllegalArgumentException("인식되지 않는 Session");
+
         boardDeleteFacade.deleteBoard(id, member);
 
         return ResponseEntity.ok(Map.of("result", 1L));
