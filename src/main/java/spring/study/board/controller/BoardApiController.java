@@ -3,6 +3,7 @@ package spring.study.board.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
@@ -31,7 +32,10 @@ public class BoardApiController {
                                        @RequestParam(defaultValue = "10", name = "limit") int limit,
                                        HttpServletRequest request) {
         Member member = sessionService.getLoginMember(request);
-        if (member == null) throw new IllegalArgumentException("인식되지 않는 Session");
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
         List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
@@ -48,32 +52,35 @@ public class BoardApiController {
     public ResponseEntity<?> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto,
                                               HttpServletRequest request) {
         Member member = sessionService.getLoginMember(request);
-        if (member == null) throw new IllegalArgumentException("인식되지 않는 Session");
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        long boardId = boardFacade.write(boardRequestDto, member);
-
-        return ResponseEntity.ok(Map.of("result", boardId));
+        return boardFacade.write(boardRequestDto, member);
     }
 
     @PatchMapping("/view")
     public ResponseEntity<?> boardViewAction(@RequestBody BoardRequestDto boardRequestDto,
                                              HttpServletRequest request){
         Member member = sessionService.getLoginMember(request);
-        if (member == null) throw new IllegalArgumentException("인식되지 않는 Session");
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        long result = boardFacade.update(boardRequestDto, member);
-
-        return ResponseEntity.ok(Map.of("result", result));
+        return boardFacade.update(boardRequestDto, member);
     }
 
     @DeleteMapping("/view/delete")
     public ResponseEntity<?> boardViewDeleteAction(@RequestParam() Long id,
                                                    HttpServletRequest request){
         Member member = sessionService.getLoginMember(request);
-        if (member == null) throw new IllegalArgumentException("인식되지 않는 Session");
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        boardDeleteFacade.deleteBoard(id, member);
-
-        return ResponseEntity.ok(Map.of("result", 1L));
+        return boardDeleteFacade.deleteBoard(id, member);
     }
 }

@@ -2,6 +2,8 @@ package spring.study.board.facade;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.entity.Board;
@@ -14,6 +16,8 @@ import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -23,26 +27,46 @@ public class BoardFacade {
     private final MemberService memberService;
     private final NotificationService notificationService;
 
-    public long write(BoardRequestDto dto, Member member) {
-        validateContent(dto.getContent(), member);
+    public ResponseEntity<?> write(BoardRequestDto dto, Member member) {
+        int risk = validateContent(dto.getContent(), member);
+
+        if (risk != 0)
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                    "result", -risk,
+                    "message", "금칙어를 사용하였습니다"
+            ));
 
         Board board = dto.toEntity();
         board.addMember(member);
 
         Board saved = boardService.save(board);
 
-        if (saved == null) throw new IllegalStateException("게시글 저장 실패");
+        if (saved == null)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "result", -10,
+                    "message", "게시글이 저장되지 않았습니다"
+            ));
 
-        return saved.getId();
+        return ResponseEntity.ok(Map.of(
+                "result", saved.getId()
+        ));
     }
 
-    public long update(BoardRequestDto dto, Member member) {
-        validateContent(dto.getContent(), member);
+    public ResponseEntity<?> update(BoardRequestDto dto, Member member) {
+        int risk = validateContent(dto.getContent(), member);
 
-        return boardService.updateBoard(dto.getId(), dto.getContent());
+        if (risk != 0)
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                    "result", -risk,
+                    "message", "금칙어를 사용하였습니다"
+            ));
+
+        return ResponseEntity.ok(Map.of(
+                "result", boardService.updateBoard(dto.getId(), dto.getContent())
+        ));
     }
 
-    private void validateContent(String content, Member member) {
+    private int validateContent(String content, Member member) {
         if (content == null || content.isBlank()) {
             throw new IllegalArgumentException("내용이 비어 있습니다");
         }
@@ -58,11 +82,9 @@ public class BoardFacade {
                 );
 
                 memberService.updateRole(member.getId(), Role.DENIED);
-
-                throw new IllegalArgumentException("금칙어 사용으로 차단됨");
             }
-
-            throw new IllegalArgumentException("금칙어 포함");
         }
+
+        return risk;
     }
 }
