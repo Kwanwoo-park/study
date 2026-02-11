@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
-import spring.study.board.facade.BoardDeleteFacade;
 import spring.study.board.facade.BoardFacade;
 import spring.study.common.service.SessionService;
 import spring.study.member.entity.Member;
@@ -24,7 +23,6 @@ import java.util.Map;
 public class BoardApiController {
     private final BoardService boardService;
     private final BoardFacade boardFacade;
-    private final BoardDeleteFacade boardDeleteFacade;
     private final SessionService sessionService;
 
     @GetMapping("/load")
@@ -81,6 +79,6 @@ public class BoardApiController {
                 "message", "유효하지 않은 세션"
         ));
 
-        return boardDeleteFacade.deleteBoard(id, member);
+        return boardFacade.deleteBoard(id, member);
     }
 }

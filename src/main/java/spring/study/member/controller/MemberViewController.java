@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import spring.study.common.service.SessionService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -24,22 +25,19 @@ public class MemberViewController {
     private final MemberService memberService;
     private final BoardService boardService;
     private final FollowService followService;
+    private final SessionService sessionService;
 
     @GetMapping("/login")
     public String login(Model model,
                         @RequestParam(value = "error", required = false) String error,
                         @RequestParam(value = "exception", required = false) String exception,
                         HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
-        HttpSession session = request.getSession();
-
-        if (session.getAttribute("member") != null) {
-            Member member = (Member) request.getSession().getAttribute("member");
-
-            if (member.getRole() == Role.USER) return "redirect:/board/main";
-            else if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
-            else request.getSession().invalidate();
-        }
+        if (member.getRole() == Role.USER) return "redirect:/board/main";
+        else if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
+        else request.getSession().invalidate();
 
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
@@ -54,27 +52,18 @@ public class MemberViewController {
 
     @GetMapping("/detail")
     public String detail(@RequestParam String email, Model model, HttpServletRequest request){
-        HttpSession session = request.getSession();
-
-        Member member;
+        HttpSession session = request.getSession(false);
 
         if (session != null && request.isRequestedSessionIdValid() && session.getAttribute("member") != null) {
-            if (email.equals(((Member) session.getAttribute("member")).getEmail())) {
-                member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+            Member member;
+            String memberEmail = ((Member) session.getAttribute("member")).getEmail();
+
+            if (email.equals(memberEmail)) {
+                member = memberService.findMember(memberEmail);
                 session.setAttribute("member", member);
             }
             else
                 return "redirect:/member/search/detail?email=" + email;
-
-            if (member == null) {
-                session.invalidate();
-                return "redirect:/member/login?error=true&exception=Not Found account";
-            }
-
-            if (!memberService.validateSession(request)) {
-                session.invalidate();
-                return "redirect:/member/login?error=true&exception=Session Invalid";
-            }
 
             model.addAttribute("member", member);
             model.addAttribute("resultMap", boardService.findByMember(member));
@@ -103,22 +92,8 @@ public class MemberViewController {
 
     @GetMapping("/updatePassword")
     public String updatePassword(Model model, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid())
-            return "redirect:/member/login?error=true&exception=Not Found account";
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Not Found account";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("email", member.getEmail());
 
@@ -127,22 +102,8 @@ public class MemberViewController {
 
     @GetMapping("/updatePhone")
     public String updatePhone(Model model, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid())
-            return "redirect:/member/login?error=true&exception=Not Found account";
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Not Found account";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("email", member.getEmail());
         model.addAttribute("phone", member.getPhone());
@@ -160,22 +121,8 @@ public class MemberViewController {
 
     @GetMapping("/withdrawal")
     public String withdrawal(Model model, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid())
-            return "redirect:/member/login?error=true&exception=Not Found account";
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Not Found account";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("name", member.getName());
 
@@ -184,22 +131,8 @@ public class MemberViewController {
 
     @GetMapping("/search")
     public String memberFind(Model model, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid())
-            return "redirect:/member/login?error=true&exception=Not Found account";
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Not Found account";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
@@ -210,30 +143,15 @@ public class MemberViewController {
     @GetMapping("/search/detail")
     public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
         HttpSession session = request.getSession();
+        String memberEmail = ((Member) session.getAttribute("member")).getEmail();
 
-        if (session == null || !request.isRequestedSessionIdValid())
-            return "redirect:/member/login?error=true&exception=Not Found account";
+        if (memberEmail.equals(memberRequestDto.getEmail()))
+            return "redirect:/member/detail?email=" + memberEmail;
 
-        Member member = (Member) session.getAttribute("member");
+        Member search_member = memberService.findMember(memberRequestDto.getEmail());
+        Member member = memberService.findMember(memberEmail);
 
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Not Found account";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
-
-        Member search_member = (Member) memberService.loadUserByUsername(memberRequestDto.getEmail());
-
-        if (member.getEmail().equals(search_member.getEmail()))
-            return "redirect:/member/detail?email="+search_member.getEmail();
-        else
-            session.setAttribute("member", member);
-
-        member = memberService.findMember(((Member) session.getAttribute("member")).getEmail());
+        session.setAttribute("member", member);
 
         model.addAttribute("member", search_member);
         model.addAttribute("resultMap", boardService.findByMember(search_member));

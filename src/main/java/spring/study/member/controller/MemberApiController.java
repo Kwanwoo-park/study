@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.common.service.SessionService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.board.entity.Board;
@@ -25,6 +26,7 @@ import spring.study.comment.service.CommentService;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
 import spring.study.forbidden.service.ForbiddenService;
+import spring.study.member.service.MemberFacade;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
@@ -40,6 +42,8 @@ import java.util.Map;
 @RequestMapping("/api/member")
 @Slf4j
 public class MemberApiController {
+    private final SessionService sessionService;
+    private final MemberFacade memberFacade;
     private final MemberService memberService;
     private final BoardService boardService;
     private final BoardImgService boardImgService;
@@ -56,141 +60,33 @@ public class MemberApiController {
     private final BCryptPasswordEncoder encoder;
 
     @PatchMapping("/login")
-    public ResponseEntity<Map<String, Object>> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
-
-        Map<String, Object> map = new HashMap<>();
-        HttpSession session = request.getSession();
-
-        try {
-            Member member = (Member) memberService.loadUserByUsername(dto.getEmail());
-
-            if (member == null) {
-                map.put("result", -3L);
-                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-            }
-
-            if ( dto.getEmail().isEmpty() || dto.getEmail().isBlank() ||dto.getPassword().isEmpty() || dto.getPassword().isBlank()) {
-                map.put("result", -10L);
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
-            }
-
-            if (encoder.matches(dto.getPassword(), member.getPassword())) {
-                if (member.getRole() != Role.DENIED) {
-                    memberService.updateLastLoginTime(member.getId());
-
-                    session.setAttribute("IP", memberService.getIp(request));
-                    session.setAttribute("UA", request.getHeader("User-Agent"));
-                    session.setAttribute("member", member);
-
-                    map.put("result", member.getId());
-                    map.put("member", member);
-                } else
-                    map.put("result", -2L);
-            } else
-                map.put("result", -1L);
-
-            return ResponseEntity.status(HttpStatus.OK).body(map);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
-        }
+    public ResponseEntity<?> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
+        return memberFacade.login(dto, request);
     }
 
     @GetMapping("/logout")
-    public ResponseEntity<Map<String, Long>> logoutAction(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Long> map = new HashMap<>();
+    public ResponseEntity<?> logoutAction(HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
+        sessionService.logout(request, memberService.getIp(request));
 
-        if (session.getAttribute("member") == null) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        Member member = (Member) session.getAttribute("member");
-
-        try {
-            session.removeAttribute("member");
-
-            map.put("result", member.getId());
-
-            return ResponseEntity.ok(map);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
+        return ResponseEntity.ok(Map.of(
+                "result", member.getId()
+        ));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Long>> registerAction(@RequestBody @Valid MemberRequestDto memberRequestDto) throws Exception {
-        Map<String, Long> map = new HashMap<>();
-
-        if ((memberRequestDto.getEmail().isEmpty() || memberRequestDto.getEmail().isBlank()) ||
-                (memberRequestDto.getPassword().isEmpty() || memberRequestDto.getPassword().isBlank()) ||
-                (memberRequestDto.getName().isEmpty() || memberRequestDto.getName().isBlank()) ||
-                (memberRequestDto.getPhone().isEmpty() || memberRequestDto.getPhone().isBlank()) ||
-                (memberRequestDto.getBirth().isEmpty() || memberRequestDto.getBirth().isBlank())) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
-        }
-
-        if (memberRequestDto.getBirth().equals("1900-01-01")) {
-            map.put("result", -2L);
-            return ResponseEntity.ok(map);
-        }
-
-        try {
-            int risk = forbiddenService.findWordList(Status.APPROVAL, memberRequestDto.getName());
-
-            if (risk != 0) {
-                map.put("result", -1L);
-                return ResponseEntity.ok(map);
-            }
-
-            MemberResponseDto dto = userService.createUser(memberRequestDto);
-
-            if (dto != null) {
-                notificationService.createNotification(memberService.findAdministrator(), memberRequestDto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
-                map.put("result", dto.getId());
-            }
-            else
-                map.put("result", -2L);
-
-            return ResponseEntity.ok(map);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -2L);
-            return ResponseEntity.ok(map);
-        }
+    public ResponseEntity<?> registerAction(@RequestBody @Valid MemberRequestDto memberRequestDto) throws Exception {
+        return memberFacade.register(memberRequestDto);
     }
 
     @GetMapping("/duplicateCheck")
-    public ResponseEntity<Map<String, Long>> duplicateCheck(@RequestParam() String email) {
-        Map<String, Long> map = new HashMap<>();
-
-        if (email.isBlank()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (memberService.existEmail(email))
-            map.put("result", 10L);
-        else
-            map.put("result", -10L);
-
-        return ResponseEntity.ok(map);
+    public ResponseEntity<?> duplicateCheck(@RequestParam() String email) {
+        return memberFacade.duplicateCheck(email);
     }
 
     @PatchMapping("/detail/action")
