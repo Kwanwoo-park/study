@@ -33,11 +33,9 @@ public class MemberViewController {
                         @RequestParam(value = "exception", required = false) String exception,
                         HttpServletRequest request) {
         Member member = sessionService.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         if (member.getRole() == Role.USER) return "redirect:/board/main";
         else if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
-        else request.getSession().invalidate();
 
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);

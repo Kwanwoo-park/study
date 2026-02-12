@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import spring.study.common.service.SessionService;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 

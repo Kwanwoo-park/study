@@ -1,17 +1,14 @@
 package spring.study.chat.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
-import spring.study.chat.service.ChatMessageImgService;
+import spring.study.common.service.SessionService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.member.service.MemberService;
@@ -23,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/chat")
 public class ChatViewController {
+    private final SessionService sessionService;
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
     private final MemberService memberService;
@@ -32,23 +30,8 @@ public class ChatViewController {
                            @RequestParam(required = false, defaultValue = "0") Integer page,
                            @RequestParam(required = false, defaultValue = "5") Integer size,
                            HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
@@ -69,23 +52,8 @@ public class ChatViewController {
 
     @GetMapping("/chatRoom")
     public String chatRoom(@RequestParam String roomId, Model model, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         ChatRoom room = roomService.find(roomId);
 

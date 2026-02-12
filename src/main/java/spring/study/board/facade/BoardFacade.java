@@ -121,16 +121,14 @@ public class BoardFacade {
 
         int risk = forbiddenService.findWordList(Status.APPROVAL, content);
 
-        if (risk != 0) {
-            if (risk == 3) {
-                notificationService.createNotification(
-                        memberService.findAdministrator(),
-                        member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
-                        Group.ADMIN
-                );
+        if (risk == 3) {
+            notificationService.createNotification(
+                    memberService.findAdministrator(),
+                    member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
+                    Group.ADMIN
+            );
 
-                memberService.updateRole(member.getId(), Role.DENIED);
-            }
+            memberService.updateRole(member.getId(), Role.DENIED);
         }
 
         return risk;

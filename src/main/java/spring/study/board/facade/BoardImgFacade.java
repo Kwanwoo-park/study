@@ -25,14 +25,14 @@ public class BoardImgFacade {
     private final ImageS3Service imageS3Service;
 
     public ResponseEntity<Map<String, Object>> imageSave(List<MultipartFile> files, Long id) {
-        if (fileSizeCheck(files) < 0) {
+        if (files.size() > 10) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -2,
                     "message", "업로드 파일 갯수 초과"
             ));
         }
 
-        if (fileFormatCheck(files) < 0) {
+        if (imageS3Service.findFormatCheck(files)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -99,
                     "message", "지원하지 않는 파일 형식"
@@ -61,13 +61,5 @@ public class BoardImgFacade {
                     "message", "오류가 발생하였습니다"
             ));
         }
-    }
-
-    private int fileSizeCheck(List<MultipartFile> files) {
-        return files.size() > 10 ? -2 :  files.size();
-    }
-
-    private int fileFormatCheck(List<MultipartFile> files) {
-        return imageS3Service.findFormatCheck(files) ? -99 : files.size();
     }
 }
