@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageImg;
 import spring.study.chat.entity.ChatRoom;
