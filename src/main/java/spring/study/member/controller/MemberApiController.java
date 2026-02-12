@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.common.service.SessionService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
-import spring.study.member.service.MemberFacade;
+import spring.study.member.facade.MemberFacade;
 import spring.study.member.service.MemberService;
 
 import java.util.Map;
