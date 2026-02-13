@@ -63,7 +63,7 @@ public class ChatApiController {
                 "message", "유효하지 않은 세션"
         ));
 
-        return chatFacade.messageCheck(message, member);
+        return chatFacade.messageCheck(message, member, request);
     }
 
     @PostMapping("/sendImage")

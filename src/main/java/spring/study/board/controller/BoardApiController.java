@@ -55,7 +55,7 @@ public class BoardApiController {
                 "message", "유효하지 않은 세션"
         ));
 
-        return boardFacade.write(boardRequestDto, member);
+        return boardFacade.write(boardRequestDto, member, request);
     }
 
     @PatchMapping("/view")
@@ -67,7 +67,7 @@ public class BoardApiController {
                 "message", "유효하지 않은 세션"
         ));
 
-        return boardFacade.update(boardRequestDto, member);
+        return boardFacade.update(boardRequestDto, member, request);
     }
 
     @DeleteMapping("/view/delete")

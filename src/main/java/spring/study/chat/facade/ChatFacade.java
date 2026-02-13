@@ -1,5 +1,6 @@
 package spring.study.chat.facade;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -98,8 +99,8 @@ public class ChatFacade {
         ));
     }
 
-    public ResponseEntity<?> messageCheck(String message, Member member) {
-        int risk = validateMessage(message, member);
+    public ResponseEntity<?> messageCheck(String message, Member member, HttpServletRequest request) {
+        int risk = validateMessage(message, member, request);
 
         if (risk != 0) {
             if (risk == -99) {
@@ -162,7 +163,7 @@ public class ChatFacade {
         }
     }
 
-    private int validateMessage(String message, Member member) {
+    private int validateMessage(String message, Member member, HttpServletRequest request) {
         if (message == null || message.isBlank()) return -99;
 
         int risk = forbiddenService.findWordList(Status.APPROVAL, message);
@@ -175,6 +176,8 @@ public class ChatFacade {
             );
 
             memberService.updateRole(member.getId(), Role.DENIED);
+
+            request.getSession(false).invalidate();
         }
 
         return risk;

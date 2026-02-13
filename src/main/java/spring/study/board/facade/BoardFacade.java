@@ -1,8 +1,10 @@
 package spring.study.board.facade;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -38,8 +40,8 @@ public class BoardFacade {
     private final MemberService memberService;
     private final NotificationService notificationService;
 
-    public ResponseEntity<?> write(BoardRequestDto dto, Member member) {
-        int risk = validateContent(dto.getContent(), member);
+    public ResponseEntity<?> write(BoardRequestDto dto, Member member, HttpServletRequest request) {
+        int risk = validateContent(dto.getContent(), member, request);
 
         if (risk != 0) {
             if (risk == -99)
@@ -70,8 +72,8 @@ public class BoardFacade {
         ));
     }
 
-    public ResponseEntity<?> update(BoardRequestDto dto, Member member) {
-        int risk = validateContent(dto.getContent(), member);
+    public ResponseEntity<?> update(BoardRequestDto dto, Member member, HttpServletRequest request) {
+        int risk = validateContent(dto.getContent(), member, request);
 
         if (risk != 0) {
             if (risk == -99) {
@@ -114,7 +116,7 @@ public class BoardFacade {
         ));
     }
 
-    private int validateContent(String content, Member member) {
+    private int validateContent(String content, Member member, HttpServletRequest request) {
         if (content == null || content.isBlank()) {
             return -99;
         }
@@ -129,6 +131,8 @@ public class BoardFacade {
             );
 
             memberService.updateRole(member.getId(), Role.DENIED);
+
+            request.getSession(false).invalidate();
         }
 
         return risk;
