@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import spring.study.common.service.SessionService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
@@ -15,27 +16,13 @@ import spring.study.member.service.MemberService;
 @Controller
 @RequestMapping("/follow")
 public class FollowViewController {
+    private final SessionService sessionService;
     private final MemberService memberService;
 
     @GetMapping("/follower")
     public String follower(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         Member follower = memberService.findMember(memberRequestDto.getEmail());
 
@@ -48,23 +35,8 @@ public class FollowViewController {
 
     @GetMapping("/following")
     public String following(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
-
-        Member member = (Member) session.getAttribute("member");
-
-        if (member == null) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Login Please";
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            return "redirect:/member/login?error=true&exception=Session Invalid";
-        }
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         Member following = memberService.findMember(memberRequestDto.getEmail());
 

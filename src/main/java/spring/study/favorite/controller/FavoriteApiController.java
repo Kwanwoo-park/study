@@ -1,24 +1,15 @@
 package spring.study.favorite.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import spring.study.board.entity.Board;
 import spring.study.common.service.SessionService;
-import spring.study.favorite.entity.Favorite;
 import spring.study.favorite.facade.FavoriteFacade;
 import spring.study.member.entity.Member;
-import spring.study.member.service.MemberService;
-import spring.study.notification.entity.Group;
-import spring.study.board.service.BoardService;
-import spring.study.favorite.service.FavoriteService;
-import spring.study.notification.service.NotificationService;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
