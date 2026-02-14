@@ -1,21 +1,19 @@
 package spring.study.forbidden.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import spring.study.common.service.SessionService;
 import spring.study.forbidden.dto.ForbiddenChangeRequestDto;
 import spring.study.forbidden.dto.ForbiddenRequestDto;
-import spring.study.forbidden.dto.ForbiddenResponseDto;
 import spring.study.forbidden.entity.Status;
-import spring.study.forbidden.service.ForbiddenService;
-import spring.study.member.service.MemberService;
+import spring.study.forbidden.facade.ForbiddenFacade;
+import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -23,312 +21,121 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/forbidden/word")
 public class ForbiddenApiController {
-    private final ForbiddenService forbiddenService;
-    private final MemberService memberService;
+    private final SessionService sessionService;
+    private final ForbiddenFacade forbiddenFacade;
 
     @GetMapping("/search")
-    public ResponseEntity<Map<String, Object>> forbiddenWordSearch(@RequestParam String word, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Object> map = new HashMap<>();
-        List<ForbiddenResponseDto> list;
+    public ResponseEntity<?> forbiddenWordSearch(@RequestParam String word, HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        try {
-            list = forbiddenService.findByWord(word);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10L);
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
-
-        map.put("list", list);
-        map.put("result", (long) list.size());
-
-        return ResponseEntity.ok(map);
+        return forbiddenFacade.search(word);
     }
 
     @GetMapping("/proposal")
-    public ResponseEntity<Map<String, Object>> forbiddenProposalWordSearch(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Object> map = new HashMap<>();
-        List<ForbiddenResponseDto> list;
+    public ResponseEntity<?> forbiddenProposalWordSearch(HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        try {
-            list = forbiddenService.findByStatus(Status.PROPOSAL);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10L);
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
-
-        map.put("list", list);
-        map.put("result", (long) list.size());
-
-        return ResponseEntity.ok(map);
+        return forbiddenFacade.getStatus(Status.PROPOSAL);
     }
 
     @GetMapping("/examine")
-    public ResponseEntity<Map<String, Object>> forbiddenExamineWordSearch(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Object> map = new HashMap<>();
-        List<ForbiddenResponseDto> list;
+    public ResponseEntity<?> forbiddenExamineWordSearch(HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        try {
-            list = forbiddenService.findByStatus(Status.EXAMINE);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10L);
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
-
-        map.put("list", list);
-        map.put("result", (long) list.size());
-
-        return ResponseEntity.ok(map);
+        return forbiddenFacade.getStatus(Status.EXAMINE);
     }
 
     @GetMapping("/approval")
-    public ResponseEntity<Map<String, Object>> forbiddenApprovalWordSearch(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Object> map = new HashMap<>();
-        List<ForbiddenResponseDto> list;
+    public ResponseEntity<?> forbiddenApprovalWordSearch(HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        try {
-            list = forbiddenService.findByStatus(Status.APPROVAL);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10L);
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
-
-        map.put("list", list);
-        map.put("result", (long) list.size());
-
-        return ResponseEntity.ok(map);
+        return forbiddenFacade.getStatus(Status.APPROVAL);
     }
 
     @PostMapping("/apply")
-    public ResponseEntity<Map<String, Long>> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Long> map = new HashMap<>();
+    public ResponseEntity<?> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (requestDto.getWord().isBlank()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
-        }
-
-        try {
-            if (forbiddenService.existWord(requestDto.getWord())) {
-                map.put("result", -1L);
-                return ResponseEntity.ok(map);
-            }
-
-            requestDto.setStatus(Status.PROPOSAL);
-            map.put("result", forbiddenService.save(requestDto).getId());
-
-            return ResponseEntity.ok(map);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
+        return forbiddenFacade.wordApply(requestDto);
     }
 
     @PostMapping("/admin/save")
-    public ResponseEntity<Map<String, Long>> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Long> map = new HashMap<>();
+    public ResponseEntity<?> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        if (!member.getRole().equals(Role.ADMIN)) {
+            request.getSession(false).invalidate();
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "비정상적인 접근입니다"
+            ));
         }
 
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (requestDto.getWord().isBlank()) {
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(map);
-        }
-
-        try {
-            if (forbiddenService.existWord(requestDto.getWord())) {
-                map.put("result", -1L);
-                return ResponseEntity.ok(map);
-            }
-
-            requestDto.setStatus(Status.APPROVAL);
-            map.put("result", forbiddenService.save(requestDto).getId());
-
-            return ResponseEntity.ok(map);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10L);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
+        return forbiddenFacade.wordSave(requestDto);
     }
 
     @PatchMapping("/admin/change/examine")
-    public ResponseEntity<Map<String, Integer>> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Integer> map = new HashMap<>();
+    public ResponseEntity<?> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        if (!member.getRole().equals(Role.ADMIN)) {
+            request.getSession(false).invalidate();
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "result", -10,
+                    "message", "비정상적인 접근입니다"
+            ));
         }
 
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            map.put("result", -10);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        try {
-            map.put("result", forbiddenService.updateStatus(Status.EXAMINE, requestDto.getIdList()));
-
-            return ResponseEntity.ok(map);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
+        return forbiddenFacade.updateStatus(Status.EXAMINE, requestDto);
     }
 
     @PatchMapping("/admin/change/approval")
-    public ResponseEntity<Map<String, Integer>> changeToApproval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Map<String, Integer> map = new HashMap<>();
+    public ResponseEntity<?> changeToApproval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
+        Member member = sessionService.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
 
-        if (session == null || !request.isRequestedSessionIdValid()) {
-            map.put("result", -10);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        if (!member.getRole().equals(Role.ADMIN)) {
+            request.getSession(false).invalidate();
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "result", -10,
+                    "message", "비정상적인 접근입니다"
+            ));
         }
 
-        if (session.getAttribute("member") == null) {
-            session.invalidate();
-            map.put("result", -10);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        if (!memberService.validateSession(request)) {
-            session.invalidate();
-            map.put("result", -10);
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
-        }
-
-        try {
-            map.put("result", forbiddenService.updateStatus(Status.APPROVAL, requestDto.getIdList()));
-
-            return ResponseEntity.ok(map);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            map.put("result", -10);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
-        }
+        return forbiddenFacade.updateStatus(Status.APPROVAL, requestDto);
     }
 }
