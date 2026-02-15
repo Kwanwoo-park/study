@@ -34,8 +34,10 @@ public class MemberViewController {
                         HttpServletRequest request) {
         Member member = sessionService.getLoginMember(request);
 
-        if (member.getRole() == Role.USER) return "redirect:/board/main";
-        else if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
+        if (member != null) {
+            if (member.getRole() == Role.USER) return "redirect:/board/main";
+            else if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
+        }
 
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
