@@ -39,7 +39,7 @@ public class FavoriteFacade {
         Favorite favorite = favoriteService.save(member, board);
         Member otherMember = board.getMember();
 
-        if (member.getId().equals(otherMember.getId()))
+        if (!member.getId().equals(otherMember.getId()))
             notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다", Group.FAVORITE).addMember(otherMember);
 
         request.getSession(false).setAttribute("member", member);

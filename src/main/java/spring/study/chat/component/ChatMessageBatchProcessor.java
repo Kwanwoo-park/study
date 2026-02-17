@@ -10,9 +10,10 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import spring.study.chat.dto.ChatMessageRequestDto;
-import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.service.ChatMessageService;
+import spring.study.chat.service.ChatRoomService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -20,6 +21,7 @@ import java.util.List;
 public class ChatMessageBatchProcessor {
     private final RedisTemplate<String, Object> objectRedisTemplate;
     private final ChatMessageService chatMessageService;
+    private final ChatRoomService roomService;
     private final ObjectMapper objectMapper;
 
     @Scheduled(fixedRate = 5000)
@@ -55,6 +57,10 @@ public class ChatMessageBatchProcessor {
                     objectRedisTemplate.delete(key);
                 }
             }
+
+            String roomId = key.split(":")[3];
+            LocalDateTime dateTime = (LocalDateTime) objectRedisTemplate.opsForValue().get(key+"lastTime");
+            roomService.updateLastTime(roomId, dateTime);
         }
     }
 }

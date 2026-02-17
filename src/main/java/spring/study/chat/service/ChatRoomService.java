@@ -14,6 +14,7 @@ import spring.study.chat.entity.ChatRoom;
 import spring.study.member.entity.Member;
 import spring.study.chat.repository.ChatRoomRepository;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -84,6 +85,13 @@ public class ChatRoomService {
 
     public void delete(String roomId) {
         chatRoomRepository.deleteByRoomId(roomId);
+    }
+
+    @Transactional
+    public void updateLastTime(String roomId, LocalDateTime time) {
+        ChatRoom room = chatRoomRepository.findByRoomId(roomId);
+
+        room.setLastChatTime(time);
     }
 
     @Transactional

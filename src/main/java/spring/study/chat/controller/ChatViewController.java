@@ -11,7 +11,6 @@ import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
-import spring.study.member.service.MemberService;
 
 import java.util.List;
 
@@ -23,12 +22,9 @@ public class ChatViewController {
     private final SessionService sessionService;
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
-    private final MemberService memberService;
 
     @GetMapping("/chatList")
     public String chatList(Model model,
-                           @RequestParam(required = false, defaultValue = "0") Integer page,
-                           @RequestParam(required = false, defaultValue = "5") Integer size,
                            HttpServletRequest request) {
         Member member = sessionService.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found";

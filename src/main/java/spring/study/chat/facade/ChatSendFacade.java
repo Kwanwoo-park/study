@@ -17,6 +17,7 @@ import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,6 +40,7 @@ public class ChatSendFacade {
 
         dto.setRoom(room);
         dto.setMember(member);
+        dto.setRegisterTime(LocalDateTime.now());
 
         if (dto.getType().equals(MessageType.ENTER)) {
             if (!roomMemberService.exist(member, room)) {

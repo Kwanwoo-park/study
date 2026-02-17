@@ -35,9 +35,11 @@ public class ChatRoomMemberService {
     }
 
     public List<ChatRoom> findRoom(Member member) {
-        List<ChatRoom> list = new ArrayList<>(chatRoomMemberRepository.findByMember(member).stream().map(ChatRoomMember::getRoom).sorted(Comparator.comparing(c -> c.getMessages().get(c.getMessages().size() - 1).getRegisterTime())).toList());
-        Collections.reverse(list);
-        return list;
+        return chatRoomMemberRepository.findByMember(member)
+                .stream()
+                .map(ChatRoomMember::getRoom)
+                .sorted(Comparator.comparing(ChatRoom::getLastChatTime).reversed())
+                .toList();
     }
 
     public HashMap<String, List<Member>> findMember(List<ChatRoom> rooms, Member member) {

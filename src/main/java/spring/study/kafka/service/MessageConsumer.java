@@ -31,6 +31,9 @@ public class MessageConsumer {
             String json = objectMapper.writeValueAsString(message);
 
             objectRedisTemplate.opsForList().rightPush(key, json);
+            objectRedisTemplate.opsForValue().set(
+                    key+"lastTime", message.getRegisterTime()
+            );
         } catch (Exception e) {
             log.error(e.getMessage());
         }

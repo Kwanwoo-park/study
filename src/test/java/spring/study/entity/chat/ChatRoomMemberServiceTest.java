@@ -4,10 +4,12 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.member.Member;
-//import spring.study.service.chat.ChatRoomMemberService;
-//import spring.study.service.chat.ChatRoomService;
-//import spring.study.service.member.MemberService;
+//import spring.study.chat.entity.ChatRoom;
+//import spring.study.chat.entity.ChatRoomMember;
+//import spring.study.chat.service.ChatRoomMemberService;
+//import spring.study.chat.service.ChatRoomService;
+//import spring.study.member.entity.Member;
+//import spring.study.member.service.MemberService;
 //
 //import java.util.List;
 //
@@ -69,7 +71,7 @@
 //        assertThat(list, is(notNullValue()));
 //
 //        for (ChatRoom room : list) {
-//            System.out.println(room.getRoomId() + " " + room.getName());
+//            System.out.println(room.getRoomId() + " " + room.getName() + " " + room.getMessages().get(room.getMessages().size()-1).getMessage());
 //        }
 //    }
 //
@@ -80,7 +82,7 @@
 //        ChatRoom room = roomService.find("row08wr08w0");
 //
 //        //when
-//        List<ChatRoomMember> result = chatRoomMemberService.find(member);
+//        List<ChatRoomMember> result = chatRoomMemberService.find(room);
 //
 //        //then
 //        assertThat(result, is(notNullValue()));

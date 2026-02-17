@@ -4,14 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
 @Getter
+@Setter
 @Entity(name = "room")
 public class ChatRoom implements Serializable {
     @Id
@@ -27,6 +30,10 @@ public class ChatRoom implements Serializable {
 
     @NotNull
     private Long count;
+
+    @LastModifiedDate
+    @Column(name = "lastTime")
+    private LocalDateTime lastChatTime;
 
     @JsonIgnore
     @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
