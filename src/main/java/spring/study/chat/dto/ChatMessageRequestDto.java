@@ -34,4 +34,16 @@ public class ChatMessageRequestDto {
         this.registerTime = registerTime;
         this.list = list;
     }
+
+    @Override
+    public String toString() {
+        return "ChatRoomResponseDto{" +
+                "id=" + id +
+                ", roomId='" + roomId + '\'' +
+                ", message='" + message + '\'' +
+                ", email=" + email + '\'' +
+                ", registerTime=" + registerTime +
+                ", list=" + list +
+                '}';
+    }
 }

@@ -32,7 +32,6 @@ public class ChatRoom implements Serializable {
     private Long count;
 
     @LastModifiedDate
-    @Column(name = "lastTime")
     private LocalDateTime lastChatTime;
 
     @JsonIgnore

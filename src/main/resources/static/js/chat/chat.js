@@ -16,8 +16,8 @@ window.onload = function() {
     loadMoreChat();
 }
 
-//let socket = new SockJS("http://localhost:8080/ws/chat")
-let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+let socket = new SockJS("http://localhost:8080/ws/chat")
+//let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
 const client = Stomp.over(socket)
 
@@ -35,7 +35,7 @@ function onError(error) {
 }
 
 function onMessageReceived(e) {
-    console.clear();
+    //console.clear();
 
     const json = JSON.parse(e.body);
 
@@ -121,7 +121,7 @@ function quit() {
 function msgSend(msg) {
     client.send("/api/chat/message/send", {}, JSON.stringify(msg));
 
-    console.clear()
+    //console.clear()
 }
 
 function msgCheck(msg) {

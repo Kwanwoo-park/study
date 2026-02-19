@@ -38,9 +38,13 @@ public class ChatSendFacade {
 
         if (dto.getId() == null) dto.setId(UUID.randomUUID().toString());
 
+        System.out.println("messageSend");
+
         dto.setRoom(room);
         dto.setMember(member);
         dto.setRegisterTime(LocalDateTime.now());
+
+        System.out.println("messageSend2");
 
         if (dto.getType().equals(MessageType.ENTER)) {
             if (!roomMemberService.exist(member, room)) {

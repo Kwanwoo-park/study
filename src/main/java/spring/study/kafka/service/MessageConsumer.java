@@ -26,6 +26,8 @@ public class MessageConsumer {
     public void consume(@Payload ChatMessageRequestDto message){
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoom().getRoomId(), message);
 
+        System.out.println(message.getEmail());
+
         try {
             String key = "chat:message:roomId:"+message.getRoom().getRoomId();
             String json = objectMapper.writeValueAsString(message);
@@ -41,6 +43,7 @@ public class MessageConsumer {
 
     @KafkaListener(topics = "topic2")
     public void consume(@Payload Notification notification) {
+        System.out.println(notification.getMember().getName());
         String id = notification.getMember().getId().toString();
         emitterService.save(id, notification);
     }

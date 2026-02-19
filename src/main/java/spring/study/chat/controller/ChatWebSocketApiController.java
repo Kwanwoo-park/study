@@ -13,10 +13,12 @@ import spring.study.chat.facade.ChatSendFacade;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatWebSocketApiController {
-    private ChatSendFacade chatSendFacade;
+    private final ChatSendFacade chatSendFacade;
 
     @MessageMapping("/chat/message/send")
     public ResponseEntity<?> sendMessage(@RequestBody ChatMessageRequestDto message) {
+        System.out.println("sendMessage");
+        System.out.println(message.toString());
         return chatSendFacade.messageSend(message);
     }
 }

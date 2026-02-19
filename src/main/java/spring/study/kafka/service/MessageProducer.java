@@ -13,10 +13,12 @@ public class MessageProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void sendMessage(ChatMessageRequestDto message){
+        System.out.println(message.getEmail());
         kafkaTemplate.send("topic", message);
     }
 
     public void sendNotification(Notification notification) {
+        System.out.println(notification.getMember().getName());
         kafkaTemplate.send("topic2", notification);
     }
 }
