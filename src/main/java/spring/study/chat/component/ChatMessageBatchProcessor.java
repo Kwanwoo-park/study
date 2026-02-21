@@ -59,8 +59,12 @@ public class ChatMessageBatchProcessor {
             }
 
             String roomId = key.split(":")[3];
-            LocalDateTime dateTime = (LocalDateTime) objectRedisTemplate.opsForValue().get(key+"lastTime");
+
+            LocalDateTime dateTime = (LocalDateTime) objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastTime");
             roomService.updateLastTime(roomId, dateTime);
+
+            String message = (String) objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastMessage");
+            roomService.updateLastMessage(roomId, message);
         }
     }
 }

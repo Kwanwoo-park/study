@@ -31,6 +31,9 @@ public class ChatRoom implements Serializable {
     @NotNull
     private Long count;
 
+    @Column(name = "lastMessage")
+    private String lastMessage;
+
     @LastModifiedDate
     private LocalDateTime lastChatTime;
 

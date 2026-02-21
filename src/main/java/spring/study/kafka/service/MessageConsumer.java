@@ -1,6 +1,7 @@
 package spring.study.kafka.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,15 +27,16 @@ public class MessageConsumer {
     public void consume(@Payload ChatMessageRequestDto message){
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoom().getRoomId(), message);
 
-        System.out.println(message.getEmail());
-
         try {
-            String key = "chat:message:roomId:"+message.getRoom().getRoomId();
+            String key = "chat:message:roomId:"+message.getRoomId();
             String json = objectMapper.writeValueAsString(message);
 
             objectRedisTemplate.opsForList().rightPush(key, json);
             objectRedisTemplate.opsForValue().set(
-                    key+"lastTime", message.getRegisterTime()
+                    "chat:room:" + message.getRoomId() + ":lastTime", message.getRegisterTime()
+            );
+            objectRedisTemplate.opsForValue().set(
+                    "chat:room:" + message.getRoomId() + ":lastMessage", message.getMessage()
             );
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -43,7 +45,6 @@ public class MessageConsumer {
 
     @KafkaListener(topics = "topic2")
     public void consume(@Payload Notification notification) {
-        System.out.println(notification.getMember().getName());
         String id = notification.getMember().getId().toString();
         emitterService.save(id, notification);
     }

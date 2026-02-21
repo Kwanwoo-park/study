@@ -17,8 +17,6 @@ public class ChatWebSocketApiController {
 
     @MessageMapping("/chat/message/send")
     public ResponseEntity<?> sendMessage(@RequestBody ChatMessageRequestDto message) {
-        System.out.println("sendMessage");
-        System.out.println(message.toString());
         return chatSendFacade.messageSend(message);
     }
 }

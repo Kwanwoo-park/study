@@ -1,5 +1,8 @@
 package spring.study.kafka.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,9 +21,11 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
     private final String server;
+    private final ObjectMapper mapper;
 
-    public KafkaProducerConfig(@Value("${bootstrap-servers}") String server) {
+    public KafkaProducerConfig(@Value("${bootstrap-servers}") String server, ObjectMapper mapper) {
         this.server = server;
+        this.mapper = mapper;
     }
 
     @Bean
@@ -28,10 +33,12 @@ public class KafkaProducerConfig {
         Map<String, Object> config = new HashMap<>();
 
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, server);
-        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
-        return new DefaultKafkaProducerFactory<>(config, new StringSerializer(), new JsonSerializer<>());
+        JsonSerializer<Object> jsonSerializer = new JsonSerializer<>(mapper);
+
+        return new DefaultKafkaProducerFactory<>(config,
+                new StringSerializer(),
+                jsonSerializer);
     }
 
     @Bean

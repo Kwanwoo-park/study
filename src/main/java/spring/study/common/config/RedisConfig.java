@@ -1,9 +1,6 @@
 package spring.study.common.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +18,12 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.port}")
     private int port;
+
+    private final ObjectMapper mapper;
+
+    public RedisConfig(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
@@ -43,8 +46,10 @@ public class RedisConfig {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
 
+        Jackson2JsonRedisSerializer<Object> jsonRedisSerializer = new Jackson2JsonRedisSerializer<>(mapper, Object.class);
+
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+        redisTemplate.setValueSerializer(jsonRedisSerializer);
 
         return redisTemplate;
     }
@@ -53,11 +58,6 @@ public class RedisConfig {
     public RedisTemplate<String, BoardResponseDto> boardRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, BoardResponseDto> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         Jackson2JsonRedisSerializer<BoardResponseDto> jsonRedisSerializer = new Jackson2JsonRedisSerializer<>(mapper, BoardResponseDto.class);
 

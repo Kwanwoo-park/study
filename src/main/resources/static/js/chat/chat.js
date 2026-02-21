@@ -35,7 +35,7 @@ function onError(error) {
 }
 
 function onMessageReceived(e) {
-    //console.clear();
+    console.clear();
 
     const json = JSON.parse(e.body);
 
@@ -121,7 +121,7 @@ function quit() {
 function msgSend(msg) {
     client.send("/api/chat/message/send", {}, JSON.stringify(msg));
 
-    //console.clear()
+    console.clear()
 }
 
 function msgCheck(msg) {

@@ -95,6 +95,13 @@ public class ChatRoomService {
     }
 
     @Transactional
+    public void updateLastMessage(String roomId, String message) {
+        ChatRoom room = chatRoomRepository.findByRoomId(roomId);
+
+        room.setLastMessage(message);
+    }
+
+    @Transactional
     public void addCount(Long id) {
         ChatRoom chatRoom = chatRoomRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 채팅방입니다."
