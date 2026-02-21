@@ -193,7 +193,7 @@ function fnDraw(data) {
             img_div.append(button);
         }
 
-        imgTalk.src = data.message;
+        imgTalk.src = data.list[0];
         imgTalk.id = 'img' + data.id;
         imgTalk.className = "chatimg";
 
@@ -267,7 +267,7 @@ function fnLoadDraw(json) {
                 img_div.append(button);
             }
 
-            imgTalk.src = data.message;
+            imgTalk.src = json.img[data.id][0];
             imgTalk.id = 'img' + data.id;
             imgTalk.className = "chatimg";
 
@@ -406,7 +406,7 @@ function fnLoad(input) {
                 type : "IMAGE",
                 roomId : roomId,
                 email : email,
-                message: json['list'][0],
+                message: "사진을 보냈습니다",
                 list: json['list']
             };
             msgSend(talkMsg)

@@ -34,12 +34,8 @@ public class ChatRoomMemberService {
         return chatRoomMemberRepository.findByMemberAndRoom(member, room);
     }
 
-    public List<ChatRoom> findRoom(Member member) {
-        return chatRoomMemberRepository.findByMember(member)
-                .stream()
-                .map(ChatRoomMember::getRoom)
-                .sorted(Comparator.comparing(ChatRoom::getLastChatTime).reversed())
-                .toList();
+    public List<ChatRoomMember> find(Member member) {
+        return chatRoomMemberRepository.findByMember(member);
     }
 
     public HashMap<String, List<Member>> findMember(List<ChatRoom> rooms, Member member) {

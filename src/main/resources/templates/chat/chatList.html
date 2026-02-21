@@ -76,8 +76,9 @@
                 <img th:src="${member[room.roomId][0].profile}" class="profile">
                 <div class="text">
                     <label th:text="${member[room.roomId][0].name}" class="chatname"></label>
-                    <label th:if="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="'사진을 보냈습니다'"></label>
-                    <label th:unless="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="${room.messages[room.messages.size-1].message}"></label>
+                    <label th:text="${room.lastMessage}"></label>
+<!--                    <label th:if="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="'사진을 보냈습니다'"></label>-->
+<!--                    <label th:unless="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="${room.messages[room.messages.size-1].message}"></label>-->
                 </div>
             </div>
             <div th:if="${#lists.size(member[room.roomId]) == 2}" class="room" th:onclick="fnClick([[${room.roomId}]])">
@@ -87,8 +88,7 @@
                 </div>
                 <div class="text">
                     <label th:text="${member[room.roomId][0].name} + ' ' + ${member[room.roomId][1].name}" class="chatname"></label>
-                    <label th:if="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="'사진을 보냈습니다'"></label>
-                    <label th:unless="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="${room.messages[room.messages.size-1].message}"></label>
+                    <label th:text="${room.lastMessage}"></label>
                 </div>
             </div>
             <div th:if="${#lists.size(member[room.roomId]) == 3}" class="room" th:onclick="fnClick([[${room.roomId}]])">
@@ -99,8 +99,7 @@
                 </div>
                 <div class="text">
                     <label th:text="${member[room.roomId][0].name} + ' ' + ${member[room.roomId][1].name} + ' ' + ${member[room.roomId][2].name}" class="chatname"></label>
-                    <label th:if="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="'사진을 보냈습니다'"></label>
-                    <label th:unless="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="${room.messages[room.messages.size-1].message}"></label>
+                    <label th:text="${room.lastMessage}"></label>
                 </div>
             </div>
             <div th:if="${#lists.size(member[room.roomId]) >= 4}" class="room" th:onclick="fnClick([[${room.roomId}]])">
@@ -112,8 +111,7 @@
                 </div>
                 <div class="text">
                     <label th:text="${member[room.roomId][0].name} + ' ' + ${member[room.roomId][1].name} + ' ' + ${member[room.roomId][2].name} + ' ' + ${member[room.roomId][3].name}" class="chatname"></label>
-                    <label th:if="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="'사진을 보냈습니다'"></label>
-                    <label th:unless="${#strings.equals(room.messages[room.messages.size-1].type, 'IMAGE')}" th:text="${room.messages[room.messages.size-1].message}"></label>
+                    <label th:text="${room.lastMessage}"></label>
                 </div>
             </div>
         </div>

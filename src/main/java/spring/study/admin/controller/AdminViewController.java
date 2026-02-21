@@ -102,28 +102,4 @@ public class AdminViewController {
 
         return "admin/forbidden_word_apply";
     }
-
-    @GetMapping("/chatTest")
-    public String chatList(Model model,
-                           @RequestParam(required = false, defaultValue = "0") Integer page,
-                           @RequestParam(required = false, defaultValue = "5") Integer size,
-                           HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
-
-        if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        model.addAttribute("profile", member.getProfile());
-        model.addAttribute("email", member.getEmail());
-
-        List<ChatRoom> list = roomMemberService.findRoom(member);
-
-        model.addAttribute("roomList", list);
-        model.addAttribute("member", roomMemberService.findMember(list, member));
-
-        return "admin/chatTest";
-    }
 }

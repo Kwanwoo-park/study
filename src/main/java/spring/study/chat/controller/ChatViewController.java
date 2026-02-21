@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.facade.ChatViewFacade;
 import spring.study.common.service.SessionService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -22,6 +23,7 @@ public class ChatViewController {
     private final SessionService sessionService;
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
+    private final ChatViewFacade viewFacade;
 
     @GetMapping("/chatList")
     public String chatList(Model model,
@@ -37,7 +39,7 @@ public class ChatViewController {
             return "chat/adminChatList";
         }
         else {
-            List<ChatRoom> list = roomMemberService.findRoom(member);
+            List<ChatRoom> list = viewFacade.chatList(member);
 
             model.addAttribute("roomList", list);
             model.addAttribute("member", roomMemberService.findMember(list, member));
