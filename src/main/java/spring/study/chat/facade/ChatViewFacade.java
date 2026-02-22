@@ -36,20 +36,24 @@ public class ChatViewFacade {
                 .toList();
 
         for (String roomId : roomIdList) {
-            LocalDateTime dateTime = (LocalDateTime) objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastTime");
-            String message = (String) objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastMessage");
+            Object time = objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastTime");
+            Object message =  objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastMessage");
 
-            if (dateTime != null || message != null) {
+            if (time != null || message != null) {
                 int idx = IntStream.range(0, roomList.size())
                         .filter(i -> list.get(i).getRoom().getRoomId().equals(roomId))
                         .findFirst()
                         .orElse(-1);
 
-                if (message != null)
-                    roomList.get(idx).setLastMessage(message);
+                if (time != null) {
+                    LocalDateTime datetime = LocalDateTime.parse((String) time);
+                    roomList.get(idx).setLastChatTime(datetime);
+                }
 
-                if (dateTime != null)
-                    roomList.get(idx).setLastChatTime(dateTime);
+                if (message != null) {
+                    String lastMessage = (String) message;
+                    roomList.get(idx).setLastMessage(lastMessage);
+                }
             }
         }
 
