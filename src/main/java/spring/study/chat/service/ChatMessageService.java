@@ -40,7 +40,7 @@ public class ChatMessageService {
     }
 
     public List<ChatMessage> find(ChatRoom room) {
-        return chatMessageRepository.findByRoom(room).stream().sorted(Comparator.comparing(ChatMessage::getRegisterTime)).toList();
+        return chatMessageRepository.findByRoom(room);
     }
 
     public void deleteByRoom(ChatRoom room) {

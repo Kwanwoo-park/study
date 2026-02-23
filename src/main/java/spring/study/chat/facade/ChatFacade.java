@@ -58,7 +58,6 @@ public class ChatFacade {
         }
 
         List<ChatMessage> list = messageService.find(room);
-        List<ChatMessage> entities = new ArrayList<>();
 
         String key = "chat:message:roomId:" + roomId;
 
@@ -70,27 +69,27 @@ public class ChatFacade {
             List<Object> messages = ops.range(key, 0, size-1);
 
             if (messages != null) {
-                entities = messages.stream()
-                        .map(obj -> {
-                            try {
-                                return objectMapper.readValue(obj.toString(), ChatMessageRequestDto.class);
-                            } catch (JsonProcessingException e) {
-                                log.error("Redis message parse error", e);
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .map(ChatMessageRequestDto::toEntity)
-                        .toList();
+                list.addAll(
+                        messages.stream()
+                                .map(obj -> {
+                                    try {
+                                        return objectMapper.readValue(obj.toString(), ChatMessageRequestDto.class);
+                                    } catch (JsonProcessingException e) {
+                                        log.error("Redis message parse error", e);
+                                        return null;
+                                    }
+                                })
+                                .filter(Objects::nonNull)
+                                .map(ChatMessageRequestDto::toEntity)
+                                .toList()
+                );
             }
         }
-
-        list.addAll(entities);
 
         return ResponseEntity.ok(Map.of(
                 "result", room.getId(),
                 "member", member,
-                "message", list,
+                "message", list.stream().sorted(Comparator.comparing(ChatMessage::getRegisterTime)).toList(),
                 "img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)).toList())
         ));
     }
