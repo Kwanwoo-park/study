@@ -1,6 +1,7 @@
 package spring.study.chat.dto;
 
 import lombok.*;
+import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.MessageType;
 import spring.study.member.entity.Member;
@@ -33,6 +34,16 @@ public class ChatMessageRequestDto {
         this.member = member;
         this.registerTime = registerTime;
         this.list = list;
+    }
+
+    public ChatMessage toEntity() {
+        return ChatMessage.builder()
+                .id(id)
+                .message(message)
+                .type(type)
+                .member(member)
+                .room(room)
+                .build();
     }
 
     @Override

@@ -1,8 +1,12 @@
 package spring.study.chat.facade;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,10 +30,7 @@ import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,8 @@ public class ChatFacade {
     private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
     private final ImageS3Service imageS3Service;
+    private final RedisTemplate<String, Object> objectRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     public ResponseEntity<?> loadChatting(String roomId, Member member) {
         ChatRoom room = roomService.find(roomId);
@@ -55,6 +58,34 @@ public class ChatFacade {
         }
 
         List<ChatMessage> list = messageService.find(room);
+        List<ChatMessage> entities = new ArrayList<>();
+
+        String key = "chat:message:roomId:" + roomId;
+
+        ListOperations<String, Object> ops = objectRedisTemplate.opsForList();
+
+        Long size = ops.size(key);
+
+        if (size != null && size > 0) {
+            List<Object> messages = ops.range(key, 0, size-1);
+
+            if (messages != null) {
+                entities = messages.stream()
+                        .map(obj -> {
+                            try {
+                                return objectMapper.readValue(obj.toString(), ChatMessageRequestDto.class);
+                            } catch (JsonProcessingException e) {
+                                log.error("Redis message parse error", e);
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .map(ChatMessageRequestDto::toEntity)
+                        .toList();
+            }
+        }
+
+        list.addAll(entities);
 
         return ResponseEntity.ok(Map.of(
                 "result", room.getId(),

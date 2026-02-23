@@ -40,7 +40,7 @@ public class ChatMessageBatchProcessor {
             Long size = ops.size(key);
 
             if (size != null && size > 0) {
-                List<Object> messages = ops.range(key, 0, -1);
+                List<Object> messages = ops.range(key, 0, size-1);
 
                 if (messages != null) {
                     List<ChatMessageRequestDto> entities = messages.stream()
