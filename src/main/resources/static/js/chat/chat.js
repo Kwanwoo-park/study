@@ -16,8 +16,8 @@ window.onload = function() {
     loadMoreChat();
 }
 
-//let socket = new SockJS("http://localhost:8080/ws/chat")
-let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+let socket = new SockJS("http://localhost:8080/ws/chat")
+//let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
 const client = Stomp.over(socket)
 
@@ -85,30 +85,6 @@ function enterRoom() {
     }
 }
 
-function sendMsg() {
-    var content = document.getElementById('chat').value;
-
-    let risk = msgCheck(content);
-
-    if (content != '') {
-        document.getElementById('chat').value = null;
-
-        if (risk == -1)
-            content = "<부적절한 내용이 포함되어 검열되었습니다>";
-        else if (risk == -3)
-            return;
-
-        var talkMsg = {
-            type : "TALK",
-            roomId : roomId,
-            email : email,
-            message : content
-        };
-
-        msgSend(talkMsg);
-    }
-}
-
 function quit() {
     var quitMsg = {
         type : "QUIT",
@@ -126,8 +102,10 @@ function msgSend(msg) {
     console.clear()
 }
 
-function msgCheck(msg) {
-    fetch(`/api/chat/message/check?message=`+msg, {
+function sendMsg() {
+    let content = document.getElementById('chat').value;
+
+    fetch(`/api/chat/message/check?message=`+content, {
         method: 'GET',
         headers: {
             "Content-Type": "application/json; charset=utf-8",
@@ -136,14 +114,29 @@ function msgCheck(msg) {
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json['result'] == -1)
-            ;
-        else if (json['result'] == -3)
-            alert("금칙어를 사용하여 계정이 정지되었습니다");
-        else if (json['result'] == -10)
-            alert("다시 시도하여주십시오");
+        if (content != '') {
+            document.getElementById('chat').value = null;
+        }
 
-        return json['result'];
+        if (json['result'] == -1)
+            msg = "<부적절한 내용이 포함되어 검열되었습니다>";
+        else if (json['result'] == -3) {
+            alert("금칙어를 사용하여 계정이 정지되었습니다");
+            window.location.reload();
+        }
+        else if (json['result'] == -10) {
+            alert("다시 시도하여주십시오");
+            window.location.reload();
+        }
+
+        let talkMsg = {
+            type : "TALK",
+            roomId : roomId,
+            email : email,
+            message : content
+        };
+
+        msgSend(talkMsg);
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");
