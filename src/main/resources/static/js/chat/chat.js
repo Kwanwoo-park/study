@@ -95,6 +95,8 @@ function sendMsg() {
 
         if (risk == -1)
             content = "<부적절한 내용이 포함되어 검열되었습니다>";
+        else if (risk == -3)
+            return;
 
         var talkMsg = {
             type : "TALK",
@@ -135,13 +137,13 @@ function msgCheck(msg) {
     .then((response) => response.json())
     .then((json) => {
         if (json['result'] == -1)
-            return -1
-        else if (json['result'] == -3) {
+            ;
+        else if (json['result'] == -3)
             alert("금칙어를 사용하여 계정이 정지되었습니다");
-            window.location.reload();
-        } else if (json['result'] == -10) {
+        else if (json['result'] == -10)
             alert("다시 시도하여주십시오");
-        }
+
+        return json['result'];
     })
     .catch((error) => {
         alert("다시 시도하여주십시오");

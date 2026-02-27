@@ -5,7 +5,6 @@
 //import org.junit.jupiter.api.extension.ExtendWith;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.boot.test.web.client.TestRestTemplate;
 //import org.springframework.boot.test.web.server.LocalServerPort;
 //import org.springframework.http.HttpMethod;
 //import org.springframework.http.MediaType;
@@ -45,8 +44,6 @@
 //    String url = "http://localhost:" + port + "/api/chat";
 //
 //    @Autowired
-//    private TestRestTemplate testTemplate;
-//    @Autowired
 //    private MemberService memberService;
 //    @Autowired
 //    private ChatRoomService roomService;
@@ -75,6 +72,28 @@
 //
 //        //when
 //        mvc.perform(post(url).session(session)
+//                .contentType(MediaType.APPLICATION_JSON)
+//        ).andExpect(status().isOk()).andDo(print());
+//    }
+//
+//    @Test
+//    void loadMessage() throws Exception {
+//        //given
+//        mvc = MockMvcBuilders
+//                .webAppContextSetup(context)
+//                .apply(springSecurity())
+//                .build();
+//
+//        MockHttpSession session = new MockHttpSession();
+//        Member member = memberService.findMember("test@test.com");
+//        session.setAttribute("member", member);
+//
+//        String roomId = "roomId";
+//
+//        url += "/load?roomId=" + roomId;
+//
+//        //when
+//        mvc.perform(get(url).session(session)
 //                .contentType(MediaType.APPLICATION_JSON)
 //        ).andExpect(status().isOk()).andDo(print());
 //    }

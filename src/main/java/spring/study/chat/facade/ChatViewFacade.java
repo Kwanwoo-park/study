@@ -45,20 +45,22 @@ public class ChatViewFacade {
                         .findFirst()
                         .orElse(-1);
 
-                if (time != null) {
-                    LocalDateTime datetime = LocalDateTime.parse((String) time);
-                    roomList.get(idx).setLastChatTime(datetime);
-                }
+                if (idx > 0) {
+                    if (time != null) {
+                        LocalDateTime datetime = LocalDateTime.parse((String) time);
+                        roomList.get(idx).setLastChatTime(datetime);
+                    }
 
-                if (message != null) {
-                    String lastMessage = (String) message;
-                    roomList.get(idx).setLastMessage(lastMessage);
+                    if (message != null) {
+                        String lastMessage = (String) message;
+                        roomList.get(idx).setLastMessage(lastMessage);
+                    }
                 }
             }
         }
 
         return roomList.stream()
-                .sorted(Comparator.comparing(ChatRoom::getLastChatTime).reversed())
+                .sorted(Comparator.comparing(ChatRoom::getLastChatTime, Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
                 .toList();
     }
 }
