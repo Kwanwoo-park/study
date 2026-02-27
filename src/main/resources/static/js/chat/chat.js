@@ -16,8 +16,8 @@ window.onload = function() {
     loadMoreChat();
 }
 
-let socket = new SockJS("http://localhost:8080/ws/chat")
-//let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+//let socket = new SockJS("http://localhost:8080/ws/chat")
+let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
 const client = Stomp.over(socket)
 
