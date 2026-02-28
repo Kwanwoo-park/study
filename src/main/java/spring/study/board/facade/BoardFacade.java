@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,16 +13,12 @@ import spring.study.board.entity.Board;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
+import spring.study.common.service.ModerationService;
 import spring.study.favorite.service.FavoriteService;
-import spring.study.forbidden.entity.Status;
-import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.entity.Member;
-import spring.study.member.entity.Role;
-import spring.study.member.service.MemberService;
-import spring.study.notification.entity.Group;
-import spring.study.notification.service.NotificationService;
 import spring.study.reply.service.ReplyService;
 
+import java.time.Duration;
 import java.util.Map;
 
 @Service
@@ -36,12 +31,10 @@ public class BoardFacade {
     private final BoardImgService boardImgService;
     private final FavoriteService favoriteService;
     private final ImageS3Service imageS3Service;
-    private final ForbiddenService forbiddenService;
-    private final MemberService memberService;
-    private final NotificationService notificationService;
+    private final ModerationService moderationService;
 
     public ResponseEntity<?> write(BoardRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = validateContent(dto.getContent(), member, request);
+        int risk = moderationService.validate(dto.getContent(), member, request);
 
         if (risk != 0) {
             if (risk == -99)
@@ -73,7 +66,7 @@ public class BoardFacade {
     }
 
     public ResponseEntity<?> update(BoardRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = validateContent(dto.getContent(), member, request);
+        int risk = moderationService.validate(dto.getContent(), member, request);
 
         if (risk != 0) {
             if (risk == -99) {
@@ -114,27 +107,5 @@ public class BoardFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 1L
         ));
-    }
-
-    private int validateContent(String content, Member member, HttpServletRequest request) {
-        if (content == null || content.isBlank()) {
-            return -99;
-        }
-
-        int risk = forbiddenService.findWordList(Status.APPROVAL, content);
-
-        if (risk == 3) {
-            notificationService.createNotification(
-                    memberService.findAdministrator(),
-                    member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
-                    Group.ADMIN
-            );
-
-            memberService.updateRole(member.getId(), Role.DENIED);
-
-            request.getSession(false).invalidate();
-        }
-
-        return risk;
     }
 }

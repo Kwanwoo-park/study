@@ -10,11 +10,8 @@ import spring.study.comment.dto.reply.ReplyRequestDto;
 import spring.study.comment.dto.reply.ReplyResponseDto;
 import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
-import spring.study.forbidden.entity.Status;
-import spring.study.forbidden.service.ForbiddenService;
+import spring.study.common.service.ModerationService;
 import spring.study.member.entity.Member;
-import spring.study.member.entity.Role;
-import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.reply.entity.Reply;
@@ -29,12 +26,11 @@ import java.util.Map;
 public class ReplyFacade {
     private final CommentService commentService;
     private final ReplyService replyService;
-    private final ForbiddenService forbiddenService;
-    private final MemberService memberService;
     private final NotificationService notificationService;
+    private final ModerationService moderationService;
 
     public ResponseEntity<?> saveReply(ReplyRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = validateReply(dto.getReply(), member, request);
+        int risk = moderationService.validate(dto.getReply(), member, request);
 
         if (risk != 0) {
             if (risk == -99)
@@ -71,25 +67,5 @@ public class ReplyFacade {
                 "result", 10L,
                 "list", list
         ));
-    }
-
-    private int validateReply(String reply, Member member, HttpServletRequest request) {
-        if (reply == null || reply.isBlank()) return -99;
-
-        int risk = forbiddenService.findWordList(Status.APPROVAL, reply);
-
-        if (risk == 3) {
-            notificationService.createNotification(
-                    memberService.findAdministrator(),
-                    member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
-                    Group.ADMIN
-            );
-
-            memberService.updateRole(member.getId(), Role.DENIED);
-
-            request.getSession(false).invalidate();
-        }
-
-        return risk;
     }
 }

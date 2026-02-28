@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import spring.study.common.service.SessionService;
+import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
@@ -21,7 +21,7 @@ import java.util.Map;
 @RequestMapping("/api/member")
 @Slf4j
 public class MemberApiController {
-    private final SessionService sessionService;
+    private final SessionManager sessionManager;
     private final MemberFacade memberFacade;
     private final MemberService memberService;
 
@@ -32,13 +32,13 @@ public class MemberApiController {
 
     @GetMapping("/logout")
     public ResponseEntity<?> logoutAction(HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
         ));
 
-        sessionService.logout(request, memberService.getIp(request));
+        sessionManager.logout(request);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId()
@@ -57,7 +57,7 @@ public class MemberApiController {
 
     @PatchMapping("/detail/action")
     public ResponseEntity<?> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "result", -10L,
@@ -80,7 +80,7 @@ public class MemberApiController {
 
     @PatchMapping("/updatePassword")
     public ResponseEntity<?> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) {
             member = memberService.findMember(memberUpdateDto.getEmail());
         } else {
@@ -97,7 +97,7 @@ public class MemberApiController {
 
     @GetMapping("/search")
     public ResponseEntity<?> searchMember(@RequestParam() String name, HttpServletRequest request) {
-        if (sessionService.getLoginMember(request) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+        if (sessionManager.getLoginMember(request) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
         ));
@@ -107,7 +107,7 @@ public class MemberApiController {
 
     @DeleteMapping("/withdrawal")
     public ResponseEntity<?> withdrawalAction(@RequestParam(required = false) String email, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "result", -10L,

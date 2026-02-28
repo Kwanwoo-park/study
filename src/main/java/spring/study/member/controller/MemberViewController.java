@@ -4,12 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import spring.study.common.service.SessionService;
+import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -25,14 +23,14 @@ public class MemberViewController {
     private final MemberService memberService;
     private final BoardService boardService;
     private final FollowService followService;
-    private final SessionService sessionService;
+    private final SessionManager sessionManager;
 
     @GetMapping("/login")
     public String login(Model model,
                         @RequestParam(value = "error", required = false) String error,
                         @RequestParam(value = "exception", required = false) String exception,
                         HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
 
         if (member != null) {
             if (member.getRole() == Role.USER) return "redirect:/board/main";
@@ -92,7 +90,7 @@ public class MemberViewController {
 
     @GetMapping("/updatePassword")
     public String updatePassword(Model model, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("email", member.getEmail());
@@ -102,7 +100,7 @@ public class MemberViewController {
 
     @GetMapping("/updatePhone")
     public String updatePhone(Model model, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("email", member.getEmail());
@@ -121,7 +119,7 @@ public class MemberViewController {
 
     @GetMapping("/withdrawal")
     public String withdrawal(Model model, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("name", member.getName());
@@ -131,7 +129,7 @@ public class MemberViewController {
 
     @GetMapping("/search")
     public String memberFind(Model model, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("profile", member.getProfile());

@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.comment.dto.CommentRequestDto;
 import spring.study.comment.facade.CommentFacade;
-import spring.study.common.service.SessionService;
+import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 
 import java.util.Map;
@@ -18,12 +18,12 @@ import java.util.Map;
 @Slf4j
 @RequestMapping("/api/comment")
 public class CommentApiController {
-    private final SessionService sessionService;
+    private final SessionManager sessionManager;
     private final CommentFacade commentFacade;
 
     @PostMapping("")
     public ResponseEntity<?> commentAction(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -34,7 +34,7 @@ public class CommentApiController {
 
     @PatchMapping("/update")
     public ResponseEntity<?> commentUpdate(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -47,7 +47,7 @@ public class CommentApiController {
     public ResponseEntity<?> commentDelete(@RequestParam Long id,
                                                  @RequestBody CommentRequestDto commentRequestDto,
                                                  HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"

@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import spring.study.common.service.SessionService;
+import spring.study.common.service.SessionManager;
 import spring.study.forbidden.dto.ForbiddenChangeRequestDto;
 import spring.study.forbidden.dto.ForbiddenRequestDto;
 import spring.study.forbidden.entity.Status;
@@ -21,12 +21,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/forbidden/word")
 public class ForbiddenApiController {
-    private final SessionService sessionService;
+    private final SessionManager sessionManager;
     private final ForbiddenFacade forbiddenFacade;
 
     @GetMapping("/search")
     public ResponseEntity<?> forbiddenWordSearch(@RequestParam String word, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -37,7 +37,7 @@ public class ForbiddenApiController {
 
     @GetMapping("/proposal")
     public ResponseEntity<?> forbiddenProposalWordSearch(HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -48,7 +48,7 @@ public class ForbiddenApiController {
 
     @GetMapping("/examine")
     public ResponseEntity<?> forbiddenExamineWordSearch(HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -59,7 +59,7 @@ public class ForbiddenApiController {
 
     @GetMapping("/approval")
     public ResponseEntity<?> forbiddenApprovalWordSearch(HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -70,7 +70,7 @@ public class ForbiddenApiController {
 
     @PostMapping("/apply")
     public ResponseEntity<?> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -81,7 +81,7 @@ public class ForbiddenApiController {
 
     @PostMapping("/admin/save")
     public ResponseEntity<?> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -101,7 +101,7 @@ public class ForbiddenApiController {
 
     @PatchMapping("/admin/change/examine")
     public ResponseEntity<?> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
@@ -121,7 +121,7 @@ public class ForbiddenApiController {
 
     @PatchMapping("/admin/change/approval")
     public ResponseEntity<?> changeToApproval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionService.getLoginMember(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"

@@ -11,11 +11,8 @@ import spring.study.board.service.BoardService;
 import spring.study.comment.dto.CommentRequestDto;
 import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
-import spring.study.forbidden.entity.Status;
-import spring.study.forbidden.service.ForbiddenService;
+import spring.study.common.service.ModerationService;
 import spring.study.member.entity.Member;
-import spring.study.member.entity.Role;
-import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
@@ -27,12 +24,11 @@ import java.util.Map;
 public class CommentFacade {
     private final CommentService commentService;
     private final BoardService boardService;
-    private final ForbiddenService forbiddenService;
-    private final MemberService memberService;
     private final NotificationService notificationService;
+    private final ModerationService moderationService;
 
     public ResponseEntity<?> getCommentList(CommentRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = validateComment(dto.getComments(), member, request);
+        int risk = moderationService.validate(dto.getComments(), member, request);
 
         if (risk != 0) {
             if (risk == -99) {
@@ -64,7 +60,7 @@ public class CommentFacade {
     }
 
     public ResponseEntity<?> updateComment(CommentRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = validateComment(dto.getComments(), member, request);
+        int risk = moderationService.validate(dto.getComments(), member, request);
 
         if (risk != 0) {
             if (risk == -99) {
@@ -96,22 +92,5 @@ public class CommentFacade {
         return ResponseEntity.ok(Map.of(
                 "result", comment.getId()
         ));
-    }
-
-    private int validateComment(String comment, Member member, HttpServletRequest request) {
-        if (comment == null || comment.isBlank()) {
-            return -99;
-        }
-
-        int risk = forbiddenService.findWordList(Status.APPROVAL, comment);
-
-        if (risk == 3) {
-            notificationService.createNotification(memberService.findAdministrator(), member.getName() + "님이 금칙어를 사용하여 차단하였습니다", Group.ADMIN);
-            memberService.updateRole(member.getId(), Role.DENIED);
-
-            request.getSession(false).invalidate();
-        }
-
-        return risk;
     }
 }

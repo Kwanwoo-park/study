@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
 
 @Service
-public class SessionService {
+public class SessionManager {
     public Member getLoginMember(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         return session == null ? null : (Member) session.getAttribute("member");
@@ -20,7 +20,7 @@ public class SessionService {
         session.setAttribute("member", member);
     }
 
-    public void logout(HttpServletRequest request, String ip) {
+    public void logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
         session.removeAttribute("member");

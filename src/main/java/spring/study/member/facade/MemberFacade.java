@@ -36,7 +36,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class MemberFacade {
-    private final SessionService sessionService;
+    private final SessionService sessionManager;
     private final MemberService memberService;
     private final BoardService boardService;
     private final BoardImgService boardImgService;
@@ -92,7 +92,7 @@ public class MemberFacade {
 
         memberService.updateLastLoginTime(member.getId());
 
-        sessionService.setLoginMember(request, memberService.getIp(request), member);
+        sessionManager.setLoginMember(request, memberService.getIp(request), member);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId(),
