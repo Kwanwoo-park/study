@@ -54,7 +54,7 @@ if (submit) {
                 alert("금칙어를 사용하여 계정이 정지되었습니다");
                 window.location.reload();
             } else if (json['result'] == -10)
-                alert("다시 시도하여주십시오.");
+                alert("다시 시도하여주십시오");
             else
                 window.location.reload();
         })
@@ -68,8 +68,7 @@ function fnEdit(commentId) {
     const comment_edit = document.getElementById('edit_comment' + commentId);
     const comment = document.getElementById('comment' + commentId);
 
-    if (comment_edit.style.display !== 'none')
-    {
+    if (comment_edit.style.display !== 'none') {
         const data = {
             id: commentId,
             comments: comment_edit.value
@@ -87,11 +86,11 @@ function fnEdit(commentId) {
         .then((json) => {
             if (json['result'] == -1)
                 alert("부적절한 내용 감지되었습니다");
-            else if (json['result'] == -3)
+            else if (json['result'] == -3) {
                 alert("금칙어를 사용하여 계정이 정지되었습니다");
                 window.location.reload();
             } else if (json['result'] == -10)
-                alert("다시 시도하여주십시오.");
+                alert("다시 시도하여주십시오");
             else
                 window.location.reload();
         })
