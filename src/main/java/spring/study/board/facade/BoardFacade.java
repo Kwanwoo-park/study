@@ -104,7 +104,8 @@ public class BoardFacade {
         boardService.deleteById(boardId);
 
         return ResponseEntity.ok(Map.of(
-                "result", 1L
+                "result", 1L,
+                "email", member.getEmail()
         ));
     }
 }
