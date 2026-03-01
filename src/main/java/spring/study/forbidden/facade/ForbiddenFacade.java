@@ -84,7 +84,7 @@ public class ForbiddenFacade {
         if (forbiddenService.existWord(dto.getWord())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -1L,
-                    "message", "이미 승일할 단어입니다"
+                    "message", "이미 승인된 단어입니다"
             ));
         }
 

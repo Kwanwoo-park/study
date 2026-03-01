@@ -49,6 +49,10 @@
     <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
 </nav>
     <div class="container">
+        <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
+            <span id="notification-message">새 알림</span>
+            <button type="button" class="btn-close" aria-label="Close">닫기</button>
+        </div>
         <button type="button" id="btn" class="btn btn-success">Forbidden word apply</button>
         <div id="uploadDiv" style="display: none;">
             <hr>

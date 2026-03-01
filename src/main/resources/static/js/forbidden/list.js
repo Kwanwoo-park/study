@@ -78,7 +78,7 @@ function fnFindProposal() {
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json['result'] > 0) {
+        if (json['result'] >= 0) {
             json.list.forEach(data => {
                 fnCreate(data)
             })
@@ -103,7 +103,7 @@ function fnFindExamine() {
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json['result'] > 0) {
+        if (json['result'] >= 0) {
             json.list.forEach(data => {
                 fnCreate(data)
             })
@@ -128,7 +128,7 @@ function fnFindApproval() {
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json['result'] > 0) {
+        if (json['result'] >= 0) {
             json.list.forEach(data => {
                 fnCreate(data)
             })

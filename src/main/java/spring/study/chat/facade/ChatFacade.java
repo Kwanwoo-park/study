@@ -147,17 +147,17 @@ public class ChatFacade {
     }
 
     public ResponseEntity<?> sendImage(List<MultipartFile> files) {
-        if (files.size() > 10) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -2,
-                    "message", "업로드 파일 갯수 초과"
-            ));
-        }
+        int check = imageS3Service.fileSizeCheck(files);
 
-        if (imageS3Service.findFormatCheck(files)) {
+        if (check == -1) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -99,
-                    "message", "지원하지 않는 파일 형식"
+                    "message", "이미지 파일이 없습니다"
+            ));
+        } else if (check == -2) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -99,
+                    "message", "최대 이미지 갯수를 초과하였습니다"
             ));
         }
 

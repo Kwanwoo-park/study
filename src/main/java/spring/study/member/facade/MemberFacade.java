@@ -15,7 +15,7 @@ import spring.study.board.service.BoardService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.comment.service.CommentService;
-import spring.study.common.service.SessionService;
+import spring.study.common.service.SessionManager;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
 import spring.study.forbidden.entity.Status;
@@ -36,7 +36,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class MemberFacade {
-    private final SessionService sessionManager;
+    private final SessionManager sessionManager;
     private final MemberService memberService;
     private final BoardService boardService;
     private final BoardImgService boardImgService;

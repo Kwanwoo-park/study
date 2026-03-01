@@ -16,8 +16,8 @@ window.onload = function() {
     loadMoreChat();
 }
 
-//let socket = new SockJS("http://localhost:8080/ws/chat")
-let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+let socket = new SockJS("http://localhost:8080/ws/chat")
+//let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
 const client = Stomp.over(socket)
 
@@ -118,15 +118,15 @@ function sendMsg() {
             document.getElementById('chat').value = null;
         }
 
-        if (json['result'] == -1)
-            msg = "<부적절한 내용이 포함되어 검열되었습니다>";
+        if (json['result'] == -1 || json['result'] == -2)
+            content = "<부적절한 내용이 포함되어 검열되었습니다>";
         else if (json['result'] == -3) {
             alert("금칙어를 사용하여 계정이 정지되었습니다");
             window.location.reload();
+            return ;
         }
         else if (json['result'] == -10) {
             alert("다시 시도하여주십시오");
-            window.location.reload();
         }
 
         let talkMsg = {

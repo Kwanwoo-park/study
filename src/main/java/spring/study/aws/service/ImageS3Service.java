@@ -57,6 +57,15 @@ public class ImageS3Service {
         return false;
     }
 
+    public int fileSizeCheck(List<MultipartFile> files) {
+        if (files == null || files.isEmpty())
+            return -1;
+        else if (files.size() > 10)
+            return -2;
+        else
+            return files.size();
+    }
+
     public String uploadImageToS3(MultipartFile image) throws IOException{
         String originName = image.getOriginalFilename();
         String ext = originName.substring(originName.lastIndexOf("."));

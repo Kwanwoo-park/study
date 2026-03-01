@@ -48,6 +48,8 @@ public class ModerationService {
             Long count = stringRedisTemplate.opsForValue().increment(key, risk);
 
             if (count != null && count >= 5) {
+                risk = 3;
+
                 notificationService.createNotification(
                         memberService.findAdministrator(),
                         member.getName() + "님이 금칙어를 사용하여 차단하였습니다",

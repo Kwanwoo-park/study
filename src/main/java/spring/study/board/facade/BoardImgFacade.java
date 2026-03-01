@@ -25,10 +25,17 @@ public class BoardImgFacade {
     private final ImageS3Service imageS3Service;
 
     public ResponseEntity<Map<String, Object>> imageSave(List<MultipartFile> files, Long id) {
-        if (files.size() > 10) {
+        int check = imageS3Service.fileSizeCheck(files);
+
+        if (check == -1) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -2,
-                    "message", "업로드 파일 갯수 초과"
+               "result", -99,
+               "message", "이미지 파일이 없습니다"
+            ));
+        } else if (check == -2) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -99,
+                    "message", "최대 이미지 갯수를 초과하였습니다"
             ));
         }
 
