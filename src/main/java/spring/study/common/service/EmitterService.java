@@ -2,6 +2,7 @@ package spring.study.common.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -36,9 +37,14 @@ public class EmitterService {
                     .name("notification")
                     .data(data)
             );
-        } catch (IOException e) {
+        } catch (ClientAbortException e) {
+            log.debug("Client aborted SSE Connection: {}", emitterId);
+            emitter.complete();
             emitterRepository.deleteById(emitterId);
-            log.error("메시지 전송 에러 : {1}", e);
+        } catch (IOException e) {
+            log.debug("SSE Connection closed: {}", emitterId);
+            emitter.complete();
+            emitterRepository.deleteById(emitterId);
         }
     }
 

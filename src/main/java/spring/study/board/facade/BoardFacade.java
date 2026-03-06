@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.board.dto.BoardRequestDto;
+import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
@@ -31,6 +32,26 @@ public class BoardFacade {
     private final FavoriteService favoriteService;
     private final ImageS3Service imageS3Service;
     private final ModerationService moderationService;
+
+    public ResponseEntity<?> detail(Long id, Member member) {
+        if (!boardService.existBoard(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "result", -1,
+                    "message", "존재하지 않는 게시글"
+            ));
+        }
+
+        Board board = boardService.findById(id);
+        long[] ids = boardService.getBoardIdList(id, board.getMember());
+
+        return ResponseEntity.ok(Map.of(
+                "result", 10,
+                "board", new BoardResponseDto(board),
+                "like", member.checkFavorite(board),
+                "previous", ids[0],
+                "next", ids[1]
+        ));
+    }
 
     public ResponseEntity<?> write(BoardRequestDto dto, Member member, HttpServletRequest request) {
         int risk = moderationService.validate(dto.getContent(), member, request);

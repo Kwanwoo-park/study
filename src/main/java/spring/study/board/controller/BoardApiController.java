@@ -46,6 +46,19 @@ public class BoardApiController {
         ));
     }
 
+    @GetMapping("/detail")
+    public ResponseEntity<?> detail(@RequestParam Long id, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "result", -10,
+                    "message", "유효하지 않은 세션"
+            ));
+        }
+
+        return boardFacade.detail(id, member);
+    }
+
     @PostMapping("/write")
     public ResponseEntity<?> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto,
                                               HttpServletRequest request) {
