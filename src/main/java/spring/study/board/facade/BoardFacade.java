@@ -19,6 +19,7 @@ import spring.study.favorite.service.FavoriteService;
 import spring.study.member.entity.Member;
 import spring.study.reply.service.ReplyService;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -32,6 +33,18 @@ public class BoardFacade {
     private final FavoriteService favoriteService;
     private final ImageS3Service imageS3Service;
     private final ModerationService moderationService;
+
+    public ResponseEntity<?> load(int cursor, int limit, Member member) {
+        List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
+        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
+
+        return ResponseEntity.ok(Map.of(
+                "boards", list,
+                "nextCursor", nextCursor,
+                "like", member.checkFavorite(list),
+                "result", 10L
+        ));
+    }
 
     public ResponseEntity<?> detail(Long id, Member member) {
         if (!boardService.existBoard(id)) {

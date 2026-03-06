@@ -7,13 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
-import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.facade.BoardFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
-import spring.study.board.service.BoardService;
 
-import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -21,7 +18,6 @@ import java.util.Map;
 @RequestMapping("/api/board")
 @Slf4j
 public class BoardApiController {
-    private final BoardService boardService;
     private final BoardFacade boardFacade;
     private final SessionManager sessionManager;
 
@@ -35,15 +31,7 @@ public class BoardApiController {
                 "message", "유효하지 않은 세션"
         ));
 
-        List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
-        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
-
-        return ResponseEntity.ok(Map.of(
-                "boards", list,
-                "nextCursor", nextCursor,
-                "like", member.checkFavorite(list),
-                "result", 10L
-        ));
+        return boardFacade.load(cursor, limit, member);
     }
 
     @GetMapping("/detail")

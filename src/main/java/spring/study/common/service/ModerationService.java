@@ -1,6 +1,7 @@
 package spring.study.common.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -39,7 +40,10 @@ public class ModerationService {
 
             memberService.updateRole(member.getId(), Role.DENIED);
 
-            request.getSession(false).invalidate();
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
 
             stringRedisTemplate.delete(key);
         } else if (risk != 0) {
@@ -58,7 +62,10 @@ public class ModerationService {
 
                 memberService.updateRole(member.getId(), Role.DENIED);
 
-                request.getSession(false).invalidate();
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                    session.invalidate();
+                }
 
                 stringRedisTemplate.delete(key);
             }

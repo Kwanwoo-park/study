@@ -45,7 +45,7 @@ public class ChatViewFacade {
                         .findFirst()
                         .orElse(-1);
 
-                if (idx > 0) {
+                if (idx >= 0) {
                     if (time != null) {
                         LocalDateTime datetime = LocalDateTime.parse((String) time);
                         roomList.get(idx).setLastChatTime(datetime);
