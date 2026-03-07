@@ -60,7 +60,10 @@ public class ChatViewFacade {
         }
 
         return roomList.stream()
-                .sorted(Comparator.comparing(ChatRoom::getLastChatTime, Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
+                .sorted(Comparator.comparing(
+                        ChatRoom::getLastChatTime,
+                        Comparator.nullsFirst(Comparator.naturalOrder())
+                ).reversed())
                 .toList();
     }
 }
