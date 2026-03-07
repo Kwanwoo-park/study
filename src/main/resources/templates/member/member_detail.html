@@ -10,9 +10,9 @@
   <link rel="stylesheet" href="/css/member/member-detail.css">
 </head>
 <body>
-<th:block th:replace="fragments/member-common :: memberNavi(${email}, ${profile})"></th:block>
+<th:block th:replace="~{fragments/member-common :: memberNavi(${email}, ${profile})}"></th:block>
 <div class="container">
-  <th:block th:replace="fragments/member-common :: notificationBanner"></th:block>
+  <th:block th:replace="~{fragments/member-common :: notificationBanner}"></th:block>
     <div class="profileDiv">
       <img th:src="${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
       &nbsp;&nbsp;&nbsp;&nbsp;
@@ -51,7 +51,7 @@
       </div>
     </div>
 </div>
-<th:block th:replace="fragments/member-common :: boardModal"></th:block>
+<th:block th:replace="~{fragments/member-common :: boardModal}"></th:block>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
@@ -59,5 +59,5 @@
 <script src="/js/member/memberDetail.js"></script>
 <script src="/js/common/common.js"></script>
 </body>
-<th:block th:replace="fragments/member-common :: pageFooter"></th:block>
+<th:block th:replace="~{fragments/member-common :: pageFooter}"></th:block>
 </html>

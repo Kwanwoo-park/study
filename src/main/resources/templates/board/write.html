@@ -10,9 +10,9 @@
 		<link rel="stylesheet" href="/css/board/write.css">
 </head>
 <body>
-		<th:block th:replace="fragments/board-common :: boardNavi(${email}, ${profile})"></th:block>
+		<th:block th:replace="~{fragments/board-common :: boardNavi(${email}, ${profile})}"></th:block>
 		<div class="container">
-			<th:block th:replace="fragments/board-common :: notificationBanner"></th:block>
+			<th:block th:replace="~{fragments/board-common :: notificationBanner}"></th:block>
 		<form method="post" enctype="multipart/form-data">
 			<div class="imgDiv">
 				<input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
@@ -30,5 +30,5 @@
 	<script src="/js/board/write.js"></script>
 	<script src="/js/common/common.js"></script>
 	</body>
-	<th:block th:replace="fragments/board-common :: pageFooter"></th:block>
+	<th:block th:replace="~{fragments/board-common :: pageFooter}"></th:block>
 </html>
