@@ -29,6 +29,7 @@ out/
 application.properties
 application-oauth.properties
 application-real.properties
+.env
 
 ### NetBeans ###
 /nbproject/private/
