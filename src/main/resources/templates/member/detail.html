@@ -20,32 +20,209 @@
 		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 		margin-bottom: 10px;
 	}
-  .profileDiv {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-bottom: 30px;
-  }
-  .imgGrid {
-    display: grid;
-    width:750px;
-    background: white;
-    boarder-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    grid-template-columns: repeat(3, minmax(100px, 750px));
-    margin-right: auto;
-    margin-left: auto;
-    margin-bottom: 10px;
-  }
-  .imgDiv {
-    border-style: solid;
-    border-width: 1px;
-    border-color: black;
-  }
-  .main-image {
-    width: 250px;
-    height: 300px;
-  }
+      .profileDiv {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 30px;
+      }
+      .imgGrid {
+        display: grid;
+        width:750px;
+        background: white;
+        boarder-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        grid-template-columns: repeat(3, minmax(100px, 750px));
+        margin-right: auto;
+        margin-left: auto;
+        margin-bottom: 10px;
+      }
+      .imgDiv {
+        border-style: solid;
+        border-width: 1px;
+        border-color: black;
+      }
+      .main-image {
+        width: 250px;
+        height: 300px;
+        cursor: pointer;
+      }
+
+    .board-modal.hidden {
+      display: none;
+     }
+
+    .board-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+     }
+
+     .board-modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+     }
+
+     .board-modal-content {
+      position: relative;
+      width: min(1000px, 94vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      margin: 5vh auto;
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+     }
+
+     .board-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      border: none;
+      background: transparent;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 3;
+     }
+
+     .board-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      user-select: none;
+      z-index: 3;
+     }
+
+     .board-nav.left {
+      left: 14px;
+     }
+
+     .board-nav.right {
+      right: 14px;
+     }
+
+     .board-nav.hidden {
+      display: none;
+     }
+
+     body.modal-open {
+      overflow: hidden;
+     }
+
+     .modal-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      cursor: pointer;
+     }
+
+     .modal-profile-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+     }
+
+     .modal-image-box {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 16px;
+     }
+
+     .modal-main-image {
+      width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+     }
+
+     .modal-image-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border: none;
+      padding: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+     }
+
+     .modal-image-arrow.left {
+      left: 10px;
+     }
+
+     .modal-image-arrow.right {
+      right: 10px;
+     }
+
+     .modal-image-arrow.hidden {
+      display: none;
+     }
+
+     .board-modal-content .modal-info {
+      display: flex;
+      flex-direction: column;
+      align-self: flex-start;
+      margin-top: 10px;
+     }
+
+     .board-modal-content .icon-box {
+      display: flex;
+      gap: 10px;
+     }
+
+     .board-modal-content .icon {
+      width: 35px;
+      height: 35px;
+      cursor: pointer;
+     }
+
+     .board-modal-content .like {
+      display: flex;
+      align-self: flex-start;
+      margin-top: 10px;
+      font-weight: bold;
+      gap: 5px;
+      cursor: pointer;
+     }
+
+     .board-modal-content .name {
+      font-weight: bold;
+      margin-top: 8px;
+     }
+
+     .board-modal-content .modal-content-pre {
+      white-space: pre-wrap;
+      margin-bottom: 0;
+     }
+
+     .board-modal-content .comment {
+      display: flex;
+      gap: 5px;
+      cursor: pointer;
+      margin-top: 8px;
+     }
 </style>
 <body>
 <nav class="navi">
@@ -90,11 +267,32 @@
     </div>
   </form>
   <div class="imgGrid">
-    <div class="imgDiv" th:each="list, index : ${resultMap}">
-      <img th:if="${list.img.size == 0}" class="main-image" th:src="@{/img/} + 'IMG_0111.jpeg'" th:id="'main_img'+${list.id}" th:onclick="fnHref([[${list.id}]])">
-      <img th:unless="${list.img.size == 0}" class="main-image" th:src="${list.img[0].imgSrc}" th:id="'main_img'+${list.id}" th:onclick="fnHref([[${list.id}]])">
-    </div>
+      <div class="imgDiv" th:each="list, index : ${resultMap}">
+          <img th:if="${list.img.size == 0}"
+               class="main-image"
+               th:src="@{/img/} + 'IMG_0111.jpeg'"
+               th:id="'main_img'+${list.id}"
+               th:onclick="openBoardModal([[${list.id}]])">
+
+          <img th:unless="${list.img.size == 0}"
+               class="main-image"
+               th:src="${list.img[0].imgSrc}"
+               th:id="'main_img'+${list.id}"
+               th:onclick="openBoardModal([[${list.id}]])">
+      </div>
   </div>
+</div>
+<div id="boardModal" class="board-modal hidden">
+    <div id="boardModalOverlay" class="board-modal-overlay"></div>
+
+    <div class="board-modal-content">
+        <button type="button" id="boardModalClose" class="board-modal-close">×</button>
+
+        <div class="board-nav left" id="boardPrevBtn">←</div>
+        <div class="board-nav right" id="boardNextBtn">→</div>
+
+        <div id="boardModalBody"></div>
+    </div>
 </div>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>

@@ -47,13 +47,11 @@ public class ChatViewFacade {
 
                 if (idx >= 0) {
                     if (time != null) {
-                        LocalDateTime datetime = LocalDateTime.parse(time);
-                        roomList.get(idx).setLastChatTime(datetime);
+                        roomList.get(idx).setLastChatTime(LocalDateTime.parse(time));
                     }
 
                     if (message != null) {
-                        String lastMessage = (String) message;
-                        roomList.get(idx).setLastMessage(lastMessage);
+                        roomList.get(idx).setLastMessage(message);
                     }
                 }
             }

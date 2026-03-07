@@ -53,134 +53,180 @@
     }
 
      .board-modal.hidden {
-  display: none;
- }
+      display: none;
+     }
 
- .board-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
- }
+     .board-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+     }
 
- .board-modal-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
- }
+     .board-modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+     }
 
- .board-modal-content {
-  position: relative;
-  width: min(1000px, 94vw);
-  max-height: 90vh;
-  overflow-y: auto;
-  margin: 5vh auto;
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
- }
+     .board-modal-content {
+      position: relative;
+      width: min(1000px, 94vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      margin: 5vh auto;
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+     }
 
- .board-modal-close {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  border: none;
-  background: transparent;
-  font-size: 28px;
-  cursor: pointer;
-  z-index: 3;
- }
+     .board-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      border: none;
+      background: transparent;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 3;
+     }
 
- .board-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  user-select: none;
-  z-index: 3;
- }
+     .board-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      user-select: none;
+      z-index: 3;
+     }
 
- .board-nav.left {
-  left: 14px;
- }
+     .board-nav.left {
+      left: 14px;
+     }
 
- .board-nav.right {
-  right: 14px;
- }
+     .board-nav.right {
+      right: 14px;
+     }
 
- .board-nav.hidden {
-  display: none;
- }
+     .board-nav.hidden {
+      display: none;
+     }
 
- body.modal-open {
-  overflow: hidden;
- }
+     body.modal-open {
+      overflow: hidden;
+     }
 
- .modal-profile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  cursor: pointer;
- }
+     .modal-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      cursor: pointer;
+     }
 
- .modal-profile-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
- }
+     .modal-profile-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+     }
 
- .modal-image-box {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 16px;
- }
+     .modal-image-box {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 16px;
+     }
 
- .modal-main-image {
-  width: 100%;
-  max-height: 500px;
-  object-fit: contain;
- }
+     .modal-main-image {
+      width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+     }
 
- .modal-image-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  user-select: none;
- }
+     .modal-image-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border: none;
+      padding: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+     }
 
- .modal-image-arrow.left {
-  left: 10px;
- }
+     .modal-image-arrow.left {
+      left: 10px;
+     }
 
- .modal-image-arrow.right {
-  right: 10px;
- }
+     .modal-image-arrow.right {
+      right: 10px;
+     }
 
- .modal-image-arrow.hidden {
-  display: none;
- }
+     .modal-image-arrow.hidden {
+      display: none;
+     }
+
+     .board-modal-content .modal-info {
+      display: flex;
+      flex-direction: column;
+      align-self: flex-start;
+      margin-top: 10px;
+     }
+
+     .board-modal-content .icon-box {
+      display: flex;
+      gap: 10px;
+     }
+
+     .board-modal-content .icon {
+      width: 35px;
+      height: 35px;
+      cursor: pointer;
+     }
+
+     .board-modal-content .like {
+      display: flex;
+      align-self: flex-start;
+      margin-top: 10px;
+      font-weight: bold;
+      gap: 5px;
+      cursor: pointer;
+     }
+
+     .board-modal-content .name {
+      font-weight: bold;
+      margin-top: 8px;
+     }
+
+     .board-modal-content .modal-content-pre {
+      white-space: pre-wrap;
+      margin-bottom: 0;
+     }
+
+     .board-modal-content .comment {
+      display: flex;
+      gap: 5px;
+      cursor: pointer;
+      margin-top: 8px;
+     }
 </style>
 <body>
 <nav class="navi">

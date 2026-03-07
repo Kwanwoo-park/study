@@ -208,37 +208,41 @@ function drawBoardModal(data) {
         : [{ imgSrc: "/img/IMG_0111.jpeg" }];
 
     const currentImage = imageList[currentImageIndex];
-
-    const date = new Date(board.registerTime);
-    const dateText =
-        date.getFullYear() + "년 " +
-        (date.getMonth() + 1) + "월 " +
-        date.getDate() + "일";
+    const liked = Boolean(data.like);
 
     modalBody.innerHTML = `
-        <div class="modal-profile" onclick="fnProfile('${board.member.email}')">
+        <div class="modal-profile" onclick="fnProfile('${escapeHtml(board.member.email)}')">
             <img class="modal-profile-img" src="${board.member.profile}">
             <span>${escapeHtml(board.member.name)}</span>
         </div>
 
         <div class="modal-image-box">
-            <div class="modal-image-arrow left ${currentImageIndex === 0 ? 'hidden' : ''}" onclick="modalImageLeft(event)">←</div>
-            <img class="modal-main-image" id="modalMainImage" src="${currentImage.imgSrc}" alt="board image">
-            <div class="modal-image-arrow right ${currentImageIndex === imageList.length - 1 ? 'hidden' : ''}" onclick="modalImageRight(event)">→</div>
+            <button type="button" id="modalImageLeftBtn" class="modal-image-arrow left" style="visibility: ${currentImageIndex === 0 ? 'hidden' : 'visible'};" onclick="modalImageLeft(event)">←</button>
+            <img class="modal-main-image" id="modalMainImage" src="${currentImage.imgSrc}" alt="board image" ondblclick="fnOnlyLike(${board.id})">
+            <button type="button" id="modalImageRightBtn" class="modal-image-arrow right" style="visibility: ${currentImageIndex === imageList.length - 1 ? 'hidden' : 'visible'};" onclick="modalImageRight(event)">→</button>
         </div>
 
-        <div class="d-flex gap-3 mb-2">
-            <span onclick="fnHref(${board.id})" style="cursor:pointer;">좋아요 ${board.favorites.length}개</span>
-            <span onclick="fnComment(${board.id})" style="cursor:pointer;">댓글 ${board.comment.length}개 모두 보기</span>
+        <div class="modal-info">
+            <div class="icon-box">
+                <img id="like${board.id}" src="/img/${liked ? 'ic_favorite.png' : 'ic_favorite_border.png'}" class="icon" onclick="fnLike(${board.id})">
+                <img id="comment${board.id}" src="/img/ic_chat_black.png" class="icon" onclick="fnComment(${board.id})">
+            </div>
+
+            <div class="like" onclick="fnHref(${board.id})">
+                <label class="form-label">좋아요</label>
+                <label class="form-label" id="like_cnt${board.id}">${board.favorites.length}</label>
+                <label class="form-label">개</label>
+            </div>
+
+            <span class="name">${escapeHtml(board.member.name)}</span>
+            <pre class="modal-content-pre">${escapeHtml(board.content)}</pre>
+
+            <div class="comment" onclick="fnComment(${board.id})">
+                <label class="form-label">댓글</label>
+                <label class="form-label" id="comment_cnt${board.id}">${board.comment.length}</label>
+                <label class="form-label">개 모두 보기</label>
+            </div>
         </div>
-
-        <div class="mb-2">
-            <strong>${escapeHtml(board.member.name)}</strong>
-        </div>
-
-        <pre style="white-space: pre-wrap;">${escapeHtml(board.content)}</pre>
-
-        <div class="text-muted mt-3">${dateText}</div>
     `;
 }
 
@@ -268,22 +272,56 @@ function redrawModalImage() {
         : [{ imgSrc: "/img/IMG_0111.jpeg" }];
 
     const modalMainImage = document.getElementById('modalMainImage');
-    const leftArrow = document.querySelector('.modal-image-arrow.left');
-    const rightArrow = document.querySelector('.modal-image-arrow.right');
+    const leftArrow = document.getElementById('modalImageLeftBtn');
+    const rightArrow = document.getElementById('modalImageRightBtn');
 
     if (modalMainImage) {
         modalMainImage.src = imageList[currentImageIndex].imgSrc;
     }
 
     if (leftArrow) {
-        if (currentImageIndex === 0) leftArrow.classList.add('hidden');
-        else leftArrow.classList.remove('hidden');
+        leftArrow.style.visibility = currentImageIndex === 0 ? 'hidden' : 'visible';
     }
 
     if (rightArrow) {
-        if (currentImageIndex === imageList.length - 1) rightArrow.classList.add('hidden');
-        else rightArrow.classList.remove('hidden');
+        rightArrow.style.visibility = currentImageIndex === imageList.length - 1 ? 'hidden' : 'visible';
     }
+}
+
+function fnLike(listId) {
+    const like = document.getElementById('like' + listId);
+    const likeCnt = document.getElementById('like_cnt' + listId);
+    if (!like || !likeCnt) return;
+
+    const liked = like.src.endsWith('ic_favorite.png');
+    const url = liked ? `/api/favorite/delete?id=${listId}` : `/api/favorite/like?id=${listId}`;
+    const method = liked ? 'DELETE' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        credentials: "include",
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        if (json['result'] > 0) {
+            likeCnt.innerText = String(parseInt(likeCnt.innerText, 10) + (liked ? -1 : 1));
+            like.src = liked ? "/img/ic_favorite_border.png" : "/img/ic_favorite.png";
+        } else {
+            alert("다시 시도하여주십시오");
+        }
+    })
+    .catch(() => {
+        alert("다시 시도하여주십시오.");
+    });
+}
+
+function fnOnlyLike(listId) {
+    const like = document.getElementById('like' + listId);
+    if (!like || like.src.endsWith('ic_favorite.png')) return;
+    fnLike(listId);
 }
 
 function updateBoardNavigation() {
@@ -324,7 +362,7 @@ function escapeHtml(str) {
 }
 
 function fnHref(listId) {
-    location.href = "/board/view?id=" + listId;
+    location.href = "/favorites?id=" + listId;
 }
 
 function fnComment(listId) {

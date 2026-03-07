@@ -20,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatMessageBatchProcessor {
     private final RedisTemplate<String, Object> objectRedisTemplate;
+    private final RedisTemplate<String, String> stringRedisTemplate;
     private final ChatMessageService chatMessageService;
     private final ChatRoomService roomService;
     private final ObjectMapper objectMapper;
@@ -60,20 +61,18 @@ public class ChatMessageBatchProcessor {
 
             String roomId = key.split(":")[3];
 
-            Object time = objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastTime");
-            Object message =  objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastMessage");
+            String time = stringRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastTime");
+            String message =  stringRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastMessage");
 
             if (time != null || message != null) {
                 if (time != null) {
-                    LocalDateTime datetime = LocalDateTime.parse((String) time);
-                    roomService.updateLastTime(roomId, datetime);
-                    objectRedisTemplate.delete("chat:room:" + roomId + ":lastTime");
+                    roomService.updateLastTime(roomId, LocalDateTime.parse(time));
+                    stringRedisTemplate.delete("chat:room:" + roomId + ":lastTime");
                 }
 
                 if (message != null) {
-                    String lastMessage = (String) message;
-                    roomService.updateLastMessage(roomId, lastMessage);
-                    objectRedisTemplate.delete("chat:room:" + roomId + ":lastMessage");
+                    roomService.updateLastMessage(roomId, message);
+                    stringRedisTemplate.delete("chat:room:" + roomId + ":lastMessage");
                 }
             }
         }
