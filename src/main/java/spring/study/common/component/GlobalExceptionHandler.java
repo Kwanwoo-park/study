@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ClientAbortException.class)
-    public void handelClientAbort(ClientAbortException e) {
+    public void handleClientAbort(ClientAbortException e) {
         log.debug("클라이언트가 연결을 종료했습니다: {}", e.getMessage());
     }
 

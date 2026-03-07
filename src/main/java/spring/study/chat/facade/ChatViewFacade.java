@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 @Slf4j
 public class ChatViewFacade {
     private final ChatRoomMemberService chatRoomMemberService;
-    private final RedisTemplate<String, Object> objectRedisTemplate;
+    private final RedisTemplate<String, String> stringRedisTemplate;
 
     public List<ChatRoom> chatList(Member member) {
         List<ChatRoomMember> list = chatRoomMemberService.find(member);
@@ -36,8 +36,8 @@ public class ChatViewFacade {
                 .toList();
 
         for (String roomId : roomIdList) {
-            Object time = objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastTime");
-            Object message =  objectRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastMessage");
+            String time = stringRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastTime");
+            String message =  stringRedisTemplate.opsForValue().get("chat:room:" + roomId + ":lastMessage");
 
             if (time != null || message != null) {
                 int idx = IntStream.range(0, roomList.size())
@@ -47,7 +47,7 @@ public class ChatViewFacade {
 
                 if (idx >= 0) {
                     if (time != null) {
-                        LocalDateTime datetime = LocalDateTime.parse((String) time);
+                        LocalDateTime datetime = LocalDateTime.parse(time);
                         roomList.get(idx).setLastChatTime(datetime);
                     }
 
