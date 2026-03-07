@@ -6,105 +6,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+		<link rel="stylesheet" href="/css/board/view.css">
 </head>
-<style>
-	.container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		background: white;
-		border-radius: 10px;
-		box-shadow: 0 0 0px rgba(0, 0, 0, 0.1);
-		margin-bottom: 10px;
-	}
-	.profile {
-		display: flex;
-		align-items: center;
-		align-self: flex-start;
-	}
-	.profile-img {
-		width: 50px;
-		height: 50px;
-		border-radius: 50%;
-		margin-right: 10px;
-	}
-	.name {
-		font-weight: bold;
-	}
-	.like {
-		display: flex;
-		flex-direction: row;
-		align-self: flex-start;
-		margin-top: 10px;
-		font-weight: bold;
-		gap: 5px;
-	}
-	.main-image-wrapper {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-	}
-	.main-image {
-		width: 500px;
-		height: 600px;
-	}
-	.btn {
-		width: 35px;
-		height: 35px;
-		border-radius: 50%;
-		font-color: black;
-		margin-top: auto;
-		margin-bottom: auto;
-	}
-	.left {
-		float: left;
-		align-items: center;
-		justify-content: center;
-		position: fixed;
-		top: 350px;
-		left: 0px;
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
-		font-color: black;
-		margin-left: 10px;
-	}
-	.right {
-		float: right;
-		align-items: center;
-		justify-content: center;
-		position: fixed;
-		top: 350px;
-		right: 0px;
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
-		font-color: black;
-		margin-right: 10px;
-	}
-	.editDiv {
-		position: fixed;
-		top: 0px;
-		right: 50px;
-		align-items: center;
-		justify-content: center;
-	}
-	.info {
-		display: flex;
-		flex-direction: column;
-		align-self: flex-start;
-		margin-top: 10px;
-	}
-	.icon-box {
-		display: flex;
-		font-size: 20px;
-		gap: 10px;
-	}
-	.icon {
-		width: 35px;
-		height: 35px;
-	}
-</style>
 <body>
 <button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
 <button type="button" th:unless="${next == 0}" id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
@@ -148,15 +51,10 @@
 		</div>
 	</div>
     <!--부트스트랩 js, jquery 추가-->
-    <script src="/js/lib/jquery.min.js"></script>
-    <script src="/js/lib/bootstrap.min.js"></script>
-	<script src="/js/board/view.js"></script>
-</body>
-<footer>
-	<div class="card">
-		<div class="card-body text-center">
-			<p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
-		</div>
-	</div>
-</footer>
+		    <script src="/js/lib/jquery.min.js"></script>
+		    <script src="/js/lib/bootstrap.min.js"></script>
+			<script src="/js/board/common-actions.js"></script>
+			<script src="/js/board/view.js"></script>
+	</body>
+	<th:block th:replace="fragments/board-common :: pageFooter"></th:block>
 </html>

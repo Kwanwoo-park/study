@@ -1,6 +1,7 @@
 package spring.study.member.facade;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -182,7 +183,7 @@ public class MemberFacade {
                     "result", 10L
             ));
         } else {
-            return ResponseEntity.status(HttpStatus.FOUND).body(Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "result", -10L,
                     "message", "이미 존재하는 이메일입니다"
             ));
@@ -197,21 +198,27 @@ public class MemberFacade {
             ));
         }
 
-        imageS3Service.deleteImage(member.getProfile());
-
         try {
             String imageUrl = imageS3Service.uploadImageToS3(file);
+            String oldProfile = member.getProfile();
 
             member.setProfile(imageUrl);
             memberService.updateProfile(member.getId(), imageUrl);
 
-            request.getSession(false).setAttribute("member", member);
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.setAttribute("member", member);
+            }
+
+            if (oldProfile != null && !oldProfile.equals(imageUrl)) {
+                imageS3Service.deleteImage(oldProfile);
+            }
 
             return ResponseEntity.ok(Map.of(
                     "result", member.getId()
             ));
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("profile image change failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -10L,
                     "message", "이미지 업로드 중 오류가 발생하였습니다"
@@ -318,13 +325,16 @@ public class MemberFacade {
         int result = memberService.updatePhoneAndBirth(member.getId(), dto.getPhone(), dto.getBirth());
 
         if (result != -2) {
-            request.getSession(false).setAttribute("member", member);
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.setAttribute("member", member);
+            }
 
             return ResponseEntity.ok(Map.of(
                     "result", member.getId()
             ));
         } else {
-            return ResponseEntity.status(HttpStatus.FOUND).body(Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "result", -2L,
                     "message", "이미 존재하는 전화번호입니다"
             ));
@@ -339,47 +349,29 @@ public class MemberFacade {
     }
 
     public ResponseEntity<?> deleteMember(Member member, HttpServletRequest request) {
-        for (Board board : member.getBoard()) {
-            boardImgService.deleteBoard(board);
-            favoriteService.deleteByBoard(board);
+        removeMemberData(member);
+
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
         }
 
-        notificationService.deleteByMember(member);
-
-        favoriteService.deleteByMember(member);
-        replyService.deleteReplay(member.getComment());
-        replyService.deleteReply(member);
-        commentService.deleteByMember(member);
-        boardService.deleteByMember(member);
-
-        followService.deleteByFollower(member);
-        followService.deleteByFollowing(member);
-
-        roomMemberService.subCount(member);
-        messageService.deleteByMember(member);
-        roomMemberService.delete(member);
-
-        imageS3Service.deleteImage(member.getProfile());
-
-        memberService.deleteById(member.getId());
-
-        request.getSession(false).invalidate();
-
-        return ResponseEntity.ok(Map.of(
-                "result", member.getId()
-        ));
+        return ResponseEntity.ok(Map.of("result", member.getId()));
     }
 
     public ResponseEntity<?> deleteMember(String email) {
         Member member = memberService.findMember(email);
+        removeMemberData(member);
+        return ResponseEntity.ok(Map.of("result", member.getId()));
+    }
 
+    private void removeMemberData(Member member) {
         for (Board board : member.getBoard()) {
             boardImgService.deleteBoard(board);
             favoriteService.deleteByBoard(board);
         }
 
         notificationService.deleteByMember(member);
-
         favoriteService.deleteByMember(member);
         replyService.deleteReplay(member.getComment());
         replyService.deleteReply(member);
@@ -394,12 +386,7 @@ public class MemberFacade {
         roomMemberService.delete(member);
 
         imageS3Service.deleteImage(member.getProfile());
-
         memberService.deleteById(member.getId());
-
-        return ResponseEntity.ok(Map.of(
-                "result", member.getId()
-        ));
     }
 
     private int validateLogin(MemberRequestDto dto) {

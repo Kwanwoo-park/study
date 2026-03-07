@@ -32,8 +32,8 @@ dependencies {
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	implementation 'org.springframework.kafka:spring-kafka'
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+	compileOnly 'org.projectlombok:lombok:1.18.32'
+	annotationProcessor 'org.projectlombok:lombok:1.18.32'
 	implementation 'org.springframework.session:spring-session-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'javax.xml.bind:jaxb-api:2.4.0-b180830.0359'
@@ -44,10 +44,18 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
-	testAnnotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
+	testImplementation 'org.projectlombok:lombok:1.18.32'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.register('regressionTest', Test) {
+	group = 'verification'
+	description = 'Runs regression test classes.'
+	useJUnitPlatform()
+	include '**/*RegressionTest.class'
+	shouldRunAfter tasks.named('test')
 }

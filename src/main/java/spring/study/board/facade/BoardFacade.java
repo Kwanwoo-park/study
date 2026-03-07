@@ -125,7 +125,7 @@ public class BoardFacade {
         Board board = boardService.findById(boardId);
 
         if (!board.getMember().getId().equals(member.getId()))
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "result", -1,
                     "message", "본인 게시글만 지울 수 있습니다"
             ));

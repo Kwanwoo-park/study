@@ -1,6 +1,7 @@
 package spring.study.reply.facade;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -52,7 +53,10 @@ public class ReplyFacade {
         if (!member.getId().equals(otherMember.getId()))
             notificationService.createNotification(otherMember, member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다", Group.REPLY).addMember(otherMember);
 
-        request.getSession(false).setAttribute("member", member);
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute("member", member);
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", result.getId()

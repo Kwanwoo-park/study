@@ -37,10 +37,17 @@ public class ImageS3Service {
 
     public boolean fileFormatCheck(MultipartFile file) {
         String[] formatArr = {"jpg", "jpeg", "png", "gif"};
+        String originName = file.getOriginalFilename();
+        if (originName == null || originName.isBlank()) {
+            return true;
+        }
 
-        String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        String format = StringUtils.getFilenameExtension(originName);
+        if (format == null) {
+            return true;
+        }
 
-        return !Arrays.stream(formatArr).toList().contains(format);
+        return !Arrays.stream(formatArr).toList().contains(format.toLowerCase());
     }
 
     public boolean findFormatCheck(List<MultipartFile> files) {
@@ -48,9 +55,17 @@ public class ImageS3Service {
         String format;
 
         for (MultipartFile file : files) {
-            format = StringUtils.getFilenameExtension(file.getOriginalFilename());
+            String originName = file.getOriginalFilename();
+            if (originName == null || originName.isBlank()) {
+                return true;
+            }
 
-            if (!Arrays.stream(formatArr).toList().contains(format))
+            format = StringUtils.getFilenameExtension(originName);
+            if (format == null) {
+                return true;
+            }
+
+            if (!Arrays.stream(formatArr).toList().contains(format.toLowerCase()))
                 return true;
         }
 
@@ -68,20 +83,24 @@ public class ImageS3Service {
 
     public String uploadImageToS3(MultipartFile image) throws IOException{
         String originName = image.getOriginalFilename();
-        String ext = originName.substring(originName.lastIndexOf("."));
+        if (originName == null || originName.isBlank()) {
+            throw new IOException("image original filename is empty");
+        }
+
+        String ext = StringUtils.getFilenameExtension(originName);
+        if (ext == null || ext.isBlank()) {
+            throw new IOException("image extension is empty");
+        }
+
         String changedName = changedImageName(originName);
 
         ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType("image/"+ext);
+        metadata.setContentType("image/" + ext.toLowerCase());
         metadata.setContentLength(image.getSize());
 
-        try {
-            PutObjectResult putObjectResult = amazonS3.putObject(new PutObjectRequest(
-                    bucketName, changedName, image.getInputStream(), metadata
-            ));
-        } catch (IOException e) {
-            log.debug(e.getMessage());
-        }
+        amazonS3.putObject(new PutObjectRequest(
+                bucketName, changedName, image.getInputStream(), metadata
+        ));
 
         return amazonS3.getUrl(bucketName, changedName).toString();
     }

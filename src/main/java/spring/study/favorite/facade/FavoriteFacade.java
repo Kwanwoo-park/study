@@ -1,6 +1,7 @@
 package spring.study.favorite.facade;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -42,7 +43,10 @@ public class FavoriteFacade {
         if (!member.getId().equals(otherMember.getId()))
             notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다", Group.FAVORITE).addMember(otherMember);
 
-        request.getSession(false).setAttribute("member", member);
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute("member", member);
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", favorite.getId()
@@ -63,7 +67,10 @@ public class FavoriteFacade {
 
         favoriteService.deleteById(favorite, member, board);
 
-        request.getSession(false).setAttribute("member", member);
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute("member", member);
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", favorite.getId()

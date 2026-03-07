@@ -1,6 +1,7 @@
 package spring.study.follow.facade;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -52,7 +53,10 @@ public class FollowFacade {
 
         notificationService.createNotification(searchMember, member.getName() + "님이 팔로우하기 시작하였습니다", Group.FOLLOW).addMember(searchMember);
 
-        request.getSession(false).setAttribute("member", member);
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute("member", member);
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", follow.getId()
@@ -85,7 +89,10 @@ public class FollowFacade {
 
         followService.delete(followService.findFollow(member, searchMember), member);
 
-        request.getSession(false).setAttribute("member", member);
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute("member", member);
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L
