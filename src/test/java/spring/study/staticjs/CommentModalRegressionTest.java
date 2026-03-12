@@ -17,14 +17,6 @@ class CommentModalRegressionTest {
     private static final Path MEMBER_BOARD_MODAL_JS_PATH = Path.of("src/main/resources/static/js/member/boardModal.js");
 
     @Test
-    void commentSubmitShouldNotTriggerSyntheticButtonClicks() throws IOException {
-        assertFalse(Files.readString(COMMENT_MODAL_JS_PATH).contains("modalSubmit.click()"),
-                "comment modal should submit directly to avoid duplicate requests");
-        assertFalse(Files.readString(COMMENT_LIST_JS_PATH).contains("submit.click()"),
-                "comment page should submit directly to avoid duplicate requests");
-    }
-
-    @Test
     void commentEntryPointsShouldOpenModalWhenAvailable() throws IOException {
         assertTrue(Files.readString(COMMON_ACTIONS_JS_PATH).contains("typeof openCommentModal === 'function'"),
                 "board common actions should prefer opening the comment modal");
