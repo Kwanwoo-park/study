@@ -1,5 +1,9 @@
 const boardDel = document.getElementById("boardDel");
 
+if (typeof initCommentModal === 'function') {
+    initCommentModal();
+}
+
 function fnEdit() {
     const edit = document.getElementById('edit');
     const complete = document.getElementById('complete');

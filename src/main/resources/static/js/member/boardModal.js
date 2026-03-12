@@ -130,11 +130,19 @@
             const imageList = (board.img && board.img.length > 0)
                 ? board.img
                 : [{ imgSrc: "/img/IMG_0111.jpeg" }];
-
+            const canEdit = board.member.email === data.email;
             const currentImage = imageList[currentImageIndex];
             const liked = Boolean(data.like);
 
             modalBody.innerHTML = `
+                ${canEdit ? `
+                <div class="editDiv">
+                    <span onclick="fnEditModal()">Edit</span>
+                    <span onclick="fnEditCompleteModal(${board.id})" id="modalComplete" style="display: none;">Complete</span>
+                    <br>
+                    <span onclick="fnDeleteModal(${board.id})" id="modalDelete">Delete</span>
+                </div>
+                ` : ''}
                 <div class="modal-profile" onclick="fnProfile('${escapeHtml(board.member.email)}')">
                     <img class="modal-profile-img" src="${board.member.profile}">
                     <span>${escapeHtml(board.member.name)}</span>
@@ -159,7 +167,8 @@
                     </div>
 
                     <span class="name">${escapeHtml(board.member.name)}</span>
-                    <pre class="modal-content-pre">${escapeHtml(board.content)}</pre>
+                    <pre class="modal-content-pre" id="modalContent">${escapeHtml(board.content)}</pre>
+                    <textarea class="form-control" rows="5" id="modalEditContent" style="display: none;">${escapeHtml(board.content)}</textarea>
 
                     <div class="comment" onclick="fnComment(${board.id})">
                         <label class="form-label">댓글</label>
@@ -275,11 +284,86 @@
         }
 
         function fnComment(listId) {
+            if (typeof global.openCommentModal === 'function') {
+                global.openCommentModal(listId);
+                return;
+            }
+
             location.href = "/comment?id=" + listId;
         }
 
         function fnProfile(email) {
             location.href = "/member/search/detail?email=" + email;
+        }
+
+        function fnEditModal() {
+            const edit = modalBody.querySelector('.editDiv span');
+            const complete = document.getElementById('modalComplete');
+            const del = document.getElementById('modalDelete');
+            const content = document.getElementById('modalContent');
+            const editContent = document.getElementById('modalEditContent');
+
+            if (!edit || !complete || !del || !content || !editContent) return;
+
+            edit.style.display = 'none';
+            del.style.display = 'none';
+            content.style.display = 'none';
+            complete.style.display = 'inline';
+            editContent.style.display = 'inline';
+        }
+
+        function fnEditCompleteModal(boardId) {
+            const editContent = document.getElementById('modalEditContent');
+            if (!editContent) return;
+
+            fetch(`/api/board/view`, {
+                method: 'PATCH',
+                headers: {
+                    "Content-Type": "application/json; charset=utf-8",
+                },
+                body: JSON.stringify({
+                    id: boardId,
+                    content: editContent.value
+                }),
+                credentials: "include",
+            })
+            .then((response) => response.json())
+            .then((json) => {
+                if (json.result == -1) alert("부적절한 내용 감지되었습니다");
+                else if (json.result == -3) {
+                    alert("금칙어를 사용하여 계정이 정지되었습니다");
+                    window.location.reload();
+                } else if (json.result == -10) {
+                    alert("다시 시도하여주십시오");
+                } else {
+                    openBoardModal(boardId, false);
+                }
+            })
+            .catch(() => {
+                alert("다시 시도하여주십시오");
+            });
+        }
+
+        function fnDeleteModal(boardId) {
+            fetch(`/api/board/view/delete?id=` + boardId, {
+                method: 'DELETE',
+                headers: {
+                    "Content-Type": "application/json; charset=utf-8",
+                },
+                credentials: "include",
+            })
+            .then((response) => response.json())
+            .then((json) => {
+                if (json.result != -1) {
+                    alert("삭제가 완료되었습니다");
+                    location.replace(`/member/detail?email=` + json.email);
+                } else {
+                    alert("다시 시도하여주십시오");
+                }
+            })
+            .catch(() => {
+                alert("다시 시도하여주십시오");
+            });
         }
 
         function escapeHtml(str) {
@@ -300,6 +384,9 @@
         global.fnHref = fnHref;
         global.fnComment = fnComment;
         global.fnProfile = fnProfile;
+        global.fnEditModal = fnEditModal;
+        global.fnEditCompleteModal = fnEditCompleteModal;
+        global.fnDeleteModal = fnDeleteModal;
     }
 
     global.initMemberBoardModal = initMemberBoardModal;

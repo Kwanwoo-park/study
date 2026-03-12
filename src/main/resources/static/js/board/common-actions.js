@@ -107,6 +107,11 @@ function fnOnlyLike(listId) {
 }
 
 function fnComment(listId) {
+    if (typeof openCommentModal === 'function') {
+        openCommentModal(listId);
+        return;
+    }
+
     location.href = '/comment?id=' + listId;
 }
 

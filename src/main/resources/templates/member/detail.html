@@ -8,11 +8,12 @@
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
   <link rel="stylesheet" href="/css/member/member-detail.css">
+  <link rel="stylesheet" href="/css/comment/modal.css">
 </head>
 <body>
-<th:block th:replace="~{fragments/member-common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
+<th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
 <div class="container">
-  <th:block th:replace="~{fragments/member-common :: notificationBanner}"></th:block>
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
   <form method="dialog" enctype="multipart/form-data">
     <div class="profileDiv">
       <img th:src="${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
@@ -56,13 +57,15 @@
       </div>
   </div>
 </div>
-<th:block th:replace="~{fragments/member-common :: boardModal}"></th:block>
+<th:block th:replace="~{fragments/board-modal :: boardModal}"></th:block>
+<th:block th:replace="~{fragments/comment-modal :: commentModal}"></th:block>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/comment/modal.js"></script>
 <script src="/js/member/boardModal.js"></script>
 <script src="/js/member/detail.js"></script>
 <script src="/js/common/common.js"></script>
 </body>
-<th:block th:replace="~{fragments/member-common :: pageFooter}"></th:block>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

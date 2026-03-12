@@ -39,20 +39,9 @@
     }
 </style>
 <body>
-<nav class="navi">
-    <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
-    <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
-    <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
-    <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
-    <div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
-    <div onclick="fnForbidden()"><img th:src="@{/img/} + ic_chat_black.png" class="nav-icon"></div>
-    <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
-</nav>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
     <div class="container">
-        <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
-            <span id="notification-message">새 알림</span>
-            <button type="button" class="btn-close" aria-label="Close">닫기</button>
-        </div>
+        <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
         <button type="button" id="btn" class="btn btn-success">Forbidden word apply</button>
         <div id="uploadDiv" style="display: none;">
             <hr>
@@ -78,11 +67,5 @@
     <script src="/js/forbidden/list.js"></script>
     <script src="/js/common/common.js"></script>
 </body>
-<footer>
-    <div class="card">
-        <div class="card-body text-center">
-            <p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
-        </div>
-    </div>
-</footer>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

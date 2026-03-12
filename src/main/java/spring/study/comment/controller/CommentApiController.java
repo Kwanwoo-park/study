@@ -29,7 +29,18 @@ public class CommentApiController {
                 "message", "유효하지 않은 세션"
         ));
 
-        return commentFacade.getCommentList(commentRequestDto, member, request);
+        return commentFacade.saveComment(commentRequestDto, member, request);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<?> getCommentList(@RequestParam Long id, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
+
+        return commentFacade.getList(id, member);
     }
 
     @PatchMapping("/update")

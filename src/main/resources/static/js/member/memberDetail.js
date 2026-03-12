@@ -18,6 +18,10 @@ if (typeof initMemberBoardModal === 'function') {
     initMemberBoardModal();
 }
 
+if (typeof initCommentModal === 'function') {
+    initCommentModal();
+}
+
 if (btn) {
     btn.addEventListener('click', () => {
         const data = { email: email };

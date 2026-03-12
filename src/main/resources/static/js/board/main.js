@@ -3,6 +3,10 @@ const container = document.querySelector('.container')
 let nextCursor = 1;
 
 window.onload = function() {
+    if (typeof initCommentModal === 'function') {
+        initCommentModal();
+    }
+
     loadMorePosts();
 }
 
@@ -136,7 +140,7 @@ function fnDraw(data) {
         img_comment.className = 'icon';
         img_comment.id = 'comment' + board.id;
         img_comment.onclick = function() {
-            fnComment(board.id);
+            fnOpenComment(board.id);
         }
         img_comment.src = '/img/ic_chat_black.png';
 
@@ -183,7 +187,7 @@ function fnDraw(data) {
         const comment_div = document.createElement('div')
         comment_div.className = 'comment'
         comment_div.onclick = function() {
-            fnComment(board.id)
+            fnOpenComment(board.id)
         }
 
         const label4 = document.createElement('label')
@@ -222,4 +226,13 @@ function fnDraw(data) {
 
         container.appendChild(main);
     });
+}
+
+function fnOpenComment(boardId) {
+    if (typeof openCommentModal === 'function') {
+        openCommentModal(boardId);
+        return;
+    }
+
+    fnComment(boardId);
 }

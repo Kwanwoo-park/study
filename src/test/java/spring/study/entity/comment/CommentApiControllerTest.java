@@ -14,12 +14,13 @@
 //import org.springframework.test.web.servlet.MockMvc;
 //import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 //import org.springframework.web.context.WebApplicationContext;
-//import spring.study.dto.comment.CommentRequestDto;
-//import spring.study.entity.member.Member;
-//import spring.study.service.member.MemberService;
+//import spring.study.comment.dto.CommentRequestDto;
+//import spring.study.member.entity.Member;
+//import spring.study.member.service.MemberService;
 //
 //import static org.assertj.core.api.Assertions.*;
 //import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+//import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 //import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 //
@@ -29,7 +30,7 @@
 //    @LocalServerPort
 //    private int port;
 //
-//    String url = "http://localhost:" + port + "/comment";
+//    String url = "http://localhost:" + port + "/api/comment";
 //
 //    @Autowired
 //    private TestRestTemplate testTemplate;
@@ -51,21 +52,22 @@
 //        MockHttpSession session = new MockHttpSession();
 //        session.setAttribute("member", memberService.findMember("test@test.com"));
 //
-//        url += "/37/action";
+//        url += "";
 //
 //        CommentRequestDto commentRequestDto = CommentRequestDto.builder()
-//                .comments("test37")
+//                .id(35L)
+//                .comments("test 35")
 //                .build();
 //
 //        // when
 //        mvc.perform(post(url).session(session)
 //                .contentType(MediaType.APPLICATION_JSON)
 //                .content(new ObjectMapper().writeValueAsString(commentRequestDto))
-//        ).andExpect(status().isOk());
+//        ).andExpect(status().isOk()).andDo(print());
 //
 //        // then
 //        Member member = memberService.findMember("test@test.com");
 //
-//        assertThat(member.getComment().get(3).getComments()).isEqualTo(commentRequestDto.getComments());
+//        assertThat(member.getComment().get(member.getComment().size()-1).getComments()).isEqualTo(commentRequestDto.getComments());
 //    }
 //}

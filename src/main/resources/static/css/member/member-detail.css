@@ -216,3 +216,19 @@ body.modal-open {
     cursor: pointer;
     margin-top: 8px;
 }
+
+.board-modal-content .editDiv {
+    position: absolute;
+    top: 24px;
+    right: 56px;
+    text-align: right;
+    z-index: 2;
+}
+
+.board-modal-content .editDiv span {
+    cursor: pointer;
+}
+
+.board-modal-content #modalEditContent {
+    margin-top: 8px;
+}

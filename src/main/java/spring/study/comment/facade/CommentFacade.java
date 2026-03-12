@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardService;
+import spring.study.comment.dto.CommentListResponseDto;
 import spring.study.comment.dto.CommentRequestDto;
 import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
@@ -17,6 +18,7 @@ import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
+import java.util.Comparator;
 import java.util.Map;
 
 @Service
@@ -28,7 +30,7 @@ public class CommentFacade {
     private final NotificationService notificationService;
     private final ModerationService moderationService;
 
-    public ResponseEntity<?> getCommentList(CommentRequestDto dto, Member member, HttpServletRequest request) {
+    public ResponseEntity<?> saveComment(CommentRequestDto dto, Member member, HttpServletRequest request) {
         int risk = moderationService.validate(dto.getComments(), member, request);
 
         if (risk != 0) {
@@ -98,6 +100,19 @@ public class CommentFacade {
 
         return ResponseEntity.ok(Map.of(
                 "result", comment.getId()
+        ));
+    }
+
+    public ResponseEntity<?> getList(Long boardId, Member member) {
+        Board board = boardService.findById(boardId);
+
+        return ResponseEntity.ok(Map.of(
+                "result", 10,
+                "member", member.getEmail(),
+                "list", board.getComment().stream()
+                        .sorted(Comparator.comparingLong(Comment::getId).reversed())
+                        .map(CommentListResponseDto::new)
+                        .toList()
         ));
     }
 }

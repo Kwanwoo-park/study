@@ -17,6 +17,10 @@ if (typeof initMemberBoardModal === 'function') {
     initMemberBoardModal();
 }
 
+if (typeof initCommentModal === 'function') {
+    initCommentModal();
+}
+
 function fnLoad(input) {
     file = input.files[0];
 

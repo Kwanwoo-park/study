@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="boardModal">
+  <div id="boardModal" class="board-modal hidden">
+    <div id="boardModalOverlay" class="board-modal-overlay"></div>
+
+    <div class="board-modal-content">
+      <button type="button" id="boardModalClose" class="board-modal-close">×</button>
+
+      <div class="board-nav left" id="boardPrevBtn">←</div>
+      <div class="board-nav right" id="boardNextBtn">→</div>
+
+      <div id="boardModalBody"></div>
+    </div>
+  </div>
+</th:block>
+</html>

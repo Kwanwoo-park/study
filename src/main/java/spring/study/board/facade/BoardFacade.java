@@ -61,6 +61,7 @@ public class BoardFacade {
                 "result", 10,
                 "board", new BoardResponseDto(board),
                 "like", member.checkFavorite(board),
+                "email", member.getEmail(),
                 "previous", ids[0],
                 "next", ids[1]
         ));
