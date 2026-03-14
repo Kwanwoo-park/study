@@ -7,6 +7,10 @@ window.onload = function() {
         initCommentModal();
     }
 
+    if (typeof initFavoriteModal === 'function') {
+        initFavoriteModal();
+    }
+
     loadMorePosts();
 }
 
@@ -74,7 +78,7 @@ function fnDraw(data) {
 
         if (board.img.length != 1) {
             const button = document.createElement('button')
-            button.className = 'btn';
+            button.className = 'arrow';
             button.type = 'button'
             button.id = 'left' + board.id;
             button.style.visibility = 'hidden';
@@ -108,7 +112,7 @@ function fnDraw(data) {
 
         if (board.img.length > 1) {
             const button = document.createElement('button')
-            button.className = 'btn';
+            button.className = 'arrow';
             button.type = 'button'
             button.id = 'right' + board.id;
             button.onclick = function() {
@@ -150,7 +154,7 @@ function fnDraw(data) {
         const like_div = document.createElement('div')
         like_div.className = 'like'
         like_div.onclick = function() {
-            fnHref(board.id);
+            fnOpenFavorite(board.id);
         }
 
         const label1 = document.createElement('label')
@@ -235,4 +239,13 @@ function fnOpenComment(boardId) {
     }
 
     fnComment(boardId);
+}
+
+function fnOpenFavorite(boardId) {
+    if (typeof openFavoriteModal === 'function') {
+        openFavoriteModal(boardId);
+        return;
+    }
+
+    fnHref(boardId);
 }

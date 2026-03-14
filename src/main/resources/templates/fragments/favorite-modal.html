@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="favoriteModal">
+    <div id="favoriteModal" class="favorite-modal hidden">
+        <div id="favoriteModalOverlay" class="favorite-modal-overlay"></div>
+
+        <div class="favorite-modal-content">
+            <button type="button" id="favoriteModalClose" class="favorite-modal-close">×</button>
+            <h4 id="favoriteModalTitle" class="favorite-modal-title">좋아요 누른 사람들</h4>
+            <div id="favoriteModalBody" class="comment-modal-body"></div>
+        </div>
+    </div>
+</th:block>
+</html>

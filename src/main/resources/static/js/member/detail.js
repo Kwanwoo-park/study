@@ -21,6 +21,10 @@ if (typeof initCommentModal === 'function') {
     initCommentModal();
 }
 
+if (typeof initFavoriteModal === 'function') {
+    initFavoriteModal();
+}
+
 function fnLoad(input) {
     file = input.files[0];
 

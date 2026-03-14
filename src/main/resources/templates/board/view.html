@@ -6,8 +6,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
-		<link rel="stylesheet" href="/css/board/view.css">
-		<link rel="stylesheet" href="/css/comment/modal.css">
+	<link rel="stylesheet" href="/css/board/view.css">
+	<link rel="stylesheet" href="/css/comment/modal.css">
+    <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
 <body>
 <button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
@@ -52,9 +53,11 @@
 		</div>
 	</div>
     <th:block th:replace="~{fragments/comment-modal :: commentModal}"></th:block>
+    <th:block th:replace="~{fragments/favorite-modal :: favoriteModal}"></th:block>
     <!--부트스트랩 js, jquery 추가-->
 		    <script src="/js/lib/jquery.min.js"></script>
 		    <script src="/js/lib/bootstrap.min.js"></script>
+            <script src="/js/favorite/modal.js"></script>
 			<script src="/js/board/common-actions.js"></script>
 			<script src="/js/comment/modal.js"></script>
 			<script src="/js/board/view.js"></script>

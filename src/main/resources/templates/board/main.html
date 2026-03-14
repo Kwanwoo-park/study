@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/common/common.css">
     <link rel="stylesheet" href="/css/board/main.css">
     <link rel="stylesheet" href="/css/comment/modal.css">
+    <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
 <body>
     <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
@@ -15,11 +16,13 @@
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
     </div>
     <th:block th:replace="~{fragments/comment-modal :: commentModal}"></th:block>
+    <th:block th:replace="~{fragments/favorite-modal :: favoriteModal}"></th:block>
     <!--부트스트랩 js, jquery 추가-->
 	    <script src="/js/lib/jquery.min.js"></script>
 	    <script src="/js/lib/bootstrap.min.js"></script>
 	    <script src="/js/board/common-actions.js"></script>
 	    <script src="/js/comment/modal.js"></script>
+        <script src="/js/favorite/modal.js"></script>
 	    <script src="/js/board/main.js"></script>
 	    <script src="/js/common/common.js"></script>
 </body>

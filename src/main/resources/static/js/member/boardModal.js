@@ -280,6 +280,11 @@
         }
 
         function fnHref(listId) {
+            if (typeof global.openFavoriteModal === 'function') {
+                global.openFavoriteModal(listId);
+                return;
+            }
+
             location.href = "/favorites?id=" + listId;
         }
 

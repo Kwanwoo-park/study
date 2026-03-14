@@ -116,6 +116,11 @@ function fnComment(listId) {
 }
 
 function fnHref(listId) {
+    if (typeof openFavoriteModal === 'function') {
+        openFavoriteModal(listId);
+        return;
+    }
+
     location.href = '/favorites?id=' + listId;
 }
 

@@ -20,6 +20,17 @@ public class FavoriteApiController {
     private final SessionManager sessionManager;
     private final FavoriteFacade favoriteFacade;
 
+    @GetMapping("/list")
+    public ResponseEntity<?> getFavoriteList(@RequestParam Long id, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
+
+        return favoriteFacade.getList(id, member);
+    }
+
     @PostMapping("/like")
     public ResponseEntity<?> favoriteAction(@RequestParam Long id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);

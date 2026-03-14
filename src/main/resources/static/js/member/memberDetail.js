@@ -22,6 +22,10 @@ if (typeof initCommentModal === 'function') {
     initCommentModal();
 }
 
+if (typeof initFavoriteModal === 'function') {
+    initFavoriteModal();
+}
+
 if (btn) {
     btn.addEventListener('click', () => {
         const data = { email: email };

@@ -19,6 +19,7 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -105,14 +106,15 @@ public class CommentFacade {
 
     public ResponseEntity<?> getList(Long boardId, Member member) {
         Board board = boardService.findById(boardId);
+        List<CommentListResponseDto> list = board.getComment().stream()
+                .sorted(Comparator.comparingLong(Comment::getId).reversed())
+                .map(CommentListResponseDto::new)
+                .toList();
 
         return ResponseEntity.ok(Map.of(
-                "result", 10,
+                "result", list.size(),
                 "member", member.getEmail(),
-                "list", board.getComment().stream()
-                        .sorted(Comparator.comparingLong(Comment::getId).reversed())
-                        .map(CommentListResponseDto::new)
-                        .toList()
+                "list", list
         ));
     }
 }

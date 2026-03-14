@@ -9,13 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardService;
+import spring.study.favorite.dto.FavoriteResponseDto;
 import spring.study.favorite.entity.Favorite;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.member.entity.Member;
-import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -24,8 +25,18 @@ import java.util.Map;
 public class FavoriteFacade {
     private final FavoriteService favoriteService;
     private final BoardService boardService;
-    private final MemberService memberService;
     private final NotificationService notificationService;
+
+    public ResponseEntity<?> getList(Long id, Member member) {
+        List<Favorite> favorites = boardService.findById(id).getFavorites();
+
+        return ResponseEntity.ok(Map.of(
+                "list", favorites.stream().map(FavoriteResponseDto::new).toList(),
+                "email", member.getEmail(),
+                "following", member.checkFollowing(favorites),
+                "result", favorites.size()
+        ));
+    }
 
     public ResponseEntity<?> like(Long id, Member member, HttpServletRequest request) {
         Board board = boardService.findById(id);

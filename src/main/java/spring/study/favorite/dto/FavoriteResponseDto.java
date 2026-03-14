@@ -8,7 +8,6 @@ import spring.study.member.entity.Member;
 @Getter
 public class FavoriteResponseDto {
     private Long id;
-    private String comments;
     private Member member;
     private Board board;
 

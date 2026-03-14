@@ -115,6 +115,7 @@
 
             if (action === 'delete') {
                 await deleteComment(Number(commentId));
+                return;
             }
         });
 
@@ -171,7 +172,7 @@
                 });
                 const json = await response.json();
 
-                if (json.result !== 10) {
+                if (json.result < 0) {
                     alert('다시 시도하여주십시오');
                     return;
                 }
@@ -188,7 +189,7 @@
             modalTitle.innerText = `댓글 ${data.list.length}개`;
 
             if (data.list.length === 0) {
-                modalBody.innerHTML = '<div>등록된 댓글이 없습니다.</div>';
+                modalBody.innerHTML = '<div>등록된 댓글이 없습니다</div>';
                 return;
             }
 
@@ -202,8 +203,8 @@
                                     <a class="comment-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
                                     ${item.member.email === data.member ? `
                                         <div class="comment-modal-actions">
-                                            <button type="button" class="btn btn-primary btn-sm" data-action="edit" data-comment-id="${item.id}">Edit</button>
-                                            <button type="button" class="btn btn-danger btn-sm" data-action="delete" data-comment-id="${item.id}">Delete</button>
+                                            <button type="button" class="btn btn-primary" data-action="edit" data-comment-id="${item.id}">Edit</button>
+                                            <button type="button" class="btn btn-danger" data-action="delete" data-comment-id="${item.id}">Delete</button>
                                         </div>
                                     ` : ''}
                                 </div>
