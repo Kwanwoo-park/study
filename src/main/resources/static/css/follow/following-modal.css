@@ -1,0 +1,96 @@
+.following-modal.hidden {
+    display: none;
+}
+
+.following-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+}
+
+.following-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.following-modal-content {
+    position: relative;
+    width: min(700px, 92vw);
+    max-height: 85vh;
+    margin: 5vh auto;
+    padding: 20px;
+    border-radius: 16px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.following-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    border: none;
+    background: transport;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.following-modal-title {
+    margin: 0;
+    text-align: center;
+}
+
+.following-modal-body {
+    overflow: auto;
+    padding: 4px;
+}
+
+.following-modal-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.following-modal-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #e9e9e9;
+}
+
+.following-modal-item:last-child {
+    border-bottom: none;
+}
+
+.following-modal-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.following-modal-profile-img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+.following-modal-profile-link {
+    color: inherit;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.following-modal-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+
+.following-modal-text {
+    margin: 8px 0;
+    white-space: pre-wrap;
+}
+
+body.following-modal-open {
+    overflow: hidden;
+}

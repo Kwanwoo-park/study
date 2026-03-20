@@ -21,6 +21,28 @@ public class FollowApiController {
     private final SessionManager sessionManager;
     private final FollowFacade followFacade;
 
+    @GetMapping("/follower")
+    public ResponseEntity<?> getFollowerList(@RequestParam String email, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
+
+        return followFacade.getFollower(email, member);
+    }
+
+    @GetMapping("/following")
+    public ResponseEntity<?> getFollowingList(@RequestParam String email, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
+
+        return followFacade.getFollowing(email, member);
+    }
+
     @PostMapping("")
     public ResponseEntity<?> memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);

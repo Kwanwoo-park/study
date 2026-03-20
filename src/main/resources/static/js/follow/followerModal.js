@@ -1,23 +1,23 @@
 (function (global) {
-    function initFavoriteModal() {
-        const modal = document.getElementById('favoriteModal');
-        const modalOverlay = document.getElementById('favoriteModalOverlay');
-        const modalClose = document.getElementById('favoriteModalClose');
-        const modalBody = document.getElementById('favoriteModalBody');
+    function initFollowerModal() {
+        const modal = document.getElementById('followerModal');
+        const modalOverlay = document.getElementById('followerModalOverlay');
+        const modalClose = document.getElementById('followerModalClose');
+        const modalBody = document.getElementById('followerModalBody');
 
         if (!modal || !modalBody) {
             return;
         }
 
-        let currentBoardId = null;
+        let currentMemberEmail = null;
         let modalOpen = false;
 
         if (modalOverlay) {
-            modalOverlay.addEventListener('click', () => closeFavoriteModal());
+            modalOverlay.addEventListener('click', () => closeFollowerModal());
         }
 
         if (modalClose) {
-            modalClose.addEventListener('click', () => closeFavoriteModal());
+            modalClose.addEventListener('click', () => closeFollowerModal());
         }
 
         modalBody.addEventListener('click', async (event) => {
@@ -37,46 +37,46 @@
         window.addEventListener('popstate', async (event) => {
             const state = event.state;
 
-            if (state && state.favoriteModal && state.boardId) {
-                await openFavoriteModal(state.boardId, false);
+            if (state && state.followerModal && state.memberEmail) {
+                await openFollowerModal(state.memberEmail, false);
                 return;
             }
 
             if (modalOpen) {
-                closeFavoriteModal(true);
+                closeFollowerModal(true);
             }
         });
 
-        async function openFavoriteModal(boardId, push = true) {
-            currentBoardId = boardId;
+        async function openFollowerModal(memberEmail, push = true) {
+            currentMemberEmail = memberEmail;
             modal.classList.remove('hidden');
-            document.body.classList.add('favorite-modal-open');
+            document.body.classList.add('follower-modal-open');
             modalOpen = true;
 
-            await loadFavorites(boardId);
+            await loadFollower(memberEmail);
 
             if (push) {
-                history.pushState({ favoriteModal: true, boardId: boardId }, '', `/favorites?id=${boardId}`);
+                history.pushState({ followerModal: true, memberEmail: memberEmail }, '', `/follow/follower?email=${memberEmail}`);
             } else {
-                history.replaceState({ favoriteModal: true, boardId: boardId }, '', `/favorites?id=${boardId}`);
+                history.replaceState({ followerModal: true, memberEmail: memberEmail }, '', `/follow/follower?email=${memberEmail}`);
             }
         }
 
-        function closeFavoriteModal(fromPopState = false) {
+        function closeFollowerModal(fromPopState = false) {
             modal.classList.add('hidden');
             modalBody.innerHTML = '';
-            document.body.classList.remove('favorite-modal-open');
+            document.body.classList.remove('follower-modal-open');
             modalOpen = false;
-            currentBoardId = null;
+            currentMemberEmail = null;
 
-            if (!fromPopState && history.state && history.state.favoriteModal) {
+            if (!fromPopState && history.state && history.state.followerModal) {
                 history.back();
             }
         }
 
-        async function loadFavorites(boardId) {
+        async function loadFollower(memberEmail) {
             try {
-                const response = await fetch(`/api/favorite/list?id=${boardId}`, {
+                const response = await fetch(`/api/follow/follower?email=${memberEmail}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8',
@@ -90,30 +90,30 @@
                     return;
                 }
 
-                renderFavorite(json);
+                renderFollower(json);
             } catch (error) {
                 console.error(error);
                 alert('다시 시도하여주십시오');
             }
         }
 
-        function renderFavorite(data) {
-            if (data.list.length === 0) {
-                modalBody.innerHTML = '<div>아직 좋아요를 누른 회원이 없습니다</div>';
+        function renderFollower(data) {
+            if (data.follower.length === 0) {
+                modalBody.innerHTML = '<div>팔로잉한 회원이 없습니다</div>';
                 return;
             }
 
             modalBody.innerHTML = `
-                <ul class="favorite-modal-list">
-                    ${data.list.map((item) => `
-                        <li class="favorite-modal-item">
-                            <div class="favorite-modal-profile-row">
-                                <img src="${escapeHtml(item.member.profile)}" class="favorite-modal-profile-img" alt="profile">
-                                <a class="favorite-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
-                                <span class="favorite-modal-text">${escapeHtml(item.member.email)}</span>
-                                ${item.member.email !== data.email ? `
-                                    <div class="favorite-modal-actions">
-                                        <button type="button" id="follow${item.id}" class="btn btn-success" data-action="follow" data-follow-id="${item.id}" data-email="${escapeHtml(item.member.email)}">${data.following[item.id] ? 'Unfollow' : 'Follow'}</button>
+                <ul class="follower-modal-list">
+                    ${data.follower.map((item) => `
+                        <li class="follower-modal-item">
+                            <div class="follower-modal-profile-row">
+                                <img src="${escapeHtml(item.follower.profile)}" class="follower-modal-profile-img" alt="profile">
+                                <a class="follower-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.follower.email)}">${escapeHtml(item.follower.name)}</a>
+                                <span class="follower-modal-text">${escapeHtml(item.follower.email)}</span>
+                                ${item.follower.email !== data.email ? `
+                                    <div class="follower-modal-actions">
+                                        <button type="button" id="follow${item.id}" class="btn btn-success" data-action="follow" data-follow-id="${item.id}" data-email="${escapeHtml(item.follower.email)}">${data.follow[item.id] ? 'Unfollow' : 'Follow'}</button>
                                     </div>
                                 ` : ''}
                             </div>
@@ -126,7 +126,7 @@
         async function toggleFollow(id, email) {
             const followText = document.getElementById('follow' + id);
 
-            const data = { email: email }
+            const data = { email : email }
 
             let method;
 
@@ -154,12 +154,11 @@
                         followText.innerText = 'Unfollow';
                     else
                         followText.innerText = 'Follow';
-                }
-                else
+                } else
                     alert("다시 시도하여주십시오");
             } catch (error) {
                 console.error(error);
-                alert('다시 시도하여주십시오');
+                alert("다시 시도하여주십시오");
             }
         }
 
@@ -172,9 +171,9 @@
                 .replaceAll("'", '&#39;')
         }
 
-        global.openFavoriteModal = openFavoriteModal;
-        global.closeFavoriteModal = closeFavoriteModal;
+        global.openFollowerModal = openFollowerModal;
+        global.closeFollowerModal = closeFollowerModal;
     }
 
-    global.initFavoriteModal = initFavoriteModal;
+    global.initFollowerModal = initFollowerModal;
 })(window);

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import spring.study.follow.dto.FollowResponseDto;
 import spring.study.follow.entity.Follow;
 import spring.study.follow.service.FollowService;
 import spring.study.member.dto.MemberRequestDto;
@@ -24,6 +25,54 @@ public class FollowFacade {
     private final MemberService memberService;
     private final FollowService followService;
     private final NotificationService notificationService;
+
+    public ResponseEntity<?> getFollower(String email, Member member) {
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", "이메일이 전달되지 않았습니다"
+            ));
+        }
+
+        Member follower = memberService.findMember(email);
+
+        if (follower == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "result", -10L,
+                    "message", "존재하지 않는 회원입니다"
+            ));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "follower", follower.getFollowing().stream().map(FollowResponseDto::new).toList(),
+                "follow", member.checkFollowing1(follower),
+                "email", member.getEmail()
+        ));
+    }
+
+    public ResponseEntity<?> getFollowing(String email, Member member) {
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", "이메일이 전달되지 않았습니다"
+            ));
+        }
+
+        Member following = memberService.findMember(email);
+
+        if (following == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "result", -10L,
+                    "message", "존재하지 않는 회원입니다"
+            ));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "following", following.getFollower().stream().map(FollowResponseDto::new).toList(),
+                "follow", member.checkFollowing2(following),
+                "email", member.getEmail()
+        ));
+    }
 
     public ResponseEntity<?> follow(MemberRequestDto dto, Member member, HttpServletRequest request) {
         if (dto.getEmail() == null || dto.getEmail().isBlank()) {

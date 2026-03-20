@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!--부트스트랩 css 추가-->
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/follow/follower-modal.css">
+  <link rel="stylesheet" href="/css/follow/following-modal.css">
   <link rel="stylesheet" href="/css/common/common.css">
   <link rel="stylesheet" href="/css/member/member-detail.css">
   <link rel="stylesheet" href="/css/comment/modal.css">
@@ -27,14 +29,10 @@
         <br>
         <label class="form-label">Posts: </label>
         <label class="form-label" th:text="${member.board.size}"></label>
-        <a th:href="@{/follow/follower(email=${member.email})}" id="follower">
-          <label class="form-label"> Follower: </label>
-          <label class="form-label" id="follower_label" th:text="${member.following.size}"></label>
-        </a>
-        <a th:href="@{/follow/following(email=${member.email})}" id="following">
-          <label class="form-label">Following: </label>
-          <label class="form-label" id="following_label" th:text="${member.follower.size}"></label>
-        </a>
+        <label class="form-label" th:onclick="openFollowerModal([[${member.email}]])" > Follower: </label>
+        <label class="form-label" id="follower_label" th:text="${member.following.size}" th:onclick="openFollowerModal([[${member.email}]])" ></label>
+        <label class="form-label" th:onclick="openFollowingModal([[${member.email}]])">Following: </label>
+        <label class="form-label" id="following_label" th:text="${member.follower.size}" th:onclick="openFollowingModal([[${member.email}]])"></label>
       </h4>
     </div>
     <div class="imgGrid">
@@ -56,9 +54,13 @@
 <th:block th:replace="~{fragments/board-modal :: boardModal}"></th:block>
 <th:block th:replace="~{fragments/comment-modal :: commentModal}"></th:block>
 <th:block th:replace="~{fragments/favorite-modal :: favoriteModal}"></th:block>
+<th:block th:replace="~{fragments/follower-modal :: followerModal}"></th:block>
+<th:block th:replace="~{fragments/following-modal :: followingModal}"></th:block>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/follow/followerModal.js"></script>
+<script src="/js/follow/followingModal.js"></script>
 <script src="/js/comment/modal.js"></script>
 <script src="/js/favorite/modal.js"></script>
 <script src="/js/member/boardModal.js"></script>

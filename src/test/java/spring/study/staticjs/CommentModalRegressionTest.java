@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CommentModalRegressionTest {
 
-    private static final Path COMMENT_MODAL_JS_PATH = Path.of("src/main/resources/static/js/comment/modal.js");
-    private static final Path COMMENT_LIST_JS_PATH = Path.of("src/main/resources/static/js/comment/list.js");
     private static final Path COMMON_ACTIONS_JS_PATH = Path.of("src/main/resources/static/js/board/common-actions.js");
     private static final Path MEMBER_BOARD_MODAL_JS_PATH = Path.of("src/main/resources/static/js/member/boardModal.js");
 

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="followerModal">
+    <div id="followerModal" class="follower-modal hidden">
+        <div id="followerModalOverlay" class="follower-modal-overlay"></div>
+
+        <div class="follower-modal-content">
+            <button type="button" id="followerModalClose" class="follower-modal-close">×</button>
+            <h4 id="followerModalTitle" class="follower-modal-title">팔로워</h4>
+            <div id="followerModalBody" class="follower-modal-body"></div>
+        </div>
+    </div>
+</th:block>
+</html>

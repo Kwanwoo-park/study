@@ -10,9 +10,6 @@ if (profile && upload) {
     profile.addEventListener('click', () => upload.click());
 }
 
-if (follower === "0") document.querySelector("#follower").removeAttribute('href');
-if (following === "0") document.querySelector("#following").removeAttribute('href');
-
 if (typeof initMemberBoardModal === 'function') {
     initMemberBoardModal();
 }
@@ -23,6 +20,14 @@ if (typeof initCommentModal === 'function') {
 
 if (typeof initFavoriteModal === 'function') {
     initFavoriteModal();
+}
+
+if (typeof initFollowerModal === 'function') {
+    initFollowerModal();
+}
+
+if (typeof initFollowingModal === 'function') {
+    initFollowingModal();
 }
 
 function fnLoad(input) {
