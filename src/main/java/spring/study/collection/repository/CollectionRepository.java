@@ -1,0 +1,18 @@
+package spring.study.collection.repository;
+
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import spring.study.collection.entity.Collection;
+import spring.study.member.entity.Member;
+
+import java.util.List;
+
+@Repository
+public interface CollectionRepository extends JpaRepository<Collection, Long> {
+    List<Collection> findByMemberIn(Member member, Pageable pageable);
+
+    @Transactional
+    void deleteByMember(Member member);
+}

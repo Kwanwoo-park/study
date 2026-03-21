@@ -16,6 +16,7 @@ import spring.study.board.service.BoardService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.comment.service.CommentService;
+import spring.study.common.service.IPEntityService;
 import spring.study.common.service.SessionManager;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
@@ -39,6 +40,7 @@ import java.util.Map;
 public class MemberFacade {
     private final SessionManager sessionManager;
     private final MemberService memberService;
+    private final IPEntityService ipEntityService;
     private final BoardService boardService;
     private final BoardImgService boardImgService;
     private final CommentService commentService;
@@ -93,7 +95,7 @@ public class MemberFacade {
 
         memberService.updateLastLoginTime(member.getId());
 
-        sessionManager.setLoginMember(request, memberService.getIp(request), member);
+        sessionManager.setLoginMember(request, ipEntityService.getIp(request), member);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId(),

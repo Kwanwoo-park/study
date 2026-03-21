@@ -99,6 +99,10 @@ public class Member extends BasetimeEntity implements UserDetails {
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
     private List<Notification> notifications = new ArrayList<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    private List<spring.study.collection.entity.Collection>  collections = new ArrayList<>();
+
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth) {
         this.id = id;
@@ -311,6 +315,10 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void addNotification(Notification notification) {
         notification.addMember(this);
+    }
+
+    public void addCollection(spring.study.collection.entity.Collection collection) {
+        collection.addMember(this);
     }
 
     public void changeProfile(String profile) {
