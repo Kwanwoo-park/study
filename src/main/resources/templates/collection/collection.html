@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>개인 소장본</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/collection/save.css">
+</head>
+<body>
+<th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
+<th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+<div class="profileDiv">
+    <h4>
+        <label class="form-label">Count: </label>
+        <label class="form-label" th:text="${member.collection.size}"></label>
+    </h4>
+</div>
+<div>
+    <div class="mb-3">
+        <input class="form-control" id="title" name="title" type="text" placeholder="example" required />
+    </div>
+    <div class="mb-3">
+        <input class="form-control" id="url" name="url" type="url" placeholder="www.example.com" required />
+    </div>
+    <form method="dialog" enctype="multipart/form-data">
+        <div class="imgDiv">
+            <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" />
+            <button type="button" class="btn btn-primary" id="btn">이미지</button>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Save</button>
+        <button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="imgBtn">Image Save</button>
+    </form>
+</div>
+<div class="container">
+    <div class="imgGrid">
+        <div class="mainImgDiv" th:each="list, index : ${resultMap}">
+            <div th:onclick="fnHref([[${list.url}]])">
+                <div>
+                    <img th:src="${list.imgSrc}" class="main-image" th:id="'main_img' + ${list.id}">
+                </div>
+                <span class="description" th:id="description" th:text="list.description"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/collection/save.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+<th:block th:replace="~{fragments/common : pageFooter}"></th:block>
+</html>

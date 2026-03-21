@@ -71,12 +71,10 @@ function fnImgSave() {
         } else if (json['result'] == -2) {
             alert("게시글 사진 갯수 초과")
             fnDelete(id)
-        }
-        else if (json['result'] == -99) {
+        } else if (json['result'] == -99) {
             alert(json['message']);
             fnDelete(id)
-        }
-        else {
+        } else {
             alert("게시글 사진 등록 실패");
             fnDelete(id)
         }

@@ -50,9 +50,9 @@ function fnSave() {
     })
     .then((response) => response.json())
     .then((json) => {
-        const status = json['status'];
+        const result = json['result'];
 
-        if (status === 500) {
+        if (result < 0) {
             alert("사진 변경에 실패했습니다");
         } else {
             alert("사진이 변경되었습니다.");
