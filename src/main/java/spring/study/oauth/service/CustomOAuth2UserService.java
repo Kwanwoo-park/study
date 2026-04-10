@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import spring.study.common.service.IPEntityService;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 import spring.study.member.repository.MemberRepository;
@@ -32,7 +31,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     private final MemberRepository memberRepository;
     private final HttpSession session;
     private final SessionManager sessionManager;
-    private final IPEntityService ipEntityService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -56,7 +54,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         if (requestAttributes instanceof ServletRequestAttributes servletRequestAttributes) {
             HttpServletRequest request = servletRequestAttributes.getRequest();
-            sessionManager.setLoginMember(request, ipEntityService.getIp(request), member);
+            sessionManager.setLoginMember(request, member);
         }
     }
 

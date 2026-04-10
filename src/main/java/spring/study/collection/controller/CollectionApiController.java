@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.collection.dto.CollectionRequestDto;
 import spring.study.collection.facade.CollectionFacade;
-import spring.study.collection.facade.IPFacade;
-import spring.study.common.entity.IPEntity;
-import spring.study.common.service.IPEntityService;
+import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 
 import java.util.Map;
@@ -22,16 +20,16 @@ import java.util.Map;
 @Slf4j
 public class CollectionApiController {
     private final CollectionFacade facade;
-    private final IPFacade ipFacade;
+    private final SessionManager sessionManager;
 
     @GetMapping("/load")
     public ResponseEntity<?> getBoard(@RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                       @RequestParam(defaultValue = "30", name = "limit") int limit,
                                       HttpServletRequest request) {
-        Member member = ipFacade.checkIP(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
-                "message", "허가되지 않은 IP"
+                "message", "유효하지 않은 세션"
         ));
 
         return facade.load(cursor, limit, member);
@@ -39,10 +37,10 @@ public class CollectionApiController {
 
     @GetMapping("/check")
     public ResponseEntity<?> check(HttpServletRequest request) {
-        Member member = ipFacade.checkIP(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
-                "message", "등록되지 않은 회원"
+                "message", "유효하지 않은 세션"
         ));
 
         return ResponseEntity.ok(Map.of(
@@ -52,30 +50,21 @@ public class CollectionApiController {
 
     @PostMapping("/save/collection")
     public ResponseEntity<?> saveCollection(@RequestBody CollectionRequestDto dto, HttpServletRequest request) {
-        Member member = ipFacade.checkIP(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
-                "message", "허가되지 않은 IP"
+                "message", "유효하지 않은 세션"
         ));
 
         return facade.save(request, dto, member);
     }
 
-    @PostMapping("/save/ip")
-    public ResponseEntity<?> saveIp(HttpServletRequest request) {
-        IPEntity entity = ipFacade.saveIp(request);
-
-        return ResponseEntity.ok(Map.of(
-                "result", entity.getIp()
-        ));
-    }
-
     @PostMapping("/save/img")
     public ResponseEntity<?> saveImg(@RequestPart MultipartFile file, HttpServletRequest request) {
-        Member member = ipFacade.checkIP(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
-                "message", "허가되지 않은 IP"
+                "message", "유효하지 않은 세션"
         ));
 
         return facade.saveImage(file);
@@ -83,10 +72,10 @@ public class CollectionApiController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteCollection(@RequestParam() Long id, HttpServletRequest request) {
-        Member member = ipFacade.checkIP(request);
+        Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
-                "message", "허가되지 않은 IP"
+                "message", "유효하지 않은 세션"
         ));
 
         return facade.delete(id, member);

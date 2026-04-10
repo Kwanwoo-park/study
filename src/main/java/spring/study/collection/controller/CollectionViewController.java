@@ -24,8 +24,6 @@ public class CollectionViewController {
 
         model.addAttribute("member", member);
 
-        log.info("size = {}", member.getCollections().size());
-
         return "collection/collection";
     }
 }

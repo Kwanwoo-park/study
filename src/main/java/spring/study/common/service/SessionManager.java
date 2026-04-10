@@ -16,10 +16,10 @@ public class SessionManager {
         return request.getSession(false);
     }
 
-    public void setLoginMember(HttpServletRequest request, String ip, Member member) {
+    public void setLoginMember(HttpServletRequest request, Member member) {
         HttpSession session = request.getSession();
 
-        session.setAttribute("IP", ip);
+        session.setAttribute("IP", getIp(request));
         session.setAttribute("UA", request.getHeader("User-Agent"));
         session.setAttribute("member", member);
     }
@@ -30,5 +30,28 @@ public class SessionManager {
         session.removeAttribute("member");
         session.removeAttribute("IP");
         session.removeAttribute("UA");
+    }
+
+    private String getIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("Proxy-Client-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("HTTP_CLIENT-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("HTTP_X-FORWARDED_FOR");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("X-Real-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("X-RealIP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("REMOTE_ADDR");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getRemoteAddr();
+
+        return ip.split(",")[0];
     }
 }
