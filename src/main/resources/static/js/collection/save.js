@@ -89,7 +89,13 @@ function drawCollections(collections) {
             }
         };
 
+        const desc = document.createElement('span');
+        desc.className = 'main-desc';
+        desc.innerText = item.description ?? '';
+
         wrapper.append(image);
+        wrapper.append(desc);
+
         imgGrid.append(wrapper);
     });
 }

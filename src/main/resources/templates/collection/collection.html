@@ -17,7 +17,7 @@
         <label class="form-label" th:text="${#lists.size(member.collections)}"></label>
     </h4>
 </div>
-<div>
+<div class="container">
     <div class="mb-3">
         <input class="form-control" id="description" name="description" type="text" placeholder="example" required />
     </div>
@@ -29,11 +29,11 @@
             <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" />
             <button type="button" class="btn btn-primary" id="btn">이미지</button>
         </div>
-        <button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Save</button>
-        <button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="imgBtn">Image Save</button>
+        <div class="saveBtnWrap">
+            <button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Save</button>
+            <button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="imgBtn">Image Save</button>
+        </div>
     </form>
-</div>
-<div class="container">
     <div class="imgGrid">
     </div>
 </div>
