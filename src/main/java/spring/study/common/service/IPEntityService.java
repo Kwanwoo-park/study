@@ -40,17 +40,28 @@ public class IPEntityService {
         return ipEntityRepository.findByIp(ip);
     }
 
-    public Boolean exist(String ip) {
-        return ipEntityRepository.existsByIP(ip);
+    public Boolean exist(String ip, Long memberId) {
+        return ipEntityRepository.existsByIpAndMemberId(ip, memberId);
     }
 
     public String getIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
 
-        if (ip == null || ip.isEmpty() || ip.equalsIgnoreCase("unknown"))
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("Proxy-Client-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("HTTP_CLIENT-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("HTTP_X-FORWARDED_FOR");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
             ip = request.getHeader("X-Real-IP");
-
-        if (ip == null || ip.isEmpty() || ip.equalsIgnoreCase("unknown"))
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("X-RealIP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("REMOTE_ADDR");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
             ip = request.getRemoteAddr();
 
         return ip.split(",")[0];

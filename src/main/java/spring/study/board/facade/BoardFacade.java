@@ -121,7 +121,6 @@ public class BoardFacade {
         ));
     }
 
-    @Transactional
     public ResponseEntity<?> deleteBoard(Long boardId, Member member) {
         Board board = boardService.findById(boardId);
 

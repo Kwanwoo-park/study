@@ -15,8 +15,8 @@
 </head>
 <body>
 <th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
+<th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
 <div class="container">
-  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
   <form method="dialog" enctype="multipart/form-data">
     <div class="profileDiv">
       <img th:src="${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
@@ -26,6 +26,7 @@
         <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
         <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
+        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/collection'">Secret</button>
         <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
         <input type="file" accept="image/*" onchange="fnLoad(this)" style="display: none" id="upload">
         <button type="button" class="btn btn-primary" id="save" style="display: none" onclick="fnSave()">사진 변경</button>

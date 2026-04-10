@@ -101,7 +101,7 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
-    private List<spring.study.collection.entity.Collection>  collections = new ArrayList<>();
+    private List<spring.study.collection.entity.Collection> collections = new ArrayList<>();
 
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth) {

@@ -34,7 +34,6 @@ public class Collection extends BasetimeEntity implements Serializable {
     @NotNull
     private String url;
 
-    @JsonIgnore
     @JoinColumn(name = "member_id")
     @ManyToOne
     private Member member;

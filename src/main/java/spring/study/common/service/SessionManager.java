@@ -12,6 +12,10 @@ public class SessionManager {
         return session == null ? null : (Member) session.getAttribute("member");
     }
 
+    public HttpSession getSession(HttpServletRequest request) {
+        return request.getSession(false);
+    }
+
     public void setLoginMember(HttpServletRequest request, String ip, Member member) {
         HttpSession session = request.getSession();
 

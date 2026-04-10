@@ -7,9 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import spring.study.collection.facade.CollectionViewFacade;
-import spring.study.collection.service.CollectionService;
+import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 
 @RequiredArgsConstructor
@@ -17,19 +15,16 @@ import spring.study.member.entity.Member;
 @RequestMapping("/collection")
 @Slf4j
 public class CollectionViewController {
-    private final CollectionViewFacade viewFacade;
-    private final CollectionService collectionService;
+    private final SessionManager sessionManager;
 
     @GetMapping("")
-    public String collectionMain(Model model,
-                                 @RequestParam(name = "cursor", defaultValue = "0") Integer cursor,
-                                 @RequestParam(name = "limit", defaultValue = "10") Integer limit,
-                                 HttpServletRequest request) {
-        Member member = viewFacade.checkIP(request);
-        if (member == null) return "/redirect:/board/main";
+    public String collectionMain(Model model, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("member", member);
-        model.addAttribute("collections", collectionService.getCollections(cursor, limit, member));
+
+        log.info("size = {}", member.getCollections().size());
 
         return "collection/collection";
     }

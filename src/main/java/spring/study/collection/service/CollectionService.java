@@ -29,11 +29,24 @@ public class CollectionService {
     }
 
     public List<CollectionResponseDto> getCollections(int cursor, int limit, Member member) {
-        return collectionRepository.findByMemberIn(member, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()))
+        return collectionRepository.findByMember(member, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()))
                 .stream().map(CollectionResponseDto::new).toList();
     }
 
     public List<CollectionResponseDto> findAll() {
         return collectionRepository.findAll().stream().map(CollectionResponseDto::new).toList();
+    }
+
+    public Collection findById(Long id) {
+        return collectionRepository.findById(id).orElseThrow();
+    }
+
+    @Transactional
+    public void deleteById(Long id) {
+        collectionRepository.deleteById(id);
+    }
+
+    public void deleteByMember(Member member) {
+        collectionRepository.deleteByMember(member);
     }
 }

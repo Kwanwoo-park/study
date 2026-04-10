@@ -114,6 +114,7 @@ public class BoardService {
         return board.getId();
     }
 
+    @Transactional
     public void deleteById(Long id) {
         boardRepository.deleteById(id);
     }

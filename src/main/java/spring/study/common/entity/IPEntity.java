@@ -1,7 +1,6 @@
 package spring.study.common.entity;
 
 import jakarta.persistence.*;
-import jakarta.transaction.Transactional;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +15,7 @@ public class IPEntity {
     @Column(name = "ip_id")
     private Long id;
 
-    @Column(name = "member_id")
+    @Column(name = "member_id", unique = true)
     private Long memberId;
 
     @Column(name = "ip")
@@ -27,6 +26,4 @@ public class IPEntity {
         this.memberId = memberId;
         this.ip = ip;
     }
-
-
 }

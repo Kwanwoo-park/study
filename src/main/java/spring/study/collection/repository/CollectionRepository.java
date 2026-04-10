@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
-    List<Collection> findByMemberIn(Member member, Pageable pageable);
+    List<Collection> findByMember(Member member, Pageable pageable);
 
     @Transactional
     void deleteByMember(Member member);

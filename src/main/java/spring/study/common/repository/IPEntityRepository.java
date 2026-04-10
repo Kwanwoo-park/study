@@ -13,7 +13,11 @@ public interface IPEntityRepository extends JpaRepository<IPEntity, Long> {
 
     List<IPEntity> findByMemberId(Long memberId);
 
-    Boolean existsByIP(String ip);
+    Boolean existsByIp(String ip);
+
+    Boolean existsByIpAndMemberId(String ip, Long memberId);
+
+    Boolean existsByMemberId(Long memberId);
 
     @Transactional
     void deleteByMemberId(Long memberId);

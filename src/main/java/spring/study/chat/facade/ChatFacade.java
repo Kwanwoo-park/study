@@ -161,6 +161,13 @@ public class ChatFacade {
             ));
         }
 
+        if (imageS3Service.findFormatCheck(files)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -99,
+                    "message", "지원하지 않는 파일 포맷입니다"
+            ));
+        }
+
         List<ChatMessageImg> list = new ArrayList<>();
         String messageId = UUID.randomUUID().toString();
 

@@ -14,18 +14,18 @@
 <div class="profileDiv">
     <h4>
         <label class="form-label">Count: </label>
-        <label class="form-label" th:text="${member.collection.size}"></label>
+        <label class="form-label" th:text="${#lists.size(member.collections)}"></label>
     </h4>
 </div>
 <div>
     <div class="mb-3">
-        <input class="form-control" id="title" name="title" type="text" placeholder="example" required />
+        <input class="form-control" id="description" name="description" type="text" placeholder="example" required />
     </div>
     <div class="mb-3">
         <input class="form-control" id="url" name="url" type="url" placeholder="www.example.com" required />
     </div>
     <form method="dialog" enctype="multipart/form-data">
-        <div class="imgDiv">
+        <div class="imgDiv" id="imgDiv">
             <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" />
             <button type="button" class="btn btn-primary" id="btn">이미지</button>
         </div>
@@ -35,14 +35,6 @@
 </div>
 <div class="container">
     <div class="imgGrid">
-        <div class="mainImgDiv" th:each="list, index : ${resultMap}">
-            <div th:onclick="fnHref([[${list.url}]])">
-                <div>
-                    <img th:src="${list.imgSrc}" class="main-image" th:id="'main_img' + ${list.id}">
-                </div>
-                <span class="description" th:id="description" th:text="list.description"></span>
-            </div>
-        </div>
     </div>
 </div>
 <script src="/js/lib/jquery.min.js"></script>
@@ -50,5 +42,5 @@
 <script src="/js/collection/save.js"></script>
 <script src="/js/common/common.js"></script>
 </body>
-<th:block th:replace="~{fragments/common : pageFooter}"></th:block>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>
