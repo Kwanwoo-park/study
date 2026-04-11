@@ -34,9 +34,9 @@
         <br>
         <label class="form-label">Posts: </label>
         <label class="form-label" th:text="${member.board.size}"></label>
-        <label class="form-label"> Follower: </label>
+        <label class="form-label" th:onclick="openFollowerModal([[${member.email}]])"> Follower: </label>
         <label class="form-label" id="follower_label" th:text="${member.following.size}" th:onclick="openFollowerModal([[${member.email}]])" ></label>
-        <label class="form-label">Following: </label>
+        <label class="form-label" th:onclick="openFollowingModal([[${member.email}]])">Following: </label>
         <label class="form-label" id="following_label" th:text="${member.follower.size}" th:onclick="openFollowingModal([[${member.email}]])"></label>
       </h4>
     </div>
