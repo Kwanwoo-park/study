@@ -2,6 +2,18 @@ const button = document.getElementById('login');
 const email = document.getElementById('email');
 const password = document.getElementById('password');
 
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(function (registration) {
+            console.log('Service Worker 등록 성공:', registration.scope);
+        })
+        .catch(function (error) {
+            console.log('Service Worker 등록 실패:', error);
+        });
+    });
+}
+
 if (button) {
     button.addEventListener('click', (event) => {
         event.preventDefault();
