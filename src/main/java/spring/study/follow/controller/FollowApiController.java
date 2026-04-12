@@ -22,25 +22,31 @@ public class FollowApiController {
     private final FollowFacade followFacade;
 
     @GetMapping("/follower")
-    public ResponseEntity<?> getFollowerList(@RequestParam String email, HttpServletRequest request) {
+    public ResponseEntity<?> getFollowerList(@RequestParam String email,
+                                             @RequestParam(defaultValue = "0", name = "cursor") int cursor,
+                                             @RequestParam(defaultValue = "10", name = "limit") int limit,
+                                             HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
         ));
 
-        return followFacade.getFollower(email, member);
+        return followFacade.getFollower(email, member, cursor, limit);
     }
 
     @GetMapping("/following")
-    public ResponseEntity<?> getFollowingList(@RequestParam String email, HttpServletRequest request) {
+    public ResponseEntity<?> getFollowingList(@RequestParam String email,
+                                              @RequestParam(defaultValue = "0", name = "cursor") int cursor,
+                                              @RequestParam(defaultValue = "10", name = "limit") int limit,
+                                              HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
         ));
 
-        return followFacade.getFollowing(email, member);
+        return followFacade.getFollowing(email, member, cursor, limit);
     }
 
     @PostMapping("")

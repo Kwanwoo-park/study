@@ -63,12 +63,17 @@ public class ReplyFacade {
         ));
     }
 
-    public ResponseEntity<?> getList(Long id) {
-        List<ReplyResponseDto> list = commentService.findById(id).getReply()
+    public ResponseEntity<?> getList(Long id, int cursor, int limit) {
+        Comment comment = commentService.findById(id);
+        long totalCount = replyService.countReplies(comment);
+        List<ReplyResponseDto> list = replyService.getReplies(comment, cursor, limit)
                 .stream().map(ReplyResponseDto::new).toList();
+        int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
+                "totalCount", totalCount,
+                "nextCursor", nextCursor,
                 "list", list
         ));
     }

@@ -1,6 +1,7 @@
 package spring.study.comment.repository;
 
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import spring.study.board.entity.Board;
@@ -12,6 +13,8 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByBoard(Board board);
+    List<Comment> findByBoard(Board board, Pageable pageable);
+    long countByBoard(Board board);
 
     @Transactional
     void deleteByBoard(Board board);

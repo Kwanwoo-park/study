@@ -18,7 +18,6 @@ import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -104,16 +103,19 @@ public class CommentFacade {
         ));
     }
 
-    public ResponseEntity<?> getList(Long boardId, Member member) {
+    public ResponseEntity<?> getList(Long boardId, Member member, int cursor, int limit) {
         Board board = boardService.findById(boardId);
-        List<CommentListResponseDto> list = board.getComment().stream()
-                .sorted(Comparator.comparingLong(Comment::getId).reversed())
+        long totalCount = commentService.countComments(board);
+        List<CommentListResponseDto> list = commentService.getComments(board, cursor, limit).stream()
                 .map(CommentListResponseDto::new)
                 .toList();
+        int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
-                "result", list.size(),
+                "result", 10L,
                 "member", member.getEmail(),
+                "totalCount", totalCount,
+                "nextCursor", nextCursor,
                 "list", list
         ));
     }

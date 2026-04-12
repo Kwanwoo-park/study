@@ -23,10 +23,7 @@ public class FollowViewController {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
-        Member follower = memberService.findMember(memberRequestDto.getEmail());
-
-        model.addAttribute("follower", follower.getFollowing());
-        model.addAttribute("follow", member.checkFollowing1(follower));
+        model.addAttribute("targetEmail", memberRequestDto.getEmail());
         model.addAttribute("email", member.getEmail());
 
         return "follow/follower";
@@ -37,11 +34,8 @@ public class FollowViewController {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
-        Member following = memberService.findMember(memberRequestDto.getEmail());
-
-        model.addAttribute("following", following.getFollower());
+        model.addAttribute("targetEmail", memberRequestDto.getEmail());
         model.addAttribute("email", member.getEmail());
-        model.addAttribute("follow", member.checkFollowing2(following));
 
         return "follow/following";
     }

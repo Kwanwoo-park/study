@@ -234,9 +234,13 @@ public class Member extends BasetimeEntity implements UserDetails {
     }
 
     public HashMap<Long, Boolean> checkFollowing1 (Member follows) {
+        return checkFollowingFollowers(follows.getFollowing());
+    }
+
+    public HashMap<Long, Boolean> checkFollowingFollowers(List<Follow> follows) {
         HashMap<Long, Boolean> map = new HashMap<>();
 
-        for (Follow following : follows.getFollowing()) {
+        for (Follow following : follows) {
             map.put(following.getId(), false);
             for (Follow follower : this.follower) {
                 if (Objects.equals(following.getFollower().getEmail(), follower.getFollowing().getEmail())) {
@@ -250,9 +254,13 @@ public class Member extends BasetimeEntity implements UserDetails {
     }
 
     public HashMap<Long, Boolean> checkFollowing2 (Member follows) {
+        return checkFollowingFollowings(follows.getFollower());
+    }
+
+    public HashMap<Long, Boolean> checkFollowingFollowings(List<Follow> follows) {
         HashMap<Long, Boolean> map = new HashMap<>();
 
-        for (Follow following : follows.getFollower()) {
+        for (Follow following : follows) {
             map.put(following.getId(), false);
             for (Follow follower : this.follower) {
                 if (Objects.equals(following.getFollowing().getEmail(), follower.getFollowing().getEmail())) {

@@ -26,7 +26,7 @@ public class FollowFacade {
     private final FollowService followService;
     private final NotificationService notificationService;
 
-    public ResponseEntity<?> getFollower(String email, Member member) {
+    public ResponseEntity<?> getFollower(String email, Member member, int cursor, int limit) {
         if (email == null || email.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
@@ -43,14 +43,21 @@ public class FollowFacade {
             ));
         }
 
+        long totalCount = followService.countFollowers(follower);
+        var followers = followService.getFollowers(follower, cursor, limit);
+        int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
+
         return ResponseEntity.ok(Map.of(
-                "follower", follower.getFollowing().stream().map(FollowResponseDto::new).toList(),
-                "follow", member.checkFollowing1(follower),
-                "email", member.getEmail()
+                "follower", followers.stream().map(FollowResponseDto::new).toList(),
+                "follow", member.checkFollowingFollowers(followers),
+                "email", member.getEmail(),
+                "totalCount", totalCount,
+                "nextCursor", nextCursor,
+                "result", 10L
         ));
     }
 
-    public ResponseEntity<?> getFollowing(String email, Member member) {
+    public ResponseEntity<?> getFollowing(String email, Member member, int cursor, int limit) {
         if (email == null || email.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
@@ -67,10 +74,17 @@ public class FollowFacade {
             ));
         }
 
+        long totalCount = followService.countFollowing(following);
+        var followings = followService.getFollowing(following, cursor, limit);
+        int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
+
         return ResponseEntity.ok(Map.of(
-                "following", following.getFollower().stream().map(FollowResponseDto::new).toList(),
-                "follow", member.checkFollowing2(following),
-                "email", member.getEmail()
+                "following", followings.stream().map(FollowResponseDto::new).toList(),
+                "follow", member.checkFollowingFollowings(followings),
+                "email", member.getEmail(),
+                "totalCount", totalCount,
+                "nextCursor", nextCursor,
+                "result", 10L
         ));
     }
 

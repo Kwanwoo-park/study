@@ -69,6 +69,17 @@ public class CommentService {
         return commentRepository.findAll();
     }
 
+    public List<Comment> getComments(Board board, int cursor, int limit) {
+        return commentRepository.findByBoard(
+                board,
+                PageRequest.of(cursor, limit, Sort.by("id").descending())
+        );
+    }
+
+    public long countComments(Board board) {
+        return commentRepository.countByBoard(board);
+    }
+
     public void deleteComment(Board board) {
         commentRepository.deleteByBoard(board);
     }

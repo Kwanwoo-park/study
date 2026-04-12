@@ -1,16 +1,22 @@
 (function (global) {
+    const FAVORITE_LIMIT = 10;
+
     function initFavoriteModal() {
         const modal = document.getElementById('favoriteModal');
         const modalOverlay = document.getElementById('favoriteModalOverlay');
         const modalClose = document.getElementById('favoriteModalClose');
         const modalBody = document.getElementById('favoriteModalBody');
 
-        if (!modal || !modalBody) {
+        if (!modal || !modalBody || modal.dataset.initialized === 'true') {
             return;
         }
 
+        modal.dataset.initialized = 'true';
+
         let currentBoardId = null;
         let modalOpen = false;
+        let nextCursor = 1;
+        let isLoading = false;
 
         if (modalOverlay) {
             modalOverlay.addEventListener('click', () => closeFavoriteModal());
@@ -19,6 +25,12 @@
         if (modalClose) {
             modalClose.addEventListener('click', () => closeFavoriteModal());
         }
+
+        modalBody.addEventListener('scroll', () => {
+            if (modalBody.scrollTop + modalBody.clientHeight >= modalBody.scrollHeight - 10) {
+                loadFavorites();
+            }
+        });
 
         modalBody.addEventListener('click', async (event) => {
             const actionTarget = event.target.closest('[data-action]');
@@ -30,7 +42,6 @@
 
             if (action === 'follow') {
                 await toggleFollow(Number(followId), email);
-                return;
             }
         });
 
@@ -49,11 +60,13 @@
 
         async function openFavoriteModal(boardId, push = true) {
             currentBoardId = boardId;
+            nextCursor = 1;
             modal.classList.remove('hidden');
             document.body.classList.add('favorite-modal-open');
             modalOpen = true;
+            modalBody.innerHTML = '';
 
-            await loadFavorites(boardId);
+            await loadFavorites(true);
 
             if (push) {
                 history.pushState({ favoriteModal: true, boardId: boardId }, '', `/favorites?id=${boardId}`);
@@ -68,15 +81,31 @@
             document.body.classList.remove('favorite-modal-open');
             modalOpen = false;
             currentBoardId = null;
+            nextCursor = 1;
 
             if (!fromPopState && history.state && history.state.favoriteModal) {
                 history.back();
             }
         }
 
-        async function loadFavorites(boardId) {
+        async function loadFavorites(reset = false) {
+            if (!currentBoardId || isLoading) {
+                return;
+            }
+
+            if (reset) {
+                nextCursor = 1;
+                modalBody.innerHTML = '';
+            }
+
+            if (!nextCursor) {
+                return;
+            }
+
+            isLoading = true;
+
             try {
-                const response = await fetch(`/api/favorite/list?id=${boardId}`, {
+                const response = await fetch(`/api/favorite/list?id=${currentBoardId}&cursor=${nextCursor - 1}&limit=${FAVORITE_LIMIT}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8',
@@ -90,55 +119,62 @@
                     return;
                 }
 
-                renderFavorite(json);
+                renderFavorite(json, reset);
+                nextCursor = json.nextCursor;
             } catch (error) {
                 console.error(error);
                 alert('다시 시도하여주십시오');
+            } finally {
+                isLoading = false;
             }
         }
 
-        function renderFavorite(data) {
-            if (data.list.length === 0) {
+        function renderFavorite(data, reset) {
+            if (reset) {
+                modalBody.innerHTML = '';
+            }
+
+            if (data.list.length === 0 && modalBody.children.length === 0) {
                 modalBody.innerHTML = '<div>아직 좋아요를 누른 회원이 없습니다</div>';
                 return;
             }
 
-            modalBody.innerHTML = `
-                <ul class="favorite-modal-list">
-                    ${data.list.map((item) => `
-                        <li class="favorite-modal-item">
-                            <div class="favorite-modal-profile-row">
-                                <img src="${escapeHtml(item.member.profile)}" class="favorite-modal-profile-img" alt="profile">
-                                <a class="favorite-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
-                                <span class="favorite-modal-text">${escapeHtml(item.member.email)}</span>
-                                ${item.member.email !== data.email ? `
-                                    <div class="favorite-modal-actions">
-                                        <button type="button" id="follow${item.id}" class="btn btn-success" data-action="follow" data-follow-id="${item.id}" data-email="${escapeHtml(item.member.email)}">${data.following[item.id] ? 'Unfollow' : 'Follow'}</button>
-                                    </div>
-                                ` : ''}
+            let list = modalBody.querySelector('.favorite-modal-list');
+            if (!list) {
+                list = document.createElement('ul');
+                list.className = 'favorite-modal-list';
+                modalBody.append(list);
+            }
+
+            data.list.forEach((item) => {
+                const li = document.createElement('li');
+                li.className = 'favorite-modal-item';
+                li.innerHTML = `
+                    <div class="favorite-modal-profile-row">
+                        <img src="${escapeHtml(item.member.profile)}" class="favorite-modal-profile-img" alt="profile">
+                        <a class="favorite-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
+                        <span class="favorite-modal-text">${escapeHtml(item.member.email)}</span>
+                        ${item.member.email !== data.email ? `
+                            <div class="favorite-modal-actions">
+                                <button type="button" id="follow${item.id}" class="btn btn-success" data-action="follow" data-follow-id="${item.id}" data-email="${escapeHtml(item.member.email)}">${data.following[item.id] ? 'Unfollow' : 'Follow'}</button>
                             </div>
-                        </li>
-                    `).join('')}
-                </ul>
-            `;
+                        ` : ''}
+                    </div>
+                `;
+                list.append(li);
+            });
         }
 
         async function toggleFollow(id, email) {
             const followText = document.getElementById('follow' + id);
-
-            const data = { email: email }
-
-            let method;
+            const data = { email: email };
 
             if (!followText) return;
 
-            if (followText.innerText === "Follow")
-                method = 'POST';
-            else
-                method = 'DELETE';
+            const method = followText.innerText === 'Follow' ? 'POST' : 'DELETE';
 
             try {
-                const response = await fetch(`/api/follow`, {
+                const response = await fetch('/api/follow', {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8',
@@ -150,13 +186,10 @@
                 const json = await response.json();
 
                 if (json.result > 0) {
-                    if (method === 'POST')
-                        followText.innerText = 'Unfollow';
-                    else
-                        followText.innerText = 'Follow';
+                    followText.innerText = method === 'POST' ? 'Unfollow' : 'Follow';
+                } else {
+                    alert('다시 시도하여주십시오');
                 }
-                else
-                    alert("다시 시도하여주십시오");
             } catch (error) {
                 console.error(error);
                 alert('다시 시도하여주십시오');
@@ -169,7 +202,7 @@
                 .replaceAll('<', '&lt;')
                 .replaceAll('>', '&gt;')
                 .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#39;')
+                .replaceAll("'", '&#39;');
         }
 
         global.openFavoriteModal = openFavoriteModal;

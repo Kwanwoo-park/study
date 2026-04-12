@@ -1,4 +1,7 @@
 (function (global) {
+    const COMMENT_LIMIT = 10;
+    const REPLY_LIMIT = 10;
+
     function initCommentModal() {
         const modal = document.getElementById('commentModal');
         const modalOverlay = document.getElementById('commentModalOverlay');
@@ -19,6 +22,9 @@
         let currentCommentId = null;
         let isReplyMode = false;
         let modalOpen = false;
+        let nextCommentCursor = 1;
+        let isCommentLoading = false;
+        const replyStates = new Map();
 
         if (modalOverlay) {
             modalOverlay.addEventListener('click', () => closeCommentModal());
@@ -35,7 +41,13 @@
         modalInput.addEventListener('keydown', async (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                modalSubmit.click()
+                modalSubmit.click();
+            }
+        });
+
+        modalBody.addEventListener('scroll', () => {
+            if (modalBody.scrollTop + modalBody.clientHeight >= modalBody.scrollHeight - 10) {
+                loadComments();
             }
         });
 
@@ -66,17 +78,24 @@
                 if (json.result == -1 || json.result == -2) {
                     alert('부적절한 내용 감지되었습니다');
                     return;
-                } else if (json.result == -3) {
+                }
+                if (json.result == -3) {
                     alert('금칙어를 사용하여 계정이 정지되었습니다');
                     window.location.reload();
                     return;
-                } else if (json.result === -10) {
+                }
+                if (json.result === -10) {
                     alert('다시 시도하여주십시오');
                     return;
                 }
 
+                const savedReplyMode = isReplyMode;
+                const savedCommentId = currentCommentId;
                 resetComposer();
-                await loadComments(currentBoardId);
+                if (savedReplyMode && savedCommentId) {
+                    resetReplyState(savedCommentId);
+                }
+                await loadComments(true);
             } catch (error) {
                 console.error(error);
                 alert('다시 시도하여주십시오.');
@@ -85,18 +104,17 @@
             }
         });
 
-
         modalBody.addEventListener('click', async (event) => {
             const actionTarget = event.target.closest('[data-action]');
             if (!actionTarget) return;
 
             const action = actionTarget.dataset.action;
-            const commentId = actionTarget.dataset.commentId;
+            const commentId = Number(actionTarget.dataset.commentId);
             const name = actionTarget.dataset.name;
 
             if (action === 'reply') {
                 isReplyMode = true;
-                currentCommentId = Number(commentId);
+                currentCommentId = commentId;
                 modalCancel.style.display = 'inline';
                 modalInput.value = '@' + name + ' ';
                 modalInput.focus();
@@ -104,18 +122,22 @@
             }
 
             if (action === 'toggle-replies') {
-                await toggleReplies(Number(commentId), actionTarget);
+                await toggleReplies(commentId, actionTarget);
+                return;
+            }
+
+            if (action === 'load-more-replies') {
+                await loadReplies(commentId);
                 return;
             }
 
             if (action === 'edit') {
-                await toggleEdit(Number(commentId));
+                await toggleEdit(commentId);
                 return;
             }
 
             if (action === 'delete') {
-                await deleteComment(Number(commentId));
-                return;
+                await deleteComment(commentId);
             }
         });
 
@@ -135,11 +157,12 @@
         async function openCommentModal(boardId, push = true) {
             currentBoardId = boardId;
             resetComposer();
+            resetCommentState();
             modal.classList.remove('hidden');
             document.body.classList.add('comment-modal-open');
             modalOpen = true;
 
-            await loadComments(boardId);
+            await loadComments(true);
 
             if (push) {
                 history.pushState({ commentModal: true, boardId: boardId }, '', `/comment?id=${boardId}`);
@@ -155,15 +178,30 @@
             modalOpen = false;
             currentBoardId = null;
             resetComposer();
+            resetCommentState();
 
             if (!fromPopState && history.state && history.state.commentModal) {
                 history.back();
             }
         }
 
-        async function loadComments(boardId) {
+        async function loadComments(reset = false) {
+            if (!currentBoardId || isCommentLoading) {
+                return;
+            }
+
+            if (reset) {
+                resetCommentState();
+            }
+
+            if (!nextCommentCursor) {
+                return;
+            }
+
+            isCommentLoading = true;
+
             try {
-                const response = await fetch(`/api/comment/list?id=${boardId}`, {
+                const response = await fetch(`/api/comment/list?id=${currentBoardId}&cursor=${nextCommentCursor - 1}&limit=${COMMENT_LIMIT}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8',
@@ -177,49 +215,66 @@
                     return;
                 }
 
-                renderComments(json);
-                updateCommentCount(boardId, json.list.length);
+                nextCommentCursor = json.nextCursor;
+                renderComments(json, reset);
+                updateCommentCount(currentBoardId, json.totalCount);
             } catch (error) {
                 console.error(error);
                 alert('다시 시도하여주십시오');
+            } finally {
+                isCommentLoading = false;
             }
         }
 
-        function renderComments(data) {
-            modalTitle.innerText = `댓글 ${data.list.length}개`;
+        function renderComments(data, reset) {
+            modalTitle.innerText = `댓글 ${data.totalCount}개`;
 
-            if (data.list.length === 0) {
+            if (reset) {
+                modalBody.innerHTML = '';
+            }
+
+            if (data.list.length === 0 && modalBody.children.length === 0) {
                 modalBody.innerHTML = '<div>등록된 댓글이 없습니다</div>';
                 return;
             }
 
-            modalBody.innerHTML = `
-                <ul class="comment-modal-list">
-                    ${data.list.map((item) => `
-                        <li class="comment-modal-item">
-                            <div id="commentArea${item.id}">
-                                <div class="comment-modal-profile-row">
-                                    <img src="${escapeHtml(item.member.profile)}" class="comment-modal-profile-img" alt="profile">
-                                    <a class="comment-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
-                                    ${item.member.email === data.member ? `
-                                        <div class="comment-modal-actions">
-                                            <button type="button" class="btn btn-primary" data-action="edit" data-comment-id="${item.id}">Edit</button>
-                                            <button type="button" class="btn btn-danger" data-action="delete" data-comment-id="${item.id}">Delete</button>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                                <pre class="comment-modal-text" id="comment${item.id}">${escapeHtml(item.comments)}</pre>
-                                <textarea class="form-control comment-modal-edit" id="edit_comment${item.id}" rows="4">${escapeHtml(item.comments)}</textarea>
-                                <div class="comment-modal-reply-row">
-                                    <span class="comment-modal-reply-button" data-action="reply" data-comment-id="${item.id}" data-name="${escapeHtmlAttr(item.member.name)}">답글 달기</span>
-                                    ${item.replyCount > 0 ? `
-                                        <span class="comment-modal-reply-button" data-action="toggle-replies" data-comment-id="${item.id}">답글 ${item.replyCount}개 모두 보기</span>
-                                    ` : ''}
-                                </div>
+            let list = modalBody.querySelector('.comment-modal-list');
+            if (!list) {
+                list = document.createElement('ul');
+                list.className = 'comment-modal-list';
+                modalBody.append(list);
+            }
+
+            data.list.forEach((item) => {
+                const li = document.createElement('li');
+                li.className = 'comment-modal-item';
+                li.innerHTML = buildCommentItem(item, data.member);
+                list.append(li);
+            });
+        }
+
+        function buildCommentItem(item, memberEmail) {
+            return `
+                <div id="commentArea${item.id}">
+                    <div class="comment-modal-profile-row">
+                        <img src="${escapeHtml(item.member.profile)}" class="comment-modal-profile-img" alt="profile">
+                        <a class="comment-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
+                        ${item.member.email === memberEmail ? `
+                            <div class="comment-modal-actions">
+                                <button type="button" class="btn btn-primary" data-action="edit" data-comment-id="${item.id}">Edit</button>
+                                <button type="button" class="btn btn-danger" data-action="delete" data-comment-id="${item.id}">Delete</button>
                             </div>
-                        </li>
-                    `).join('')}
-                </ul>
+                        ` : ''}
+                    </div>
+                    <pre class="comment-modal-text" id="comment${item.id}">${escapeHtml(item.comments)}</pre>
+                    <textarea class="form-control comment-modal-edit" id="edit_comment${item.id}" rows="4">${escapeHtml(item.comments)}</textarea>
+                    <div class="comment-modal-reply-row">
+                        <span class="comment-modal-reply-button" data-action="reply" data-comment-id="${item.id}" data-name="${escapeHtmlAttr(item.member.name)}">답글 달기</span>
+                        ${item.replyCount > 0 ? `
+                            <span class="comment-modal-reply-button" data-action="toggle-replies" data-comment-id="${item.id}">답글 ${item.replyCount}개 모두 보기</span>
+                        ` : ''}
+                    </div>
+                </div>
             `;
         }
 
@@ -248,19 +303,17 @@
                         alert('부적절한 내용 감지되었습니다');
                         return;
                     }
-
                     if (json.result === -3) {
                         alert('금칙어를 사용하여 계정이 정지되었습니다');
                         window.location.reload();
                         return;
                     }
-
                     if (json.result === -10) {
                         alert('다시 시도하여주십시오');
                         return;
                     }
 
-                    await loadComments(currentBoardId);
+                    await loadComments(true);
                 } catch (error) {
                     console.error(error);
                     alert('다시 시도하여주십시오.');
@@ -286,7 +339,7 @@
                 const json = await response.json();
 
                 if (json.result > 0) {
-                    await loadComments(currentBoardId);
+                    await loadComments(true);
                     return;
                 }
 
@@ -307,8 +360,56 @@
                 return;
             }
 
+            const area = document.createElement('div');
+            area.id = 'replyArea' + commentId;
+            area.className = 'comment-modal-reply-list';
+            commentArea.append(area);
+
+            await loadReplies(commentId, true);
+            toggleTarget.innerText = toggleTarget.innerText.replace('모두 보기', '숨기기');
+        }
+
+        function getReplyState(commentId) {
+            if (!replyStates.has(commentId)) {
+                replyStates.set(commentId, {
+                    nextCursor: 1,
+                    items: [],
+                    isLoading: false
+                });
+            }
+
+            return replyStates.get(commentId);
+        }
+
+        function resetReplyState(commentId) {
+            replyStates.set(commentId, {
+                nextCursor: 1,
+                items: [],
+                isLoading: false
+            });
+        }
+
+        async function loadReplies(commentId, reset = false) {
+            const state = getReplyState(commentId);
+
+            if (state.isLoading) {
+                return;
+            }
+
+            if (reset) {
+                resetReplyState(commentId);
+            }
+
+            const currentState = getReplyState(commentId);
+            if (!currentState.nextCursor) {
+                renderReplies(commentId);
+                return;
+            }
+
+            currentState.isLoading = true;
+
             try {
-                const response = await fetch(`/api/reply/list?id=${commentId}`, {
+                const response = await fetch(`/api/reply/list?id=${commentId}&cursor=${currentState.nextCursor - 1}&limit=${REPLY_LIMIT}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8',
@@ -322,28 +423,48 @@
                     return;
                 }
 
-                const area = document.createElement('div');
-                area.id = 'replyArea' + commentId;
-                area.className = 'comment-modal-reply-list';
-
-                json.list.forEach((item) => {
-                    const replyItem = document.createElement('div');
-                    replyItem.className = 'comment-modal-reply-item';
-                    replyItem.innerHTML = `
-                        <img src="${escapeHtml(item.member.profile)}" class="comment-modal-profile-img" alt="profile">
-                        <div class="comment-modal-reply-content">
-                            <a class="comment-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
-                            <pre class="comment-modal-reply-text"><a href="/member/search/detail?email=${encodeURIComponent(item.commentMember.email)}">@${escapeHtml(item.commentMember.name)}</a> ${escapeHtml(item.reply)}</pre>
-                        </div>
-                    `;
-                    area.append(replyItem);
-                });
-
-                commentArea.append(area);
-                toggleTarget.innerText = toggleTarget.innerText.replace('모두 보기', '숨기기');
+                currentState.items = reset ? json.list.slice() : currentState.items.concat(json.list);
+                currentState.nextCursor = json.nextCursor;
+                renderReplies(commentId);
             } catch (error) {
                 console.error(error);
                 alert('다시 시도하여주십시오');
+            } finally {
+                currentState.isLoading = false;
+            }
+        }
+
+        function renderReplies(commentId) {
+            const area = document.getElementById('replyArea' + commentId);
+            const state = getReplyState(commentId);
+
+            if (!area) {
+                return;
+            }
+
+            area.innerHTML = '';
+
+            state.items.forEach((item) => {
+                const replyItem = document.createElement('div');
+                replyItem.className = 'comment-modal-reply-item';
+                replyItem.innerHTML = `
+                    <img src="${escapeHtml(item.member.profile)}" class="comment-modal-profile-img" alt="profile">
+                    <div class="comment-modal-reply-content">
+                        <a class="comment-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
+                        <pre class="comment-modal-reply-text"><a href="/member/search/detail?email=${encodeURIComponent(item.commentMember.email)}">@${escapeHtml(item.commentMember.name)}</a> ${escapeHtml(item.reply)}</pre>
+                    </div>
+                `;
+                area.append(replyItem);
+            });
+
+            if (state.nextCursor) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'btn btn-light btn-sm';
+                button.dataset.action = 'load-more-replies';
+                button.dataset.commentId = String(commentId);
+                button.innerText = '답글 더 보기';
+                area.append(button);
             }
         }
 
@@ -355,6 +476,13 @@
             if (modalCancel) {
                 modalCancel.style.display = 'none';
             }
+        }
+
+        function resetCommentState() {
+            nextCommentCursor = 1;
+            isCommentLoading = false;
+            replyStates.clear();
+            modalBody.innerHTML = '';
         }
 
         function updateCommentCount(boardId, count) {

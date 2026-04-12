@@ -27,14 +27,19 @@ public class FavoriteFacade {
     private final BoardService boardService;
     private final NotificationService notificationService;
 
-    public ResponseEntity<?> getList(Long id, Member member) {
-        List<Favorite> favorites = boardService.findById(id).getFavorites();
+    public ResponseEntity<?> getList(Long id, Member member, int cursor, int limit) {
+        Board board = boardService.findById(id);
+        long totalCount = favoriteService.countFavorites(board);
+        List<Favorite> favorites = favoriteService.getFavorites(board, cursor, limit);
+        int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
                 "list", favorites.stream().map(FavoriteResponseDto::new).toList(),
                 "email", member.getEmail(),
                 "following", member.checkFollowing(favorites),
-                "result", favorites.size()
+                "totalCount", totalCount,
+                "nextCursor", nextCursor,
+                "result", 10L
         ));
     }
 

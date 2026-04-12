@@ -2,6 +2,8 @@ package spring.study.reply.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import spring.study.comment.dto.reply.ReplyRequestDto;
 import spring.study.comment.entity.Comment;
@@ -37,6 +39,17 @@ public class ReplyService {
 
     public List<Reply> findReply(Comment comment) {
         return replyRepository.findByComment(comment);
+    }
+
+    public List<Reply> getReplies(Comment comment, int cursor, int limit) {
+        return replyRepository.findByComment(
+                comment,
+                PageRequest.of(cursor, limit, Sort.by("id").ascending())
+        );
+    }
+
+    public long countReplies(Comment comment) {
+        return replyRepository.countByComment(comment);
     }
 
     public void deleteReply(Member member) {

@@ -21,14 +21,17 @@ public class FavoriteApiController {
     private final FavoriteFacade favoriteFacade;
 
     @GetMapping("/list")
-    public ResponseEntity<?> getFavoriteList(@RequestParam Long id, HttpServletRequest request) {
+    public ResponseEntity<?> getFavoriteList(@RequestParam Long id,
+                                             @RequestParam(defaultValue = "0", name = "cursor") int cursor,
+                                             @RequestParam(defaultValue = "10", name = "limit") int limit,
+                                             HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
         ));
 
-        return favoriteFacade.getList(id, member);
+        return favoriteFacade.getList(id, member, cursor, limit);
     }
 
     @PostMapping("/like")

@@ -2,11 +2,15 @@ package spring.study.favorite.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import spring.study.board.entity.Board;
 import spring.study.favorite.entity.Favorite;
 import spring.study.member.entity.Member;
 import spring.study.favorite.repository.FavoriteRepository;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -32,6 +36,17 @@ public class FavoriteService {
 
     public Boolean existFavorite(Member member, Board board) {
         return favoriteRepository.existsByMemberAndBoard(member, board);
+    }
+
+    public List<Favorite> getFavorites(Board board, int cursor, int limit) {
+        return favoriteRepository.findByBoard(
+                board,
+                PageRequest.of(cursor, limit, Sort.by("id").descending())
+        );
+    }
+
+    public long countFavorites(Board board) {
+        return favoriteRepository.countByBoard(board);
     }
 
     @Transactional

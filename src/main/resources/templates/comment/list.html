@@ -43,30 +43,8 @@
 <body>
 <div>
   <h4>댓글</h4>
-  <div class="container">
-    <ul class="list-group-flush">
-      <li class="list-group-item" th:each="list,index : ${comment.list}">
-          <span th:id="'commentArea' + ${list.id}">
-            <img th:src="${list.member.profile}" class="profile" id="profile">
-            <a th:href="@{/member/search/detail(email=${list.member.email})}">
-              <span th:text="${list.member.name}"></span>
-            </a>
-            <div class="float-right" th:if="${#strings.equals(list.member.email, member)}">
-              <button type="button" class="btn btn-primary" th:onclick="fnEdit([[${list.id}]])">Edit</button>
-              <button type="button" class="btn btn-danger" th:onclick="fnDelete([[${list.id}]])">Delete</button>
-            </div>
-            <pre th:id="'comment'+${list.id}" th:text="${list.comments}"></pre>
-            <textarea class="form-control" th:id="'edit_comment'+${list.id}" rows="5" cols=""
-                      name="Comment edit" th:text="${list.comments}" style="display: none;"></textarea>
-            <label class="reply" th:onclick="fnReply([[${list.id}]], [[${list.member.name}]])">답글 달기</label>
-            <div class="reply" th:unless="${list.reply.size == 0}" th:onclick="fnReplyGet([[${list.id}]])">
-              <label class="form-label">답글 </label>
-              <label class="form-label" th:id="'reply_cnt' + ${list.id}" th:text="${list.reply.size}"></label>
-              <label class="form-label">개 모두 보기</label>
-            </div>
-          </span>
-      </li>
-    </ul>
+  <div class="container" th:attr="data-board-id=${boardId},data-member-email=${member}">
+    <ul class="list-group-flush" id="commentList"></ul>
   </div>
   <div class="mb-3">
     <label class="form-label" id="cancel" onclick="fnCancel()" style="display: none">답글 달기 취소</label>

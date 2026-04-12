@@ -2,6 +2,8 @@ package spring.study.follow.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import spring.study.follow.dto.FollowRequestDto;
 import spring.study.follow.entity.Follow;
@@ -44,6 +46,28 @@ public class FollowService {
 
     public Boolean existFollow(Member follower, Member following) {
         return followRepository.existsByFollowerAndFollowing(follower, following);
+    }
+
+    public List<Follow> getFollowers(Member member, int cursor, int limit) {
+        return followRepository.findByFollowing(
+                member,
+                PageRequest.of(cursor, limit, Sort.by("id").descending())
+        );
+    }
+
+    public List<Follow> getFollowing(Member member, int cursor, int limit) {
+        return followRepository.findByFollower(
+                member,
+                PageRequest.of(cursor, limit, Sort.by("id").descending())
+        );
+    }
+
+    public long countFollowers(Member member) {
+        return followRepository.countByFollowing(member);
+    }
+
+    public long countFollowing(Member member) {
+        return followRepository.countByFollower(member);
     }
 
     @Transactional

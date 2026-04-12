@@ -33,14 +33,17 @@ public class CommentApiController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<?> getCommentList(@RequestParam Long id, HttpServletRequest request) {
+    public ResponseEntity<?> getCommentList(@RequestParam Long id,
+                                            @RequestParam(defaultValue = "0", name = "cursor") int cursor,
+                                            @RequestParam(defaultValue = "10", name = "limit") int limit,
+                                            HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
         ));
 
-        return commentFacade.getList(id, member);
+        return commentFacade.getList(id, member, cursor, limit);
     }
 
     @PatchMapping("/update")

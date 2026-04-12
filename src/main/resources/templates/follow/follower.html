@@ -7,27 +7,12 @@
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 </head>
 <body>
-<div class="container">
+<div class="container" th:attr="data-target-email=${targetEmail},data-member-email=${email},data-mode='follower'">
   <h1>Follower List</h1>
   <form method="dialog">
     <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
     <div class="card">
-      <ul class="list-group-flush">
-        <li class="list-group-item" th:each="list,index : ${follower}">
-          <span>
-            <span th:text="${index.index+1}"></span>
-            <img th:src="${list.follower.profile}" width="30vw" height="30vw" style="border-radius: 90px" id="profile">
-            <a th:href="@{/member/search/detail(email=${list.follower.email})}">
-              <span th:text="${list.follower.name}"></span>
-            </a>
-            <span th:text="${list.follower.email}"></span>
-            <div class="float-right" th:unless="${#strings.equals(list.follower.email, email)}">
-              <button type="button" th:id="'follow' + ${list.id}" th:if="${follow[list.id]}" class="btn btn-success" th:onclick="fnFollow([[${list.id}]], [[${list.follower.email}]])">Unfollow</button>
-              <button type="button" th:id="'follow' + ${list.id}" th:unless="${follow[list.id]}" class="btn btn-success"th:onclick="fnFollow([[${list.id}]], [[${list.follower.email}]])">Follow</button>
-            </div>
-          </span>
-        </li>
-      </ul>
+      <ul class="list-group-flush" id="followList"></ul>
     </div>
   </form>
 </div>
