@@ -23,14 +23,31 @@ public class ChatApiController {
     private final ChatFacade chatFacade;
 
     @GetMapping("/load")
-    public ResponseEntity<?> loadChatting(@RequestParam String roomId, HttpServletRequest request) {
+    public ResponseEntity<?> loadChatting(@RequestParam String roomId,
+                                          @RequestParam(defaultValue = "0", name = "cursor") int cursor,
+                                          @RequestParam(defaultValue = "100", name = "limit") int limit,
+                                          HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,
                 "message", "유효하지 않은 세션"
         ));
 
-        return chatFacade.loadChatting(roomId, member);
+        return chatFacade.loadChatting(roomId, member, cursor, limit);
+    }
+
+    @GetMapping("/previous/load")
+    public ResponseEntity<?> loadPreviousChatting(@RequestParam String roomId,
+                                                  @RequestParam(defaultValue = "0", name = "cursor") int cursor,
+                                                  @RequestParam(defaultValue = "100", name = "limit") int limit,
+                                                  HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
+
+        return chatFacade.loadPreviousChatting(roomId, member, cursor, limit);
     }
 
     @PostMapping("/createRoom")

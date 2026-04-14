@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
@@ -31,6 +32,7 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.reply.service.ReplyService;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -290,6 +292,19 @@ public class MemberFacade {
 
         return ResponseEntity.ok(Map.of(
                 "result", userService.updatePwd(member.getId(), password)
+        ));
+    }
+
+    public ResponseEntity<?> loadMemberBoards(int cursor, int limit, String email, Member loginMember) {
+        Member targetMember = memberService.findMember(email);
+        List<BoardResponseDto> list = boardService.getBoardByMember(cursor, limit, targetMember);
+        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
+
+        return ResponseEntity.ok(Map.of(
+                "boards", list,
+                "nextCursor", nextCursor,
+                "like", loginMember.checkFavorite(list),
+                "result", 10L
         ));
     }
 

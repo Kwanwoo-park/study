@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageRequestDto;
+import spring.study.chat.dto.ChatMessageResponseDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageImg;
 import spring.study.chat.entity.ChatRoom;
@@ -42,7 +43,7 @@ public class ChatFacade {
     private final RedisTemplate<String, Object> objectRedisTemplate;
     private final ObjectMapper objectMapper;
 
-    public ResponseEntity<?> loadChatting(String roomId, Member member) {
+    public ResponseEntity<?> loadChatting(String roomId, Member member, int cursor, int limit) {
         ChatRoom room = roomService.find(roomId);
 
         if (room == null) {
@@ -52,7 +53,7 @@ public class ChatFacade {
             ));
         }
 
-        List<ChatMessage> list = messageService.find(room);
+        List<ChatMessageResponseDto> list = messageService.loadChatting(0, 100, room);
 
         String key = "chat:message:roomId:" + roomId;
 
@@ -68,23 +69,49 @@ public class ChatFacade {
                         messages.stream()
                                 .map(obj -> {
                                     try {
-                                        return objectMapper.readValue(obj.toString(), ChatMessageRequestDto.class);
+                                        return objectMapper.readValue(obj.toString(), ChatMessage.class);
                                     } catch (JsonProcessingException e) {
                                         log.error("Redis message parse error", e);
                                         return null;
                                     }
                                 })
                                 .filter(Objects::nonNull)
-                                .map(ChatMessageRequestDto::toEntity)
+                                .map(ChatMessageResponseDto::new)
                                 .toList()
                 );
             }
         }
 
+        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
+
         return ResponseEntity.ok(Map.of(
                 "result", room.getId(),
                 "member", member,
-                "message", list.stream().sorted(Comparator.comparing(ChatMessage::getRegisterTime)).toList(),
+                "nextCursor", nextCursor,
+                "message", list.stream().sorted(Comparator.comparing(ChatMessageResponseDto::getRegisterTime)).toList(),
+                "img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)).toList())
+        ));
+    }
+
+    public ResponseEntity<?> loadPreviousChatting(String roomId, Member member, int cursor, int limit) {
+        ChatRoom room = roomService.find(roomId);
+
+        if (room == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", "채팅방이 존재하지 않습니다"
+            ));
+        }
+
+        List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room);
+
+        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
+
+        return ResponseEntity.ok(Map.of(
+                "result", room.getId(),
+                "member", member,
+                "message", list,
+                "nextCursor", nextCursor,
                 "img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)).toList())
         ));
     }

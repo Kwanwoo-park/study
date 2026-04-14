@@ -16,7 +16,7 @@
 <body>
 <th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
 <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
-<div class="container">
+<div class="container" th:attr="data-member-email=${member.email}">
   <form method="dialog" enctype="multipart/form-data">
     <div class="profileDiv">
       <img th:src="${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
@@ -41,21 +41,7 @@
       </h4>
     </div>
   </form>
-  <div class="imgGrid">
-      <div class="imgDiv" th:each="list, index : ${resultMap}">
-          <img th:if="${list.img.size == 0}"
-               class="main-image"
-               th:src="@{/img/} + 'IMG_0111.jpeg'"
-               th:id="'main_img'+${list.id}"
-               th:onclick="openBoardModal([[${list.id}]])">
-
-          <img th:unless="${list.img.size == 0}"
-               class="main-image"
-               th:src="${list.img[0].imgSrc}"
-               th:id="'main_img'+${list.id}"
-               th:onclick="openBoardModal([[${list.id}]])">
-      </div>
-  </div>
+  <div class="imgGrid"></div>
 </div>
 <th:block th:replace="~{fragments/board-modal :: boardModal}"></th:block>
 <th:block th:replace="~{fragments/comment-modal :: commentModal}"></th:block>

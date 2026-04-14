@@ -3,14 +3,16 @@ package spring.study.chat.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import spring.study.chat.dto.ChatMessageRequestDto;
+import spring.study.chat.dto.ChatMessageResponseDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.member.entity.Member;
 import spring.study.chat.repository.ChatMessageRepository;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -41,6 +43,13 @@ public class ChatMessageService {
 
     public List<ChatMessage> find(ChatRoom room) {
         return chatMessageRepository.findByRoom(room);
+    }
+
+    public List<ChatMessageResponseDto> loadChatting(int cursor, int limit, ChatRoom room) {
+        return chatMessageRepository.findByRoom(room, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()))
+                .stream()
+                .map(ChatMessageResponseDto::new)
+                .toList();
     }
 
     public void deleteByRoom(ChatRoom room) {

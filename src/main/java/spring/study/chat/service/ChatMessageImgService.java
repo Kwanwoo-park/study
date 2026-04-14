@@ -3,6 +3,7 @@ package spring.study.chat.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import spring.study.chat.dto.ChatMessageResponseDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageImg;
 import spring.study.chat.repository.ChatMessageImgRepository;
@@ -30,10 +31,10 @@ public class ChatMessageImgService {
         return messageImgRepository.findByMessageId(messageId);
     }
 
-    public Map<String, Object> findMessageImg(List<ChatMessage> list) {
+    public Map<String, Object> findMessageImg(List<ChatMessageResponseDto> list) {
         Map<String, Object> map = new HashMap<>();
 
-        for (ChatMessage message : list) {
+        for (ChatMessageResponseDto message : list) {
             map.put(message.getId(), messageImgRepository.findByMessageId(message.getId()));
         }
 

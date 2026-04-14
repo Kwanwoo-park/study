@@ -64,7 +64,6 @@ public class MemberViewController {
                 return "redirect:/member/search/detail?email=" + email;
 
             model.addAttribute("member", member);
-            model.addAttribute("resultMap", boardService.findByMember(member));
         }
         else {
             return "redirect:/member/login?error=true&exception=Session Expired";
@@ -152,7 +151,6 @@ public class MemberViewController {
         session.setAttribute("member", member);
 
         model.addAttribute("member", search_member);
-        model.addAttribute("resultMap", boardService.findByMember(search_member));
         model.addAttribute("status", followService.existFollow(member, search_member));
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());

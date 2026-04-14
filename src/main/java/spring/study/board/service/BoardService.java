@@ -58,6 +58,13 @@ public class BoardService {
         return boardRepository.findByMember(member, Sort.by("id").descending());
     }
 
+    public List<BoardResponseDto> getBoardByMember(int cursor, int limit, Member member) {
+        return boardRepository.findByMember(member, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()))
+                .stream()
+                .map(BoardResponseDto::new)
+                .toList();
+    }
+
     private List<Member> getMemberList(Member member) {
         List<Member> memberList = new ArrayList<>();
 

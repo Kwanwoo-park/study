@@ -14,6 +14,8 @@ import java.util.List;
 public interface BoardRepository extends JpaRepository<Board, Long> {
     List<Board> findByMemberIn(List<Member> list, Pageable pageable);
 
+    List<Board> findByMember(Member member, Pageable pageable);
+
     List<Board> findByMember(Member member, Sort sort);
 
     List<Board> findByMemberIn(List<Member> members, Sort sort);

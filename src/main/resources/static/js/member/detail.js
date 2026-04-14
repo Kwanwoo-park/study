@@ -3,11 +3,30 @@ const following = document.querySelector("#following_label").innerText;
 
 const upload = document.querySelector("#upload");
 const profile = document.querySelector("#profile");
+const container = document.querySelector('.container');
+const imgGrid = document.querySelector('.imgGrid');
+const memberEmail = container?.dataset.memberEmail;
+
+const BOARD_LIMIT = 30;
 
 let file;
+let nextCursor = 1;
+let isLoading = false;
 
 if (profile && upload) {
     profile.addEventListener('click', () => upload.click());
+}
+
+window.addEventListener('load', () => {
+    loadMoreBoards();
+});
+
+if (container) {
+    container.addEventListener('scroll', () => {
+        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1) {
+            loadMoreBoards();
+        }
+    });
 }
 
 if (typeof initMemberBoardModal === 'function') {
@@ -79,5 +98,53 @@ function fnLogout() {
         } else {
             alert("다시 시도하여주십시오");
         }
+    });
+}
+
+async function loadMoreBoards() {
+    if (!imgGrid || !memberEmail || !nextCursor || isLoading) {
+        return;
+    }
+
+    isLoading = true;
+
+    try {
+        const response = await fetch(`/api/member/detail/boards?email=${encodeURIComponent(memberEmail)}&cursor=${nextCursor - 1}&limit=${BOARD_LIMIT}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        const json = await response.json();
+
+        if (json.result > 0) {
+            drawBoards(json.boards);
+            nextCursor = json.nextCursor;
+        } else {
+            alert("다시 시도하여주십시오");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("다시 시도하여주십시오");
+    } finally {
+        isLoading = false;
+    }
+}
+
+function drawBoards(boards) {
+    boards.forEach((board) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'imgDiv';
+
+        const image = document.createElement('img');
+        image.className = 'main-image';
+        image.id = `main_img${board.id}`;
+        image.src = board.img.length === 0 ? '/img/IMG_0111.jpeg' : board.img[0].imgSrc;
+        image.loading = 'lazy';
+        image.onclick = function () {
+            openBoardModal(board.id);
+        };
+
+        wrapper.append(image);
+        imgGrid.append(wrapper);
     });
 }
