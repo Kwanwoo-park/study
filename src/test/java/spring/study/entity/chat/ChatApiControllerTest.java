@@ -88,9 +88,31 @@
 //        Member member = memberService.findMember("test@test.com");
 //        session.setAttribute("member", member);
 //
-//        String roomId = "roomId";
+//        String roomId = "roomID";
 //
-//        url += "/load?roomId=" + roomId;
+//        url += "/load?roomId=" + roomId + "&cursor=" + 0 + "&limit=" + 100;
+//
+//        //when
+//        mvc.perform(get(url).session(session)
+//                .contentType(MediaType.APPLICATION_JSON)
+//        ).andExpect(status().isOk()).andDo(print());
+//    }
+//
+//    @Test
+//    void loadPreviousMessage() throws Exception {
+//        //given
+//        mvc = MockMvcBuilders
+//                .webAppContextSetup(context)
+//                .apply(springSecurity())
+//                .build();
+//
+//        MockHttpSession session = new MockHttpSession();
+//        Member member = memberService.findMember("test@test.com");
+//        session.setAttribute("member", member);
+//
+//        String roomId = "roomID";
+//
+//        url += "/previous/load?roomId=" + roomId + "&cursor=" + 2 + "&limit=" + 10;
 //
 //        //when
 //        mvc.perform(get(url).session(session)

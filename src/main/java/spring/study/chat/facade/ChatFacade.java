@@ -53,7 +53,7 @@ public class ChatFacade {
             ));
         }
 
-        List<ChatMessageResponseDto> list = messageService.loadChatting(0, 100, room);
+        List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room);
 
         String key = "chat:message:roomId:" + roomId;
 
@@ -85,11 +85,11 @@ public class ChatFacade {
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
-                "result", room.getId(),
-                "member", member,
-                "nextCursor", nextCursor,
-                "message", list.stream().sorted(Comparator.comparing(ChatMessageResponseDto::getRegisterTime)).toList(),
-                "img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)).toList())
+                //"result", room.getId(),
+                //"member", member,
+                //"nextCursor", nextCursor,
+                "message", list.stream().sorted(Comparator.comparing(ChatMessageResponseDto::getRegisterTime).reversed()).toList()
+                //"img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)).toList())
         ));
     }
 

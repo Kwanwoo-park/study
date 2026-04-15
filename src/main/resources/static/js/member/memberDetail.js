@@ -14,7 +14,6 @@ const BOARD_LIMIT = 30;
 
 let method;
 let nextCursor = 1;
-let isLoading = false;
 if (btn && btn.innerText === 'Follow') method = "POST";
 else method = "DELETE";
 
@@ -99,11 +98,9 @@ if (chatting) {
 }
 
 async function loadMoreBoards() {
-    if (!imgGrid || !memberEmail || !nextCursor || isLoading) {
+    if (!imgGrid || !memberEmail || !nextCursor) {
         return;
     }
-
-    isLoading = true;
 
     try {
         const response = await fetch(`/api/member/detail/boards?email=${encodeURIComponent(memberEmail)}&cursor=${nextCursor - 1}&limit=${BOARD_LIMIT}`, {
@@ -122,8 +119,6 @@ async function loadMoreBoards() {
     } catch (error) {
         console.error(error);
         alert("다시 시도하여주십시오");
-    } finally {
-        isLoading = false;
     }
 }
 

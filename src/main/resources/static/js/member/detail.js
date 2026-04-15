@@ -11,7 +11,6 @@ const BOARD_LIMIT = 30;
 
 let file;
 let nextCursor = 1;
-let isLoading = false;
 
 if (profile && upload) {
     profile.addEventListener('click', () => upload.click());
@@ -102,11 +101,9 @@ function fnLogout() {
 }
 
 async function loadMoreBoards() {
-    if (!imgGrid || !memberEmail || !nextCursor || isLoading) {
+    if (!imgGrid || !memberEmail || !nextCursor) {
         return;
     }
-
-    isLoading = true;
 
     try {
         const response = await fetch(`/api/member/detail/boards?email=${encodeURIComponent(memberEmail)}&cursor=${nextCursor - 1}&limit=${BOARD_LIMIT}`, {
@@ -125,8 +122,6 @@ async function loadMoreBoards() {
     } catch (error) {
         console.error(error);
         alert("다시 시도하여주십시오");
-    } finally {
-        isLoading = false;
     }
 }
 

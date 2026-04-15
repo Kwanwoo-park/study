@@ -6,8 +6,10 @@ const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
 
 const maxSize = 10;
+const CHAT_LIMIT = 100;
 
 let container = document.querySelector(".container");
+let nextCursor = 1;
 
 if (btn)
     btn.addEventListener('click', () => upload.click());
@@ -15,6 +17,12 @@ if (btn)
 window.onload = function() {
     loadMoreChat();
 }
+
+container.addEventListener('scroll', () => {
+    if (container.scrollTop == 0) {
+        loadPreviousChat();
+    }
+})
 
 //let socket = new SockJS("http://localhost:8080/ws/chat")
 let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
@@ -46,7 +54,7 @@ function onMessageReceived(e) {
 
 async function loadMoreChat() {
     try {
-        const res = await fetch(`/api/chat/load?roomId=` + roomId, {
+        const res = await fetch(`/api/chat/load?roomId=${encodeURIComponent(roomId)}&cursor=${nextCursor - 1}&limit=${CHAT_LIMIT}`, {
             method: 'GET',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
@@ -59,11 +67,35 @@ async function loadMoreChat() {
             fnLoadDraw(data)
 
             container.scrollTop = container.scrollHeight;
+            nextCursor = data.nextCursor;
         }
         else
             alert('다시 시도하여주십시오')
     } catch (e) {
         console.error('로드 오류', e);
+    }
+}
+
+async function loadPreviousChat() {
+    try {
+        const res = await fetch(`/api/chat/previous/load?roomId=${encodeURIComponent(roomId)}&cursor=${nextCursor - 1}&limit=${CHAT_LIMIT}`, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (data['result'] > 0) {
+            fnLoadDraw(data)
+
+            container.scrollTop = container.scrollHeight;
+            nextCursor = data.nextCursor;
+        }
+        else
+            alert('다시 시도하여주십시오')
     }
 }
 
