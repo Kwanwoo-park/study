@@ -6,7 +6,7 @@ const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
 
 const maxSize = 10;
-const CHAT_LIMIT = 100;
+const CHAT_LIMIT = 30;
 
 let container = document.querySelector(".container");
 let nextCursor = 1;
@@ -77,6 +77,8 @@ async function loadMoreChat() {
 }
 
 async function loadPreviousChat() {
+    if (!nextCursor) return;
+
     try {
         const res = await fetch(`/api/chat/previous/load?roomId=${encodeURIComponent(roomId)}&cursor=${nextCursor - 1}&limit=${CHAT_LIMIT}`, {
             method: 'GET',
@@ -90,12 +92,12 @@ async function loadPreviousChat() {
 
         if (data['result'] > 0) {
             fnLoadDraw(data)
-
-            container.scrollTop = container.scrollHeight;
             nextCursor = data.nextCursor;
         }
         else
             alert('다시 시도하여주십시오')
+    } catch (e) {
+        console.error('로드 오류', e);
     }
 }
 
@@ -294,7 +296,7 @@ function fnLoadDraw(json) {
                 img_div.append(button);
             }
 
-            imgTalk.src = json.img[data.id][0];
+            imgTalk.src = json.img[data.id][0].imgSrc;
             imgTalk.id = 'img' + data.id;
             imgTalk.className = "chatimg";
 
@@ -321,7 +323,7 @@ function fnLoadDraw(json) {
 
         newMsgLi.append(newMsgArea);
 
-        msgArea.append(newMsgLi);
+        msgArea.prepend(newMsgLi);
     });
 }
 
