@@ -6,10 +6,11 @@ const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
 
 const maxSize = 10;
-const CHAT_LIMIT = 30;
+const CHAT_LIMIT = 10;
 
 let container = document.querySelector(".container");
 let nextCursor = 1;
+let height = 0;
 
 if (btn)
     btn.addEventListener('click', () => upload.click());
@@ -48,8 +49,6 @@ function onMessageReceived(e) {
     const json = JSON.parse(e.body);
 
     fnDraw(json)
-
-    container.scrollTop = container.scrollHeight;
 }
 
 async function loadMoreChat() {
@@ -89,9 +88,12 @@ async function loadPreviousChat() {
         });
 
         const data = await res.json();
+        height = container.scrollHeight;
 
         if (data['result'] > 0) {
             fnLoadDraw(data)
+
+            container.scrollTop = container.scrollHeight - height;
             nextCursor = data.nextCursor;
         }
         else
