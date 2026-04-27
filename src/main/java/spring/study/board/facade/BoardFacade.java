@@ -1,7 +1,6 @@
 package spring.study.board.facade;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,19 +14,26 @@ import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
 import spring.study.common.service.ModerationService;
+import spring.study.favorite.entity.Favorite;
 import spring.study.favorite.service.FavoriteService;
+import spring.study.follow.service.FollowService;
 import spring.study.member.entity.Member;
+import spring.study.member.service.MemberService;
 import spring.study.reply.service.ReplyService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class BoardFacade {
+    private final MemberService memberService;
     private final BoardService boardService;
     private final ReplyService replyService;
+    private final FollowService followService;
     private final CommentService commentService;
     private final BoardImgService boardImgService;
     private final FavoriteService favoriteService;
@@ -35,13 +41,32 @@ public class BoardFacade {
     private final ModerationService moderationService;
 
     public ResponseEntity<?> load(int cursor, int limit, Member member) {
-        List<BoardResponseDto> list = boardService.getBoard(cursor, limit, member);
+        List<Member> memberList = followService.getMemberList(member);
+
+        List<Board> list = boardService.getBoard(cursor, limit, memberList);
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
-                "boards", list,
+                "boards", list.stream().map(BoardResponseDto::new).toList(),
                 "nextCursor", nextCursor,
-                "like", member.checkFavorite(list),
+                "like", checkFavorite(list, member),
+                "like_count", favoriteService.countFavorites(list),
+                "comment_count", commentService.countComments(list),
+                "result", 10L
+        ));
+    }
+
+    public ResponseEntity<?> loadMemberBoards(int cursor, int limit, String email, Member loginMember) {
+        Member targetMember = memberService.findMember(email);
+        List<Board> list = boardService.getBoardByMember(cursor, limit, targetMember);
+        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
+
+        return ResponseEntity.ok(Map.of(
+                "boards", list.stream().map(BoardResponseDto::new).toList(),
+                "nextCursor", nextCursor,
+                "like", checkFavorite(list, loginMember),
+                "like_count", favoriteService.countFavorites(list),
+                "comment_count", commentService.countComments(list),
                 "result", 10L
         ));
     }
@@ -60,7 +85,7 @@ public class BoardFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 10,
                 "board", new BoardResponseDto(board),
-                "like", member.checkFavorite(board),
+                "like", checkFavorite(board, member),
                 "email", member.getEmail(),
                 "previous", ids[0],
                 "next", ids[1]
@@ -141,5 +166,43 @@ public class BoardFacade {
                 "result", 1L,
                 "email", member.getEmail()
         ));
+    }
+
+    private HashMap<Long, Boolean> checkFavorite(List<Board> boardList, Member member) {
+        HashMap<Long, Boolean> map = new HashMap<>();
+
+        List<Favorite> memberFavorites = favoriteService.findByMember(member);
+
+        for (Board board : boardList) {
+            map.put(board.getId(), false);
+
+            List<Favorite> boardFavorites = favoriteService.findByBoard(board);
+
+            for (Favorite fb : boardFavorites) {
+                for (Favorite fm : memberFavorites) {
+                    if (Objects.equals(fm.getId(), fb.getId())) {
+                        map.put(board.getId(), true);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return map;
+    }
+
+    public Boolean checkFavorite(Board board, Member member) {
+        List<Favorite> boardFavorites = favoriteService.findByBoard(board);
+        List<Favorite> memberFavorites = favoriteService.findByMember(member);
+
+        for (Favorite fb : boardFavorites) {
+            for (Favorite fm : memberFavorites) {
+                if (Objects.equals(fm.getId(), fb.getId())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

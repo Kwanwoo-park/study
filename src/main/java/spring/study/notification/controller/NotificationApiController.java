@@ -29,7 +29,6 @@ public class NotificationApiController {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return null;
 
-
         return emitterService.addEmitter(member.getId().toString());
     }
 

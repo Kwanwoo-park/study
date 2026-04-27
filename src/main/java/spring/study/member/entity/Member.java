@@ -64,43 +64,43 @@ public class Member extends BasetimeEntity implements UserDetails {
     private LocalDateTime lastLoginTime;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<Board> board = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<Favorite> favorites = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<Comment> comment = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<Reply> reply = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "follower", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "follower")
     private List<Follow> follower = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "following", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "following")
     private List<Follow> following = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<ChatRoomMember> chatRoomMembers= new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<ChatMessage> messages = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<Notification> notifications = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<spring.study.collection.entity.Collection> collections = new ArrayList<>();
 
     @Builder
@@ -182,36 +182,6 @@ public class Member extends BasetimeEntity implements UserDetails {
                 break;
             }
         }
-    }
-
-    public HashMap<Long, Boolean> checkFavorite(List<BoardResponseDto> boards) {
-        HashMap<Long, Boolean> map = new HashMap<>();
-        for (BoardResponseDto b : boards) {
-            map.put(b.getId(), false);
-
-            for (Favorite fb : b.getFavorites()) {
-                for (Favorite fm : favorites) {
-                    if (Objects.equals(fm.getId(), fb.getId())) {
-                        map.put(b.getId(), true);
-                        break;
-                    }
-                }
-            }
-        }
-
-        return map;
-    }
-
-    public Boolean checkFavorite(Board board) {
-        for (Favorite fb : board.getFavorites()) {
-            for (Favorite fm : favorites) {
-                if (Objects.equals(fm.getId(), fb.getId())) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     public HashMap<Long, Boolean> checkFollowing (List<Favorite> favorites) {
@@ -327,6 +297,15 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void addCollection(spring.study.collection.entity.Collection collection) {
         collection.addMember(this);
+    }
+
+    public void removeCollection(spring.study.collection.entity.Collection collection) {
+        for (spring.study.collection.entity.Collection c : collections) {
+            if (c.getId().equals(collection.getId())) {
+                collections.remove(c);
+                break;
+            }
+        }
     }
 
     public void changeProfile(String profile) {

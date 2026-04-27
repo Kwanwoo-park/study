@@ -9,12 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
-import spring.study.follow.entity.Follow;
 import spring.study.member.entity.Member;
 import spring.study.board.repository.BoardRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +20,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class BoardService {
-
     private final BoardRepository boardRepository;
 
     @Transactional
@@ -35,10 +32,12 @@ public class BoardService {
         return boardRepository.save(board);
     }
 
-    public List<BoardResponseDto> getBoard(int cursor, int limit, Member member) {
-        List<Member> list = getMemberList(member);
+    public List<Board> getBoard(int cursor, int limit, List<Member> list) {
+        return boardRepository.findByMemberIn(list, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()));
+    }
 
-        return boardRepository.findByMemberIn(list, PageRequest.of(cursor, limit, Sort.by("registerTime").descending())).stream().map(BoardResponseDto::new).toList();
+    public List<Board> getBoardByMember(int cursor, int limit, Member member) {
+        return boardRepository.findByMember(member, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()));
     }
 
     public HashMap<String, Object> findAll(Integer page, Integer size) {
@@ -58,25 +57,6 @@ public class BoardService {
         return boardRepository.findByMember(member, Sort.by("id").descending());
     }
 
-    public List<BoardResponseDto> getBoardByMember(int cursor, int limit, Member member) {
-        return boardRepository.findByMember(member, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()))
-                .stream()
-                .map(BoardResponseDto::new)
-                .toList();
-    }
-
-    private List<Member> getMemberList(Member member) {
-        List<Member> memberList = new ArrayList<>();
-
-        memberList.add(member);
-
-        for (Follow follow : member.getFollower()) {
-            memberList.add(follow.getFollowing());
-        }
-
-        return memberList;
-    }
-
     public List<Board> findAll() {
         return boardRepository.findAll();
     }
@@ -90,7 +70,7 @@ public class BoardService {
     }
 
     public long[] getBoardIdList(Long id, Member member) {
-        List<Long> id_list = member.getBoard().stream().map(Board::getId).toList();
+        List<Long> id_list = boardRepository.findByMember(member).stream().map(Board::getId).toList();
 
         int size = id_list.size();
         long[] ids = new long[2];

@@ -103,7 +103,7 @@ async function loadMoreBoards() {
     }
 
     try {
-        const response = await fetch(`/api/member/detail/boards?email=${encodeURIComponent(memberEmail)}&cursor=${nextCursor - 1}&limit=${BOARD_LIMIT}`, {
+        const response = await fetch(`/api/board/member/detail?email=${encodeURIComponent(memberEmail)}&cursor=${nextCursor - 1}&limit=${BOARD_LIMIT}`, {
             method: 'GET',
             credentials: 'include',
         });

@@ -34,6 +34,22 @@ public class BoardApiController {
         return boardFacade.load(cursor, limit, member);
     }
 
+    @GetMapping("/member/detail")
+    public ResponseEntity<?> loadMemberBoards(@RequestParam String email,
+                                              @RequestParam(defaultValue = "0", name = "cursor") int cursor,
+                                              @RequestParam(defaultValue = "10", name = "limit") int limit,
+                                              HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "result", -10,
+                    "message", "유효하지 않은 세션"
+            ));
+        }
+
+        return boardFacade.loadMemberBoards(cursor, limit, email, member);
+    }
+
     @GetMapping("/detail")
     public ResponseEntity<?> detail(@RequestParam Long id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);

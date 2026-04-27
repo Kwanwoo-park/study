@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.entity.Board;
+import spring.study.board.facade.BoardFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 import spring.study.board.service.BoardService;
@@ -19,6 +20,7 @@ import spring.study.board.service.BoardService;
 @Slf4j
 public class BoardViewController {
     private final BoardService boardService;
+    private final BoardFacade boardFacade;
     private final SessionManager sessionManager;
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -69,7 +71,7 @@ public class BoardViewController {
             long[] ids = boardService.getBoardIdList(boardRequestDto.getId(), board.getMember());
 
             model.addAttribute("board", board);
-            model.addAttribute("like", member.checkFavorite(board));
+            model.addAttribute("like", boardFacade.checkFavorite(board, member));
             model.addAttribute("member", member.getEmail());
             model.addAttribute("previous", ids[0]);
             model.addAttribute("next", ids[1]);

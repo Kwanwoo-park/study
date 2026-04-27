@@ -295,19 +295,6 @@ public class MemberFacade {
         ));
     }
 
-    public ResponseEntity<?> loadMemberBoards(int cursor, int limit, String email, Member loginMember) {
-        Member targetMember = memberService.findMember(email);
-        List<BoardResponseDto> list = boardService.getBoardByMember(cursor, limit, targetMember);
-        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
-
-        return ResponseEntity.ok(Map.of(
-                "boards", list,
-                "nextCursor", nextCursor,
-                "like", loginMember.checkFavorite(list),
-                "result", 10L
-        ));
-    }
-
     public ResponseEntity<?> updatePhone(MemberRequestDto dto, HttpServletRequest request) {
         int check = validateMember2(dto);
 

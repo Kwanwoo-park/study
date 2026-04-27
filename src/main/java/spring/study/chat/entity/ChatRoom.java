@@ -38,11 +38,11 @@ public class ChatRoom implements Serializable {
     private LocalDateTime lastChatTime;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "room")
     private List<ChatMessage> messages = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "room")
     private List<ChatRoomMember> chatRoomMembers = new ArrayList<>();
 
     @Builder

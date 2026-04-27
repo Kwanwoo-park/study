@@ -36,7 +36,7 @@ public class Comment extends BasetimeEntity implements Serializable{
     private Board board;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "comment", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "comment")
     private List<Reply> reply = new ArrayList<>();
 
     @Builder

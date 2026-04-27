@@ -7,10 +7,16 @@ import spring.study.board.entity.Board;
 import spring.study.favorite.entity.Favorite;
 import spring.study.member.entity.Member;
 
+import java.util.List;
+
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     Favorite findByMemberAndBoard(Member member, Board board);
-    java.util.List<Favorite> findByBoard(Board board, Pageable pageable);
+    List<Favorite> findByBoard(Board board, Pageable pageable);
+
+    List<Favorite> findByBoard(Board board);
+    List<Favorite> findByMember(Member member);
+
     long countByBoard(Board board);
 
     void deleteByMember(Member member);

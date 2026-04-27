@@ -68,22 +68,6 @@ public class MemberApiController {
         return memberFacade.changeProfileImage(file, member, request);
     }
 
-    @GetMapping("/detail/boards")
-    public ResponseEntity<?> loadMemberBoards(@RequestParam String email,
-                                              @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                              @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                              HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "result", -10,
-                    "message", "유효하지 않은 세션"
-            ));
-        }
-
-        return memberFacade.loadMemberBoards(cursor, limit, email, member);
-    }
-
     @GetMapping("/find/email")
     public ResponseEntity<?> findAction(@RequestParam() String email) {
         return memberFacade.findEmail(email);

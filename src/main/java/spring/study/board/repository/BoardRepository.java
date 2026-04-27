@@ -20,7 +20,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     List<Board> findByMemberIn(List<Member> members, Sort sort);
 
-    List<Board> findByMemberIn(List<Member> members);
+    List<Board> findByMember(Member members);
 
     @Transactional
     void deleteByMember(Member member);

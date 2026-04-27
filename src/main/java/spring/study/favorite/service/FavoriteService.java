@@ -10,6 +10,7 @@ import spring.study.favorite.entity.Favorite;
 import spring.study.member.entity.Member;
 import spring.study.favorite.repository.FavoriteRepository;
 
+import java.util.HashMap;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -28,6 +29,14 @@ public class FavoriteService {
         board.addFavorite(favorite);
 
         return favoriteRepository.save(favorite);
+    }
+
+    public List<Favorite> findByBoard(Board board) {
+        return favoriteRepository.findByBoard(board);
+    }
+
+    public List<Favorite> findByMember(Member member) {
+        return favoriteRepository.findByMember(member);
     }
 
     public Favorite findByMemberAndBoard(Member member, Board board) {
@@ -49,11 +58,17 @@ public class FavoriteService {
         return favoriteRepository.countByBoard(board);
     }
 
+    public HashMap<Long, Long> countFavorites(List<Board> boardList) {
+        HashMap<Long, Long> map = new HashMap<>();
+
+        for (Board board : boardList)
+            map.put(board.getId(), favoriteRepository.countByBoard(board));
+
+        return map;
+    }
+
     @Transactional
     public void deleteById(Favorite favorite, Member member, Board board) {
-        member.removeFavorite(favorite);
-        board.removeFavorite(favorite);
-
         favoriteRepository.deleteById(favorite.getId());
     }
 

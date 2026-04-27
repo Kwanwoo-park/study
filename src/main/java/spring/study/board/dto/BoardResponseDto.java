@@ -17,18 +17,14 @@ public class BoardResponseDto {
     private Long id;
     private String content;
     private Member member;
-    private List<Favorite> favorites;
     private List<BoardImg> img;
-    private List<Comment> comment;
     private LocalDateTime registerTime;
 
     public BoardResponseDto(Board entity) {
         this.id = entity.getId();
         this.content = entity.getContent();
         this.member = entity.getMember();
-        this.favorites = entity.getFavorites();
         this.img = entity.getImg();
-        this.comment = entity.getComment();
         this.registerTime = entity.getRegisterTime();
     }
 

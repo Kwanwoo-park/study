@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 import spring.study.follow.entity.Follow;
 import spring.study.member.entity.Member;
 
+import java.util.List;
+
 @Repository
 public interface FollowRepository extends JpaRepository<Follow, Long> {
     @Transactional
@@ -19,8 +21,11 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     void deleteByFollowing(Member following);
 
     Follow findByFollowerAndFollowing(Member follower, Member following);
-    java.util.List<Follow> findByFollower(Member follower, Pageable pageable);
-    java.util.List<Follow> findByFollowing(Member following, Pageable pageable);
+
+    List<Follow> findByFollower(Member member);
+
+    List<Follow> findByFollower(Member follower, Pageable pageable);
+    List<Follow> findByFollowing(Member following, Pageable pageable);
     long countByFollower(Member follower);
     long countByFollowing(Member following);
 

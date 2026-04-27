@@ -16,12 +16,6 @@ let nextCursor = 1;
 let isLoading = false;
 
 window.onload = async function() {
-    const isAllowed = await checkIp();
-
-    if (!isAllowed) {
-        return;
-    }
-
     await loadMoreCollections();
 };
 
@@ -157,6 +151,10 @@ async function fnImgSave() {
     }
 }
 
+async function fnDelete() {
+
+}
+
 function fnLoad(input) {
     file = input.files[0];
 
@@ -175,52 +173,3 @@ function fnLoad(input) {
     imgDiv.append(preview);
 }
 
-async function checkIp() {
-    try {
-        const response = await fetch(`/api/collection/check`, {
-            method: 'GET',
-            credentials: "include",
-        });
-
-        const json = await response.json();
-
-        if (json.result < 0) {
-            if (await saveIP() !== 0) {
-                window.location.reload();
-            }
-
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        console.error(error);
-        alert("다시 시도하여 주십시오");
-        return false;
-    }
-}
-
-async function saveIP() {
-    try {
-        const response = await fetch(`/api/collection/save/ip`, {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
-            credentials: 'include',
-        });
-
-        const json = await response.json();
-
-        if (json.result < 0) {
-            alert("다시 시도하여 주십시오");
-            return 0;
-        } else {
-            return 1;
-        }
-    } catch (error) {
-        console.error(error);
-        alert('다시 시도하여 주십시오');
-        return 0;
-    }
-}

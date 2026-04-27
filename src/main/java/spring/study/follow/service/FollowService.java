@@ -10,6 +10,7 @@ import spring.study.follow.entity.Follow;
 import spring.study.member.entity.Member;
 import spring.study.follow.repository.FollowRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -46,6 +47,19 @@ public class FollowService {
 
     public Boolean existFollow(Member follower, Member following) {
         return followRepository.existsByFollowerAndFollowing(follower, following);
+    }
+
+    public List<Member> getMemberList(Member member) {
+        List<Follow> list = followRepository.findByFollower(member);
+        List<Member> memberList = new ArrayList<>();
+
+        memberList.add(member);
+
+        for (Follow follow : list) {
+            memberList.add(follow.getFollowing());
+        }
+
+        return memberList;
     }
 
     public List<Follow> getFollowers(Member member, int cursor, int limit) {

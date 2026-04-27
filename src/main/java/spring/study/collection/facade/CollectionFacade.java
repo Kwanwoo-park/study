@@ -39,8 +39,6 @@ public class CollectionFacade {
         Collection collection = dto.toEntity();
         collection.addMember(member);
 
-        request.getSession(false).setAttribute("member", member);
-
         Collection saved = collectionService.save(collection);
 
         if (saved == null) {

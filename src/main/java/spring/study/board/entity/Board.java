@@ -36,11 +36,11 @@ public class Board extends BasetimeEntity implements Serializable {
     private Member member;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "board")
     private List<Favorite> favorites = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "board", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "board")
     private List<Comment> comment = new ArrayList<>();
 
     @JsonIgnore

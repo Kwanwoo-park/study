@@ -80,6 +80,15 @@ public class CommentService {
         return commentRepository.countByBoard(board);
     }
 
+    public HashMap<Long, Long> countComments(List<Board> boardList) {
+        HashMap<Long, Long> map = new HashMap<>();
+
+        for (Board board : boardList)
+            map.put(board.getId(), commentRepository.countByBoard(board));
+
+        return map;
+    }
+
     public void deleteComment(Board board) {
         commentRepository.deleteByBoard(board);
     }
