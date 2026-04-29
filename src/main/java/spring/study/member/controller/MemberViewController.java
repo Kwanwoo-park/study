@@ -50,24 +50,18 @@ public class MemberViewController {
 
     @GetMapping("/detail")
     public String detail(@RequestParam String email, Model model, HttpServletRequest request){
-        HttpSession session = request.getSession(false);
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
-        if (session != null && request.isRequestedSessionIdValid() && session.getAttribute("member") != null) {
-            Member member;
-            String memberEmail = ((Member) session.getAttribute("member")).getEmail();
+        String memberEmail = member.getEmail();
 
-            if (email.equals(memberEmail)) {
-                member = memberService.findMember(memberEmail);
-                session.setAttribute("member", member);
-            }
-            else
-                return "redirect:/member/search/detail?email=" + email;
+        if (!email.equals(memberEmail))
+            return "redirect:/member/search/detail?email=" + email;
 
-            model.addAttribute("member", member);
-        }
-        else {
-            return "redirect:/member/login?error=true&exception=Session Expired";
-        }
+        model.addAttribute("member", member);
+        model.addAttribute("board_count", boardService.countByMember(member));
+        model.addAttribute("follower_count", followService.countFollowers(member));
+        model.addAttribute("following_count", followService.countFollowing(member));
 
         return "member/detail";
     }
@@ -139,19 +133,21 @@ public class MemberViewController {
 
     @GetMapping("/search/detail")
     public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        String memberEmail = ((Member) session.getAttribute("member")).getEmail();
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+
+        String memberEmail = member.getEmail();
 
         if (memberEmail.equals(memberRequestDto.getEmail()))
             return "redirect:/member/detail?email=" + memberEmail;
 
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
-        Member member = memberService.findMember(memberEmail);
-
-        session.setAttribute("member", member);
 
         model.addAttribute("member", search_member);
         model.addAttribute("status", followService.existFollow(member, search_member));
+        model.addAttribute("board_count", boardService.countByMember(search_member));
+        model.addAttribute("follower_count", followService.countFollowers(search_member));
+        model.addAttribute("following_count", followService.countFollowing(search_member));
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
 

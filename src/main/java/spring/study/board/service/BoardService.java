@@ -69,6 +69,10 @@ public class BoardService {
         return boardRepository.existsById(id);
     }
 
+    public Long countByMember(Member member) {
+        return boardRepository.countByMember(member);
+    }
+
     public long[] getBoardIdList(Long id, Member member) {
         List<Long> id_list = boardRepository.findByMember(member).stream().map(Board::getId).toList();
 

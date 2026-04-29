@@ -53,11 +53,6 @@ public class ReplyFacade {
         if (!member.getId().equals(otherMember.getId()))
             notificationService.createNotification(otherMember, member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다", Group.REPLY).addMember(otherMember);
 
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.setAttribute("member", member);
-        }
-
         return ResponseEntity.ok(Map.of(
                 "result", result.getId()
         ));

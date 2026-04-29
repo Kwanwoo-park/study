@@ -116,11 +116,6 @@ public class FollowFacade {
 
         notificationService.createNotification(searchMember, member.getName() + "님이 팔로우하기 시작하였습니다", Group.FOLLOW).addMember(searchMember);
 
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.setAttribute("member", member);
-        }
-
         return ResponseEntity.ok(Map.of(
                 "result", follow.getId()
         ));
@@ -151,11 +146,6 @@ public class FollowFacade {
         }
 
         followService.delete(followService.findFollow(member, searchMember), member);
-
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.setAttribute("member", member);
-        }
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L

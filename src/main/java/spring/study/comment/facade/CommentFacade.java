@@ -55,11 +55,6 @@ public class CommentFacade {
         if (!member.getId().equals(otherMember.getId()))
             notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다", Group.COMMENT).addMember(otherMember);
 
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.setAttribute("member", member);
-        }
-
         return ResponseEntity.ok(Map.of(
                 "result", comment.getId()
         ));

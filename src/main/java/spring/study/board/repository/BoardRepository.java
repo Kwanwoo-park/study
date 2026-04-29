@@ -22,6 +22,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     List<Board> findByMember(Member members);
 
+    long countByMember(Member member);
+
     @Transactional
     void deleteByMember(Member member);
 }
