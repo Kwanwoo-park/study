@@ -51,8 +51,6 @@ public class NotificationService {
                     .notiGroup(group)
                     .build());
 
-            notification.addMember(otherMember);
-
             producer.sendNotification(notification);
         }
     }
