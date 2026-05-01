@@ -108,7 +108,6 @@ public class BoardFacade {
         }
 
         Board board = dto.toEntity();
-        board.addMember(member);
 
         Board saved = boardService.save(board);
 
