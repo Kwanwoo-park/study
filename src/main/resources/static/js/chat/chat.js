@@ -252,6 +252,8 @@ function fnDraw(data) {
     newMsgLi.append(newMsgArea);
 
     msgArea.append(newMsgLi);
+
+    container.scrollTop = container.scrollHeight;
 }
 
 function fnLoadDraw(json) {
