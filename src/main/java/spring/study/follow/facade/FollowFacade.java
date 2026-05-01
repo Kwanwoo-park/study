@@ -16,7 +16,10 @@ import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -44,12 +47,12 @@ public class FollowFacade {
         }
 
         long totalCount = followService.countFollowers(follower);
-        var followers = followService.getFollowers(follower, cursor, limit);
+        List<Follow> followers = followService.getFollowers(follower, cursor, limit);
         int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
                 "follower", followers.stream().map(FollowResponseDto::new).toList(),
-                "follow", member.checkFollowingFollowers(followers),
+                "follow", checkFollowingFollowers(followers, followService.findByFollower(member)),
                 "email", member.getEmail(),
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
@@ -75,12 +78,12 @@ public class FollowFacade {
         }
 
         long totalCount = followService.countFollowing(following);
-        var followings = followService.getFollowing(following, cursor, limit);
+        List<Follow> followings = followService.getFollowing(following, cursor, limit);
         int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
                 "following", followings.stream().map(FollowResponseDto::new).toList(),
-                "follow", member.checkFollowingFollowings(followings),
+                "follow", checkFollowingFollowing(followings, followService.findByFollower(member)),
                 "email", member.getEmail(),
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
@@ -145,10 +148,44 @@ public class FollowFacade {
             ));
         }
 
-        followService.delete(followService.findFollow(member, searchMember), member);
+        followService.delete(followService.findFollow(member, searchMember));
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L
         ));
+    }
+
+    private HashMap<Long, Boolean> checkFollowingFollowers(List<Follow> follows, List<Follow> memberFollowers) {
+        HashMap<Long, Boolean> map = new HashMap<>();
+
+        for (Follow following : follows) {
+            map.put(following.getId(), false);
+
+            for (Follow follower : memberFollowers) {
+                if (Objects.equals(following.getFollower().getEmail(), follower.getFollowing().getEmail())) {
+                    map.put(following.getId(), true);
+                    break;
+                }
+            }
+        }
+
+        return map;
+    }
+
+    private HashMap<Long, Boolean> checkFollowingFollowing(List<Follow> follows, List<Follow> memberFollowers) {
+        HashMap<Long, Boolean> map = new HashMap<>();
+
+        for (Follow following : follows) {
+            map.put(following.getId(), false);
+
+            for (Follow follower : memberFollowers) {
+                if (Objects.equals(following.getFollowing().getEmail(), follower.getFollowing().getEmail())) {
+                    map.put(following.getId(), true);
+                    break;
+                }
+            }
+        }
+
+        return map;
     }
 }

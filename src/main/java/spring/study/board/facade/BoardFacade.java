@@ -58,15 +58,12 @@ public class BoardFacade {
 
     public ResponseEntity<?> loadMemberBoards(int cursor, int limit, String email, Member loginMember) {
         Member targetMember = memberService.findMember(email);
-        List<Board> list = boardService.getBoardByMember(cursor, limit, targetMember);
+        List<BoardResponseDto> list = boardService.getBoardByMember(cursor, limit, targetMember).stream().map(BoardResponseDto::new).toList();
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
-                "boards", list.stream().map(BoardResponseDto::new).toList(),
+                "boards", list,
                 "nextCursor", nextCursor,
-                "like", checkFavorite(list, loginMember),
-                "like_count", favoriteService.countFavorites(list),
-                "comment_count", commentService.countComments(list),
                 "result", 10L
         ));
     }
@@ -86,6 +83,8 @@ public class BoardFacade {
                 "result", 10,
                 "board", new BoardResponseDto(board),
                 "like", checkFavorite(board, member),
+                "like_count", favoriteService.countFavorites(board),
+                "comment_count", commentService.countComments(board),
                 "email", member.getEmail(),
                 "previous", ids[0],
                 "next", ids[1]

@@ -25,9 +25,6 @@ public class FavoriteService {
                 .member(member)
                 .build();
 
-        member.addFavorite(favorite);
-        board.addFavorite(favorite);
-
         return favoriteRepository.save(favorite);
     }
 

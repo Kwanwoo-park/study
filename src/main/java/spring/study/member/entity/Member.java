@@ -184,65 +184,6 @@ public class Member extends BasetimeEntity implements UserDetails {
         }
     }
 
-    public HashMap<Long, Boolean> checkFollowing (List<Favorite> favorites) {
-        HashMap<Long, Boolean> map = new HashMap<>();
-
-        for (Favorite f : favorites) {
-            map.put(f.getId(), false);
-
-            for (Follow following : f.getMember().getFollowing()) {
-                for (Follow follower : follower) {
-                    if (Objects.equals(follower.getId(), following.getId())) {
-                        map.put(f.getId(), true);
-                        break;
-                    }
-                }
-            }
-        }
-
-        return map;
-    }
-
-    public HashMap<Long, Boolean> checkFollowing1 (Member follows) {
-        return checkFollowingFollowers(follows.getFollowing());
-    }
-
-    public HashMap<Long, Boolean> checkFollowingFollowers(List<Follow> follows) {
-        HashMap<Long, Boolean> map = new HashMap<>();
-
-        for (Follow following : follows) {
-            map.put(following.getId(), false);
-            for (Follow follower : this.follower) {
-                if (Objects.equals(following.getFollower().getEmail(), follower.getFollowing().getEmail())) {
-                    map.put(following.getId(), true);
-                    break;
-                }
-            }
-        }
-
-        return map;
-    }
-
-    public HashMap<Long, Boolean> checkFollowing2 (Member follows) {
-        return checkFollowingFollowings(follows.getFollower());
-    }
-
-    public HashMap<Long, Boolean> checkFollowingFollowings(List<Follow> follows) {
-        HashMap<Long, Boolean> map = new HashMap<>();
-
-        for (Follow following : follows) {
-            map.put(following.getId(), false);
-            for (Follow follower : this.follower) {
-                if (Objects.equals(following.getFollowing().getEmail(), follower.getFollowing().getEmail())) {
-                    map.put(following.getId(), true);
-                    break;
-                }
-            }
-        }
-
-        return map;
-    }
-
     public void addComment(Comment comment) {
         comment.addMember(this);
     }

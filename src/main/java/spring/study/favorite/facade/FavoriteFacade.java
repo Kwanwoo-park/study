@@ -12,18 +12,23 @@ import spring.study.board.service.BoardService;
 import spring.study.favorite.dto.FavoriteResponseDto;
 import spring.study.favorite.entity.Favorite;
 import spring.study.favorite.service.FavoriteService;
+import spring.study.follow.entity.Follow;
+import spring.study.follow.service.FollowService;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class FavoriteFacade {
     private final FavoriteService favoriteService;
+    private final FollowService followService;
     private final BoardService boardService;
     private final NotificationService notificationService;
 
@@ -36,7 +41,7 @@ public class FavoriteFacade {
         return ResponseEntity.ok(Map.of(
                 "list", favorites.stream().map(FavoriteResponseDto::new).toList(),
                 "email", member.getEmail(),
-                "following", member.checkFollowing(favorites),
+                "following", checkFollowing(favorites, followService.findByFollower(member)),
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
                 "result", 10L
@@ -81,5 +86,24 @@ public class FavoriteFacade {
         return ResponseEntity.ok(Map.of(
                 "result", favorite.getId()
         ));
+    }
+
+    private HashMap<Long, Boolean> checkFollowing(List<Favorite> boardFavorites, List<Follow> memberFollower) {
+        HashMap<Long, Boolean> map = new HashMap<>();
+
+        for (Favorite f : boardFavorites) {
+            map.put(f.getId(), false);
+
+            for (Follow following : f.getMember().getFollowing()) {
+                for (Follow follower : memberFollower) {
+                    if (Objects.equals(follower.getId(), following.getId())) {
+                        map.put(f.getId(), true);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return map;
     }
 }

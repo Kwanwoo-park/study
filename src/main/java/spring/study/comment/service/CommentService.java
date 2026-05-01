@@ -28,16 +28,6 @@ public class CommentService {
         return commentRepository.save(comment);
     }
 
-    @Transactional
-    public Comment save(CommentRequestDto commentSaveDto, Member member, Board board) {
-        Comment comment = commentRepository.save(commentSaveDto.toEntity());
-
-        comment.addBoard(board);
-        comment.addMember(member);
-
-        return comment;
-    }
-
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
 

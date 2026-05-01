@@ -164,7 +164,7 @@ function fnDraw(data) {
         const label2 = document.createElement('label')
         label2.className = 'form-label'
         label2.id = 'like_cnt' + board.id;
-        label2.innerText = board.favorites.length
+        label2.innerText = data.like_count[board.id];
 
         const label3 = document.createElement('label')
         label3.className = 'form-label'
@@ -201,7 +201,7 @@ function fnDraw(data) {
         const label5 = document.createElement('label')
         label5.className = 'form-label'
         label5.id = 'comment_cnt' + board.id;
-        label5.innerText = board.comment.length
+        label5.innerText = data.comment_count[board.id];
 
         const label6 = document.createElement('label')
         label6.className = 'form-label'

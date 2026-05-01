@@ -62,6 +62,10 @@ public class FollowService {
         return memberList;
     }
 
+    public List<Follow> findByFollower(Member member) {
+        return followRepository.findByFollower(member);
+    }
+
     public List<Follow> getFollowers(Member member, int cursor, int limit) {
         return followRepository.findByFollowing(
                 member,
@@ -90,9 +94,7 @@ public class FollowService {
     }
 
     @Transactional
-    public void delete(Follow follow, Member member) {
-        member.removeFollower(follow);
-
+    public void delete(Follow follow) {
         followRepository.deleteById(follow.getId());
     }
 
