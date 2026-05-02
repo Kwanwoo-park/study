@@ -13,6 +13,11 @@ import java.util.List;
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
     List<Collection> findByMember(Member member, Pageable pageable);
 
+    long countByMember(Member member);
+
+    @Transactional
+    void deleteByIdIn(List<Long> idList);
+
     @Transactional
     void deleteByMember(Member member);
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import spring.study.collection.service.CollectionService;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 
@@ -16,6 +17,7 @@ import spring.study.member.entity.Member;
 @Slf4j
 public class CollectionViewController {
     private final SessionManager sessionManager;
+    private final CollectionService collectionService;
 
     @GetMapping("")
     public String collectionMain(Model model, HttpServletRequest request) {
@@ -23,6 +25,7 @@ public class CollectionViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
 
         model.addAttribute("member", member);
+        model.addAttribute("count", collectionService.countByMember(member));
 
         return "collection/collection";
     }

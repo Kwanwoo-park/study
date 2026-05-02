@@ -12,6 +12,7 @@ import spring.study.collection.facade.CollectionFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -56,7 +57,7 @@ public class CollectionApiController {
                 "message", "유효하지 않은 세션"
         ));
 
-        return facade.save(request, dto, member);
+        return facade.save(dto, member);
     }
 
     @PostMapping("/save/img")
@@ -71,7 +72,7 @@ public class CollectionApiController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteCollection(@RequestParam() Long id, HttpServletRequest request) {
+    public ResponseEntity<?> deleteCollection(@RequestBody List<Long> id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "result", -10,

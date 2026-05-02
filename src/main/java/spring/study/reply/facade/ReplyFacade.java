@@ -62,7 +62,7 @@ public class ReplyFacade {
         ));
     }
 
-    public ResponseEntity<?> getList(Long id, int cursor, int limit) {
+    public ResponseEntity<?> getList(Long id, Member member, int cursor, int limit) {
         Comment comment = commentService.findById(id);
         long totalCount = replyService.countReplies(comment);
         List<ReplyResponseDto> list = replyService.getReplies(comment, cursor, limit)
@@ -71,6 +71,7 @@ public class ReplyFacade {
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
+                "member", member.getEmail(),
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
                 "list", list

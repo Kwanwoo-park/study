@@ -261,8 +261,8 @@
                         <a class="comment-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.member.email)}">${escapeHtml(item.member.name)}</a>
                         ${item.member.email === memberEmail ? `
                             <div class="comment-modal-actions">
-                                <button type="button" class="btn btn-primary" data-action="edit" data-comment-id="${item.id}">Edit</button>
-                                <button type="button" class="btn btn-danger" data-action="delete" data-comment-id="${item.id}">Delete</button>
+                                <span data-action="edit" data-comment-id="${item.id}">Edit</span>
+                                <span data-action="delete" data-comment-id="${item.id}">Delete</span>
                             </div>
                         ` : ''}
                     </div>

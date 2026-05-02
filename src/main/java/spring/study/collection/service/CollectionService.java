@@ -41,9 +41,18 @@ public class CollectionService {
         return collectionRepository.findById(id).orElseThrow();
     }
 
+    public Long countByMember(Member member) {
+        return collectionRepository.countByMember(member);
+    }
+
     @Transactional
     public void deleteById(Long id) {
         collectionRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteByIds(List<Long> ids) {
+        collectionRepository.deleteByIdIn(ids);
     }
 
     public void deleteByMember(Member member) {

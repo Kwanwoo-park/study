@@ -43,6 +43,6 @@ public class ReplyApiController {
                 "message", "유효하지 않은 세션"
         ));
 
-        return replyFacade.getList(id, cursor, limit);
+        return replyFacade.getList(id, member, cursor, limit);
     }
 }

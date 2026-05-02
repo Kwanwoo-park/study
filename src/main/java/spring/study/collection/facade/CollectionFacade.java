@@ -35,9 +35,9 @@ public class CollectionFacade {
         ));
     }
 
-    public ResponseEntity<?> save(HttpServletRequest request, CollectionRequestDto dto, Member member) {
+    public ResponseEntity<?> save(CollectionRequestDto dto, Member member) {
+        dto.setMember(member);
         Collection collection = dto.toEntity();
-        collection.addMember(member);
 
         Collection saved = collectionService.save(collection);
 
@@ -77,17 +77,19 @@ public class CollectionFacade {
         }
     }
 
-    public ResponseEntity<?> delete(Long id, Member member) {
-        Collection collection = collectionService.findById(id);
+    public ResponseEntity<?> delete(List<Long> idList, Member member) {
+        for (Long id : idList) {
+            Collection collection = collectionService.findById(id);
 
-        if (!collection.getMember().getId().equals(member.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -1,
-                    "message", "본인만 지울 수 있습니다"
-            ));
+            if (!collection.getMember().getId().equals(member.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "result", -1,
+                        "message", "본인만 지울 수 있습니다"
+                ));
+            }
         }
 
-        collectionService.deleteById(id);
+        collectionService.deleteByIds(idList);
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L

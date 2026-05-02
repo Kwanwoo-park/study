@@ -14,7 +14,7 @@
 <div class="profileDiv">
     <h4>
         <label class="form-label">Count: </label>
-        <label class="form-label" th:text="${#lists.size(member.collections)}"></label>
+        <label class="form-label" id="collection-count" th:text="${count}"></label>
     </h4>
 </div>
 <div class="container">
@@ -34,6 +34,11 @@
             <button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="imgBtn">Image Save</button>
         </div>
     </form>
+    <div class="saveBtnWrap">
+        <button type="button" class="btn btn-outline-secondary" id="selectToggle">선택 모드</button>
+        <span id="selectedCount">선택된 게시글 0개</span>
+        <button type="button" class="btn btn-outline-danger" id="deleteBtn" onclick="fnDelete()" disabled>선택 삭제</button>
+    </div>
     <div class="imgGrid">
     </div>
 </div>
