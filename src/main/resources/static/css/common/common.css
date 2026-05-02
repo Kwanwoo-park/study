@@ -1,12 +1,14 @@
 .navi {
     display: flex;
-    flex-direction: column;
-    align-self: flex-start;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     position: fixed;
-    top: 0px;
-    left: 10px;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
 }
 
 .nav-icon {

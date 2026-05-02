@@ -35,9 +35,6 @@ public class FollowService {
                 .following(search_member)
                 .build();
 
-        member.addFollower(follow);
-        search_member.addFollowing(follow);
-
         return followRepository.save(follow);
     }
 
