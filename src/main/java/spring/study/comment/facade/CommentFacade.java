@@ -56,7 +56,11 @@ public class CommentFacade {
         Comment comment = commentService.save(dto.toEntity());
 
         if (!member.getId().equals(otherMember.getId()))
-            notificationService.createNotification(otherMember, member.getName() + "님이 게시물에 댓글을 작성하였습니다", Group.COMMENT).addMember(otherMember);
+            notificationService.createNotification(otherMember,
+                    member.getName() + "님이 게시물에 댓글을 작성하였습니다",
+                    Group.COMMENT,
+                    board.getId().toString()
+            ).addMember(otherMember);
 
         return ResponseEntity.ok(Map.of(
                 "result", comment.getId()

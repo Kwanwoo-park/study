@@ -32,16 +32,19 @@ public class Notification extends BasetimeEntity implements Serializable {
     @NotNull
     private Group notiGroup;
 
+    private String url;
+
     @JoinColumn(name = "member_id")
     @ManyToOne
     private Member member;
 
     @Builder
-    public Notification(Long id, String message, Status readStatus, Group notiGroup, Member member) {
+    public Notification(Long id, String message, Status readStatus, Group notiGroup, String url, Member member) {
         this.id = id;
         this.message = message;
         this.readStatus = readStatus;
         this.notiGroup = notiGroup;
+        this.url = url;
         this.member = member;
     }
 

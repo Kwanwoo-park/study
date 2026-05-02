@@ -51,7 +51,11 @@ public class ReplyFacade {
         Reply result = replyService.save(dto, member, comment);
 
         if (!member.getId().equals(otherMember.getId()))
-            notificationService.createNotification(otherMember, member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다", Group.REPLY).addMember(otherMember);
+            notificationService.createNotification(otherMember,
+                    member.getName() + "님이 회원님의 댓글에 답글을 작성하였습니다",
+                    Group.REPLY,
+                    comment.getBoard().getId().toString()
+            ).addMember(otherMember);
 
         return ResponseEntity.ok(Map.of(
                 "result", result.getId()

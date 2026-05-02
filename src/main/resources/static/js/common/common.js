@@ -3,7 +3,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     eventSource.addEventListener('notification', function(event) {
         try {
-            const notificationMessage = JSON.parse(event.data)['message'];
+            let json = JSON.parse(event.data);
+            const notificationMessage = json['message'];
+            const notificationGroup = json['group'];
+            const notificationUrl = json['url'];
 
             if (notificationMessage) {
                 const notificationElement = document.getElementById('notification-message');
@@ -11,6 +14,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const notificationBanner = document.getElementById('notification-banner');
                 notificationBanner.classList.remove('d-none');
+                notificationBanner.style.cursor = 'pointer';
+                notificationBanner.onclick = function() {
+                    notificationBanner.classList.add('d-none');
+                    fnNotification(notificationGroup, notificationUrl);
+                };
 
                 setTimeout(() => {
                     notificationBanner.classList.add('d-none');
@@ -35,7 +43,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('notification-banner')
             .querySelector('.btn-close')
-            .addEventListener('click', function() {
+            .addEventListener('click', function(event) {
+                event.stopPropagation();
                 const notificationBanner = document.getElementById('notification-banner');
                 notificationBanner.classList.add('d-none');
             });
@@ -71,4 +80,11 @@ function fnDetail(email) {
 
 function fnForbidden() {
     location.replace(`/forbidden/list`);
+}
+
+function fnNotification(group, url) {
+    if (group == "CHAT")
+        location.replace(`/chat/chatRoom?roomId=` + url);
+    else if (group == "COMMENT" || group == "REPLY" || group == "FAVORITE")
+        location.replace(`/board/view?id=` + url);
 }

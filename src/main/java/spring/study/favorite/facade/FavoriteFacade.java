@@ -51,6 +51,13 @@ public class FavoriteFacade {
     public ResponseEntity<?> like(Long id, Member member, HttpServletRequest request) {
         Board board = boardService.findById(id);
 
+        if (board == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -1L,
+                    "message", "존재하지 않는 게시글입니다"
+            ));
+        }
+
         if (favoriteService.existFavorite(member, board)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -1L,
@@ -62,7 +69,11 @@ public class FavoriteFacade {
         Member otherMember = board.getMember();
 
         if (!member.getId().equals(otherMember.getId()))
-            notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다", Group.FAVORITE).addMember(otherMember);
+            notificationService.createNotification(otherMember,
+                    member.getName() + "님이 게시글에 좋아요를 눌렀습니다",
+                    Group.FAVORITE,
+                    id.toString()
+            ).addMember(otherMember);
 
         return ResponseEntity.ok(Map.of(
                 "result", favorite.getId()

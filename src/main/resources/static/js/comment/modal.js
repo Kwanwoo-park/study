@@ -116,7 +116,7 @@
                 isReplyMode = true;
                 currentCommentId = commentId;
                 modalCancel.style.display = 'inline';
-                modalInput.value = '@' + name + ' ';
+                modalInput.value = '';
                 modalInput.focus();
                 return;
             }

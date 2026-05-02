@@ -37,6 +37,19 @@ public class NotificationService {
     }
 
     @Transactional
+    public Notification createNotification(Member member, String message, Group group, String url) {
+        Notification notification = notificationRepository.save(Notification.builder()
+                .member(member)
+                .message(message)
+                .readStatus(Status.UNREAD)
+                .notiGroup(group)
+                .build());
+
+        producer.sendNotification(notification);
+        return notification;
+    }
+
+    @Transactional
     public void createNotification(List<ChatRoomMember> list, Member member, Group group) {
         Notification notification;
         Member otherMember;
@@ -49,6 +62,7 @@ public class NotificationService {
                     .message(member.getName() + "님이 메시지를 보냈습니다.")
                     .readStatus(Status.UNREAD)
                     .notiGroup(group)
+                    .url(roomMember.getRoom().getRoomId())
                     .build());
 
             producer.sendNotification(notification);
