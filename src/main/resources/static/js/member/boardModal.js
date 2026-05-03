@@ -162,7 +162,7 @@
 
                     <div class="like" onclick="fnHref(${board.id})">
                         <label class="form-label">좋아요</label>
-                        <label class="form-label" id="like_cnt${board.id}">${like_count[board.id]}</label>
+                        <label class="form-label" id="like_cnt${board.id}">${data.like_count}</label>
                         <label class="form-label">개</label>
                     </div>
 
@@ -172,7 +172,7 @@
 
                     <div class="comment" onclick="fnComment(${board.id})">
                         <label class="form-label">댓글</label>
-                        <label class="form-label" id="comment_cnt${board.id}">${comment_count[board.id]}</label>
+                        <label class="form-label" id="comment_cnt${board.id}">${data.comment_count}</label>
                         <label class="form-label">개 모두 보기</label>
                     </div>
                 </div>

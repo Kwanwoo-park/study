@@ -260,7 +260,10 @@ function toggleSelectionMode() {
         selectedCollectionIds.clear();
     }
 
-    syncAllCardSelectionStates();
+    document.querySelectorAll('.mainImgDiv').forEach((card) => {
+        syncCardSelectionState(card);
+    });
+
     updateSelectionSummary();
 }
 
@@ -277,12 +280,6 @@ function toggleCollectionSelection(id) {
     }
 
     updateSelectionSummary();
-}
-
-function syncAllCardSelectionStates() {
-    document.querySelectorAll('.mainImgDiv').forEach((card) => {
-        syncCardSelectionState(card);
-    });
 }
 
 function syncCardSelectionState(card) {

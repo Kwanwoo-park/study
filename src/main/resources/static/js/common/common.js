@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 notificationBanner.style.cursor = 'pointer';
                 notificationBanner.onclick = function() {
                     notificationBanner.classList.add('d-none');
-                    fnNotification(notificationGroup, notificationUrl);
+                    fnNotificationMove(notificationGroup, notificationUrl);
                 };
 
                 setTimeout(() => {
@@ -82,7 +82,7 @@ function fnForbidden() {
     location.replace(`/forbidden/list`);
 }
 
-function fnNotification(group, url) {
+function fnNotificationMove(group, url) {
     if (group == "CHAT")
         location.replace(`/chat/chatRoom?roomId=` + url);
     else if (group == "COMMENT" || group == "REPLY" || group == "FAVORITE")

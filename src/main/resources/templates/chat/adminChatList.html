@@ -5,50 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/chat/chat.css">
   <title>Chat List</title>
 </head>
-<style>
-  .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 700px;
-      overflow: auto;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      margin-bottom: 10px;
-  }
-  .navi {
-      display: flex;
-      flex-direction: column;
-      align-self: flex-start;
-      align-items: center;
-      justify-content: center;
-      position: fixed;
-      top: 0px;
-      left: 10px;
-  }
-  .nav-icon {
-      width: 50px;
-      height: 50px;
-  }
-  .profile-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-  }
-</style>
 <body>
-<nav class="navi">
-  <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
-  <div onclick="fnSearch()"><img th:src="@{/img/} + 'ic_search.png'" class="nav-icon"></div>
-  <div onclick="fnWrite()"><img th:src="@{/img/} + 'ic_add_a_photo.png'" class="nav-icon"></div>
-  <div onclick="fnChatting()"><img th:src="@{/img/} + 'ic_chatting.png'" class="nav-icon"></div>
-  <div onclick="fnNotification()"><img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon notification-dot"></div>
-  <div onclick="fnForbidden()"><img th:src="@{/img/} + ic_chat_black.png" class="nav-icon"></div>
-  <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
-</nav>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
 <div class="container">
   <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
     <span id="notification-message">새 알림</span>

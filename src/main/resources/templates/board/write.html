@@ -10,25 +10,25 @@
     <link rel="stylesheet" href="/css/board/write.css">
 </head>
 <body>
-		<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
-		<div class="container">
+    <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+    <div class="container">
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
-		<form method="post" enctype="multipart/form-data">
-			<div class="imgDiv">
-				<input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
-				<button type="button" class="btn btn-primary" id="btn">Image</button>
-			</div>
-			<textarea class="form-control" rows="5" cols="" id="content" name="content" style="display: none"></textarea>
-			<button type="button" class="btn btn-success" onclick="fnPrevious()" style="display: none" id="previous">Previous</button>
-			<button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Submit</button>
-			<button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="img_btn">Image Save</button>
-		</form>
+        <form method="post" enctype="multipart/form-data">
+            <div class="imgDiv">
+                <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
+                <button type="button" class="btn btn-primary" id="btn">Image</button>
+            </div>
+            <textarea class="form-control" rows="5" cols="" id="content" name="content" style="display: none"></textarea>
+            <button type="button" class="btn btn-success" onclick="fnPrevious()" style="display: none" id="previous">Previous</button>
+            <button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Submit</button>
+            <button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="img_btn">Image Save</button>
+        </form>
 	</div>
     <!--부트스트랩 js, jquery 추가-->
 	<script src="/js/lib/jquery.min.js"></script>
 	<script src="/js/lib/bootstrap.min.js"></script>
 	<script src="/js/board/write.js"></script>
 	<script src="/js/common/common.js"></script>
-	</body>
-	<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>
