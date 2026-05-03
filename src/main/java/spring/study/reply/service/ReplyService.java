@@ -20,12 +20,10 @@ public class ReplyService {
 
     @Transactional
     public Reply save(ReplyRequestDto dto, Member member, Comment comment) {
-        Reply reply = replaceReply(dto, member);
+        dto.setMember(member);
+        dto.setComment(comment);
 
-        member.addReply(reply);
-        comment.addReply(reply);
-
-        return replyRepository.save(reply);
+        return replyRepository.save(dto.toEntity());
     }
 
     @Transactional
@@ -64,10 +62,5 @@ public class ReplyService {
 
     public void deleteReply(Long id) {
         replyRepository.deleteById(id);
-    }
-
-    private Reply replaceReply(ReplyRequestDto dto, Member commetMember) {
-        dto.setReply(dto.getReply().replace("@"+commetMember.getName()+" ", ""));
-        return dto.toEntity();
     }
 }

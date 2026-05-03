@@ -118,8 +118,11 @@ function fnPrevious() {
     submit.style.display = 'none';
     content.style.display = 'none';
 
-    left.style.display = 'none';
-    right.style.display = 'none';
+    if (left)
+        left.style.display = 'none';
+
+    if (right)
+        right.style.display = 'none';
 
     file = null;
     fidx = 0;
