@@ -142,8 +142,8 @@ function fnLoad(input) {
     imgDiv.style.marginTop = 0;
 
     btn.style.display = 'none';
-    previous.style.display = 'inline';
-    submit.style.display = 'inline';
+    previous.style.display = 'flex';
+    submit.style.display = 'flex';
     content.style.display = 'inline';
 
     file = Array.from(input.files);

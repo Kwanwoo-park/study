@@ -21,7 +21,7 @@ public class FollowViewController {
     @GetMapping("/follower")
     public String follower(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/follow/follower?email=" + memberRequestDto.getEmail();
 
         model.addAttribute("targetEmail", memberRequestDto.getEmail());
         model.addAttribute("email", member.getEmail());
@@ -32,7 +32,7 @@ public class FollowViewController {
     @GetMapping("/following")
     public String following(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/follow/following?email=" + memberRequestDto.getEmail();
 
         model.addAttribute("targetEmail", memberRequestDto.getEmail());
         model.addAttribute("email", member.getEmail());

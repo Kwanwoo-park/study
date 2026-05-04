@@ -5,9 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageRequestDto;
+import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.MessageType;
+import spring.study.chat.service.ChatMessageImgService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
@@ -18,6 +21,7 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,6 +32,8 @@ public class ChatSendFacade {
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
+    private final ChatMessageImgService chatMessageImgService;
+    private final ImageS3Service imageS3Service;
     private final MemberService memberService;
     private final NotificationService notificationService;
     private final MessageProducer producer;
@@ -60,6 +66,11 @@ public class ChatSendFacade {
                 roomService.subCount(room.getId());
                 dto.setMessage(member.getName() + "님이 퇴장했습니다");
             } else {
+                for (String messageId : messageService.find(room).stream().map(ChatMessage::getId).toList()) {
+                    imageS3Service.deleteImg(chatMessageImgService.findMessage(messageId));
+                    chatMessageImgService.deleteMessage(messageId);
+                }
+
                 messageService.deleteByRoom(room);
                 roomService.delete(room.getRoomId());
 

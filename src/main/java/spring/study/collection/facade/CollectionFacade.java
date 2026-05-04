@@ -1,6 +1,5 @@
 package spring.study.collection.facade;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,6 +13,7 @@ import spring.study.collection.entity.Collection;
 import spring.study.collection.service.CollectionService;
 import spring.study.member.entity.Member;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -78,6 +78,8 @@ public class CollectionFacade {
     }
 
     public ResponseEntity<?> delete(List<Long> idList, Member member) {
+        List<String> imgSrcList = new ArrayList<>();
+
         for (Long id : idList) {
             Collection collection = collectionService.findById(id);
 
@@ -87,8 +89,11 @@ public class CollectionFacade {
                         "message", "본인만 지울 수 있습니다"
                 ));
             }
+
+            imgSrcList.add(collection.getImgSrc());
         }
 
+        imageS3Service.deleteImgSrc(imgSrcList);
         collectionService.deleteByIds(idList);
 
         return ResponseEntity.ok(Map.of(

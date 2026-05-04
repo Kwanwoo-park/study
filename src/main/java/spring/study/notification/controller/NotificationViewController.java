@@ -18,7 +18,7 @@ public class NotificationViewController {
     @GetMapping("/list")
     public String getNotification(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/notification/list";
 
         model.addAttribute("member", member);
 

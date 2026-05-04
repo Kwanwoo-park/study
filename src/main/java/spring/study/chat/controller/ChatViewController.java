@@ -29,7 +29,7 @@ public class ChatViewController {
     public String chatList(Model model,
                            HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/chat/chatList";
 
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
@@ -51,7 +51,7 @@ public class ChatViewController {
     @GetMapping("/chatRoom")
     public String chatRoom(@RequestParam String roomId, Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/chat/chatRoom?roomId=" + roomId;
 
         ChatRoom room = roomService.find(roomId);
 

@@ -19,7 +19,7 @@ public class CommentViewController {
     @GetMapping("")
     public String getComments(Model model, @RequestParam Long id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/comment?id=" + id;
 
         model.addAttribute("member", member.getEmail());
         model.addAttribute("boardId", id);

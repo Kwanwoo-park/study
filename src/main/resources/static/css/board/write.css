@@ -17,6 +17,12 @@
     margin-top: 300px;
 }
 
+.btnDiv {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 img {
     width: 500px;
     height: 500px;

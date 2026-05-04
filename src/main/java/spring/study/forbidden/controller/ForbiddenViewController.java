@@ -18,7 +18,7 @@ public class ForbiddenViewController {
     @GetMapping("/list")
     public String forbiddenList(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/forbidden/list";
 
         model.addAttribute("email", member.getEmail());
         model.addAttribute("profile", member.getProfile());

@@ -29,6 +29,7 @@ public class MemberViewController {
     public String login(Model model,
                         @RequestParam(value = "error", required = false) String error,
                         @RequestParam(value = "exception", required = false) String exception,
+                        @RequestParam(value = "url", required = false) String url,
                         HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
 
@@ -39,6 +40,7 @@ public class MemberViewController {
 
         model.addAttribute("error", error);
         model.addAttribute("exception", exception);
+        model.addAttribute("url", url);
 
         return "member/login";
     }
@@ -51,7 +53,7 @@ public class MemberViewController {
     @GetMapping("/detail")
     public String detail(@RequestParam String email, Model model, HttpServletRequest request){
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/detail?email=" + email;
 
         String memberEmail = member.getEmail();
 
@@ -84,7 +86,7 @@ public class MemberViewController {
     @GetMapping("/updatePassword")
     public String updatePassword(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePassword";
 
         model.addAttribute("email", member.getEmail());
 
@@ -94,7 +96,7 @@ public class MemberViewController {
     @GetMapping("/updatePhone")
     public String updatePhone(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePhone";
 
         model.addAttribute("email", member.getEmail());
         model.addAttribute("phone", member.getPhone());
@@ -113,7 +115,7 @@ public class MemberViewController {
     @GetMapping("/withdrawal")
     public String withdrawal(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/withdrawal";
 
         model.addAttribute("name", member.getName());
 
@@ -123,7 +125,7 @@ public class MemberViewController {
     @GetMapping("/search")
     public String memberFind(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/search";
 
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
@@ -134,7 +136,7 @@ public class MemberViewController {
     @GetMapping("/search/detail")
     public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/search/detail?email=" + memberRequestDto.getEmail();
 
         String memberEmail = member.getEmail();
 

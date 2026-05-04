@@ -2,17 +2,9 @@ const button = document.getElementById('login');
 const email = document.getElementById('email');
 const password = document.getElementById('password');
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(function (registration) {
-            console.log('Service Worker 등록 성공:', registration.scope);
-        })
-        .catch(function (error) {
-            console.log('Service Worker 등록 실패:', error);
-        });
-    });
-}
+const url = new URL(window.location.href);
+const urlParams = url.searchParams;
+const redirectUrl = urlParams.get('url');
 
 if (button) {
     button.addEventListener('click', (event) => {
@@ -33,8 +25,13 @@ if (button) {
             .then((response) => response.json())
             .then((json) => {
                 if (json['result'] > 0) {
-                    alert(json.member.name + "님 환영합니다!");
-                    location.replace(`/board/main`)
+                    if (redirectUrl !== '') {
+                        location.replace(redirectUrl);
+                    }
+                    else {
+                        alert(json.member.name + "님 환영합니다!");
+                        location.replace(`/board/main`)
+                    }
                 } else if (json['result'] == -10) {
                     console.error('Error during login:', error);
                     alert('Login error occurred. Please try again later');

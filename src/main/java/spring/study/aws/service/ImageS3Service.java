@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.board.entity.BoardImg;
+import spring.study.chat.entity.ChatMessageImg;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -125,6 +126,19 @@ public class ImageS3Service {
         return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.OK);
     }
 
+    public void deleteImg(List<ChatMessageImg> list) {
+        String[] splitString;
+        String fileName;
+
+        for (ChatMessageImg img : list) {
+            splitString = img.getImgSrc().split("/");
+            fileName = splitString[splitString.length-1];
+
+            if (amazonS3.doesObjectExist(bucketName, fileName))
+                amazonS3.deleteObject(new DeleteObjectRequest(bucketName, fileName));
+        }
+    }
+
     public void deleteImage(List<BoardImg> list) {
         String[] splitString;
         String fileName;
@@ -138,15 +152,24 @@ public class ImageS3Service {
         }
     }
 
-    public int deleteImage(String name) {
+    public void deleteImage(String name) {
         String[] splitString = name.split("/");
         String fileName = splitString[splitString.length-1];
 
         if (amazonS3.doesObjectExist(bucketName, fileName))
             amazonS3.deleteObject(new DeleteObjectRequest(bucketName, fileName));
-        else
-            return 0;
+    }
 
-        return 1;
+    public void deleteImgSrc(List<String> list) {
+        String[] splitString;
+        String fileName;
+
+        for (String imgSrc : list) {
+            splitString = imgSrc.split("/");
+            fileName = splitString[splitString.length-1];
+
+            if (amazonS3.doesObjectExist(bucketName, fileName))
+                amazonS3.deleteObject(new DeleteObjectRequest(bucketName, fileName));
+        }
     }
 }

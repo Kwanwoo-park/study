@@ -30,7 +30,7 @@ public class BoardViewController {
                                    @RequestParam(required = false, defaultValue = "5") Integer size,
                                    HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/all";
 
         model.addAttribute("resultMap", boardService.findAll(page, size));
         model.addAttribute("member", member);
@@ -41,7 +41,7 @@ public class BoardViewController {
     @GetMapping("/main")
     public String mainPage(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/main";
 
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
@@ -52,7 +52,7 @@ public class BoardViewController {
     @GetMapping("/write")
     public String getBoardWritePage(Model model, HttpServletRequest request){
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/write";
 
         model.addAttribute("name", member.getName());
         model.addAttribute("profile", member.getProfile());
@@ -64,7 +64,7 @@ public class BoardViewController {
     @GetMapping("/view")
     public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/view?id=" + boardRequestDto.getId();
 
         if (boardService.existBoard(boardRequestDto.getId())) {
             Board board = boardService.findById(boardRequestDto.getId());

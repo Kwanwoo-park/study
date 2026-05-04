@@ -26,7 +26,7 @@ public class AdminViewController {
     @GetMapping("/administrator")
     public String admin(HttpServletRequest request){
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/administrator";
 
         if (member.getRole() != Role.ADMIN) {
             request.getSession(false).invalidate();
@@ -41,7 +41,7 @@ public class AdminViewController {
                                @RequestParam(required = false, defaultValue = "0") Integer page,
                                @RequestParam(required = false, defaultValue = "5") Integer size){
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/memberCheck";
 
         if (member.getRole() != Role.ADMIN) {
             request.getSession(false).invalidate();
@@ -56,7 +56,7 @@ public class AdminViewController {
     @GetMapping("/member/detail")
     public String memberDetail(Model model, MemberRequestDto requestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/member/detail";
 
         if (member.getRole() != Role.ADMIN) {
             request.getSession(false).invalidate();
@@ -71,7 +71,7 @@ public class AdminViewController {
     @GetMapping("/forbidden/word/list")
     public String forbiddenWordList(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/forbidden/word/list";
 
         if (member.getRole() != Role.ADMIN) {
             request.getSession(false).invalidate();
@@ -86,7 +86,7 @@ public class AdminViewController {
     @GetMapping("/forbidden/word/apply")
     public String forbiddenWordAppplyList(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/forbidden/word/apply";
 
         if (member.getRole() != Role.ADMIN) {
             request.getSession(false).invalidate();

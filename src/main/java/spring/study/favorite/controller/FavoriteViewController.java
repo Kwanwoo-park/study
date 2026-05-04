@@ -19,7 +19,7 @@ public class FavoriteViewController {
     @GetMapping("")
     public String getFavorites(Model model, @RequestParam Long id, HttpServletRequest request) throws Exception {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found";
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/favorite?id=" + id;
 
         model.addAttribute("boardId", id);
         model.addAttribute("email", member.getEmail());
