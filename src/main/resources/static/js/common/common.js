@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             let json = JSON.parse(event.data);
             const notificationMessage = json['message'];
-            const notificationGroup = json['group'];
+            const notificationGroup = json['notiGroup'];
             const notificationUrl = json['url'];
 
             if (notificationMessage) {
@@ -85,6 +85,8 @@ function fnForbidden() {
 function fnNotificationMove(group, url) {
     if (group == "CHAT")
         location.replace(`/chat/chatRoom?roomId=` + url);
-    else if (group == "COMMENT" || group == "REPLY" || group == "FAVORITE")
+    else if (group == "COMMENT" || group == "REPLY")
+        location.replace(`/comment?id=` + url);
+    else if (group == "FAVORITE")
         location.replace(`/board/view?id=` + url);
 }

@@ -43,6 +43,7 @@ public class NotificationService {
                 .message(message)
                 .readStatus(Status.UNREAD)
                 .notiGroup(group)
+                .url(url)
                 .build());
 
         producer.sendNotification(notification);

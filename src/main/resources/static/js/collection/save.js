@@ -217,8 +217,11 @@ async function fnDelete() {
         updateCollectionCount(-successCount);
     }
 
+    document.querySelectorAll('.mainImgDiv').forEach((card) => {
+        syncCardSelectionState(card);
+    });
+
     selectedCollectionIds.clear();
-    syncAllCardSelectionStates();
     updateSelectionSummary();
 
     if (successCount > 0 && failCount === 0) {

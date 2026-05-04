@@ -55,11 +55,17 @@ function fnDraw(data) {
         const mainLi = document.createElement('li');
         mainLi.className = 'notification-card';
 
+        const clickDiv = document.createElement('div');
+        clickDiv.onclick = function() {
+            fnNotificationMove(item.notiGroup, item.url);
+        }
+
         const message = document.createElement('p');
         message.innerText = item.message;
         message.className = 'notification-message';
 
-        mainLi.append(message);
+        clickDiv.append(message);
+        mainLi.append(clickDiv);
 
         const div = document.createElement('div');
         div.className = 'notification-actions';
