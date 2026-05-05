@@ -25,7 +25,7 @@ if (button) {
             .then((response) => response.json())
             .then((json) => {
                 if (json['result'] > 0) {
-                    if (redirectUrl !== '') {
+                    if (redirectUrl) {
                         location.replace(redirectUrl);
                     }
                     else {

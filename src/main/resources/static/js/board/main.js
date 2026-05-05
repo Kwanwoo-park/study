@@ -1,6 +1,7 @@
 const container = document.querySelector('.container')
 
 let nextCursor = 1;
+let loading;
 
 window.onload = function() {
     if (typeof initCommentModal === 'function') {
@@ -39,10 +40,14 @@ async function loadMorePosts() {
             nextCursor = data.nextCursor;
 
             if (!nextCursor){
-                const load = document.createElement('span')
-                load.id = 'loading'
-                load.innerText = '모든 게시물을 불러왔습니다';
-                container.append(load);
+                load = document.getElementById('loading');
+
+                if (!load) {
+                    load = document.createElement('span')
+                    load.id = 'loading'
+                    load.innerText = '모든 게시물을 불러왔습니다';
+                    container.append(load);
+                }
             }
         } else
             alert("다시 시도하여주십시오");
