@@ -23,7 +23,7 @@ async function loadNewUser() {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
         },
-        credentials: "includes",
+        credentials: "include",
     });
     const data = await res.json();
 
