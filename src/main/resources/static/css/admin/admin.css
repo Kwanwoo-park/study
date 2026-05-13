@@ -1,0 +1,19 @@
+.user-status {
+    width: 100%;
+    height: 200px;
+    overflow: auto;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.new-user {
+    width: 100%;
+    height: 200px;
+    overflow: auto;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}

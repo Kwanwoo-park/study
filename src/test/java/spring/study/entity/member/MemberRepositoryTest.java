@@ -6,8 +6,12 @@
 //import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 //import org.springframework.data.domain.Sort;
-//import spring.study.repository.member.MemberRepository;
+//import spring.study.member.entity.Member;
+//import spring.study.member.entity.Role;
+//import spring.study.member.repository.MemberRepository;
 //
+//import java.time.LocalDate;
+//import java.time.LocalDateTime;
 //import java.util.List;
 //
 //import static org.assertj.core.api.Assertions.*;
@@ -149,5 +153,20 @@
 //    @Test
 //    void test() {
 //        System.out.println(memberRepository.findByEmail("test2@test.com"));
+//    }
+//
+//    @Test
+//    void findRegisterTime() {
+//        //given
+//        LocalDateTime end = LocalDateTime.now();
+//        LocalDateTime start = end.minusDays(1);
+//
+//        // when
+//        List<Member> list = memberRepository.findByRegisterTimeBetween(start, end);
+//
+//        // then
+//        for (Member member : list) {
+//            System.out.println(member.getId() + " " + member.getEmail());
+//        }
 //    }
 //}

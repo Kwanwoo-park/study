@@ -12,7 +12,7 @@
 //import spring.study.member.service.MemberService;
 //import spring.study.member.service.UserService;
 //
-//import java.util.ArrayList;
+//import java.time.LocalDateTime;
 //import java.util.HashMap;
 //import java.util.List;
 //
@@ -139,6 +139,21 @@
 //        // then
 //        for (String key : map.keySet()) {
 //            System.out.println(map.get(key));
+//        }
+//    }
+//
+//    @Test
+//    void findRegisterTime() {
+//        // given
+//        LocalDateTime end = LocalDateTime.now();
+//        LocalDateTime start = end.minusDays(1);
+//
+//        // when
+//        List<Member> list = memberService.findNewUser(start, end);
+//
+//        // then
+//        for (Member member : list) {
+//            System.out.println(member.getId() + " " + member.getEmail());
 //        }
 //    }
 //}

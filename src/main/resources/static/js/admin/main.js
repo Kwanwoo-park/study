@@ -1,5 +1,6 @@
-window.onload = function() {
-    loadUserStatus();
+window.onload = async function() {
+    await loadUserStatus();
+    await loadNewUser();
 }
 
 async function loadUserStatus() {
@@ -14,6 +15,20 @@ async function loadUserStatus() {
 
     if (data.count >= 0)
         fnDraw(data);
+}
+
+async function loadNewUser() {
+    const res = await fetch(`/api/admin/member/new`, {
+        method: 'GET',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        credentials: "includes",
+    });
+    const data = await res.json();
+
+    if (data.count >= 0)
+        fnNewUserDraw(data);
 }
 
 function fnDraw(data) {
@@ -32,17 +47,46 @@ function fnDraw(data) {
         const userName = document.createElement('label');
         userName.innerText = member.name;
 
-        const userName2 = document.createElement('label');
-        userName2.innerText = "(" + member.email + ")";
-        userName2.style.color = 'gray';
+        const email = document.createElement('label');
+        email.innerText = "(" + member.email + ")";
+        email.style.color = 'gray';
 
         li.append(userName);
-        li.append(userName2);
+        li.append(email);
 
         ul.append(li);
     })
 
     userDiv.append(ul);
+}
+
+function fnNewUserDraw(data) {
+    const newUserDiv = document.querySelector('.new-user');
+
+    const userCount = document.createElement('label');
+    userCount.innerText = "신규 가입자 수: " + data.count;
+
+    newUserDiv.append(userCount);
+
+    const ul = document.createElement('ul');
+
+    data.list.forEach(member => {
+        const li = document.createElement('li');
+
+        const userName = document.createElement('label');
+        userName.innerText = member.name;
+
+        const email = document.createElement('label');
+        email.innerText = "(" + member.email + ")";
+        email.style.color = 'gray';
+
+        li.append(userName);
+        li.append(email);
+
+        ul.append(li);
+    });
+
+    newUserDiv.append(ul);
 }
 
 function fnLogout() {

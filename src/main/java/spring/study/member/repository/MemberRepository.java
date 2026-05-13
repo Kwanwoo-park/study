@@ -1,20 +1,19 @@
 package spring.study.member.repository;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    Optional<Member> findByEmail(String email);
+    List<Member> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
-    Page<Member> findByName(String name, Pageable pageable);
+    Optional<Member> findByEmail(String email);
 
     List<Member> findByName(String name);
 

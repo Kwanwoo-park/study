@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +33,19 @@ public class AdminFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "count", count != null ? Long.parseLong(count) : 0L,
+                "list", list
+        ));
+    }
+
+    public ResponseEntity<?> newMember() {
+        LocalDateTime end = LocalDateTime.now(), start = end.minusDays(1);
+
+        List<Member> list = memberService.findNewUser(start, end);
+        int count = list.size();
+
+        return ResponseEntity.ok(Map.of(
+                "result", 1L,
+                "count", count,
                 "list", list
         ));
     }

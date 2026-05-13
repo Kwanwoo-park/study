@@ -79,6 +79,10 @@ public class MemberService implements UserDetailsService {
         return memberRepository.existsByEmail(email);
     }
 
+    public List<Member> findNewUser(LocalDateTime start, LocalDateTime end) {
+        return memberRepository.findByRegisterTimeBetween(start, end);
+    }
+
     public void deleteById(Long id) { memberRepository.deleteById(id); }
 
     @Transactional

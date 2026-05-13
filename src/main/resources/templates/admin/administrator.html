@@ -6,18 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!--부트스트랩 css 추가-->
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/admin/admin.css">
 </head>
-<style>
-    .user-status {
-        width: 100%;
-        height: 200px;
-        overflow: auto;
-        padding: 10px;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-</style>
 <body>
   <div class="container">
     <h1>Admin view</h1>
@@ -31,6 +21,7 @@
         <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
       </div>
       <div class="user-status"></div>
+      <div class="new-user"></div>
   </div>
 
 <!--부트스트랩 js, jquery 추가-->

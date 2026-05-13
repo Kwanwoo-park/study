@@ -84,4 +84,23 @@ public class AdminApiController {
 
         return adminFacade.memberOnline();
     }
+
+    @GetMapping("/member/new")
+    public ResponseEntity<?> newMember(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "result", -10L,
+                    "message", "잘못된 접근입니다"
+            ));
+        }
+
+        return adminFacade.newMember();
+    }
 }
