@@ -14,7 +14,6 @@
 //import org.springframework.web.context.WebApplicationContext;
 //import spring.study.member.service.MemberService;
 //
-//import static org.assertj.core.api.Assertions.*;
 //import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 //import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -49,6 +48,44 @@
 //        url += "/member/online";
 //
 //        //when
+//        mvc.perform(get(url).session(session).contentType(MediaType.APPLICATION_JSON))
+//                .andExpect(status().isOk())
+//                .andDo(print());
+//    }
+//
+//    @Test
+//    void newUser() throws Exception {
+//        // given
+//        mvc = MockMvcBuilders
+//                .webAppContextSetup(context)
+//                .apply(springSecurity())
+//                .build();
+//
+//        MockHttpSession session = new MockHttpSession();
+//        session.setAttribute("member", memberService.findMember("test@test.com"));
+//
+//        url += "/member/new";
+//
+//        // when
+//        mvc.perform(get(url).session(session).contentType(MediaType.APPLICATION_JSON))
+//                .andExpect(status().isOk())
+//                .andDo(print());
+//    }
+//
+//    @Test
+//    void newBoard() throws Exception {
+//        // given
+//        mvc = MockMvcBuilders
+//                .webAppContextSetup(context)
+//                .apply(springSecurity())
+//                .build();
+//
+//        MockHttpSession session = new MockHttpSession();
+//        session.setAttribute("member", memberService.findMember("test@test.com"));
+//
+//        url += "/board/new";
+//
+//        // when
 //        mvc.perform(get(url).session(session).contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(status().isOk())
 //                .andDo(print());

@@ -32,6 +32,10 @@ public class BoardService {
         return boardRepository.save(board);
     }
 
+    public List<Board> findNewBoard(LocalDateTime start, LocalDateTime end) {
+        return boardRepository.findByRegisterTimeBetween(start, end);
+    }
+
     public List<Board> getBoard(int cursor, int limit, List<Member> list) {
         return boardRepository.findByMemberIn(list, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()));
     }

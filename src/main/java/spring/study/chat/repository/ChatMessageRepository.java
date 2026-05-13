@@ -8,6 +8,7 @@ import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.member.entity.Member;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -15,6 +16,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
     List<ChatMessage> findByRoom(ChatRoom room);
 
     List<ChatMessage> findByRoom(ChatRoom room, Pageable pageable);
+
+    List<ChatMessage> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
     @Transactional
     void deleteByRoom(ChatRoom room);

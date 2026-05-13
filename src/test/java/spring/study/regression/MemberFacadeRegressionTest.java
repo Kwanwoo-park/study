@@ -11,24 +11,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import spring.study.aws.service.ImageS3Service;
-import spring.study.board.service.BoardImgService;
-import spring.study.board.service.BoardService;
-import spring.study.chat.service.ChatMessageService;
-import spring.study.chat.service.ChatRoomMemberService;
-import spring.study.comment.service.CommentService;
-import spring.study.common.service.SessionManager;
-import spring.study.favorite.service.FavoriteService;
-import spring.study.follow.service.FollowService;
-import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.facade.MemberFacade;
 import spring.study.member.service.MemberService;
-import spring.study.member.service.UserService;
-import spring.study.notification.service.NotificationService;
-import spring.study.reply.service.ReplyService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.io.IOException;
 
@@ -38,22 +25,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MemberFacadeRegressionTest {
-
-    @Mock private SessionManager sessionManager;
     @Mock private MemberService memberService;
-    @Mock private BoardService boardService;
-    @Mock private BoardImgService boardImgService;
-    @Mock private CommentService commentService;
-    @Mock private ReplyService replyService;
-    @Mock private FollowService followService;
-    @Mock private FavoriteService favoriteService;
-    @Mock private ChatRoomMemberService roomMemberService;
-    @Mock private ChatMessageService messageService;
-    @Mock private UserService userService;
-    @Mock private ForbiddenService forbiddenService;
-    @Mock private NotificationService notificationService;
     @Mock private ImageS3Service imageS3Service;
-    @Mock private BCryptPasswordEncoder encoder;
 
     @InjectMocks
     private MemberFacade memberFacade;

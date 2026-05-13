@@ -13,6 +13,7 @@ import spring.study.chat.entity.ChatRoom;
 import spring.study.member.entity.Member;
 import spring.study.chat.repository.ChatMessageRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -43,6 +44,10 @@ public class ChatMessageService {
 
     public List<ChatMessage> find(ChatRoom room) {
         return chatMessageRepository.findByRoom(room);
+    }
+
+    public List<ChatMessage> findActiveChatting(LocalDateTime start, LocalDateTime end) {
+        return chatMessageRepository.findByRegisterTimeBetween(start, end);
     }
 
     public List<ChatMessageResponseDto> loadChatting(int cursor, int limit, ChatRoom room) {

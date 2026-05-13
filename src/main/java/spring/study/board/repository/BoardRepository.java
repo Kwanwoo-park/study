@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.entity.Board;
 import spring.study.member.entity.Member;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -18,9 +19,9 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     List<Board> findByMember(Member member, Sort sort);
 
-    List<Board> findByMemberIn(List<Member> members, Sort sort);
-
     List<Board> findByMember(Member members);
+
+    List<Board> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
     long countByMember(Member member);
 

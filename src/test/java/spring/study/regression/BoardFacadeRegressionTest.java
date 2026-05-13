@@ -6,13 +6,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import spring.study.aws.service.ImageS3Service;
 import spring.study.board.entity.Board;
 import spring.study.board.facade.BoardFacade;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
-import spring.study.common.service.ModerationService;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -29,8 +27,6 @@ class BoardFacadeRegressionTest {
     @Mock private CommentService commentService;
     @Mock private BoardImgService boardImgService;
     @Mock private FavoriteService favoriteService;
-    @Mock private ImageS3Service imageS3Service;
-    @Mock private ModerationService moderationService;
 
     @InjectMocks
     private BoardFacade boardFacade;
