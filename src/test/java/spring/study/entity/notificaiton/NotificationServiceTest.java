@@ -3,10 +3,10 @@
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import spring.study.entity.member.Member;
+//import spring.study.member.entity.Member;
+//import spring.study.member.service.MemberService;
 //import spring.study.notification.entity.Notification;
-//import spring.study.service.member.MemberService;
-//import spring.study.service.notification.NotificationService;
+//import spring.study.notification.service.NotificationService;
 //
 //import java.util.List;
 //
@@ -29,5 +29,17 @@
 //        for (Notification noti : list) {
 //            System.out.println(noti.getMember().getEmail() + " " + noti.getMessage());
 //        }
+//    }
+//
+//    @Test
+//    void count() {
+//        // given
+//        Member member = memberService.findMember("akakslslzz@naver.com");
+//
+//        // when
+//        Long count = notificationService.countUnReadNotification(member);
+//
+//        // then
+//        System.out.println(count);
 //    }
 //}

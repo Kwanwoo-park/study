@@ -43,6 +43,17 @@ public class NotificationApiController {
         return notificationFacade.load(member);
     }
 
+    @GetMapping({"/count/unread", "/count/Unread"})
+    public ResponseEntity<?> countUnreadNotification(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "result", -10,
+                "message", "유효하지 않은 세션"
+        ));
+
+        return notificationFacade.count(member);
+    }
+
     @GetMapping("/sort/{group}")
     public ResponseEntity<?> sortGroup(@PathVariable Group group, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);

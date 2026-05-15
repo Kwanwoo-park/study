@@ -28,6 +28,13 @@ public class NotificationFacade {
         ));
     }
 
+    public ResponseEntity<?> count(Member member) {
+        return ResponseEntity.ok(Map.of(
+                "result", 10L,
+                "count", notificationService.countUnReadNotification(member)
+        ));
+    }
+
     public ResponseEntity<?> loadByGroup(Member member, Group group) {
         List<Notification> list = notificationService.findByMember(member)
                 .stream()

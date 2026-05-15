@@ -89,6 +89,10 @@ public class NotificationService {
         notification.changeToRead();
     }
 
+    public Long countUnReadNotification(Member member) {
+        return notificationRepository.countByMemberAndReadStatus(member, Status.UNREAD);
+    }
+
     public Notification findById(Long id) {
         return notificationRepository.findById(id).orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다"));
     }

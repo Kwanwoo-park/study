@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    fnUpdateUnreadNotificationDot();
+
     const eventSource = new EventSource('/api/notification/stream');
 
     eventSource.addEventListener('notification', function(event) {
@@ -9,6 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const notificationUrl = json['url'];
 
             if (notificationMessage) {
+                fnSetUnreadNotificationDot(true);
+
                 const notificationElement = document.getElementById('notification-message');
                 notificationElement.textContent = notificationMessage;
 
@@ -53,6 +57,31 @@ document.addEventListener('DOMContentLoaded', function() {
         eventSource.close();
     });
 });
+
+function fnSetUnreadNotificationDot(hasUnread) {
+    const notificationNavIcon = document.getElementById('notification-nav-icon');
+    if (!notificationNavIcon) return;
+
+    notificationNavIcon.classList.toggle('active', hasUnread);
+}
+
+function fnUpdateUnreadNotificationDot() {
+    fetch('/api/notification/count/unread', {
+        method: 'GET',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        credentials: "include",
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        if (json['result'] <= 0) return;
+        fnSetUnreadNotificationDot(Number(json['count']) > 0);
+    })
+    .catch((error) => {
+        console.error('읽지 않은 알림 수 조회 오류:', error);
+    });
+}
 
 function fnMain() {
     location.replace(`/board/main`);

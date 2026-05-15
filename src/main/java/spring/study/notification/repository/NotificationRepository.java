@@ -25,6 +25,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findByReadStatusAndRegisterTimeBefore(Status readStatus, LocalDateTime registerTime);
 
+    long countByMemberAndReadStatus(Member member, Status readStatus);
+
     @Transactional
     void deleteByRegisterTimeBefore(LocalDateTime registerTime);
 
