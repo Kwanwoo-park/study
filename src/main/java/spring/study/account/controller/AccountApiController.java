@@ -1,0 +1,62 @@
+package spring.study.account.controller;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import spring.study.account.dto.AccountRequestDto;
+import spring.study.account.facade.AccountFacade;
+import spring.study.common.facade.CommonFacade;
+import spring.study.common.service.SessionManager;
+import spring.study.member.entity.Member;
+
+@RestController
+@RequiredArgsConstructor
+@Slf4j
+@RequestMapping("/api/account")
+public class AccountApiController {
+    private final SessionManager sessionManager;
+    private final AccountFacade accountFacade;
+    private final CommonFacade commonFacade;
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createAccount(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountFacade.create(member);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<?> getAccountList(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountFacade.getList(member);
+    }
+
+    @PatchMapping("/amount/add")
+    public ResponseEntity<?> addAmount(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountFacade.addAmount(dto);
+    }
+
+    @PatchMapping("/amount/sub")
+    public ResponseEntity<?> subAmount(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountFacade.subAmount(dto);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteAccount(@RequestParam String account, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountFacade.delete(account);
+    }
+}

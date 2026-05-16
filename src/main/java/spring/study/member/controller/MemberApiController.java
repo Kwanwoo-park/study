@@ -4,10 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
@@ -22,6 +22,7 @@ import java.util.Map;
 @Slf4j
 public class MemberApiController {
     private final SessionManager sessionManager;
+    private final CommonFacade commonFacade;
     private final MemberFacade memberFacade;
     private final MemberService memberService;
 
@@ -33,10 +34,7 @@ public class MemberApiController {
     @GetMapping("/logout")
     public ResponseEntity<?> logoutAction(HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         sessionManager.logout(request);
 
@@ -58,12 +56,7 @@ public class MemberApiController {
     @PatchMapping("/detail/action")
     public ResponseEntity<?> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "result", -10L,
-                    "message", "유효하지 않은 세션입니다"
-            ));
-        }
+        if (member == null) return commonFacade.unauthorized();
 
         return memberFacade.changeProfileImage(file, member, request);
     }
@@ -97,10 +90,7 @@ public class MemberApiController {
 
     @GetMapping("/search")
     public ResponseEntity<?> searchMember(@RequestParam() String name, HttpServletRequest request) {
-        if (sessionManager.getLoginMember(request) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (sessionManager.getLoginMember(request) == null) return commonFacade.unauthorized();
 
         return memberFacade.search(name);
     }
@@ -108,12 +98,7 @@ public class MemberApiController {
     @DeleteMapping("/withdrawal")
     public ResponseEntity<?> withdrawalAction(@RequestParam(required = false) String email, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "result", -10L,
-                    "message", "유효하지 않은 세션입니다"
-            ));
-        }
+        if (member == null) return commonFacade.unauthorized();
 
         if (email == null) return memberFacade.deleteMember(member, request);
         else return memberFacade.deleteMember(email);

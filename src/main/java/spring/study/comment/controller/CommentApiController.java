@@ -3,15 +3,14 @@ package spring.study.comment.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.comment.dto.CommentRequestDto;
 import spring.study.comment.facade.CommentFacade;
+import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,15 +18,13 @@ import java.util.Map;
 @RequestMapping("/api/comment")
 public class CommentApiController {
     private final SessionManager sessionManager;
+    private final CommonFacade commonFacade;
     private final CommentFacade commentFacade;
 
     @PostMapping("")
     public ResponseEntity<?> commentAction(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return commentFacade.saveComment(commentRequestDto, member, request);
     }
@@ -38,10 +35,7 @@ public class CommentApiController {
                                             @RequestParam(defaultValue = "10", name = "limit") int limit,
                                             HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return commentFacade.getList(id, member, cursor, limit);
     }
@@ -49,10 +43,7 @@ public class CommentApiController {
     @PatchMapping("/update")
     public ResponseEntity<?> commentUpdate(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return commentFacade.updateComment(commentRequestDto, member, request);
     }
@@ -62,10 +53,7 @@ public class CommentApiController {
                                                  @RequestBody CommentRequestDto commentRequestDto,
                                                  HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return commentFacade.deleteComment(id, commentRequestDto, member, request);
     }

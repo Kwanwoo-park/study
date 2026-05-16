@@ -3,17 +3,16 @@ package spring.study.notification.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.common.service.EmitterService;
 import spring.study.notification.facade.NotificationFacade;
 
-import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -21,6 +20,7 @@ import java.util.Map;
 @Slf4j
 public class NotificationApiController {
     private final SessionManager sessionManager;
+    private final CommonFacade commonFacade;
     private final EmitterService emitterService;
     private final NotificationFacade notificationFacade;
 
@@ -35,10 +35,7 @@ public class NotificationApiController {
     @GetMapping("/load")
     public ResponseEntity<?> loadNotification(HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.load(member);
     }
@@ -46,10 +43,7 @@ public class NotificationApiController {
     @GetMapping({"/count/unread", "/count/Unread"})
     public ResponseEntity<?> countUnreadNotification(HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.count(member);
     }
@@ -57,10 +51,7 @@ public class NotificationApiController {
     @GetMapping("/sort/{group}")
     public ResponseEntity<?> sortGroup(@PathVariable Group group, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.loadByGroup(member, group);
     }
@@ -68,10 +59,7 @@ public class NotificationApiController {
     @PatchMapping("/mark-as-read")
     public ResponseEntity<?> updateAsRead(@RequestParam Long id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.updateAsRead(id);
     }
@@ -79,10 +67,7 @@ public class NotificationApiController {
     @PatchMapping("/mark-all-as-read")
     public ResponseEntity<?> updateAllAsRead(HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "result", -10,
-                "message", "유효하지 않은 세션"
-        ));
+        if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.updateAllAsRead(member);
     }

@@ -14,6 +14,8 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByBoard(Board board, Pageable pageable);
 
+    Boolean existsByMemberAndBoard(Member member, Board board);
+
     long countByBoard(Board board);
 
     @Transactional

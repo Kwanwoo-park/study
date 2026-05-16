@@ -66,6 +66,10 @@ public class CommentService {
         );
     }
 
+    public Boolean existComment(Member member, Board board) {
+        return commentRepository.existsByMemberAndBoard(member, board);
+    }
+
     public long countComments(Board board) {
         return commentRepository.countByBoard(board);
     }

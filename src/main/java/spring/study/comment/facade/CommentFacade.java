@@ -91,17 +91,18 @@ public class CommentFacade {
 
     public ResponseEntity<?> deleteComment(Long id, CommentRequestDto dto, Member member, HttpServletRequest request) {
         Board board = boardService.findById(id);
-        Comment comment = commentService.findById(dto.getId(), member, board);
+
+        if (!commentService.existComment(member, board)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", "이미 삭제된 댓글입니다"
+            ));
+        }
 
         commentService.deleteById(dto.getId());
 
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.setAttribute("member", member);
-        }
-
         return ResponseEntity.ok(Map.of(
-                "result", comment.getId()
+                "result", dto.getId()
         ));
     }
 

@@ -77,10 +77,7 @@ public class ChatRoomService {
 
         if (search1 != null)
             return search1;
-        else if (search2 != null)
-            return search2;
-        else
-            return null;
+        else return search2;
     }
 
     public void delete(String roomId) {

@@ -9,6 +9,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import spring.study.account.entity.Account;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.common.entity.BasetimeEntity;
 import spring.study.board.entity.Board;
@@ -103,6 +104,10 @@ public class Member extends BasetimeEntity implements UserDetails {
     @OneToMany(mappedBy = "member")
     private List<spring.study.collection.entity.Collection> collections = new ArrayList<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "member")
+    private List<Account> accountList = new ArrayList<>();
+
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth) {
         this.id = id;
@@ -156,46 +161,6 @@ public class Member extends BasetimeEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    public void addBoard(Board board) {
-        board.addMember(this);
-    }
-
-    public void removeBoard(Board b) {
-        for (Board b1 : board) {
-            if (b1.getId().equals(b.getId())) {
-                board.remove(b);
-                break;
-            }
-        }
-    }
-
-    public void addFavorite(Favorite favorite) {
-        favorite.addMember(this);
-    }
-
-    public void removeFavorite(Favorite favorite) {
-        for (Favorite f : favorites) {
-            if (f.getId().equals(favorite.getId())) {
-                favorites.remove(f);
-                break;
-            }
-        }
-    }
-
-    public void addComment(Comment comment) {
-        comment.addMember(this);
-    }
-
-    public void addReply(Reply reply) {
-        reply.addMember(this);
-    }
-
-    public void removeComments(List<Comment> list) {
-        for (Comment c : list) {
-            comment.remove(c);
-        }
     }
 
     public void removeComment(Comment cmt) {

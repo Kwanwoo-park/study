@@ -4,8 +4,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import spring.study.board.entity.Board;
 import spring.study.board.entity.BoardImg;
-import spring.study.comment.entity.Comment;
-import spring.study.favorite.entity.Favorite;
 import spring.study.member.entity.Member;
 
 import java.time.LocalDateTime;

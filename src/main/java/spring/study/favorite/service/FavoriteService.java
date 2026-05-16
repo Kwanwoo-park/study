@@ -65,7 +65,7 @@ public class FavoriteService {
     }
 
     @Transactional
-    public void deleteById(Favorite favorite, Member member, Board board) {
+    public void deleteById(Favorite favorite) {
         favoriteRepository.deleteById(favorite.getId());
     }
 

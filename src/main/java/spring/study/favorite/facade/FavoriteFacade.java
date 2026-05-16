@@ -48,7 +48,7 @@ public class FavoriteFacade {
         ));
     }
 
-    public ResponseEntity<?> like(Long id, Member member, HttpServletRequest request) {
+    public ResponseEntity<?> like(Long id, Member member) {
         Board board = boardService.findById(id);
 
         if (board == null) {
@@ -80,7 +80,7 @@ public class FavoriteFacade {
         ));
     }
 
-    public ResponseEntity<?> unlike(Long id, Member member, HttpServletRequest request) {
+    public ResponseEntity<?> unlike(Long id, Member member) {
         Board board = boardService.findById(id);
 
         Favorite favorite = favoriteService.findByMemberAndBoard(member, board);
@@ -92,7 +92,7 @@ public class FavoriteFacade {
             ));
         }
 
-        favoriteService.deleteById(favorite, member, board);
+        favoriteService.deleteById(favorite);
 
         return ResponseEntity.ok(Map.of(
                 "result", favorite.getId()
