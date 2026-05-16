@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="/css/member/member-detail.css">
   <link rel="stylesheet" href="/css/comment/modal.css">
   <link rel="stylesheet" href="/css/favorite/modal.css">
+  <link rel="stylesheet" href="/css/account/modal.css">
 </head>
 <body>
 <th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
@@ -26,6 +27,7 @@
         <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
         <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
+        <button type="button" class="btn btn-primary" onclick="openAccountModal()">계좌 조회</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/collection'">Secret</button>
         <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
         <input type="file" accept="image/*" onchange="fnLoad(this)" style="display: none" id="upload">
@@ -48,6 +50,7 @@
 <th:block th:replace="~{fragments/favorite-modal :: favoriteModal}"></th:block>
 <th:block th:replace="~{fragments/follower-modal :: followerModal}"></th:block>
 <th:block th:replace="~{fragments/following-modal :: followingModal}"></th:block>
+<th:block th:replace="~{fragments/account-modal :: accountModal}"></th:block>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
@@ -55,6 +58,7 @@
 <script src="/js/follow/followingModal.js"></script>
 <script src="/js/comment/modal.js"></script>
 <script src="/js/favorite/modal.js"></script>
+<script src="/js/account/modal.js"></script>
 <script src="/js/member/boardModal.js"></script>
 <script src="/js/member/detail.js"></script>
 <script src="/js/common/common.js"></script>

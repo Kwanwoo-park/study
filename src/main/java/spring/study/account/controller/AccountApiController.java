@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.account.dto.AccountRequestDto;
+import spring.study.account.dto.AccountTranDto;
 import spring.study.account.facade.AccountFacade;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
@@ -36,20 +37,20 @@ public class AccountApiController {
         return accountFacade.getList(member);
     }
 
-    @PatchMapping("/amount/add")
-    public ResponseEntity<?> addAmount(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
+    @PatchMapping("/tran")
+    public ResponseEntity<?> tranAccount(@RequestBody AccountTranDto dto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountFacade.addAmount(dto);
+        return accountFacade.tranAccount(dto);
     }
 
-    @PatchMapping("/amount/sub")
-    public ResponseEntity<?> subAmount(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
+    @PatchMapping("/change/name")
+    public ResponseEntity<?> changeAccountName(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountFacade.subAmount(dto);
+        return accountFacade.changeAccountName(dto);
     }
 
     @DeleteMapping("/delete")

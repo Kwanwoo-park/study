@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="accountModal">
+    <div id="accountModal" class="account-modal hidden">
+        <div id="accountModalOverlay" class="account-modal-overlay"></div>
+
+        <div class="account-modal-content">
+            <button type="button" id="accountModalClose" class="account-modal-close">×</button>
+            <div class="account-modal-header">
+                <h4 class="account-modal-title" id="accountListTitle"></h4>
+                <button type="button" id="accountCreateBtn" class="btn btn-primary">계좌 생성</button>
+            </div>
+            <div id="accountModalBody" class="account-modal-body"></div>
+        </div>
+    </div>
+</th:block>
+</html>

@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import spring.study.account.dto.AccountTranDto;
 import spring.study.account.entity.Account;
 import spring.study.account.repository.AccountRepository;
 import spring.study.member.entity.Member;
@@ -16,11 +17,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequiredArgsConstructor
 public class AccountService {
     private final AccountRepository accountRepository;
-
-    @Transactional
-    public Account createAccount() {
-        return createAccount(null);
-    }
 
     @Transactional
     public Account createAccount(Member member) {
@@ -58,7 +54,7 @@ public class AccountService {
     }
 
     public boolean existsByAccount(String accountNum) {
-        return accountRepository.existsById(accountNum);
+        return !accountRepository.existsById(accountNum);
     }
 
     @Transactional
@@ -66,6 +62,15 @@ public class AccountService {
         Account account = findByAccount(accountNum);
 
         account.changeName(name);
+    }
+
+    @Transactional
+    public void tranAccount(AccountTranDto dto) {
+        Account account = findByAccount(dto.getAccount());
+        Account tranAccount = findByAccount(dto.getTranAccount());
+
+        account.subAmount(dto.getAmount());
+        tranAccount.addAmount(dto.getAmount());
     }
 
     @Transactional

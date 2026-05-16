@@ -48,6 +48,10 @@ if (typeof initFollowingModal === 'function') {
     initFollowingModal();
 }
 
+if (typeof initAccountModal === 'function') {
+    initAccountModal();
+}
+
 function fnLoad(input) {
     file = input.files[0];
 

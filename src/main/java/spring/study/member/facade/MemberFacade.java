@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.account.service.AccountService;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
@@ -16,6 +17,7 @@ import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
+import spring.study.collection.service.CollectionService;
 import spring.study.comment.service.CommentService;
 import spring.study.common.service.SessionManager;
 import spring.study.favorite.service.FavoriteService;
@@ -49,6 +51,8 @@ public class MemberFacade {
     private final FavoriteService favoriteService;
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
+    private final CollectionService collectionService;
+    private final AccountService accountService;
     private final UserService userService;
     private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
@@ -386,6 +390,10 @@ public class MemberFacade {
         roomMemberService.subCount(member);
         messageService.deleteByMember(member);
         roomMemberService.delete(member);
+
+        collectionService.deleteByMember(member);
+
+        accountService.deleteByMember(member);
 
         imageS3Service.deleteImage(member.getProfile());
         memberService.deleteById(member.getId());
