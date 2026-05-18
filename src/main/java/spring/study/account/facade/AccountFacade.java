@@ -50,11 +50,20 @@ public class AccountFacade {
             ));
         }
 
-        accountService.tranAccount(dto);
+        Account account;
+
+        try {
+            account = accountService.tranAccount(dto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", e.getMessage()
+            ));
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "amount", accountService.findByAccount(dto.getAccount()).getAmount(),
+                "amount", account.getAmount(),
                 "message", "정상적으로 이체되었습니다"
         ));
     }

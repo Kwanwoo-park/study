@@ -11,6 +11,7 @@ import spring.study.member.entity.Member;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -65,12 +66,26 @@ public class AccountService {
     }
 
     @Transactional
-    public void tranAccount(AccountTranDto dto) {
+    public Account tranAccount(AccountTranDto dto) {
+        if (dto.getAmount() <= 10000) {
+            throw new IllegalArgumentException("이체 금액은 1만원보다 커야 합니다");
+        }
+
+        if (Objects.equals(dto.getAccount(), dto.getTranAccount())) {
+            throw new IllegalArgumentException("같은 계좌로 이체할 수 없습니다");
+        }
+
         Account account = findByAccount(dto.getAccount());
         Account tranAccount = findByAccount(dto.getTranAccount());
 
+        if (account.getAmount() - dto.getAmount() < 0) {
+            throw new IllegalArgumentException("이체 금액이 계좌 잔액보다 큽니다");
+        }
+
         account.subAmount(dto.getAmount());
         tranAccount.addAmount(dto.getAmount());
+
+        return account;
     }
 
     @Transactional

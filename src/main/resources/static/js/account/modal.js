@@ -171,6 +171,7 @@
 
             accounts.forEach((account) => {
                 const accountId = escapeAttribute(account.account);
+                const canTransfer = Number(account.amount || 0) >= 10000;
                 const item = document.createElement('li');
                 item.className = 'account-modal-item';
                 item.innerHTML = `
@@ -180,13 +181,13 @@
                             <div class="account-modal-number">${escapeHtml(formatAccountNumber(account.account))}</div>
                         </div>
                         <div class="account-modal-amount">${formatAmount(account.amount)}원</div>
-                        <button type="button" class="btn btn-success account-transfer-toggle" data-action="transfer-toggle" data-account="${accountId}">계좌이체</button>
+                        ${canTransfer ? `<button type="button" class="btn btn-success account-transfer-toggle" data-action="transfer-toggle" data-account="${accountId}">계좌이체</button>` : ''}
                     </div>
-                    <div class="account-transfer-form hidden" id="transferForm${accountId}">
+                    ${canTransfer ? `<div class="account-transfer-form hidden" id="transferForm${accountId}">
                         <input type="text" class="form-control account-transfer-input" id="transferAccount${accountId}" placeholder="받는 계좌번호">
                         <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="1" placeholder="이체 금액">
                         <button type="button" class="btn btn-primary" data-action="transfer-submit" data-account="${accountId}">이체</button>
-                    </div>
+                    </div>` : ''}
                 `;
                 list.append(item);
             });
