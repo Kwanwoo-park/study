@@ -25,6 +25,14 @@
         <button type="button" th:if="${status}" id="follow" class="btn btn-success">Unfollow</button>
         <button type="button" th:unless="${status}" id="follow" class="btn btn-success">Follow</button>
         <button type="button" id="chatting" class="btn btn-success">Chatting</button>
+        <button type="button"
+                id="memberTransferBtn"
+                class="btn btn-primary"
+                th:if="${transferAccount != null}"
+                th:data-url="@{/account(tranAccount=${transferAccount.account}, tranName=${member.name})}"
+                onclick="location.href=this.dataset.url">
+          계좌이체
+        </button>
         <br>
         <br>
         <label class="form-label">Posts: </label>

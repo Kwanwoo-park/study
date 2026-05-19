@@ -37,7 +37,7 @@ public class AccountFacade {
         ));
     }
 
-    public ResponseEntity<?> tranAccount(AccountTranDto dto) {
+    public ResponseEntity<?> tranAccount(AccountTranDto dto, Member member) {
         if (accountService.existsByAccount(dto.getAccount())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
@@ -47,6 +47,14 @@ public class AccountFacade {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
                     "message", "존재하지 않는 계좌입니다"
+            ));
+        }
+
+        Account sourceAccount = accountService.findByAccount(dto.getAccount());
+        if (!sourceAccount.getMember().getId().equals(member.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -10L,
+                    "message", "본인 계좌만 이체할 수 있습니다"
             ));
         }
 

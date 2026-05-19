@@ -42,7 +42,7 @@ public class AccountApiController {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountFacade.tranAccount(dto);
+        return accountFacade.tranAccount(dto, member);
     }
 
     @PatchMapping("/change/name")

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Account</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/account/page.css">
+</head>
+<body>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+
+<main class="account-page"
+      th:attr="data-tran-account=${tranAccount}, data-tran-name=${tranName}">
+  <section class="account-page-header">
+    <div>
+      <h1 id="accountPageTitle">계좌</h1>
+      <p id="accountPageDescription" class="account-page-description"></p>
+    </div>
+    <button type="button" id="accountCreateBtn" class="btn btn-primary">계좌 생성</button>
+  </section>
+
+  <section id="accountPageBody" class="account-page-body"></section>
+</main>
+
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/account/page.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>

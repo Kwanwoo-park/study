@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import spring.study.account.dto.AccountResponseDto;
+import spring.study.account.service.AccountService;
 import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
@@ -24,6 +26,7 @@ public class MemberViewController {
     private final BoardService boardService;
     private final FollowService followService;
     private final SessionManager sessionManager;
+    private final AccountService accountService;
 
     @GetMapping("/login")
     public String login(Model model,
@@ -152,6 +155,10 @@ public class MemberViewController {
         model.addAttribute("following_count", followService.countFollowing(search_member));
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
+        model.addAttribute("transferAccount", accountService.findByMember(search_member).stream()
+                .findFirst()
+                .map(AccountResponseDto::new)
+                .orElse(null));
 
         return "member/member_detail";
     }
