@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Backend Project Portfolio</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<main class="deck" aria-live="polite">
+    <aside class="sidebar" aria-label="슬라이드 목차">
+        <div class="brand">
+            <span class="brand-mark">S</span>
+            <div>
+                <strong>Study</strong>
+                <span>Backend Portfolio</span>
+            </div>
+        </div>
+        <nav class="toc" id="toc"></nav>
+    </aside>
+
+    <section class="stage" aria-label="포트폴리오 슬라이드">
+        <div class="progress">
+            <span id="progressBar"></span>
+        </div>
+
+        <article class="slide active" data-title="Overview">
+            <div class="slide-grid hero-layout">
+                <div class="hero-copy">
+                    <p class="eyebrow">Spring Boot Community Service</p>
+                    <h1>실시간 커뮤니티 서비스를 위한 백엔드 프로젝트</h1>
+                    <p class="lead">
+                        게시글, 댓글, 채팅, 알림, 금칙어 관리까지 실제 운영 환경에서 필요한 기능을 구현한 Spring Boot 기반 커뮤니티 서비스입니다.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="https://www.kwanwoo.site" target="_blank" rel="noreferrer">운영 서비스 보기</a>
+                        <span>Java 17 · Spring Boot 3.0.5 · AWS</span>
+                    </div>
+                </div>
+                <div class="product-shot" aria-label="서비스 구성 요약">
+                    <div class="browser-bar">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="feed-preview">
+                        <div class="profile-line"></div>
+                        <div class="image-tile"></div>
+                        <div class="text-line wide"></div>
+                        <div class="text-line"></div>
+                        <div class="metric-row">
+                            <strong>Realtime Chat</strong>
+                            <strong>Kafka Event</strong>
+                            <strong>Redis Session</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="slide" data-title="Goal">
+            <p class="eyebrow">Project Goal</p>
+            <h2>단순 CRUD를 넘어 운영 가능한 서비스 구조로 확장</h2>
+            <div class="goal-grid">
+                <div>
+                    <span class="number">01</span>
+                    <h3>실시간 경험</h3>
+                    <p>WebSocket 기반 채팅과 SSE 알림으로 사용자 반응성을 높였습니다.</p>
+                </div>
+                <div>
+                    <span class="number">02</span>
+                    <h3>비동기 처리</h3>
+                    <p>Kafka Producer/Consumer 구조로 알림 이벤트와 메시지 처리를 분리했습니다.</p>
+                </div>
+                <div>
+                    <span class="number">03</span>
+                    <h3>운영 확장성</h3>
+                    <p>Redis 세션 저장소, Docker, AWS EC2/S3/Load Balancer를 활용했습니다.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="slide" data-title="Architecture">
+            <p class="eyebrow">System Architecture</p>
+            <h2>Redis, Kafka, WebSocket을 중심으로 한 서비스 아키텍처</h2>
+            <div class="architecture">
+                <div class="node user">User</div>
+                <div class="line horizontal"></div>
+                <div class="node app">Spring Boot<br>Application</div>
+                <div class="service-row">
+                    <div class="node">MySQL<br><small>JPA 영속성</small></div>
+                    <div class="node">Redis<br><small>세션·캐시</small></div>
+                    <div class="node">Kafka<br><small>이벤트 큐</small></div>
+                    <div class="node">S3<br><small>이미지 저장</small></div>
+                </div>
+            </div>
+        </article>
+
+        <article class="slide" data-title="Features">
+            <p class="eyebrow">Core Features</p>
+            <h2>사용자 활동 흐름을 하나의 서비스 안에서 처리</h2>
+            <div class="feature-board">
+                <section>
+                    <h3>회원</h3>
+                    <p>회원가입, 로그인, OAuth2, 세션 인증, 팔로우</p>
+                </section>
+                <section>
+                    <h3>게시글</h3>
+                    <p>작성, 수정, 삭제, 조회, 댓글, 대댓글, 좋아요</p>
+                </section>
+                <section>
+                    <h3>채팅</h3>
+                    <p>WebSocket 기반 채팅방과 메시지 송수신</p>
+                </section>
+                <section>
+                    <h3>알림·관리</h3>
+                    <p>Kafka 이벤트 알림, 금칙어 관리, 관리자 기능</p>
+                </section>
+            </div>
+        </article>
+
+        <article class="slide" data-title="Stack">
+            <p class="eyebrow">Tech Stack</p>
+            <h2>서비스 계층별 기술 선택</h2>
+            <div class="stack-table">
+                <div><strong>Backend</strong><span>Java 17, Spring Boot, Spring Security, Spring Data JPA</span></div>
+                <div><strong>Realtime</strong><span>WebSocket, Kafka, Server-Sent Events</span></div>
+                <div><strong>Data</strong><span>MySQL, Redis, H2 Test Database</span></div>
+                <div><strong>Infra</strong><span>AWS EC2, S3, Load Balancer, Docker, Gradle</span></div>
+                <div><strong>View</strong><span>Thymeleaf, HTML, CSS, JavaScript</span></div>
+            </div>
+        </article>
+
+        <article class="slide" data-title="Highlights">
+            <p class="eyebrow">Implementation Highlights</p>
+            <h2>코드 구조에서 확인되는 구현 포인트</h2>
+            <div class="highlight-grid">
+                <div>
+                    <h3>Facade 계층</h3>
+                    <p>Controller와 Service 사이의 복합 유스케이스를 Facade로 분리해 흐름을 명확히 했습니다.</p>
+                </div>
+                <div>
+                    <h3>배치 처리</h3>
+                    <p>채팅 메시지와 알림을 BatchProcessor로 묶어 처리해 이벤트 처리 부담을 낮췄습니다.</p>
+                </div>
+                <div>
+                    <h3>회귀 테스트</h3>
+                    <p>Board, Member, ImageS3, 정적 JS 회귀 테스트를 별도 Gradle task로 실행할 수 있습니다.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="slide" data-title="Deployment">
+            <p class="eyebrow">Deployment</p>
+            <h2>AWS 기반 운영 배포 구조</h2>
+            <div class="deployment">
+                <div class="deploy-step">Internet</div>
+                <div class="deploy-step">AWS Load Balancer</div>
+                <div class="deploy-step main">Spring Boot Server on EC2</div>
+                <div class="deploy-resources">
+                    <span>MySQL</span>
+                    <span>Redis</span>
+                    <span>Kafka</span>
+                    <span>S3</span>
+                </div>
+            </div>
+        </article>
+
+        <article class="slide" data-title="Closing">
+            <div class="closing">
+                <p class="eyebrow">Portfolio Summary</p>
+                <h2>운영 경험을 고려한 커뮤니티 백엔드 구현</h2>
+                <p>
+                    이 프로젝트는 인증, 게시글, 소셜 기능, 실시간 채팅, 비동기 알림, AWS 배포까지 하나의 서비스 사이클을 직접 구성한 결과물입니다.
+                </p>
+                <div class="closing-tags">
+                    <span>Spring Boot</span>
+                    <span>Kafka</span>
+                    <span>Redis</span>
+                    <span>WebSocket</span>
+                    <span>AWS</span>
+                </div>
+            </div>
+        </article>
+
+        <footer class="controls">
+            <button type="button" id="prevBtn" aria-label="이전 슬라이드">‹</button>
+            <span id="slideCounter">1 / 8</span>
+            <button type="button" id="nextBtn" aria-label="다음 슬라이드">›</button>
+        </footer>
+    </section>
+</main>
+<script src="./app.js"></script>
+</body>
+</html>
