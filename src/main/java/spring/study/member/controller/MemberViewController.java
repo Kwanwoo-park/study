@@ -155,10 +155,9 @@ public class MemberViewController {
         model.addAttribute("following_count", followService.countFollowing(search_member));
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
-        model.addAttribute("transferAccount", accountService.findByMember(search_member).stream()
-                .findFirst()
+        model.addAttribute("transferAccounts", accountService.findByMember(search_member).stream()
                 .map(AccountResponseDto::new)
-                .orElse(null));
+                .toList());
 
         return "member/member_detail";
     }

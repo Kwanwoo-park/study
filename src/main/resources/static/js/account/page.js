@@ -141,7 +141,7 @@
                     <button type="button" class="btn btn-success" data-action="transfer-toggle" data-account="${accountId}">선택</button>
                 </div>
                 <div class="account-transfer-form hidden" id="transferForm${accountId}">
-                    <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="1" placeholder="이체 금액">
+                    <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="1" step="10000" placeholder="이체 금액">
                     <button type="button" class="btn btn-primary" data-action="transfer-submit" data-account="${accountId}" data-tran-account="${escapeAttribute(transferTarget.account)}">이체</button>
                 </div>`
                 : `
@@ -155,7 +155,7 @@
                 </div>
                 ${canTransfer ? `<div class="account-transfer-form hidden" id="transferForm${accountId}">
                     <input type="text" class="form-control account-transfer-input" id="transferAccount${accountId}" placeholder="받는 계좌번호">
-                    <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="1" placeholder="이체 금액">
+                    <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="1" step="10000" placeholder="이체 금액">
                     <button type="button" class="btn btn-primary" data-action="transfer-submit" data-account="${accountId}">이체</button>
                 </div>` : ''}
             `;

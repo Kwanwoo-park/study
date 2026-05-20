@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Transfer Account</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/account/page.css">
+</head>
+<body>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+
+<main class="account-page">
+  <section class="account-page-header">
+    <div>
+      <h1 th:text="${tranName + '님 계좌 선택'}">계좌 선택</h1>
+      <p class="account-page-description">이체할 상대 계좌를 선택해주세요</p>
+    </div>
+  </section>
+
+  <section class="account-page-body">
+    <div class="account-page-message" th:if="${transferAccounts == null or transferAccounts.isEmpty()}">
+      상대 회원이 보유한 계좌가 없습니다
+    </div>
+
+    <ul class="account-page-list" th:if="${transferAccounts != null and !transferAccounts.isEmpty()}">
+      <li class="account-page-item" th:each="account : ${transferAccounts}">
+        <form class="account-page-row" method="get" th:action="@{/account}">
+          <input type="hidden" name="tranName" th:value="${tranName}">
+          <input type="hidden" name="tranAccount" th:value="${account.account}">
+          <div>
+            <div class="account-page-name" th:text="${account.name}">계좌</div>
+            <div class="account-page-number" th:text="${account.account}">0000000000</div>
+          </div>
+          <div class="account-page-amount" th:text="${#numbers.formatInteger(account.amount, 0, 'COMMA') + '원'}">0원</div>
+          <button type="submit" class="btn btn-success">선택</button>
+        </form>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>

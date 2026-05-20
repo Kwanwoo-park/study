@@ -67,7 +67,7 @@ public class AccountService {
 
     @Transactional
     public Account tranAccount(AccountTranDto dto) {
-        if (dto.getAmount() <= 10000) {
+        if (dto.getAmount() < 10000) {
             throw new IllegalArgumentException("이체 금액은 1만원보다 커야 합니다");
         }
 
