@@ -1,0 +1,97 @@
+.member-search-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 700px;
+    padding: 32px;
+    overflow: auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+}
+
+.member-search-header {
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.member-search-header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.member-search-header p {
+    margin: 8px 0 0;
+    color: #666;
+}
+
+.member-search-box {
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.member-search-results {
+    display: grid;
+    width: 100%;
+    gap: 10px;
+}
+
+.member-result-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: inherit;
+    background: #fff;
+    text-decoration: none;
+}
+
+.member-result-card:hover {
+    border-color: #b7c3d0;
+    background: #f8fafc;
+    text-decoration: none;
+}
+
+.member-result-profile {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.member-result-info {
+    min-width: 0;
+}
+
+.member-result-name {
+    display: block;
+    font-weight: 700;
+}
+
+.member-result-email {
+    display: block;
+    margin-top: 3px;
+    overflow: hidden;
+    color: #666;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.member-search-message {
+    padding: 36px 0;
+    color: #777;
+    text-align: center;
+}
+
+@media (max-width: 560px) {
+    .member-search-page {
+        padding: 24px 18px;
+    }
+}

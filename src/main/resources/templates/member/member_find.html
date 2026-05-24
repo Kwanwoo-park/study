@@ -6,38 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/member/search.css">
 </head>
-<style>
-  .container {
-    display: flex;
-	flex-direction: column;
-	align-items: center;
-	height: 700px;
-	overflow: auto;
-	background: white;
-	border-radius: 10px;
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-	margin-bottom: 10px;
-  }
-  .list-group-flush {
-    align-self: flex-start;
-  }
-  .profile {
-    width: 30px;
-    height: 30px;
-    border-radius: 90px;
-  }
-</style>
 <body>
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
-  <div class="container">
+  <main class="container member-search-page">
     <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
-    <input type="search" class="form-control" id="name" name="name" placeholder="Search member">
-  </div>
+    <section class="member-search-header">
+      <h1>Member Search</h1>
+      <p>닉네임에 검색어가 포함된 회원을 찾습니다.</p>
+    </section>
+    <div class="member-search-box">
+      <input type="search" class="form-control" id="name" name="name" placeholder="닉네임 검색" autocomplete="off">
+    </div>
+    <div class="member-search-results" id="searchResult" aria-live="polite"></div>
+  </main>
 
   <script src="/js/lib/jquery.min.js"></script>
-  <script type="application/json; charset=utf-8"
-          src="/js/lib/bootstrap.min/js"></script>
+  <script src="/js/lib/bootstrap.min.js"></script>
   <script src="/js/member/search.js"></script>
   <script src="/js/common/common.js"></script>
 </body>

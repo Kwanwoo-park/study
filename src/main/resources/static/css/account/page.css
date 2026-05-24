@@ -1,7 +1,14 @@
 .account-page {
-    width: min(920px, 92vw);
-    min-height: calc(100vh - 120px);
-    margin: 32px auto 88px;
+    display: flex;
+    flex-direction: column;
+    height: 700px;
+    overflow: auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    padding-top: 32px;
+    padding-bottom: 32px;
 }
 
 .account-page-header {

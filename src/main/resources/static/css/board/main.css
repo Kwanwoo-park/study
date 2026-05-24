@@ -81,6 +81,14 @@ html {
     margin-top: 10px;
 }
 
+.info pre {
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-family: inherit;
+}
+
 .icon-box {
     display: flex;
     font-size: 20px;

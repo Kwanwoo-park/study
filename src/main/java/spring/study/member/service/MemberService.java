@@ -56,7 +56,7 @@ public class MemberService implements UserDetailsService {
     }
 
     public List<MemberResponseDto> findName(String name) {
-        return memberRepository.findByName(name).stream().map(MemberResponseDto::new).toList();
+        return memberRepository.findByNameContaining(name).stream().map(MemberResponseDto::new).toList();
     }
 
     public List<Member> findMember(List<Long> list) {

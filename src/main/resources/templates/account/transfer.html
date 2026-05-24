@@ -12,7 +12,7 @@
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
 <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
 
-<main class="account-page">
+<main class="container account-page">
   <section class="account-page-header">
     <div>
       <h1 th:text="${tranName + '님 계좌 선택'}">계좌 선택</h1>
@@ -42,9 +42,9 @@
   </section>
 </main>
 
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/common/common.js"></script>
 </body>
-<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

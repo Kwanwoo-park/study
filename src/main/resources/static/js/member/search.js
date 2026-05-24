@@ -1,62 +1,100 @@
-const name = document.getElementById('name')
-const container = document.querySelector('.container')
+const nameInput = document.getElementById('name');
+const searchResult = document.getElementById('searchResult');
 
-if (name) {
-    name.addEventListener('keydown', (event) => {
-        const field = document.querySelector('.list-group-flush')
+let searchTimer;
 
-        if (event.key == 'Enter') {
-            if (field)
-                field.remove();
+if (nameInput && searchResult) {
+    renderMessage('검색어를 입력해주세요.');
 
-            let area = document.createElement('ul');
-            area.className = 'list-group-flush'
+    nameInput.addEventListener('input', () => {
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(searchMembers, 250);
+    });
 
-            container.append(area)
-
-            fetch(`/api/member/search?name=` + name.value, {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['result'] > 0) {
-                    json.list.forEach(data => {
-                        let newArea = document.createElement('li');
-                        newArea.className = 'list-group-item';
-
-                        let span = document.createElement('span');
-
-                        let img = document.createElement('img');
-                        img.src = data.profile;
-                        img.className = 'profile';
-                        img.id = 'profile';
-
-                        let memberHref = document.createElement('a');
-                        memberHref.href = "/member/search/detail?email=" + data.email;
-                        memberHref.innerText = data.name;
-
-                        let email = document.createElement('span');
-                        email.innerText = data.email;
-
-                        span.append(img);
-                        span.append(memberHref);
-                        span.append(email);
-
-                        newArea.append(span);
-
-                        area.append(newArea);
-                    })
-                } else
-                    alert("다시 시도하여주십시오")
-            })
-            .catch((error) => {
-                console.error(error);
-                alert("다시 시도하여주십시오")
-            })
+    nameInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            window.clearTimeout(searchTimer);
+            searchMembers();
         }
-    })
+    });
+}
+
+async function searchMembers() {
+    const keyword = nameInput.value.trim();
+
+    if (!keyword) {
+        renderMessage('검색어를 입력해주세요.');
+        return;
+    }
+
+    renderMessage('검색 중입니다.');
+
+    try {
+        const response = await fetch(`/api/member/search?name=${encodeURIComponent(keyword)}`, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            credentials: "include",
+        });
+        const json = await response.json();
+
+        if (json.result < 0) {
+            alert(json.message || '다시 시도해주세요');
+            return;
+        }
+
+        renderResults(json.list || []);
+    } catch (error) {
+        console.error(error);
+        alert('다시 시도해주세요');
+    }
+}
+
+function renderResults(list) {
+    searchResult.innerHTML = '';
+
+    if (list.length === 0) {
+        renderMessage('검색 결과가 없습니다.');
+        return;
+    }
+
+    list.forEach((member) => {
+        const card = document.createElement('a');
+        card.className = 'member-result-card';
+        card.href = `/member/search/detail?email=${encodeURIComponent(member.email)}`;
+
+        const img = document.createElement('img');
+        img.src = member.profile;
+        img.alt = '';
+        img.className = 'member-result-profile';
+
+        const info = document.createElement('div');
+        info.className = 'member-result-info';
+
+        const memberName = document.createElement('span');
+        memberName.className = 'member-result-name';
+        memberName.innerText = member.name;
+
+        const email = document.createElement('span');
+        email.className = 'member-result-email';
+        email.innerText = member.email;
+
+        info.append(memberName);
+        info.append(email);
+        card.append(img);
+        card.append(info);
+        searchResult.append(card);
+    });
+}
+
+function renderMessage(message) {
+    searchResult.innerHTML = '';
+
+    const messageElement = document.createElement('div');
+    messageElement.className = 'member-search-message';
+    messageElement.innerText = message;
+
+    searchResult.append(messageElement);
 }

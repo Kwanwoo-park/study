@@ -12,7 +12,7 @@
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
 <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
 
-<main class="account-page"
+<main class="container account-page"
       th:attr="data-tran-account=${tranAccount}, data-tran-name=${tranName}">
   <section class="account-page-header">
     <div>
@@ -25,10 +25,10 @@
   <section id="accountPageBody" class="account-page-body"></section>
 </main>
 
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/account/page.js"></script>
 <script src="/js/common/common.js"></script>
 </body>
-<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

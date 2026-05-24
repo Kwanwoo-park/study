@@ -348,9 +348,16 @@ public class MemberFacade {
     }
 
     public ResponseEntity<?> search(String name) {
+        if (name == null || name.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "result", 10L,
+                    "list", List.of()
+            ));
+        }
+
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "list", memberService.findName(name)
+                "list", memberService.findName(name.trim())
         ));
     }
 

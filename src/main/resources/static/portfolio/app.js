@@ -6,6 +6,10 @@ const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 
 let currentIndex = 0;
+let wheelDelta = 0;
+let wheelLocked = false;
+const wheelThreshold = 80;
+const wheelLockMs = 520;
 
 function renderToc() {
     slides.forEach((slide, index) => {
@@ -72,16 +76,53 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
+document.addEventListener("wheel", (event) => {
+    if (wheelLocked || Math.abs(event.deltaY) < Math.abs(event.deltaX)) {
+        return;
+    }
+
+    event.preventDefault();
+    wheelDelta += event.deltaY;
+
+    if (Math.abs(wheelDelta) < wheelThreshold) {
+        return;
+    }
+
+    if (wheelDelta > 0) {
+        nextSlide();
+    } else {
+        prevSlide();
+    }
+
+    wheelDelta = 0;
+    wheelLocked = true;
+    window.setTimeout(() => {
+        wheelLocked = false;
+    }, wheelLockMs);
+}, { passive: false });
+
 let touchStartX = 0;
+let touchStartY = 0;
 
 document.addEventListener("touchstart", (event) => {
     touchStartX = event.changedTouches[0].screenX;
+    touchStartY = event.changedTouches[0].screenY;
 }, { passive: true });
 
 document.addEventListener("touchend", (event) => {
     const deltaX = event.changedTouches[0].screenX - touchStartX;
+    const deltaY = event.changedTouches[0].screenY - touchStartY;
 
-    if (Math.abs(deltaX) < 60) {
+    if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 60) {
+        return;
+    }
+
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        if (deltaY < 0) {
+            nextSlide();
+        } else {
+            prevSlide();
+        }
         return;
     }
 
