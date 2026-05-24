@@ -12,6 +12,8 @@ let container = document.querySelector(".container");
 let nextCursor = 1;
 let height = 0;
 
+ignoreWebSocketLogs();
+
 if (btn)
     btn.addEventListener('click', () => upload.click());
 
@@ -25,10 +27,11 @@ container.addEventListener('scroll', () => {
     }
 })
 
-//let socket = new SockJS("http://localhost:8080/ws/chat")
-let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+let socket = new SockJS("http://localhost:8080/ws/chat")
+//let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
 const client = Stomp.over(socket)
+client.debug = function() {};
 
 client.connect({}, onConnected, onError);
 
@@ -43,9 +46,33 @@ function onError(error) {
     console.error(error);
 }
 
-function onMessageReceived(e) {
-    console.clear();
+function ignoreWebSocketLogs() {
+    const webSocketLogPatterns = [
+        'Opening Web Socket',
+        'Web Socket Opened',
+        'Web Socket Closed',
+        'STOMP: connected',
+        'Whoops! Lost connection',
+        '>>>',
+        '<<<'
+    ];
 
+    ['log', 'debug', 'info'].forEach(method => {
+        const originalConsoleMethod = console[method];
+
+        console[method] = function() {
+            const message = Array.from(arguments).join(' ');
+
+            if (webSocketLogPatterns.some(pattern => message.indexOf(pattern) !== -1)) {
+                return;
+            }
+
+            originalConsoleMethod.apply(console, arguments);
+        };
+    });
+}
+
+function onMessageReceived(e) {
     const json = JSON.parse(e.body);
 
     fnDraw(json)
@@ -134,8 +161,6 @@ function quit() {
 
 function msgSend(msg) {
     client.send("/api/chat/message/send", {}, JSON.stringify(msg));
-
-    console.clear()
 }
 
 function sendMsg() {
@@ -191,15 +216,14 @@ function fnDraw(data) {
     let profile = document.createElement('img');
     let imgTalk = document.createElement('img');
 
-    newMsgLi.className = "list-group-item";
+    applyMessageDirection(newMsgLi, newMsgArea, data);
 
     profile.src = data.member.profile;
     profile.className = "profile";
 
     name.innerText = data.member.name;
 
-    newMsgArea.append(profile);
-    newMsgArea.append(name);
+    appendMessageHeader(newMsgArea, profile, name);
 
     if (data.type == "IMAGE") {
         const img_div = document.createElement('div')
@@ -267,15 +291,14 @@ function fnLoadDraw(json) {
         let profile = document.createElement('img');
         let imgTalk = document.createElement('img');
 
-        newMsgLi.className = "list-group-item";
+        applyMessageDirection(newMsgLi, newMsgArea, data);
 
         profile.src = data.member.profile;
         profile.className = "profile";
 
         name.innerText = data.member.name;
 
-        newMsgArea.append(profile);
-        newMsgArea.append(name);
+        appendMessageHeader(newMsgArea, profile, name);
 
         if (data.type == "IMAGE") {
             const img_div = document.createElement('div')
@@ -329,6 +352,23 @@ function fnLoadDraw(json) {
 
         msgArea.prepend(newMsgLi);
     });
+}
+
+function applyMessageDirection(messageLi, messageArea, data) {
+    const senderEmail = data.member && data.member.email ? data.member.email : data.email;
+    const directionClass = senderEmail == email ? 'mine' : 'other';
+
+    messageLi.className = "list-group-item chat-message-row " + directionClass;
+    messageArea.className = "chat-message-content";
+}
+
+function appendMessageHeader(messageArea, profile, name) {
+    const header = document.createElement('span');
+
+    header.className = "chat-message-header";
+    header.append(profile);
+    header.append(name);
+    messageArea.append(header);
 }
 
 function fnLeft(id, arr) {

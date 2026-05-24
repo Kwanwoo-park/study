@@ -20,6 +20,51 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         margin-bottom: 10px;
     }
+    .msgArea,
+    .list-group-flush {
+        width: 100%;
+        padding-left: 0;
+    }
+    .chat-message-row {
+        display: flex;
+        width: 100%;
+        border: 0;
+        background: transparent;
+    }
+    .chat-message-row.other {
+        justify-content: flex-start;
+        text-align: left;
+    }
+    .chat-message-row.mine {
+        justify-content: flex-end;
+        text-align: right;
+    }
+    .chat-message-content {
+        display: flex;
+        flex-direction: column;
+        max-width: 70%;
+    }
+    .chat-message-row.other .chat-message-content {
+        align-items: flex-start;
+    }
+    .chat-message-row.mine .chat-message-content {
+        align-items: flex-end;
+    }
+    .chat-message-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .chat-message-row.mine .chat-message-header {
+        flex-direction: row-reverse;
+    }
+    .chat-message-content pre {
+        max-width: 100%;
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        text-align: inherit;
+    }
     .profile {
         width: 50px;
         height: 50px;
