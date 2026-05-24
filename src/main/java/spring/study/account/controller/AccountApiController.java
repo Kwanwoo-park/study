@@ -45,12 +45,20 @@ public class AccountApiController {
         return accountFacade.tranAccount(dto, member);
     }
 
+    @PatchMapping("/deposit")
+    public ResponseEntity<?> deposit(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountFacade.deposit(dto, member);
+    }
+
     @PatchMapping("/change/name")
     public ResponseEntity<?> changeAccountName(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountFacade.changeAccountName(dto);
+        return accountFacade.changeAccountName(dto, member);
     }
 
     @DeleteMapping("/delete")
@@ -58,6 +66,6 @@ public class AccountApiController {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountFacade.delete(account);
+        return accountFacade.delete(account, member);
     }
 }

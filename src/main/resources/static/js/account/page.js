@@ -30,12 +30,22 @@
         const account = actionTarget.dataset.account;
 
         if (action === 'transfer-toggle') {
-            toggleTransferForm(account);
+            toggleForm(`transferForm${account}`);
+            return;
+        }
+
+        if (action === 'deposit-toggle') {
+            toggleForm(`depositForm${account}`);
             return;
         }
 
         if (action === 'transfer-submit') {
             await transferAccount(account, actionTarget.dataset.tranAccount);
+            return;
+        }
+
+        if (action === 'deposit-submit') {
+            await depositAccount(account);
         }
     });
 
@@ -60,14 +70,14 @@
             const json = await response.json();
 
             if (json.result < 0) {
-                alert('다시 시도하여주십시오');
+                alert(json.message || '다시 시도해주세요');
                 return;
             }
 
             renderAccounts(json);
         } catch (error) {
             console.error(error);
-            alert('다시 시도하여주십시오');
+            alert('다시 시도해주세요');
         } finally {
             isLoading = false;
         }
@@ -131,34 +141,8 @@
             const item = document.createElement('li');
             item.className = 'account-page-item';
             item.innerHTML = isTransferPage
-                ? `
-                <div class="account-page-row">
-                    <div>
-                        <div class="account-page-name">${escapeHtml(account.name || '계좌')}</div>
-                        <div class="account-page-number">${escapeHtml(formatAccountNumber(account.account))}</div>
-                    </div>
-                    <div class="account-page-amount">${formatAmount(account.amount)}원</div>
-                    <button type="button" class="btn btn-success" data-action="transfer-toggle" data-account="${accountId}">선택</button>
-                </div>
-                <div class="account-transfer-form hidden" id="transferForm${accountId}">
-                    <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="1" step="10000" placeholder="이체 금액">
-                    <button type="button" class="btn btn-primary" data-action="transfer-submit" data-account="${accountId}" data-tran-account="${escapeAttribute(transferTarget.account)}">이체</button>
-                </div>`
-                : `
-                <div class="account-page-row">
-                    <div>
-                        <div class="account-page-name">${escapeHtml(account.name || '계좌')}</div>
-                        <div class="account-page-number">${escapeHtml(formatAccountNumber(account.account))}</div>
-                    </div>
-                    <div class="account-page-amount">${formatAmount(account.amount)}원</div>
-                    ${canTransfer ? `<button type="button" class="btn btn-success" data-action="transfer-toggle" data-account="${accountId}">계좌이체</button>` : ''}
-                </div>
-                ${canTransfer ? `<div class="account-transfer-form hidden" id="transferForm${accountId}">
-                    <input type="text" class="form-control account-transfer-input" id="transferAccount${accountId}" placeholder="받는 계좌번호">
-                    <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="1" step="10000" placeholder="이체 금액">
-                    <button type="button" class="btn btn-primary" data-action="transfer-submit" data-account="${accountId}">이체</button>
-                </div>` : ''}
-            `;
+                ? renderTransferTargetAccount(account, accountId)
+                : renderOwnAccount(account, accountId, canTransfer);
             list.append(item);
         });
 
@@ -166,8 +150,55 @@
         body.append(list);
     }
 
-    function toggleTransferForm(account) {
-        const targetForm = document.getElementById(`transferForm${account}`);
+    function renderTransferTargetAccount(account, accountId) {
+        return `
+            <div class="account-page-row">
+                <div>
+                    <div class="account-page-name">${escapeHtml(account.name || '계좌')}</div>
+                    <div class="account-page-number">${escapeHtml(formatAccountNumber(account.account))}</div>
+                </div>
+                <div class="account-page-amount">${formatAmount(account.amount)}원</div>
+                <div class="account-action-group">
+                    <button type="button" class="btn btn-outline-primary" data-action="deposit-toggle" data-account="${accountId}">입금</button>
+                    <button type="button" class="btn btn-success" data-action="transfer-toggle" data-account="${accountId}">선택</button>
+                </div>
+            </div>
+            <div class="account-transfer-form hidden" id="depositForm${accountId}">
+                <input type="number" class="form-control account-transfer-input" id="depositAmount${accountId}" min="10000" step="10000" placeholder="입금 금액">
+                <button type="button" class="btn btn-primary" data-action="deposit-submit" data-account="${accountId}">입금</button>
+            </div>
+            <div class="account-transfer-form hidden" id="transferForm${accountId}">
+                <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="10000" step="10000" placeholder="이체 금액">
+                <button type="button" class="btn btn-primary" data-action="transfer-submit" data-account="${accountId}" data-tran-account="${escapeAttribute(transferTarget.account)}">이체</button>
+            </div>`;
+    }
+
+    function renderOwnAccount(account, accountId, canTransfer) {
+        return `
+            <div class="account-page-row">
+                <div>
+                    <div class="account-page-name">${escapeHtml(account.name || '계좌')}</div>
+                    <div class="account-page-number">${escapeHtml(formatAccountNumber(account.account))}</div>
+                </div>
+                <div class="account-page-amount">${formatAmount(account.amount)}원</div>
+                <div class="account-action-group">
+                    <button type="button" class="btn btn-outline-primary" data-action="deposit-toggle" data-account="${accountId}">입금</button>
+                    ${canTransfer ? `<button type="button" class="btn btn-success" data-action="transfer-toggle" data-account="${accountId}">계좌이체</button>` : ''}
+                </div>
+            </div>
+            <div class="account-transfer-form hidden" id="depositForm${accountId}">
+                <input type="number" class="form-control account-transfer-input" id="depositAmount${accountId}" min="10000" step="10000" placeholder="입금 금액">
+                <button type="button" class="btn btn-primary" data-action="deposit-submit" data-account="${accountId}">입금</button>
+            </div>
+            ${canTransfer ? `<div class="account-transfer-form hidden" id="transferForm${accountId}">
+                <input type="text" class="form-control account-transfer-input" id="transferAccount${accountId}" placeholder="받는 계좌번호">
+                <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="10000" step="10000" placeholder="이체 금액">
+                <button type="button" class="btn btn-primary" data-action="transfer-submit" data-account="${accountId}">이체</button>
+            </div>` : ''}`;
+    }
+
+    function toggleForm(formId) {
+        const targetForm = document.getElementById(formId);
         if (!targetForm) return;
 
         body.querySelectorAll('.account-transfer-form').forEach((form) => {
@@ -225,6 +256,49 @@
         } catch (error) {
             console.error(error);
             alert('계좌이체 중 오류가 발생했습니다');
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    async function depositAccount(account) {
+        if (isLoading) {
+            return;
+        }
+
+        const amountInput = document.getElementById(`depositAmount${account}`);
+        const amount = Number(amountInput?.value || 0);
+
+        if (!amount || amount < 1) {
+            alert('입금 금액을 입력해주세요');
+            return;
+        }
+
+        isLoading = true;
+
+        try {
+            const response = await fetch('/api/account/deposit', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                },
+                body: JSON.stringify({
+                    account: account,
+                    amount: amount,
+                }),
+                credentials: 'include',
+            });
+            const json = await response.json();
+
+            alert(json.message || '입금 결과 메시지가 없습니다');
+
+            if (json.result > 0) {
+                isLoading = false;
+                await loadAccounts();
+            }
+        } catch (error) {
+            console.error(error);
+            alert('입금 중 오류가 발생했습니다');
         } finally {
             isLoading = false;
         }

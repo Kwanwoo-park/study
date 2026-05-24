@@ -68,7 +68,7 @@ public class AccountService {
     @Transactional
     public Account tranAccount(AccountTranDto dto) {
         if (dto.getAmount() < 10000) {
-            throw new IllegalArgumentException("이체 금액은 1만원보다 커야 합니다");
+            throw new IllegalArgumentException("이체 금액은 1만원 이상이어야 합니다");
         }
 
         if (Objects.equals(dto.getAccount(), dto.getTranAccount())) {
@@ -89,10 +89,15 @@ public class AccountService {
     }
 
     @Transactional
-    public void addAmount(String accountNum, Long amount) {
-        Account account = findByAccount(accountNum);
+    public Account deposit(String accountNum, Long amount) {
+        if (amount == null || amount < 10000) {
+            throw new IllegalArgumentException("입금 금액은 1만원 이상이어야 합니다");
+        }
 
+        Account account = findByAccount(accountNum);
         account.addAmount(amount);
+
+        return account;
     }
 
     @Transactional

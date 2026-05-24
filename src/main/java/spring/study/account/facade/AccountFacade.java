@@ -38,24 +38,17 @@ public class AccountFacade {
     }
 
     public ResponseEntity<?> tranAccount(AccountTranDto dto, Member member) {
-        if (accountService.existsByAccount(dto.getAccount())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "존재하지 않는 계좌입니다"
-            ));
-        } else if (accountService.existsByAccount(dto.getTranAccount())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "존재하지 않는 계좌입니다"
-            ));
+        if (dto.getTranAccount() == null || dto.getTranAccount().isBlank()) {
+            return accountNotFound();
         }
 
-        Account sourceAccount = accountService.findByAccount(dto.getAccount());
-        if (!sourceAccount.getMember().getId().equals(member.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -10L,
-                    "message", "본인 계좌만 이체할 수 있습니다"
-            ));
+        if (accountService.existsByAccount(dto.getTranAccount())) {
+            return accountNotFound();
+        }
+
+        ResponseEntity<?> validation = validateOwner(dto.getAccount(), member);
+        if (validation != null) {
+            return validation;
         }
 
         Account account;
@@ -76,12 +69,34 @@ public class AccountFacade {
         ));
     }
 
-    public ResponseEntity<?> changeAccountName(AccountRequestDto dto) {
-        if (accountService.existsByAccount(dto.getAccount())) {
+    public ResponseEntity<?> deposit(AccountRequestDto dto, Member member) {
+        ResponseEntity<?> validation = validateOwner(dto.getAccount(), member);
+        if (validation != null) {
+            return validation;
+        }
+
+        Account account;
+
+        try {
+            account = accountService.deposit(dto.getAccount(), dto.getAmount());
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
-                    "message", "존재하지 않는 계좌입니다"
+                    "message", e.getMessage()
             ));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "result", 10L,
+                "amount", account.getAmount(),
+                "message", "정상적으로 입금되었습니다"
+        ));
+    }
+
+    public ResponseEntity<?> changeAccountName(AccountRequestDto dto, Member member) {
+        ResponseEntity<?> validation = validateOwner(dto.getAccount(), member);
+        if (validation != null) {
+            return validation;
         }
 
         accountService.changeAccountName(dto.getAccount(), dto.getName());
@@ -91,18 +106,43 @@ public class AccountFacade {
         ));
     }
 
-    public ResponseEntity<?> delete(String account) {
-        if (accountService.existsByAccount(account)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "존재하지 않는 계좌입니다"
-            ));
+    public ResponseEntity<?> delete(String account, Member member) {
+        ResponseEntity<?> validation = validateOwner(account, member);
+        if (validation != null) {
+            return validation;
         }
 
         accountService.deleteByAccount(account);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L
+        ));
+    }
+
+    private ResponseEntity<?> validateOwner(String accountNumber, Member member) {
+        if (accountNumber == null || accountNumber.isBlank()) {
+            return accountNotFound();
+        }
+
+        if (accountService.existsByAccount(accountNumber)) {
+            return accountNotFound();
+        }
+
+        Account account = accountService.findByAccount(accountNumber);
+        if (!account.getMember().getId().equals(member.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -10L,
+                    "message", "본인 계좌만 사용할 수 있습니다"
+            ));
+        }
+
+        return null;
+    }
+
+    private ResponseEntity<?> accountNotFound() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "result", -10L,
+                "message", "존재하지 않는 계좌입니다"
         ));
     }
 }

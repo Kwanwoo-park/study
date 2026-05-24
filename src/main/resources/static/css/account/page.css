@@ -60,6 +60,12 @@
     text-align: right;
 }
 
+.account-action-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 .account-page-message {
     padding: 40px 0;
     text-align: center;
@@ -96,5 +102,9 @@
 
     .account-page-amount {
         text-align: left;
+    }
+
+    .account-action-group {
+        justify-content: flex-start;
     }
 }
