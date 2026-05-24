@@ -32,7 +32,7 @@ public class ForbiddenService {
     }
 
     public List<ForbiddenResponseDto> findByWord(String word) {
-        return forbiddenRepository.findByWord(word).stream().map(ForbiddenResponseDto::new).toList();
+        return forbiddenRepository.findByWordContaining(word).stream().map(ForbiddenResponseDto::new).toList();
     }
 
     public List<ForbiddenResponseDto> findByRisk(Risk risk) {

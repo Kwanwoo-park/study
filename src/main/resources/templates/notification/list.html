@@ -7,32 +7,26 @@
     <!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/notification/list.css">
 </head>
-<style>
-    .container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          height: 700px;
-          overflow: auto;
-          background: white;
-          border-radius: 10px;
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-          margin-bottom: 10px;
-      }
-</style>
 <body>
 <th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
-<div class="container">
+<div class="container notification-page">
     <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
-    <button class="btn btn-primary" onclick="fnAllRead()">모두 읽음으로 표시</button>
+    <header class="page-header">
+        <div>
+            <h1 class="page-title">알림</h1>
+            <p class="page-description">새 소식과 활동 내역을 한 곳에서 확인하세요.</p>
+        </div>
+        <button class="btn btn-primary" onclick="fnAllRead()">모두 읽음</button>
+    </header>
     <div class="noti-group">
-        <button type="button" id="admin" onclick="fnClick('ADMIN')">시스템 알림 모아보기</button>
-        <button type="button" id="follow" onclick="fnClick('FOLLOW')">팔로우 알림 모아보기</button>
-        <button type="button" id="favorite" onclick="fnClick('FAVORITE')">좋아요 알림 모아보기</button>
-        <button type="button" id="chat" onclick="fnClick('CHAT')">채팅 알림 모아보기</button>
-        <button type="button" id="comment" onclick="fnClick('COMMENT')">댓글 알림 모아보기</button>
-        <button type="button" id="reply" onclick="fnClick('REPLY')">답글 알림 모아보기</button>
+        <button type="button" id="admin" onclick="fnClick('ADMIN')">시스템</button>
+        <button type="button" id="follow" onclick="fnClick('FOLLOW')">팔로우</button>
+        <button type="button" id="favorite" onclick="fnClick('FAVORITE')">좋아요</button>
+        <button type="button" id="chat" onclick="fnClick('CHAT')">채팅</button>
+        <button type="button" id="comment" onclick="fnClick('COMMENT')">댓글</button>
+        <button type="button" id="reply" onclick="fnClick('REPLY')">답글</button>
     </div>
     <div class="noti-div">
     </div>

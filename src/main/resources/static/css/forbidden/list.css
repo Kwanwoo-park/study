@@ -1,0 +1,147 @@
+html {
+    scroll-behavior: smooth;
+}
+
+label {
+    margin-right: 5px;
+}
+
+.container.forbidden-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 700px;
+    max-height: 700px;
+    overflow: auto;
+    background: white;
+    border: 1px solid #e8edf5;
+    border-radius: 8px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    margin: 32px auto 88px;
+    padding: 28px;
+}
+
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.page-description {
+    margin: 6px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.apply-panel {
+    display: none;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+}
+
+.apply-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 180px;
+    gap: 12px;
+    align-items: end;
+}
+
+.field-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.btnDiv {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 12px 0 20px;
+}
+
+.text {
+    color: #111827;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.annotation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.searchDiv {
+    width: 100%;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    margin-bottom: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.forbidden-search-message {
+    padding: 28px 16px;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    color: #6b7280;
+    text-align: center;
+    background: #fff;
+}
+
+#search {
+    min-height: 44px;
+}
+
+#risk {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: #fff;
+    padding: 6px 10px;
+}
+
+@media (max-width: 768px) {
+    .container.forbidden-page {
+        min-height: calc(100vh - 130px);
+        max-height: none;
+        margin: 16px 12px 86px;
+        padding: 20px;
+    }
+
+    .page-header,
+    .apply-grid {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+
+    .btnDiv {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header .btn {
+        width: 100%;
+    }
+}

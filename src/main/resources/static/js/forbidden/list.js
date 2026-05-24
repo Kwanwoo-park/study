@@ -4,11 +4,12 @@ const btn = document.getElementById('btn');
 const div = document.getElementById('uploadDiv')
 const searchDiv = document.querySelector('.searchDiv')
 const risk = document.getElementById('risk')
+let searchTimer;
 
 if (btn) {
     btn.addEventListener('click', (event) => {
-        if (div.style.display === 'none')
-            div.style.display = 'inline';
+        if (getComputedStyle(div).display === 'none')
+            div.style.display = 'block';
         else {
             fetch(`/api/forbidden/word/apply`, {
                 method: 'POST',
@@ -38,36 +39,56 @@ if (btn) {
 }
 
 if (search) {
-    search.addEventListener('keydown', (event) => {
-        if (event.key == 'Enter') {
-            fnBefore();
+    renderMessage('검색어를 입력해주세요.');
 
-            fetch(`/api/forbidden/word/search?word=` + search.value, {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['result'] > 0) {
-                    json.list.forEach(data => {
-                        fnCreate(data)
-                    })
-                } else
-                    alert("다시 시도하여주십시오")
-            })
-            .catch((error) => {
-                console.error(error);
-                alert("다시 시도하여주십시오")
-            })
+    search.addEventListener('input', () => {
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(searchForbiddenWords, 250);
+    });
+
+    search.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            window.clearTimeout(searchTimer);
+            searchForbiddenWords();
         }
     })
 }
 
+async function searchForbiddenWords() {
+    const keyword = search.value.trim();
+
+    if (!keyword) {
+        renderMessage('검색어를 입력해주세요.');
+        return;
+    }
+
+    renderMessage('검색 중입니다.');
+
+    try {
+        const response = await fetch(`/api/forbidden/word/search?word=${encodeURIComponent(keyword)}`, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            credentials: "include",
+        });
+        const json = await response.json();
+
+        if (json.result < 0) {
+            alert(json.message || '다시 시도하여주십시오');
+            return;
+        }
+
+        renderResults(json.list || []);
+    } catch (error) {
+        console.error(error);
+        alert("다시 시도하여주십시오")
+    }
+}
+
 function fnFindProposal() {
-    fnBefore();
+    clearResults();
 
     fetch(`/api/forbidden/word/proposal`, {
         method: 'GET',
@@ -79,9 +100,7 @@ function fnFindProposal() {
     .then((response) => response.json())
     .then((json) => {
         if (json['result'] >= 0) {
-            json.list.forEach(data => {
-                fnCreate(data)
-            })
+            renderResults(json.list || []);
         } else
             alert("다시 시도하여주십시오")
     })
@@ -92,7 +111,7 @@ function fnFindProposal() {
 }
 
 function fnFindExamine() {
-    fnBefore();
+    clearResults();
 
     fetch(`/api/forbidden/word/examine`, {
         method: 'GET',
@@ -104,9 +123,7 @@ function fnFindExamine() {
     .then((response) => response.json())
     .then((json) => {
         if (json['result'] >= 0) {
-            json.list.forEach(data => {
-                fnCreate(data)
-            })
+            renderResults(json.list || []);
         } else
             alert("다시 시도하여주십시오")
     })
@@ -117,7 +134,7 @@ function fnFindExamine() {
 }
 
 function fnFindApproval() {
-    fnBefore();
+    clearResults();
 
     fetch(`/api/forbidden/word/approval`, {
         method: 'GET',
@@ -129,9 +146,7 @@ function fnFindApproval() {
     .then((response) => response.json())
     .then((json) => {
         if (json['result'] >= 0) {
-            json.list.forEach(data => {
-                fnCreate(data)
-            })
+            renderResults(json.list || []);
         } else
             alert("다시 시도하여주십시오")
     })
@@ -141,17 +156,27 @@ function fnFindApproval() {
     })
 }
 
-function fnBefore() {
-    const field = document.querySelector('.list')
+function clearResults() {
+    searchDiv.innerHTML = '';
+}
 
-    if (field)
-        field.remove();
+function renderResults(list) {
+    clearResults();
 
-    area = document.createElement('div');
-    area.className = 'list';
+    if (list.length === 0) {
+        renderMessage('검색 결과가 없습니다.');
+        return;
+    }
+
+    list.forEach(data => {
+        fnCreate(data)
+    })
 }
 
 function fnCreate(data) {
+    const area = document.createElement('div');
+    area.className = 'list';
+
     let text = document.createElement('div')
     text.className = 'text';
 
@@ -190,4 +215,14 @@ function fnCreate(data) {
     area.append(annotation);
 
     searchDiv.append(area)
+}
+
+function renderMessage(message) {
+    clearResults();
+
+    const messageElement = document.createElement('div');
+    messageElement.className = 'forbidden-search-message';
+    messageElement.innerText = message;
+
+    searchDiv.append(messageElement);
 }

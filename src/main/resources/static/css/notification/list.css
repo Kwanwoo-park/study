@@ -1,0 +1,134 @@
+.container.notification-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 700px;
+    max-height: 700px;
+    overflow: auto;
+    background: white;
+    border: 1px solid #e8edf5;
+    border-radius: 8px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    margin: 32px auto 88px;
+    padding: 28px;
+}
+
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.page-description {
+    margin: 6px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.noti-group {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.noti-group button {
+    min-height: 42px;
+    border: 1px solid #d8dee9;
+    border-radius: 8px;
+    background: #fff;
+    color: #374151;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.noti-group button:hover {
+    background: #eef4ff;
+    border-color: #9dbcfb;
+    color: #1d4ed8;
+}
+
+.noti-div {
+    width: 100%;
+}
+
+.noti-ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.notification-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.notification-card > div:first-child {
+    flex: 1;
+    cursor: pointer;
+}
+
+.notification-message {
+    margin: 0;
+    color: #1f2937;
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: keep-all;
+}
+
+.notification-actions {
+    flex: 0 0 auto;
+}
+
+.mark-as-read-button {
+    min-width: 108px;
+}
+
+@media (max-width: 768px) {
+    .container.notification-page {
+        min-height: calc(100vh - 130px);
+        max-height: none;
+        margin: 16px 12px 86px;
+        padding: 20px;
+    }
+
+    .page-header {
+        flex-direction: column;
+    }
+
+    .noti-group {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .notification-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .notification-actions,
+    .mark-as-read-button {
+        width: 100%;
+    }
+}

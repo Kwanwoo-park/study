@@ -14,7 +14,7 @@ import java.util.List;
 
 @Repository
 public interface ForbiddenRepository extends JpaRepository<Forbidden, Long> {
-    List<Forbidden> findByWord(String word);
+    List<Forbidden> findByWordContaining(String word);
 
     List<Forbidden> findByStatus(Status status);
 

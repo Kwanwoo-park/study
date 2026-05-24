@@ -6,59 +6,40 @@
     <title>Forbidden word list</title>
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/forbidden/list.css">
 </head>
-<style>
-    html {
-        scroll-behavior: smooth;
-    }
-    label {
-        margin-right: 5px;
-    }
-    .container {
-        display: flex;
-        flex-direction: column;
-        align-self: start;
-        height: 700px;
-        overflow: auto;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 10px;
-    }
-    .btnDiv {
-        display: flex;
-        flex-direction: row;
-        align-self: start;
-        justify-content: center;
-    }
-    .text {
-      font-size: 20px;
-    }
-    .annotation {
-      color: gray;
-    }
-</style>
 <body>
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
-    <div class="container">
+    <div class="container forbidden-page">
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
-        <button type="button" id="btn" class="btn btn-success">Forbidden word apply</button>
-        <div id="uploadDiv" style="display: none;">
-            <hr>
-            <input type="text" class="form-control" id="word" name="word" placeholder="Input forbidden word">
-            <label for="risk">위험도 선택</label>
-            <select id="risk">
-                <option value="HIGH">High</option>
-                <option value="MIDDLE">Middle</option>
-                <option value="LOW">Low</option>
-            </select>
-            <hr>
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">금지어 신청</h1>
+                <p class="page-description">금지어를 신청하고 진행 상태를 조회하세요.</p>
+            </div>
+            <button type="button" id="btn" class="btn btn-success">신청하기</button>
+        </header>
+        <div id="uploadDiv" class="apply-panel">
+            <div class="apply-grid">
+                <div>
+                    <label class="field-label" for="word">금지어</label>
+                    <input type="text" class="form-control" id="word" name="word" placeholder="신청할 단어를 입력하세요">
+                </div>
+                <div>
+                    <label class="field-label" for="risk">위험도</label>
+                    <select id="risk">
+                        <option value="HIGH">High</option>
+                        <option value="MIDDLE">Middle</option>
+                        <option value="LOW">Low</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <input type="search" class="form-control" id="search" name="search" placeholder="Search word">
+        <input type="search" class="form-control" id="search" name="search" placeholder="검색할 단어를 입력하고 Enter를 누르세요">
         <div class="btnDiv">
-            <button type="button" class="btn btn-primary" onclick="fnFindProposal()">Find Proposal</button>
-            <button type="button" class="btn btn-primary" onclick="fnFindExamine()">Find Examine</button>
-            <button type="button" class="btn btn-primary" onclick="fnFindApproval()">find Approval</button>
+            <button type="button" class="btn btn-primary" onclick="fnFindProposal()">신청 목록</button>
+            <button type="button" class="btn btn-primary" onclick="fnFindExamine()">검토 목록</button>
+            <button type="button" class="btn btn-primary" onclick="fnFindApproval()">승인 목록</button>
         </div>
         <div class="searchDiv"></div>
     </div>
