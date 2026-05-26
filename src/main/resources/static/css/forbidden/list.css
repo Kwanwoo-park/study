@@ -123,6 +123,51 @@ label {
     padding: 6px 10px;
 }
 
+body.dark-mode .container.forbidden-page {
+    background: var(--surface-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+body.dark-mode .page-description,
+body.dark-mode .field-label,
+body.dark-mode .annotation,
+body.dark-mode .annotation label {
+    color: var(--text-secondary) !important;
+}
+
+body.dark-mode .apply-panel,
+body.dark-mode .list,
+body.dark-mode .forbidden-search-message {
+    background: var(--surface-muted) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+body.dark-mode .text,
+body.dark-mode .text label,
+body.dark-mode .searchDiv,
+body.dark-mode .searchDiv *,
+body.dark-mode .searchDiv label,
+body.dark-mode .forbidden-search-message {
+    color: var(--text-primary) !important;
+}
+
+body.dark-mode .searchDiv {
+    background: transparent !important;
+}
+
+body.dark-mode .searchDiv > div {
+    background: var(--surface-muted) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode #risk {
+    background: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--input-text) !important;
+}
+
 @media (max-width: 768px) {
     .container.forbidden-page {
         min-height: calc(100vh - 130px);

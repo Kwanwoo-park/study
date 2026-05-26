@@ -1,6 +1,21 @@
+:root {
+    --page-bg: #f5f7fb;
+    --surface-bg: #ffffff;
+    --surface-muted: #f8fafc;
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --border-color: #d9dee7;
+    --nav-bg: rgba(255, 255, 255, 0.9);
+    --nav-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    --input-bg: #ffffff;
+    --input-text: #202124;
+    --input-border: #ced4da;
+}
+
 body {
-    background: #f5f7fb;
-    color: #202124;
+    background: var(--page-bg);
+    color: var(--text-primary);
+    transition: background-color .2s ease, color .2s ease;
 }
 
 .navi {
@@ -8,21 +23,72 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: clamp(1px, 1vw, 6px);
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
+    padding: 6px clamp(6px, 2vw, 10px);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--nav-bg);
+    box-shadow: var(--nav-shadow);
+    backdrop-filter: blur(10px);
 }
 
 .nav-icon {
-    width: 50px;
-    height: 50px;
+    width: clamp(36px, 11vw, 50px);
+    height: clamp(36px, 11vw, 50px);
+    transition: filter .2s ease, opacity .2s ease;
 }
 .profile-icon {
-    width: 50px;
-    height: 50px;
+    width: clamp(36px, 11vw, 50px);
+    height: clamp(36px, 11vw, 50px);
     border-radius: 50%;
+    border: 1px solid var(--border-color);
+    object-fit: cover;
+}
+
+.theme-toggle-btn {
+    position: relative;
+    width: clamp(36px, 11vw, 50px);
+    height: clamp(36px, 11vw, 50px);
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--surface-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .15s ease;
+}
+
+.theme-toggle-btn:hover {
+    transform: translateY(-1px);
+}
+
+.theme-toggle-icon {
+    position: absolute;
+    top: 28%;
+    left: 28%;
+    width: 44%;
+    height: 44%;
+    border-radius: 50%;
+    background: #f59e0b;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, .18);
+}
+
+.theme-toggle-icon::after {
+    content: '';
+    position: absolute;
+    top: -9%;
+    left: 32%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--surface-bg);
+    opacity: 0;
+    transition: opacity .2s ease, transform .2s ease, background-color .2s ease;
 }
 
 .notification-dot {
@@ -44,4 +110,153 @@ body {
 
 .notification-dot.active::after {
     display: block;
+}
+
+body.dark-mode {
+    --page-bg: #111827;
+    --surface-bg: #1f2937;
+    --surface-muted: #172033;
+    --text-primary: #f3f4f6;
+    --text-secondary: #cbd5e1;
+    --border-color: #374151;
+    --nav-bg: rgba(31, 41, 55, 0.92);
+    --nav-shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+    --input-bg: #111827;
+    --input-text: #f3f4f6;
+    --input-border: #4b5563;
+}
+
+body.dark-mode .nav-icon {
+    filter: invert(1) brightness(1.35);
+    opacity: .9;
+}
+
+body.dark-mode .theme-toggle-icon {
+    background: #e5e7eb;
+    box-shadow: 0 0 0 4px rgba(229, 231, 235, .12);
+}
+
+body.dark-mode .theme-toggle-icon::after {
+    opacity: 1;
+    transform: translate(-5px, -1px);
+}
+
+body.dark-mode a {
+    color: #93c5fd;
+}
+
+body.dark-mode .container,
+body.dark-mode .container h1,
+body.dark-mode .container h2,
+body.dark-mode .container h3,
+body.dark-mode .container h4,
+body.dark-mode .container h5,
+body.dark-mode .container h6,
+body.dark-mode .container p,
+body.dark-mode .container span,
+body.dark-mode .container label,
+body.dark-mode .container div,
+body.dark-mode .container li,
+body.dark-mode .container td,
+body.dark-mode .container th,
+body.dark-mode .container strong,
+body.dark-mode .container small {
+    color: var(--text-primary) !important;
+}
+
+body.dark-mode .card,
+body.dark-mode .container,
+body.dark-mode .container.forbidden-page,
+body.dark-mode .container.notification-page,
+body.dark-mode .modal-content,
+body.dark-mode .list-group-item,
+body.dark-mode .dropdown-menu,
+body.dark-mode .jumbotron,
+body.dark-mode .profileDiv,
+body.dark-mode .viewDiv,
+body.dark-mode .writeDiv,
+body.dark-mode .chatDiv,
+body.dark-mode .collectionDiv,
+body.dark-mode .account-page-body,
+body.dark-mode .apply-panel,
+body.dark-mode .member-search-box,
+body.dark-mode .member-result-card,
+body.dark-mode .notification-card,
+body.dark-mode .board-modal-content,
+body.dark-mode .comment-modal-content,
+body.dark-mode .favorite-modal-content,
+body.dark-mode .follower-modal-content,
+body.dark-mode .following-modal-content {
+    background: var(--surface-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode .board-modal-content,
+body.dark-mode .board-modal-content *,
+body.dark-mode .comment-modal-content,
+body.dark-mode .comment-modal-content *,
+body.dark-mode .favorite-modal-content,
+body.dark-mode .favorite-modal-content *,
+body.dark-mode .follower-modal-content,
+body.dark-mode .follower-modal-content *,
+body.dark-mode .following-modal-content,
+body.dark-mode .following-modal-content * {
+    color: var(--text-primary);
+}
+
+body.dark-mode .comment-modal-item,
+body.dark-mode .favorite-modal-item,
+body.dark-mode .follower-modal-item,
+body.dark-mode .following-modal-item {
+    border-color: var(--border-color);
+}
+
+body.dark-mode .comment-modal-reply-row {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .board-modal-close,
+body.dark-mode .comment-modal-close,
+body.dark-mode .favorite-modal-close,
+body.dark-mode .follower-modal-close,
+body.dark-mode .following-modal-close {
+    color: var(--text-primary);
+}
+
+body.dark-mode .table,
+body.dark-mode .table td,
+body.dark-mode .table th {
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .form-control,
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border-color: var(--input-border) !important;
+}
+
+body.dark-mode .form-control::placeholder,
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder,
+body.dark-mode .text-muted,
+body.dark-mode .page-description,
+body.dark-mode .account-page-description,
+body.dark-mode .member-search-header p {
+    color: var(--text-secondary) !important;
+}
+
+body.dark-mode .alert-info {
+    background-color: #0f2f3a;
+    border-color: #155e75;
+    color: #dff7ff;
+}
+
+body.dark-mode footer .card {
+    background: var(--surface-bg);
+    border-color: var(--border-color);
 }

@@ -1,4 +1,12 @@
+(function() {
+    const savedTheme = fnGetStoredTheme();
+    if (savedTheme === 'dark' && document.body) {
+        document.body.classList.add('dark-mode');
+    }
+})();
+
 document.addEventListener('DOMContentLoaded', function() {
+    fnInitThemeToggle();
     fnUpdateUnreadNotificationDot();
 
     const eventSource = new EventSource('/api/notification/stream');
@@ -45,18 +53,62 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('상태:', event.readyState);
     };
 
-    document.getElementById('notification-banner')
-            .querySelector('.btn-close')
-            .addEventListener('click', function(event) {
+    const notificationBanner = document.getElementById('notification-banner');
+    const notificationCloseButton = notificationBanner ? notificationBanner.querySelector('.btn-close') : null;
+    if (notificationCloseButton) {
+        notificationCloseButton.addEventListener('click', function(event) {
                 event.stopPropagation();
                 const notificationBanner = document.getElementById('notification-banner');
                 notificationBanner.classList.add('d-none');
             });
+    }
 
     window.addEventListener('beforeunload', function() {
         eventSource.close();
     });
 });
+
+function fnInitThemeToggle() {
+    if (fnGetStoredTheme() === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+
+    const themeToggle = document.getElementById('theme-toggle');
+    if (!themeToggle) return;
+
+    fnUpdateThemeToggleLabel();
+    themeToggle.addEventListener('click', function() {
+        const enabledDarkMode = document.body.classList.toggle('dark-mode');
+        fnSetStoredTheme(enabledDarkMode ? 'dark' : 'light');
+        fnUpdateThemeToggleLabel();
+    });
+}
+
+function fnGetStoredTheme() {
+    try {
+        return localStorage.getItem('theme');
+    } catch (error) {
+        return null;
+    }
+}
+
+function fnSetStoredTheme(theme) {
+    try {
+        localStorage.setItem('theme', theme);
+    } catch (error) {
+        console.error('테마 저장 오류:', error);
+    }
+}
+
+function fnUpdateThemeToggleLabel() {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (!themeToggle) return;
+
+    const enabledDarkMode = document.body.classList.contains('dark-mode');
+    const label = enabledDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환';
+    themeToggle.setAttribute('aria-label', label);
+    themeToggle.setAttribute('title', label);
+}
 
 function fnSetUnreadNotificationDot(hasUnread) {
     const notificationNavIcon = document.getElementById('notification-nav-icon');

@@ -103,3 +103,29 @@ html {
 .date {
     color: gray;
 }
+
+body.dark-mode .main {
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color);
+}
+
+body.dark-mode .profile,
+body.dark-mode .name,
+body.dark-mode .like,
+body.dark-mode .comment,
+body.dark-mode .info,
+body.dark-mode .info pre,
+body.dark-mode .form-label,
+body.dark-mode #loading {
+    color: var(--text-primary) !important;
+}
+
+body.dark-mode .date {
+    color: var(--text-secondary) !important;
+}
+
+body.dark-mode .arrow {
+    background: var(--surface-muted);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
