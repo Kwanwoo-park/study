@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/common/common.css">
     <link rel="stylesheet" href="/css/notification/list.css">
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
 <div class="container notification-page">
     <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>

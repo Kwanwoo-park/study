@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/css/common/common.css">
   <link rel="stylesheet" href="/css/admin/admin.css">
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
   <div class="container">
     <h1>Admin view</h1>
       <div class="float-left">

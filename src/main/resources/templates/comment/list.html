@@ -41,7 +41,7 @@
     flex-direction: row;
   }
 </style>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <div>
   <h4>댓글</h4>
   <div class="container" th:attr="data-board-id=${boardId},data-member-email=${member}">

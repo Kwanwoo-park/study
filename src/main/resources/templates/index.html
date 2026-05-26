@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Welcome to Kwanwoo.site</title>
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 </body>
 <script type="text/javascript">
     location.href = "/member/login";

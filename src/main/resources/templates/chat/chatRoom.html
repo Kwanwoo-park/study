@@ -83,7 +83,7 @@
         font-size: 10px;
     }
 </style>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
     <input type="hidden" id="room" th:value="${room}">
     <input type="hidden" id="email" th:value="${member}">
     <input type="hidden" id="flag" th:value="${flag}">

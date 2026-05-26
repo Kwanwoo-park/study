@@ -173,6 +173,8 @@ body.dark-mode .list-group-item,
 body.dark-mode .dropdown-menu,
 body.dark-mode .jumbotron,
 body.dark-mode .profileDiv,
+body.dark-mode .imgGrid,
+body.dark-mode .imgDiv,
 body.dark-mode .viewDiv,
 body.dark-mode .writeDiv,
 body.dark-mode .chatDiv,
@@ -259,4 +261,147 @@ body.dark-mode .alert-info {
 body.dark-mode footer .card {
     background: var(--surface-bg);
     border-color: var(--border-color);
+}
+
+body.mobile-view {
+    overflow-x: hidden;
+    padding-bottom: 96px;
+}
+
+body.mobile-view .container {
+    width: 100%;
+    max-width: 100%;
+    min-height: auto;
+    padding-left: 12px;
+    padding-right: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.mobile-view .float-left,
+body.mobile-view .float-right {
+    float: none !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+body.mobile-view .btn {
+    max-width: 100%;
+    white-space: normal;
+}
+
+body.mobile-view table {
+    min-width: 520px;
+}
+
+body.mobile-view .table {
+    margin-bottom: 0;
+}
+
+body.mobile-view .pagination {
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+body.mobile-view .navi {
+    width: calc(100vw - 16px);
+    bottom: 8px;
+    justify-content: space-around;
+    gap: 2px;
+    padding: 6px;
+}
+
+body.mobile-view .nav-icon,
+body.mobile-view .profile-icon,
+body.mobile-view .theme-toggle-btn {
+    width: 38px;
+    height: 38px;
+}
+
+body.mobile-view .profileDiv {
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+}
+
+body.mobile-view .profileDiv h4 {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    font-size: 1rem;
+}
+
+body.mobile-view .profileDiv .form-label {
+    margin-right: 0 !important;
+}
+
+body.mobile-view img {
+    max-width: 100%;
+}
+
+body.mobile-view .profileDiv img#profile {
+    width: 128px !important;
+    height: 128px !important;
+}
+
+body.mobile-view .imgGrid {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body.mobile-view .main-image,
+body.mobile-view .save-img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+}
+
+body.mobile-view .main,
+body.mobile-view .mainImgDiv,
+body.mobile-view .imgDiv {
+    width: 100%;
+    max-width: 100%;
+}
+
+body.mobile-view .main-image-wrapper,
+body.mobile-view .modal-image-box {
+    max-width: 100%;
+}
+
+body.mobile-view .left,
+body.mobile-view .right,
+body.mobile-view .board-nav,
+body.mobile-view .modal-image-arrow {
+    position: absolute;
+}
+
+body.mobile-view .editDiv {
+    position: static;
+    align-self: flex-end;
+    margin-bottom: 8px;
+}
+
+body.mobile-view .board-modal-content {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+    margin: 10px auto;
+    padding: 18px 12px;
+}
+
+body.mobile-view .chat-message-content {
+    max-width: 86%;
+}
+
+body.mobile-view .chatimg {
+    width: min(200px, 70vw);
+    height: auto;
+}
+
+body.mobile-view textarea.form-control {
+    width: 100%;
 }

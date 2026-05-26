@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/common/common.css">
     <link rel="stylesheet" href="/css/forbidden/list.css">
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
     <div class="container forbidden-page">
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>

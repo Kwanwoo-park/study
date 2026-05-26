@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/chat/chat.css">
     <title>Chat List</title>
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
     <div class="container">
         <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">

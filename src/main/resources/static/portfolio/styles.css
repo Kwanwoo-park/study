@@ -569,6 +569,91 @@ h3 {
     }
 }
 
+body.mobile-view {
+    overflow-x: hidden;
+}
+
+body.mobile-view .deck {
+    grid-template-columns: 1fr;
+}
+
+body.mobile-view .sidebar {
+    position: static;
+    gap: 18px;
+    padding: 20px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+}
+
+body.mobile-view .toc {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.mobile-view .toc button {
+    flex: 0 0 auto;
+    width: auto;
+    white-space: nowrap;
+}
+
+body.mobile-view .progress {
+    left: 0;
+}
+
+body.mobile-view .stage {
+    min-height: auto;
+    padding: 26px 14px 92px;
+}
+
+body.mobile-view .slide {
+    width: 100%;
+    min-height: auto;
+    padding: 24px 18px;
+}
+
+body.mobile-view .hero-layout,
+body.mobile-view .goal-grid,
+body.mobile-view .feature-board,
+body.mobile-view .highlight-grid,
+body.mobile-view .service-row,
+body.mobile-view .deploy-resources,
+body.mobile-view .metric-row {
+    grid-template-columns: 1fr;
+}
+
+body.mobile-view .stack-table div {
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+body.mobile-view .architecture,
+body.mobile-view .stack-table,
+body.mobile-view .product-shot {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.mobile-view h1 {
+    font-size: 36px;
+}
+
+body.mobile-view h2 {
+    font-size: 29px;
+}
+
+body.mobile-view .lead,
+body.mobile-view .closing p:not(.eyebrow) {
+    font-size: 17px;
+}
+
+body.mobile-view .controls {
+    right: 14px;
+    bottom: 14px;
+}
+
 @media (max-width: 560px) {
     h1 {
         font-size: 36px;

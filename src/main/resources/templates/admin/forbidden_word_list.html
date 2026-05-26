@@ -15,7 +15,7 @@
     }
   </style>
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <div class="container">
   <h1>Forbidden word list</h1>
   <button type="button" id="btn" class="btn btn-success">Forbidden word upload</button>

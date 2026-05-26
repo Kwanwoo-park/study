@@ -5,11 +5,22 @@ const slideCounter = document.getElementById("slideCounter");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 
+const mobileUaTokens = [
+    "mobile", "android", "iphone", "ipad", "ipod",
+    "blackberry", "windows phone", "opera mini", "iemobile"
+];
+
 let currentIndex = 0;
 let wheelDelta = 0;
 let wheelLocked = false;
 const wheelThreshold = 80;
 const wheelLockMs = 520;
+
+function applyMobileViewClass() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobile = mobileUaTokens.some((token) => userAgent.includes(token));
+    document.body.classList.toggle("mobile-view", isMobile);
+}
 
 function renderToc() {
     slides.forEach((slide, index) => {
@@ -133,5 +144,6 @@ document.addEventListener("touchend", (event) => {
     }
 }, { passive: true });
 
+applyMobileViewClass();
 renderToc();
 updateDeck();

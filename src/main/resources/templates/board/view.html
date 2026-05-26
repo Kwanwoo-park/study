@@ -11,7 +11,7 @@
 	<link rel="stylesheet" href="/css/comment/modal.css">
     <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
 <button type="button" th:unless="${next == 0}" id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
 	<div class="container">

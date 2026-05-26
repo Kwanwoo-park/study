@@ -26,7 +26,7 @@
         margin-bottom: 10px;
     }
 </style>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <div>
   <h4>좋아요 누른 사람들</h4>
     <div class="container" th:attr="data-board-id=${boardId},data-member-email=${email}">

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/css/comment/modal.css">
     <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
     <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
     <div class="container">
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>

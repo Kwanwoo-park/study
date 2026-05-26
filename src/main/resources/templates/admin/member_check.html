@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <div class="container">
   <h1>Member check</h1>
   <button type="button" class="btn btn-success" onclick="javascript:location.href='/admin/administrator'">Previous</button>

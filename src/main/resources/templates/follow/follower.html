@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
 </head>
-<body>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <div class="container" th:attr="data-target-email=${targetEmail},data-member-email=${email},data-mode='follower'">
   <h1>Follower List</h1>
   <form method="dialog">
