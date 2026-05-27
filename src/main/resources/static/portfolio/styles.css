@@ -655,19 +655,196 @@ body.mobile-view .controls {
 }
 
 @media (max-width: 560px) {
-    h1 {
-        font-size: 36px;
+    body {
+        overflow-x: hidden;
     }
 
-    h2 {
-        font-size: 29px;
+    .deck {
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .stage {
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 12px 10px 74px;
+        place-items: stretch;
+    }
+
+    .progress {
+        height: 4px;
     }
 
     .slide {
-        padding: 24px 20px;
+        width: 100%;
+        min-height: calc(100vh - 88px);
+        min-height: calc(100dvh - 88px);
+        max-height: calc(100vh - 88px);
+        max-height: calc(100dvh - 88px);
+        overflow-y: auto;
+        padding: 18px 16px;
+        border-radius: 8px;
+        box-shadow: 0 12px 32px rgba(31, 41, 55, 0.14);
+    }
+
+    .slide-grid {
+        gap: 18px;
+    }
+
+    .eyebrow {
+        margin-bottom: 10px;
+        font-size: 11px;
+    }
+
+    h1 {
+        margin-bottom: 14px;
+        font-size: 27px;
+        line-height: 1.18;
+    }
+
+    h2 {
+        margin-bottom: 18px;
+        font-size: 25px;
+        line-height: 1.18;
+    }
+
+    h3 {
+        font-size: 18px;
+    }
+
+    .lead,
+    .closing p:not(.eyebrow) {
+        font-size: 16px;
+        line-height: 1.55;
+    }
+
+    .hero-actions {
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .hero-actions a {
+        width: 100%;
+        padding: 11px 14px;
+        text-align: center;
+    }
+
+    .product-shot {
+        max-height: 230px;
+    }
+
+    .feed-preview {
+        padding: 16px;
+    }
+
+    .goal-grid,
+    .feature-board,
+    .highlight-grid {
+        gap: 10px;
+    }
+
+    .goal-grid > div,
+    .feature-board section,
+    .highlight-grid > div {
+        min-height: auto;
+        padding: 16px;
+    }
+
+    .goal-grid p,
+    .feature-board p,
+    .highlight-grid p {
+        font-size: 15px;
+        line-height: 1.48;
+    }
+
+    .number {
+        margin-bottom: 12px;
+        font-size: 22px;
+    }
+
+    .architecture {
+        gap: 10px;
+    }
+
+    .node,
+    .node.app {
+        width: 100%;
+        min-width: 0;
+        padding: 14px 12px;
+        font-size: 15px;
+    }
+
+    .node small {
+        font-size: 12px;
+    }
+
+    .line.horizontal {
+        height: 12px;
+    }
+
+    .stack-table div {
+        padding: 14px 16px;
+    }
+
+    .stack-table strong,
+    .stack-table span {
+        font-size: 15px;
+    }
+
+    .deploy-step {
+        padding: 13px 14px;
+        font-size: 16px;
+    }
+
+    .deploy-resources {
+        gap: 8px;
+    }
+
+    .deploy-resources span,
+    .closing-tags span {
+        padding: 11px 10px;
+        font-size: 14px;
+    }
+
+    .closing {
+        min-height: calc(100vh - 130px);
+        min-height: calc(100dvh - 130px);
+    }
+
+    .closing-tags {
+        gap: 8px;
+        margin-top: 22px;
     }
 
     .metric-row {
         grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .metric-row strong {
+        padding: 11px 10px;
+        font-size: 12px;
+    }
+
+    .controls {
+        right: 10px;
+        bottom: 10px;
+        left: 10px;
+        justify-content: center;
+        padding: 8px;
+    }
+
+    .controls button {
+        width: 40px;
+        height: 40px;
+    }
+
+    .controls span {
+        min-width: 58px;
     }
 }

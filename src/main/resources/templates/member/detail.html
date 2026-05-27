@@ -21,25 +21,32 @@
     <div class="profileDiv">
       <img th:src="${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
       &nbsp;&nbsp;&nbsp;&nbsp;
-      <h4>
-        <label class="form-label" th:text="${member.name}" style="margin-right: 10px;"></label>
-        <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
-        <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/account'">계좌 조회</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/collection'">Secret</button>
-        <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
+      <div class="profileInfo">
+        <div class="profileNameRow">
+          <label class="form-label profileName" th:text="${member.name}"></label>
+          <div class="profileActions">
+            <button type="button" class="btn btn-outline-secondary profileMenuToggle" aria-label="메뉴 열기" aria-expanded="false">☰</button>
+            <div class="profileActionMenu">
+              <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
+              <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
+              <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
+              <button type="button" class="btn btn-primary" onclick="javascript:location.href='/account'">계좌 조회</button>
+              <button type="button" class="btn btn-primary" onclick="javascript:location.href='/collection'">Secret</button>
+              <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
+              <button type="button" class="btn btn-primary" id="save" style="display: none" onclick="fnSave()">사진 변경</button>
+            </div>
+          </div>
+        </div>
         <input type="file" accept="image/*" onchange="fnLoad(this)" style="display: none" id="upload">
-        <button type="button" class="btn btn-primary" id="save" style="display: none" onclick="fnSave()">사진 변경</button>
-        <br>
-        <br>
-        <label class="form-label">Posts: </label>
-        <label class="form-label" th:text="${board_count}"></label>
-        <label class="form-label" th:onclick="openFollowerModal([[${member.email}]])"> Follower: </label>
-        <label class="form-label" id="follower_label" th:text="${follower_count}" th:onclick="openFollowerModal([[${member.email}]])" ></label>
-        <label class="form-label" th:onclick="openFollowingModal([[${member.email}]])">Following: </label>
-        <label class="form-label" id="following_label" th:text="${following_count}" th:onclick="openFollowingModal([[${member.email}]])"></label>
-      </h4>
+        <div class="profileStats">
+          <label class="form-label">Posts: </label>
+          <label class="form-label" th:text="${board_count}"></label>
+          <label class="form-label" th:onclick="openFollowerModal([[${member.email}]])"> Follower: </label>
+          <label class="form-label" id="follower_label" th:text="${follower_count}" th:onclick="openFollowerModal([[${member.email}]])" ></label>
+          <label class="form-label" th:onclick="openFollowingModal([[${member.email}]])">Following: </label>
+          <label class="form-label" id="following_label" th:text="${following_count}" th:onclick="openFollowingModal([[${member.email}]])"></label>
+        </div>
+      </div>
     </div>
   </form>
   <div class="imgGrid"></div>

@@ -48,6 +48,8 @@ if (typeof initFollowingModal === 'function') {
     initFollowingModal();
 }
 
+initProfileActionMenu();
+
 function fnLoad(input) {
     file = input.files[0];
 
@@ -55,6 +57,28 @@ function fnLoad(input) {
     img.src = URL.createObjectURL(file);
 
     document.getElementById("save").style.display = 'inline';
+}
+
+function initProfileActionMenu() {
+    const actions = document.querySelector('.profileActions');
+    const toggle = document.querySelector('.profileMenuToggle');
+
+    if (!actions || !toggle) {
+        return;
+    }
+
+    toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isOpen = actions.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!actions.contains(event.target)) {
+            actions.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
 }
 
 function fnSave() {

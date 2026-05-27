@@ -123,12 +123,17 @@ document.addEventListener("touchstart", (event) => {
 document.addEventListener("touchend", (event) => {
     const deltaX = event.changedTouches[0].screenX - touchStartX;
     const deltaY = event.changedTouches[0].screenY - touchStartY;
+    const isMobile = window.matchMedia("(max-width: 560px)").matches;
 
     if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 60) {
         return;
     }
 
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        if (isMobile) {
+            return;
+        }
+
         if (deltaY < 0) {
             nextSlide();
         } else {

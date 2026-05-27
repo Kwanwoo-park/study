@@ -17,6 +17,71 @@
     padding-bottom: 30px;
 }
 
+.profileInfo {
+    min-width: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.profileNameRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.profileName {
+    margin-right: 0;
+}
+
+.profileActions {
+    position: relative;
+    display: inline-flex;
+}
+
+.profileMenuToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 38px;
+    padding: 0;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.profileActionMenu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 20;
+    width: 180px;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+.profileActions.open .profileActionMenu {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.profileActionMenu .btn {
+    width: 100%;
+    margin: 0;
+    white-space: normal;
+}
+
+.profileStats {
+    margin-top: 16px;
+}
+
 .imgGrid {
     display: grid;
     width: 750px;
@@ -231,4 +296,58 @@ body.modal-open {
 
 .board-modal-content #modalEditContent {
     margin-top: 8px;
+}
+
+@media (max-width: 767px) {
+    .container {
+        width: 100%;
+        height: auto;
+        min-height: 700px;
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .profileDiv {
+        width: 100%;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 14px;
+    }
+
+    .profileDiv #profile {
+        width: 96px;
+        height: 96px;
+        flex: 0 0 auto;
+    }
+
+    .profileNameRow {
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+    }
+
+    .profileName {
+        max-width: calc(100vw - 190px);
+        word-break: break-word;
+    }
+
+    .profileStats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 6px;
+        margin-top: 12px;
+        font-size: 16px;
+    }
+
+    .imgGrid {
+        width: 100%;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .main-image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+    }
 }

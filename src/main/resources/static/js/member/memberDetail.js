@@ -97,6 +97,8 @@ if (chatting) {
     });
 }
 
+initProfileActionMenu();
+
 async function loadMoreBoards() {
     if (!imgGrid || !memberEmail || !nextCursor) {
         return;
@@ -120,6 +122,28 @@ async function loadMoreBoards() {
         console.error(error);
         alert("다시 시도하여주십시오");
     }
+}
+
+function initProfileActionMenu() {
+    const actions = document.querySelector('.profileActions');
+    const toggle = document.querySelector('.profileMenuToggle');
+
+    if (!actions || !toggle) {
+        return;
+    }
+
+    toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isOpen = actions.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!actions.contains(event.target)) {
+            actions.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
 }
 
 function drawBoards(boards) {
