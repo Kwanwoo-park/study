@@ -16,6 +16,15 @@
   </style>
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script>
+  try {
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-mode');
+    }
+  } catch (error) {
+    console.error('테마 조회 오류:', error);
+  }
+</script>
 <div class="container">
   <h1>Forbidden word list</h1>
   <button type="button" id="btn" class="btn btn-success">Forbidden word upload</button>

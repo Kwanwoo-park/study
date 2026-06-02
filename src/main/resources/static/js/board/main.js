@@ -81,7 +81,7 @@ function fnDraw(data) {
         const main_image_div = document.createElement('div');
         main_image_div.className = 'main-image-wrapper'
 
-        if (board.img.length != 1) {
+        if (board.img.length > 1) {
             const button = document.createElement('button')
             button.className = 'arrow';
             button.type = 'button'
@@ -90,7 +90,7 @@ function fnDraw(data) {
             button.onclick = function() {
                 fnLeft(board.id, board.img);
             }
-            button.innerText = '←'
+            button.innerText = '‹'
             main_image_div.append(button)
         }
 
@@ -123,7 +123,7 @@ function fnDraw(data) {
             button.onclick = function() {
                 fnRight(board.id, board.img);
             }
-            button.innerText = '→'
+            button.innerText = '›'
             main_image_div.append(button);
         }
 

@@ -112,6 +112,22 @@ body {
     display: block;
 }
 
+#notification-banner {
+    position: fixed !important;
+    top: 16px !important;
+    left: 50% !important;
+    right: auto !important;
+    z-index: 1100;
+    width: min(420px, calc(100vw - 32px));
+    margin: 0 !important;
+    transform: translateX(-50%);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+}
+
+#notification-banner .btn-close {
+    margin-left: 12px;
+}
+
 body.dark-mode {
     --page-bg: #111827;
     --surface-bg: #1f2937;

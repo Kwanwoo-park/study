@@ -165,7 +165,7 @@ function fnForbidden() {
 
 function fnNotificationMove(group, url) {
     if (group == "CHAT")
-        location.replace(`/chat/chatRoom?roomId=` + url);
+        location.href = `/chat/chatRoom?roomId=` + url;
     else if (group == "COMMENT" || group == "REPLY")
         location.replace(`/comment?id=` + url);
     else if (group == "FAVORITE")

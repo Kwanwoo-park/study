@@ -54,24 +54,56 @@ html {
 }
 
 .main-image-wrapper {
+    position: relative;
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    max-width: 250px;
+    overflow: hidden;
+    border-radius: 8px;
 }
 
 .main-image {
     width: 100%;
     max-width: 250px;
+    display: block;
+    object-fit: cover;
 }
 
 .arrow {
-    width: 35px;
-    height: 35px;
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
     border-radius: 50%;
-    font-color: black;
-    margin-top: auto;
-    margin-bottom: auto;
+    background: rgba(17, 24, 39, 0.62);
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.2);
+    transform: translateY(-50%);
+    transition: background-color .15s ease, opacity .15s ease, transform .15s ease;
+}
+
+.arrow:hover {
+    background: rgba(17, 24, 39, 0.82);
+    transform: translateY(-50%) scale(1.04);
+}
+
+.arrow[id^="left"] {
+    left: 10px;
+}
+
+.arrow[id^="right"] {
+    right: 10px;
 }
 
 .info {
@@ -125,7 +157,6 @@ body.dark-mode .date {
 }
 
 body.dark-mode .arrow {
-    background: var(--surface-muted);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
+    background: rgba(15, 23, 42, 0.78);
+    color: #fff;
 }

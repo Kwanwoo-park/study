@@ -133,6 +133,7 @@
             const canEdit = board.member.email === data.email;
             const currentImage = imageList[currentImageIndex];
             const liked = Boolean(data.like);
+            const hasMultipleImages = imageList.length > 1;
 
             modalBody.innerHTML = `
                 ${canEdit ? `
@@ -149,9 +150,10 @@
                 </div>
 
                 <div class="modal-image-box">
-                    <button type="button" id="modalImageLeftBtn" class="modal-image-arrow left" style="visibility: ${currentImageIndex === 0 ? 'hidden' : 'visible'};" onclick="modalImageLeft(event)">←</button>
+                    ${hasMultipleImages ? `<button type="button" id="modalImageLeftBtn" class="modal-image-arrow left ${currentImageIndex === 0 ? 'is-disabled' : ''}" onclick="modalImageLeft(event)" aria-label="이전 이미지">‹</button>` : ''}
                     <img class="modal-main-image" id="modalMainImage" src="${currentImage.imgSrc}" alt="board image" ondblclick="fnOnlyLike(${board.id})">
-                    <button type="button" id="modalImageRightBtn" class="modal-image-arrow right" style="visibility: ${currentImageIndex === imageList.length - 1 ? 'hidden' : 'visible'};" onclick="modalImageRight(event)">→</button>
+                    ${hasMultipleImages ? `<button type="button" id="modalImageRightBtn" class="modal-image-arrow right ${currentImageIndex === imageList.length - 1 ? 'is-disabled' : ''}" onclick="modalImageRight(event)" aria-label="다음 이미지">›</button>` : ''}
+                    ${hasMultipleImages ? `<span id="modalImageCounter" class="modal-image-counter">${currentImageIndex + 1} / ${imageList.length}</span>` : ''}
                 </div>
 
                 <div class="modal-info">
@@ -213,11 +215,16 @@
             }
 
             if (leftArrow) {
-                leftArrow.style.visibility = currentImageIndex === 0 ? 'hidden' : 'visible';
+                leftArrow.classList.toggle('is-disabled', currentImageIndex === 0);
             }
 
             if (rightArrow) {
-                rightArrow.style.visibility = currentImageIndex === imageList.length - 1 ? 'hidden' : 'visible';
+                rightArrow.classList.toggle('is-disabled', currentImageIndex === imageList.length - 1);
+            }
+
+            const imageCounter = document.getElementById('modalImageCounter');
+            if (imageCounter) {
+                imageCounter.textContent = `${currentImageIndex + 1} / ${imageList.length}`;
             }
         }
 
