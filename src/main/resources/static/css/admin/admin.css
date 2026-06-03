@@ -14,3 +14,11 @@ body.dark-mode .new-status {
     border: 1px solid var(--border-color);
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
 }
+
+.admin-forbidden-text {
+    font-size: 20px;
+}
+
+.admin-forbidden-annotation {
+    color: gray;
+}

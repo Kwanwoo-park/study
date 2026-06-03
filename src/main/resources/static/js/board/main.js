@@ -83,10 +83,9 @@ function fnDraw(data) {
 
         if (board.img.length > 1) {
             const button = document.createElement('button')
-            button.className = 'arrow';
+            button.className = 'arrow is-invisible';
             button.type = 'button'
             button.id = 'left' + board.id;
-            button.style.visibility = 'hidden';
             button.onclick = function() {
                 fnLeft(board.id, board.img);
             }

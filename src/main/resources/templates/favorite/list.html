@@ -6,27 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/favorite/list.css">
 </head>
-<style>
-    html {
-      scroll-behavior: smooth;
-    }
-    h4 {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .container {
-        height: 700px;
-        overflow: auto;
-        padding: 10px;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 10px;
-    }
-</style>
-<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<body class="favorite-list-page" th:classappend="${isMobile} ? ' mobile-view' : ''">
 <div>
   <h4>좋아요 누른 사람들</h4>
     <div class="container" th:attr="data-board-id=${boardId},data-member-email=${email}">

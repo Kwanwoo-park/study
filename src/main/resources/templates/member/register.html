@@ -14,10 +14,10 @@
     <form action="/register/action" method="post">
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>
-            <button type="button" id="email_check" class="btn btn-primary" style="padding-left:10px;">Duplicate Check</button>
-            <button type="button" id="email_certification" class="btn btn-primary" style="padding-left: 10px; display: none;">Email Certification</button>
+            <button type="button" id="email_check" class="btn btn-primary inline-action-button">Duplicate Check</button>
+            <button type="button" id="email_certification" class="btn btn-primary inline-action-button is-hidden">Email Certification</button>
             <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
-            <div class="form-group last mb-4 check_input" id="check" style="display: none;">
+            <div class="form-group last mb-4 check_input is-hidden" id="check">
                 <label for="memailconfirm" id="memailconfirmTxt">인증번호를 입력해주세요</label>
                 <input type="text" class="form-control" id="memailconfirm">
             </div>
@@ -39,7 +39,7 @@
             <input type="date" class="form-control" id="birth" name="birth" value="1900-01-01" max="9999-12-31" required>
         </div>
         <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-        <button type="button" id="submit" class="btn btn-primary" style="display: none;">Submit</button>
+        <button type="button" id="submit" class="btn btn-primary is-hidden">Submit</button>
     </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->

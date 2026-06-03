@@ -5,169 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/chat/chat.css">
     <title>Chatting Room</title>
 </head>
-<style>
-    html {
-        scroll-behavior: smooth;
-    }
-    .container {
-        display: flex;
-        flex-direction: column;
-        height: 700px;
-        overflow: auto;
-        background: var(--surface-bg);
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 10px;
-    }
-    .chat-controls {
-        display: flex;
-        gap: 8px;
-        max-width: 1140px;
-        margin: 0 auto 10px;
-        padding: 0 15px;
-    }
-    .chat-controls textarea {
-        resize: none;
-    }
-    .msgArea,
-    .list-group-flush {
-        width: 100%;
-        padding-left: 0;
-    }
-    .chat-message-row {
-        display: flex;
-        width: 100%;
-        border: 0;
-        background: transparent;
-    }
-    .chat-message-row.other {
-        justify-content: flex-start;
-        text-align: left;
-    }
-    .chat-message-row.mine {
-        justify-content: flex-end;
-        text-align: right;
-    }
-    .chat-message-content {
-        display: flex;
-        flex-direction: column;
-        max-width: 70%;
-        gap: 6px;
-    }
-    .chat-message-row.other .chat-message-content {
-        align-items: flex-start;
-    }
-    .chat-message-row.mine .chat-message-content {
-        align-items: flex-end;
-    }
-    .chat-message-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .chat-message-row.mine .chat-message-header {
-        flex-direction: row-reverse;
-    }
-    .chat-message-content pre {
-        max-width: 100%;
-        margin: 0;
-        padding: 8px 12px;
-        border-radius: 12px;
-        background: var(--surface-muted);
-        color: var(--text-primary);
-        white-space: pre-wrap;
-        overflow-wrap: break-word;
-        text-align: inherit;
-    }
-    .chat-message-row.mine .chat-message-content pre {
-        background: #dbeafe;
-        color: #111827;
-    }
-    .profile {
-        width: 50px;
-        height: 50px;
-        border-radius: 90px;
-        object-fit: cover;
-    }
-    .chatimg {
-        width: 200px;
-        height: 200px;
-        object-fit: cover;
-        border-radius: 8px;
-    }
-    .arrow {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        border: 1px solid var(--border-color);
-        background: var(--surface-muted);
-        color: var(--text-primary);
-        font-size: 10px;
-    }
-    body.dark-mode .container {
-        box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
-    }
-    body.dark-mode .list-group-item {
-        background: transparent !important;
-        border-color: var(--border-color) !important;
-    }
-    body.dark-mode .chat-message-header,
-    body.dark-mode .chat-message-content pre {
-        color: var(--text-primary);
-    }
-    body.dark-mode .chat-message-row.mine .chat-message-content pre {
-        background: #1d4ed8;
-        color: #eff6ff;
-    }
-    body.dark-mode .chat-message-row.other .chat-message-content pre {
-        background: var(--surface-muted);
-    }
-    body.dark-mode .chatimg {
-        border: 1px solid var(--border-color);
-    }
-    body.dark-mode .arrow {
-        background: var(--surface-muted);
-        color: var(--text-primary);
-    }
-    @media (max-width: 576px) {
-        .container {
-            height: calc(100vh - 180px);
-        }
-        .chat-controls {
-            flex-wrap: wrap;
-        }
-        .chat-controls textarea {
-            flex: 1 0 100%;
-        }
-    }
-</style>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
-    <script>
-        try {
-            if (localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-            }
-        } catch (error) {
-            console.error('테마 조회 오류:', error);
-        }
-    </script>
+    <script src="/js/common/theme.js"></script>
     <input type="hidden" id="room" th:value="${room}">
     <input type="hidden" id="email" th:value="${member}">
     <input type="hidden" id="flag" th:value="${flag}">
-    <div class="container">
+    <div class="container chat-room-container">
         <form method="dialog" enctype="multipart/form-data">
         <div class="msgArea">
             <ul class="list-group-flush"></ul>
         </div>
         </form>
     </div>
-    <div class="chat-controls">
+    <div class="chat-room-controls">
         <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>
         <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
-        <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
+        <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>
         <button type="button" class="btn btn-primary" id="btn">이미지 전송</button>
         <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
     </div>

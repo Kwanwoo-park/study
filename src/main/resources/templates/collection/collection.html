@@ -26,12 +26,12 @@
     </div>
     <form method="dialog" enctype="multipart/form-data">
         <div class="imgDiv" id="imgDiv">
-            <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" />
+            <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" class="is-hidden" />
             <button type="button" class="btn btn-primary" id="btn">이미지</button>
         </div>
         <div class="saveBtnWrap">
-            <button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Save</button>
-            <button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="imgBtn">Image Save</button>
+            <button type="button" class="btn btn-primary is-hidden" onclick="fnSave()" id="submit">Save</button>
+            <button type="button" class="btn btn-primary is-hidden" onclick="fnImgSave()" id="imgBtn">Image Save</button>
         </div>
     </form>
     <div class="saveBtnWrap">

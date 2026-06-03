@@ -15,14 +15,14 @@
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
         <form method="post" enctype="multipart/form-data">
             <div class="imgDiv">
-                <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" style="display: none" multiple/>
+                <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>
                 <button type="button" class="btn btn-primary" id="btn">Image</button>
             </div>
-            <textarea class="form-control" rows="5" cols="" id="content" name="content" style="display: none"></textarea>
+            <textarea class="form-control is-hidden" rows="5" cols="" id="content" name="content"></textarea>
             <div class="btnDiv">
-                <button type="button" class="btn btn-success" onclick="fnPrevious()" style="display: none" id="previous">Previous</button>
-                <button type="button" class="btn btn-primary" onclick="fnSave()" style="display: none" id="submit">Submit</button>
-                <button type="button" class="btn btn-primary" onclick="fnImgSave()" style="display: none" id="img_btn">Image Save</button>
+                <button type="button" class="btn btn-success is-hidden" onclick="fnPrevious()" id="previous">Previous</button>
+                <button type="button" class="btn btn-primary is-hidden" onclick="fnSave()" id="submit">Submit</button>
+                <button type="button" class="btn btn-primary is-hidden" onclick="fnImgSave()" id="img_btn">Image Save</button>
             </div>
         </form>
 	</div>

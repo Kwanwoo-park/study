@@ -17,7 +17,7 @@
 	<div class="container">
 		<div class="editDiv" th:if="${#strings.equals(board.member.email, member)}">
 			<span th:onclick="fnEdit()" id="edit">Edit</span>
-			<span th:onclick="fnEditComplete([[${board.id}]])" id="complete" style="display: none;">Complete</span>
+			<span th:onclick="fnEditComplete([[${board.id}]])" id="complete" class="is-hidden">Complete</span>
 			<br>
 			<span th:onclick="fnDelete([[${board.id}]])" id="delete">Delete</span>
 		</div>
@@ -26,7 +26,7 @@
 			<span th:text="${board.member.name}" class="name"></span>
 		</div>
 		<div class="main-image-wrapper">
-			<button th:if="${board.img.size > 1}" type="button" class="arrow" th:id="'left' + ${board.id}" style="visibility:hidden;" th:onclick="fnLeft([[${board.id}]], [[${board.img}]])">‹</button>
+			<button th:if="${board.img.size > 1}" type="button" class="arrow is-invisible" th:id="'left' + ${board.id}" th:onclick="fnLeft([[${board.id}]], [[${board.img}]])">‹</button>
 			<img th:if="${board.img.size == 0}" th:src="@{/img/} + 'IMG_0111.jpeg'" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
 			<img th:unless="${board.img.size == 0}" th:src="${board.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
 			<input type="hidden" th:id="'img' + ${board.id}" th:value="0">
@@ -45,7 +45,7 @@
 			</div>
 			<span th:text="${board.member.name}" class="name"></span>
 			<pre th:text="${board.content}" id="content"></pre>
-			<textarea th:text="${board.content}" class="form-control" rows="5" cols="" id="editContent" name="content" style="display: none"></textarea>
+			<textarea th:text="${board.content}" class="form-control is-hidden" rows="5" cols="" id="editContent" name="content"></textarea>
 			<div class="comment" th:onclick="fnComment([[${board.id}]])">
 				<label class="form-label">댓글</label>
 				<label class="form-label" th:id="'comment_cnt' + ${board.id}" th:text="${board.comment.size}"></label>

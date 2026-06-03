@@ -6,29 +6,14 @@
   <title>Administrator View</title>
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
-  <style>
-    .text {
-      font-size: 20px;
-    }
-    .annotation {
-      color: gray;
-    }
-  </style>
+  <link rel="stylesheet" href="/css/admin/admin.css">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
-<script>
-  try {
-    if (localStorage.getItem('theme') === 'dark') {
-      document.body.classList.add('dark-mode');
-    }
-  } catch (error) {
-    console.error('테마 조회 오류:', error);
-  }
-</script>
+<script src="/js/common/theme.js"></script>
 <div class="container">
   <h1>Forbidden word list</h1>
   <button type="button" id="btn" class="btn btn-success">Forbidden word upload</button>
-  <div id="uploadDiv" style="display: none;">
+  <div id="uploadDiv" class="is-hidden">
     <input type="text" class="form-control" id="word" name="word" placeholder="Input forbidden word">
     <label for="risk">위험도 선택</label>
     <select id="risk">
@@ -39,11 +24,11 @@
   </div>
   <hr>
   <div th:each="list : ${list}">
-    <div class="text">
+    <div class="text admin-forbidden-text">
       <label class="form-label">Word: </label>
       <label class="form-label" th:text="${list.word}"></label>
     </div>
-    <div class="annotation">
+    <div class="annotation admin-forbidden-annotation">
       <label>Status: </label>
       <label th:text="${list.Status}"></label>
       <label>Risk: </label>

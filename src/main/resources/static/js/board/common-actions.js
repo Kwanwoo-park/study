@@ -15,12 +15,12 @@ function fnLeft(listId, imageArr) {
     mainImage.src = imageArr[nextIndex].imgSrc;
     imgId.value = nextIndex;
 
-    if (rightArrow && rightArrow.style.visibility === 'hidden') {
-        rightArrow.style.visibility = 'visible';
+    if (rightArrow) {
+        rightArrow.classList.remove('is-invisible');
     }
 
     if (leftArrow && nextIndex === 0) {
-        leftArrow.style.visibility = 'hidden';
+        leftArrow.classList.add('is-invisible');
     }
 }
 
@@ -41,12 +41,12 @@ function fnRight(listId, imageArr) {
     mainImage.src = imageArr[nextIndex].imgSrc;
     imgId.value = nextIndex;
 
-    if (leftArrow && leftArrow.style.visibility === 'hidden') {
-        leftArrow.style.visibility = 'visible';
+    if (leftArrow) {
+        leftArrow.classList.remove('is-invisible');
     }
 
     if (rightArrow && nextIndex === imageArr.length - 1) {
-        rightArrow.style.visibility = 'hidden';
+        rightArrow.classList.add('is-invisible');
     }
 }
 

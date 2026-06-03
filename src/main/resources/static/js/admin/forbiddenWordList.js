@@ -5,9 +5,10 @@ const risk = document.getElementById('risk')
 
 if (btn) {
     btn.addEventListener('click', (event) => {
-        if (div.style.display === 'none')
+        if (window.getComputedStyle(div).display === 'none') {
+            div.classList.remove('is-hidden');
             div.style.display = 'inline';
-        else {
+        } else {
             fetch(`/api/forbidden/word/admin/save`, {
                 method: 'POST',
                 headers: {

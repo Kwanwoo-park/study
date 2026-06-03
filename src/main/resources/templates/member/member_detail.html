@@ -18,7 +18,7 @@
 <div class="container" th:attr="data-member-email=${member.email}">
   <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
     <div class="profileDiv">
-      <img th:src="${member.profile}" width="200vw" height="200vw" style="border-radius: 90px" id="profile">
+      <img th:src="${member.profile}" class="profile-image-large" id="profile">
       &nbsp;&nbsp;&nbsp;&nbsp;
       <div class="profileInfo">
         <div class="profileNameRow">
