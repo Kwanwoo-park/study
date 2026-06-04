@@ -93,23 +93,35 @@ body {
 
 .notification-dot {
     position: relative;
-    display: inline-block;
-}
-.notification-dot::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: red;
-    transform: translate(50%, -50%);
-    display: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.notification-dot.active::after {
-    display: block;
+.notification-count-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border: 2px solid var(--nav-bg);
+    border-radius: 999px;
+    background: #dc2626;
+    color: #ffffff;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    transform: translate(45%, -45%);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, .35);
+    pointer-events: none;
+}
+
+.notification-dot.active .notification-count-badge {
+    display: inline-flex;
 }
 
 .is-hidden {
@@ -386,7 +398,7 @@ body.mobile-view .main-image,
 body.mobile-view .save-img {
     width: 100%;
     max-width: 100%;
-    height: 100%;
+    height: auto;
     max-height: 375px;
 }
 

@@ -14,12 +14,14 @@ document.addEventListener('DOMContentLoaded', function() {
     eventSource.addEventListener('notification', function(event) {
         try {
             let json = JSON.parse(event.data);
+            const notificationId = json['id'];
             const notificationMessage = json['message'];
             const notificationGroup = json['notiGroup'];
             const notificationUrl = json['url'];
 
             if (notificationMessage) {
-                fnSetUnreadNotificationDot(true);
+                fnUpdateUnreadNotificationDot();
+                if (typeof fnHandleIncomingNotificationCount === 'function') fnHandleIncomingNotificationCount(json);
 
                 const notificationElement = document.getElementById('notification-message');
                 notificationElement.textContent = notificationMessage;
@@ -27,9 +29,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const notificationBanner = document.getElementById('notification-banner');
                 notificationBanner.classList.remove('d-none');
                 notificationBanner.style.cursor = 'pointer';
+                notificationBanner.dataset.notificationId = notificationId || '';
                 notificationBanner.onclick = function() {
                     notificationBanner.classList.add('d-none');
-                    fnNotificationMove(notificationGroup, notificationUrl);
+                    fnMoveNotificationAfterRead(notificationId, notificationGroup, notificationUrl);
                 };
 
                 setTimeout(() => {
@@ -57,10 +60,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const notificationCloseButton = notificationBanner ? notificationBanner.querySelector('.btn-close') : null;
     if (notificationCloseButton) {
         notificationCloseButton.addEventListener('click', function(event) {
-                event.stopPropagation();
-                const notificationBanner = document.getElementById('notification-banner');
-                notificationBanner.classList.add('d-none');
-            });
+            event.stopPropagation();
+            const notificationBanner = document.getElementById('notification-banner');
+            const notificationId = notificationBanner ? notificationBanner.dataset.notificationId : null;
+            if (notificationBanner) notificationBanner.classList.add('d-none');
+            fnMarkNotificationAsRead(notificationId);
+        });
     }
 
     window.addEventListener('beforeunload', function() {
@@ -110,11 +115,21 @@ function fnUpdateThemeToggleLabel() {
     themeToggle.setAttribute('title', label);
 }
 
-function fnSetUnreadNotificationDot(hasUnread) {
+function fnSetUnreadNotificationDot(unreadCount) {
     const notificationNavIcon = document.getElementById('notification-nav-icon');
     if (!notificationNavIcon) return;
 
+    const count = Number(unreadCount);
+    const hasUnread = count > 0;
+    const notificationCountBadge = document.getElementById('notification-unread-count');
+
     notificationNavIcon.classList.toggle('active', hasUnread);
+    notificationNavIcon.setAttribute('aria-label', hasUnread ? `미확인 알림 ${count}개` : '미확인 알림 없음');
+
+    if (!notificationCountBadge) return;
+
+    notificationCountBadge.textContent = hasUnread ? (count > 99 ? '99+' : String(count)) : '';
+    notificationCountBadge.setAttribute('aria-hidden', hasUnread ? 'false' : 'true');
 }
 
 function fnUpdateUnreadNotificationDot() {
@@ -128,10 +143,38 @@ function fnUpdateUnreadNotificationDot() {
     .then((response) => response.json())
     .then((json) => {
         if (json['result'] <= 0) return;
-        fnSetUnreadNotificationDot(Number(json['count']) > 0);
+        fnSetUnreadNotificationDot(json['count']);
     })
     .catch((error) => {
         console.error('읽지 않은 알림 수 조회 오류:', error);
+    });
+}
+
+function fnMarkNotificationAsRead(id) {
+    if (!id) return Promise.resolve(false);
+
+    return fetch(`/api/notification/mark-as-read?id=` + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        credentials: "include",
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        const isUpdated = json['result'] > 0;
+        if (isUpdated) fnUpdateUnreadNotificationDot();
+        return isUpdated;
+    })
+    .catch((error) => {
+        console.error('알림 읽음 처리 오류:', error);
+        return false;
+    });
+}
+
+function fnMoveNotificationAfterRead(id, group, url) {
+    fnMarkNotificationAsRead(id).finally(() => {
+        fnNotificationMove(group, url);
     });
 }
 

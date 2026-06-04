@@ -42,7 +42,6 @@
     justify-content: center;
     width: 100%;
     max-width: 500px;
-    height: 375px;
     max-height: 375px;
     overflow: hidden;
     border-radius: 8px;
@@ -51,9 +50,9 @@
 .main-image {
     display: block;
     width: 100%;
-    height: 100%;
+    height: auto;
     max-height: 375px;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .main-image-wrapper .arrow {
