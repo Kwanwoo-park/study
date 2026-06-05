@@ -106,6 +106,28 @@
     min-width: 108px;
 }
 
+body.dark-mode .mark-as-read-button {
+    background: #2563eb;
+    border-color: #60a5fa;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, .25);
+}
+
+body.dark-mode .mark-as-read-button:hover,
+body.dark-mode .mark-as-read-button:focus {
+    background: #1d4ed8;
+    border-color: #93c5fd;
+    color: #ffffff !important;
+}
+
+body.dark-mode .mark-as-read-button:disabled {
+    background: #374151;
+    border-color: #6b7280;
+    color: #d1d5db !important;
+    box-shadow: none;
+    opacity: 1;
+}
+
 @media (max-width: 768px) {
     .container.notification-page {
         min-height: calc(100vh - 130px);

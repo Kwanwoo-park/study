@@ -3,7 +3,6 @@ package spring.study.board.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +11,7 @@ import spring.study.board.entity.Board;
 import spring.study.board.facade.BoardFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 import spring.study.board.service.BoardService;
 
 @RequiredArgsConstructor
@@ -23,7 +23,6 @@ public class BoardViewController {
     private final BoardFacade boardFacade;
     private final SessionManager sessionManager;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
     public String getBoardListPage(Model model,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -31,6 +30,11 @@ public class BoardViewController {
                                    HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/all";
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
 
         model.addAttribute("resultMap", boardService.findAll(page, size));
         model.addAttribute("member", member);
