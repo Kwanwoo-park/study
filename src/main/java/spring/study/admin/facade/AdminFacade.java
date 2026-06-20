@@ -16,6 +16,7 @@ import spring.study.member.service.MemberService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -27,19 +28,26 @@ public class AdminFacade {
     private final RedisTemplate<String, String> redisTemplate;
 
     public ResponseEntity<?> memberOnline() {
-        String count = redisTemplate.opsForValue().get("online:total");
+        Set<String> onlineUserKeys = redisTemplate.keys("online:user:*");
 
-        List<Long> userIds = redisTemplate.keys("online:user:*")
+        List<Long> userIds = (onlineUserKeys == null ? Set.<String>of() : onlineUserKeys)
                 .stream()
                 .map(k -> k.substring(k.lastIndexOf(":") + 1))
                 .map(Long::parseLong)
                 .toList();
+        long count = userIds.size();
+
+        if (count == 0L) {
+            redisTemplate.delete("online:total");
+        } else {
+            redisTemplate.opsForValue().set("online:total", Long.toString(count));
+        }
 
         List<Member> list = memberService.findMember(userIds);
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
-                "count", count != null ? Long.parseLong(count) : 0L,
+                "count", count,
                 "list", list
         ));
     }

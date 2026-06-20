@@ -15,6 +15,7 @@
             <span id="notification-message">새 알림</span>
             <button type="button" class="btn-close" aria-label="Close">닫기</button>
         </div>
+        <h1 class="simple-page-title">채팅</h1>
         <div class="room" th:each="room : ${roomList}">
             <div th:if="${#lists.size(member[room.roomId]) == 1}" class="room" th:onclick="fnClick([[${room.roomId}]])">
                 <img th:src="${member[room.roomId][0].profile}" class="profile">

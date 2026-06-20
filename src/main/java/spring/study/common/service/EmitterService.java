@@ -12,6 +12,7 @@ import spring.study.common.repository.EmitterRepository;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -40,12 +41,18 @@ public class EmitterService {
         } catch (ClientAbortException e) {
             log.debug("Client aborted SSE Connection: {}", emitterId);
             emitter.complete();
-            emitterRepository.deleteById(emitterId);
+            disconnect(extractMemberId(emitterId), emitterId);
         } catch (IOException e) {
             log.debug("SSE Connection closed: {}", emitterId);
             emitter.complete();
-            emitterRepository.deleteById(emitterId);
+            disconnect(extractMemberId(emitterId), emitterId);
         }
+    }
+
+    private String extractMemberId(String emitterId) {
+        int separatorIndex = emitterId.indexOf("_");
+
+        return separatorIndex < 0 ? emitterId : emitterId.substring(0, separatorIndex);
     }
 
     public SseEmitter addEmitter(String id) {
@@ -54,14 +61,14 @@ public class EmitterService {
         emitterRepository.deleteAllEventCacheByMemberId(id);
         SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L));
 
-        Boolean exist = redisTemplate.opsForValue().setIfAbsent("online:user:" + id, "1", Duration.ofHours(1L));
+        redisTemplate.opsForValue().setIfAbsent("online:user:" + id, "1", Duration.ofHours(1L));
+        redisTemplate.expire("online:user:" + id, Duration.ofHours(1L));
 
-        if (Boolean.TRUE.equals(exist))
-            redisTemplate.opsForValue().increment("online:total");
+        syncOnlineTotal();
 
-        emitter.onCompletion(() -> emitterRepository.deleteAllEventCacheByMemberId(id));
-        emitter.onTimeout(() -> disconnect(id));
-        emitter.onError(e -> disconnect(id));
+        emitter.onCompletion(() -> disconnect(id, emitterId));
+        emitter.onTimeout(() -> disconnect(id, emitterId));
+        emitter.onError(e -> disconnect(id, emitterId));
 
         Map<String, Object> events = emitterRepository.findAllEventCacheStartWithById(id);
 
@@ -70,22 +77,33 @@ public class EmitterService {
         try {
             emitter.send(SseEmitter.event().reconnectTime(3000).name("connect").data("connected"));
         } catch (IOException e) {
-            emitterRepository.deleteById(emitterId);
+            disconnect(id, emitterId);
         }
 
         return emitter;
     }
 
-    private void disconnect(String id) {
-        emitterRepository.deleteAllEventCacheByMemberId(id);
+    private void disconnect(String id, String emitterId) {
+        emitterRepository.deleteById(emitterId);
 
-        String value = redisTemplate.opsForValue().get("online:total");
-
-        if (redisTemplate.hasKey("online:user:" + id)) {
-            if (value != null && Long.parseLong(value) > 0L)
-                redisTemplate.opsForValue().decrement("online:total");
-
-            redisTemplate.delete("online:user:" + id);
+        if (!emitterRepository.findAllEmitterStartWithById(id).isEmpty()) {
+            return;
         }
+
+        emitterRepository.deleteAllEventCacheByMemberId(id);
+        redisTemplate.delete("online:user:" + id);
+        syncOnlineTotal();
+    }
+
+    private void syncOnlineTotal() {
+        Set<String> onlineUserKeys = redisTemplate.keys("online:user:*");
+        long count = onlineUserKeys == null ? 0L : onlineUserKeys.size();
+
+        if (count == 0L) {
+            redisTemplate.delete("online:total");
+            return;
+        }
+
+        redisTemplate.opsForValue().set("online:total", Long.toString(count));
     }
 }

@@ -13,6 +13,7 @@ import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Status;
 import spring.study.notification.repository.NotificationRepository;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -38,13 +39,19 @@ public class NotificationService {
 
     @Transactional
     public Notification createNotification(Member member, String message, Group group, String url) {
-        Notification notification = notificationRepository.save(Notification.builder()
-                .member(member)
-                .message(message)
-                .readStatus(Status.UNREAD)
-                .notiGroup(group)
-                .url(url)
-                .build());
+        Notification notification = findUpdatableNotification(member, group, url);
+
+        if (notification == null) {
+            notification = notificationRepository.save(Notification.builder()
+                    .member(member)
+                    .message(message)
+                    .readStatus(Status.UNREAD)
+                    .notiGroup(group)
+                    .url(url)
+                    .build());
+        } else {
+            notification.updateUnread(message, url);
+        }
 
         producer.sendNotification(notification);
         return notification;
@@ -58,13 +65,12 @@ public class NotificationService {
         for (ChatRoomMember roomMember : list) {
             otherMember = roomMember.getMember();
 
-            notification = notificationRepository.save(Notification.builder()
-                    .member(otherMember)
-                    .message(member.getName() + "님이 메시지를 보냈습니다.")
-                    .readStatus(Status.UNREAD)
-                    .notiGroup(group)
-                    .url(roomMember.getRoom().getRoomId())
-                    .build());
+            notification = createOrUpdateNotification(
+                    otherMember,
+                    member.getName() + "님이 메시지를 보냈습니다.",
+                    group,
+                    roomMember.getRoom().getRoomId()
+            );
 
             producer.sendNotification(notification);
         }
@@ -78,6 +84,21 @@ public class NotificationService {
     @Transactional
     public int updateAllRead(Member member) {
         return notificationRepository.updateAll(member.getId(), Status.READ);
+    }
+
+    @Transactional
+    public int updateReadByGroupAndUrl(Member member, Group group, String url) {
+        if (url == null || url.isBlank()) {
+            return 0;
+        }
+
+        return notificationRepository.updateReadStatusByMemberAndGroupAndUrl(
+                member,
+                group,
+                url,
+                Status.UNREAD,
+                Status.READ
+        );
     }
 
     @Transactional
@@ -98,7 +119,9 @@ public class NotificationService {
     }
 
     public List<Notification> findByMember(Member member) {
-        return notificationRepository.findByMember(member).stream().sorted(Comparator.comparing(Notification::getId).reversed()).toList();
+        return notificationRepository.findByMember(member).stream()
+                .sorted(Comparator.comparing(this::notificationSortTime).reversed())
+                .toList();
     }
 
     public List<Notification> findUnReadNotification(Member member) {
@@ -107,5 +130,39 @@ public class NotificationService {
 
     public void deleteByMember(Member member) {
         notificationRepository.deleteByMember(member);
+    }
+
+    private Notification createOrUpdateNotification(Member member, String message, Group group, String url) {
+        Notification notification = findUpdatableNotification(member, group, url);
+
+        if (notification == null) {
+            return notificationRepository.save(Notification.builder()
+                    .member(member)
+                    .message(message)
+                    .readStatus(Status.UNREAD)
+                    .notiGroup(group)
+                    .url(url)
+                    .build());
+        }
+
+        notification.updateUnread(message, url);
+        return notification;
+    }
+
+    private Notification findUpdatableNotification(Member member, Group group, String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+
+        return notificationRepository.findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(
+                member,
+                group,
+                url,
+                Status.UNREAD
+        ).orElse(null);
+    }
+
+    private LocalDateTime notificationSortTime(Notification notification) {
+        return notification.getUpdateTime() == null ? notification.getRegisterTime() : notification.getUpdateTime();
     }
 }

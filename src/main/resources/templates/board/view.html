@@ -15,6 +15,7 @@
 <button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
 <button type="button" th:unless="${next == 0}" id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
 	<div class="container">
+		<h1 class="simple-page-title">게시글</h1>
 		<div class="editDiv" th:if="${#strings.equals(board.member.email, member)}">
 			<span th:onclick="fnEdit()" id="edit">Edit</span>
 			<span th:onclick="fnEditComplete([[${board.id}]])" id="complete" class="is-hidden">Complete</span>

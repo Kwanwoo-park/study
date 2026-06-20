@@ -28,8 +28,10 @@ public class EmitterRepository {
     }
 
     public Map<String, SseEmitter> findAllEmitterStartWithById(String memberId) {
+        String emitterPrefix = memberId + "_";
+
         return emitters.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(memberId))
+                .filter(entry -> entry.getKey().startsWith(emitterPrefix))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 

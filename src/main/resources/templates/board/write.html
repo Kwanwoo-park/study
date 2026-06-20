@@ -13,6 +13,7 @@
     <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
     <div class="container">
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+        <h1 class="simple-page-title">게시글 작성</h1>
         <form method="post" enctype="multipart/form-data">
             <div class="imgDiv">
                 <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>

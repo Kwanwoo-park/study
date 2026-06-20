@@ -11,6 +11,7 @@ import spring.study.member.entity.Member;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @Entity
@@ -49,10 +50,21 @@ public class Notification extends BasetimeEntity implements Serializable {
     }
 
     public void addMember(Member member) {
+        if (member.getNotifications().contains(this)) {
+            return;
+        }
+
         member.getNotifications().add(this);
     }
 
     public void changeToRead() {
         this.readStatus = Status.READ;
+    }
+
+    public void updateUnread(String message, String url) {
+        this.message = message;
+        this.url = url;
+        this.readStatus = Status.UNREAD;
+        changeUpdateTime(LocalDateTime.now());
     }
 }

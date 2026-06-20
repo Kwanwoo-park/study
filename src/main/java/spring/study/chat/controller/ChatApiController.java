@@ -12,6 +12,8 @@ import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
+import spring.study.notification.entity.Group;
+import spring.study.notification.service.NotificationService;
 
 import java.util.*;
 
@@ -24,6 +26,7 @@ public class ChatApiController {
     private final CommonFacade commonFacade;
     private final ChatFacade chatFacade;
     private final ChatPresenceService chatPresenceService;
+    private final NotificationService notificationService;
 
     @GetMapping("/load")
     public ResponseEntity<?> loadChatting(@RequestParam String roomId,
@@ -85,6 +88,7 @@ public class ChatApiController {
         if (member == null) return commonFacade.unauthorized();
 
         chatPresenceService.active(roomId, member);
+        notificationService.updateReadByGroupAndUrl(member, Group.CHAT, roomId);
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L
