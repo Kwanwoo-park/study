@@ -82,4 +82,12 @@ public class AccountApiController {
 
         return accountTransactionFacade.getListByAccount(account, page, member);
     }
+
+    @PatchMapping("/transactions/{id}/cancel")
+    public ResponseEntity<?> cancelTransaction(@PathVariable Long id, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountTransactionFacade.cancel(id, member);
+    }
 }

@@ -12,10 +12,14 @@ import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.repository.AccountRepository;
 import spring.study.account.repository.AccountTransactionRepository;
 import spring.study.member.entity.Member;
+import spring.study.notification.entity.Group;
+import spring.study.notification.service.NotificationService;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -24,6 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountTransactionRepository accountTransactionRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public Account createAccount(Member member) {
@@ -90,7 +95,7 @@ public class AccountService {
 
         account.subAmount(dto.getAmount());
         tranAccount.addAmount(dto.getAmount());
-        accountTransactionRepository.save(AccountTransaction.builder()
+        AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
                 .transactionType(AccountTransactionType.TRANSFER)
                 .transactionStatus(AccountTransactionStatus.COMPLETED)
                 .amount(dto.getAmount())
@@ -102,6 +107,7 @@ public class AccountService {
                 .bankName("Kwanwoo site account")
                 .transactionTime(LocalDateTime.now())
                 .build());
+        notifyTransaction(transaction);
 
         return account;
     }
@@ -114,7 +120,7 @@ public class AccountService {
 
         Account account = findByAccount(accountNum);
         account.addAmount(amount);
-        accountTransactionRepository.save(AccountTransaction.builder()
+        AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
                 .transactionType(AccountTransactionType.DEPOSIT)
                 .transactionStatus(AccountTransactionStatus.COMPLETED)
                 .amount(amount)
@@ -125,6 +131,7 @@ public class AccountService {
                 .bankName("Kwanwoo site account")
                 .transactionTime(LocalDateTime.now())
                 .build());
+        notifyTransaction(transaction);
 
         return account;
     }
@@ -155,5 +162,46 @@ public class AccountService {
         long randomValue = ThreadLocalRandom.current().nextLong(range);
 
         return String.valueOf(min + Math.floorMod(timestamp + randomValue, range));
+    }
+
+    void notifyTransaction(AccountTransaction transaction) {
+        if (transaction.getWithdrawalAccount() != null) {
+            notifyAccountMember(
+                    transaction.getWithdrawalAccount(),
+                    createTransactionMessage(transaction, transaction.getWithdrawalAccount())
+            );
+        }
+
+        if (transaction.getDepositAccount() != null) {
+            notifyAccountMember(
+                    transaction.getDepositAccount(),
+                    createTransactionMessage(transaction, transaction.getDepositAccount())
+            );
+        }
+    }
+
+    private void notifyAccountMember(Account account, String message) {
+        Member member = account.getMember();
+        if (member == null) {
+            return;
+        }
+
+        notificationService.createNotification(member, message, Group.TRAN, account.getAccount());
+    }
+
+    private String createTransactionMessage(AccountTransaction transaction, Account account) {
+        String amount = NumberFormat.getNumberInstance(Locale.KOREA).format(transaction.getAmount());
+        String status = transaction.getTransactionStatus() == AccountTransactionStatus.CANCELED ? "취소" : "완료";
+        String transactionType = switch (transaction.getTransactionType()) {
+            case TRANSFER -> "이체";
+            case DEPOSIT -> "입금";
+            case WITHDRAWAL -> "출금";
+            case PAYMENT -> "결제";
+            case REFUND -> "환불";
+            case FEE -> "수수료";
+            case CANCEL -> "취소";
+        };
+
+        return account.getName() + " 계좌에서 " + amount + "원 " + transactionType + " 거래가 " + status + "되었습니다.";
     }
 }

@@ -103,4 +103,8 @@ public class AccountTransaction implements Serializable {
         this.bankName = bankName;
         this.transactionTime = transactionTime;
     }
+
+    public void cancel() {
+        this.transactionStatus = AccountTransactionStatus.CANCELED;
+    }
 }

@@ -23,6 +23,7 @@ public class AccountTransactionResponseDto {
     private String counterpartyName;
     private String bankName;
     private LocalDateTime transactionTime;
+    private boolean cancelable;
 
     public AccountTransactionResponseDto(AccountTransaction entity) {
         this.id = entity.getId();
@@ -37,5 +38,8 @@ public class AccountTransactionResponseDto {
         this.counterpartyName = entity.getCounterpartyName();
         this.bankName = entity.getBankName();
         this.transactionTime = entity.getTransactionTime();
+        this.cancelable = entity.getTransactionStatus() == AccountTransactionStatus.COMPLETED
+                && entity.getTransactionType() != AccountTransactionType.CANCEL
+                && entity.getTransactionTime().plusDays(1).isAfter(LocalDateTime.now());
     }
 }

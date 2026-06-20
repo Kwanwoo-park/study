@@ -114,6 +114,10 @@
     text-align: right;
 }
 
+.account-transaction-summary .btn {
+    margin-top: 8px;
+}
+
 .account-transaction-summary.deposit .account-page-amount {
     color: #0a7d36;
 }

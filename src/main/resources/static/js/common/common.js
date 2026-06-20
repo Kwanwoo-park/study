@@ -213,4 +213,6 @@ function fnNotificationMove(group, url) {
         location.replace(`/comment?id=` + url);
     else if (group == "FAVORITE")
         location.replace(`/board/view?id=` + url);
+    else if (group == "TRAN")
+        location.replace(`/account/transactions?account=` + encodeURIComponent(url));
 }

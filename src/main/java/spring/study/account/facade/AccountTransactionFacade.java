@@ -45,6 +45,28 @@ public class AccountTransactionFacade {
         ));
     }
 
+    public ResponseEntity<?> cancel(Long transactionId, Member member) {
+        try {
+            AccountTransaction cancelTransaction = accountTransactionService.cancelTransaction(transactionId, member);
+
+            return ResponseEntity.ok(Map.of(
+                    "result", 10L,
+                    "transaction", new AccountTransactionResponseDto(cancelTransaction),
+                    "message", "거래가 취소되었습니다"
+            ));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -10L,
+                    "message", e.getMessage()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
     private ResponseEntity<?> validateOwner(String accountNumber, Member member) {
         if (accountNumber == null || accountNumber.isBlank()) {
             return accountNotFound();

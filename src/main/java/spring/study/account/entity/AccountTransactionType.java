@@ -6,5 +6,6 @@ public enum AccountTransactionType {
     WITHDRAWAL,
     PAYMENT,
     REFUND,
-    FEE
+    FEE,
+    CANCEL
 }

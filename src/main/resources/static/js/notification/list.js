@@ -3,6 +3,7 @@ const notificationGroupButtons = {
     ADMIN: { id: 'admin', label: '시스템' },
     FOLLOW: { id: 'follow', label: '팔로우' },
     FAVORITE: { id: 'favorite', label: '좋아요' },
+    TRAN: { id: 'tran', label: '거래' },
     CHAT: { id: 'chat', label: '채팅' },
     COMMENT: { id: 'comment', label: '댓글' },
     REPLY: { id: 'reply', label: '답글' },

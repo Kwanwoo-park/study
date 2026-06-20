@@ -22,18 +22,24 @@
     let isLoading = false;
 
     body.addEventListener('click', async (event) => {
-        const button = event.target.closest('[data-page-action]');
-        if (!button || isLoading) {
+        if (isLoading) {
             return;
         }
 
-        if (button.dataset.pageAction === 'previous') {
+        const pageButton = event.target.closest('[data-page-action]');
+        if (pageButton && pageButton.dataset.pageAction === 'previous') {
             await loadTransactions(Math.max(currentPage - 1, 0));
             return;
         }
 
-        if (button.dataset.pageAction === 'next') {
+        if (pageButton && pageButton.dataset.pageAction === 'next') {
             await loadTransactions(currentPage + 1);
+            return;
+        }
+
+        const cancelButton = event.target.closest('[data-transaction-action="cancel"]');
+        if (cancelButton) {
+            await cancelTransaction(cancelButton.dataset.transactionId);
         }
     });
 
@@ -136,6 +142,9 @@
         const typeLabel = getTypeLabel(transaction.transactionType);
         const statusLabel = getStatusLabel(transaction.transactionStatus);
         const isDeposit = transaction.depositAccount === account;
+        const cancelButton = transaction.cancelable
+            ? `<button type="button" class="btn btn-outline-danger btn-sm" data-transaction-action="cancel" data-transaction-id="${escapeHtml(transaction.id)}">취소</button>`
+            : '';
 
         return `
             <div class="account-transaction-row">
@@ -150,9 +159,46 @@
                 <div class="account-transaction-summary ${isDeposit ? 'deposit' : 'withdrawal'}">
                     <div class="account-page-amount">${isDeposit ? '+' : '-'}${formatAmount(transaction.amount)}원</div>
                     <div class="account-page-number">${escapeHtml(statusLabel)}</div>
+                    ${cancelButton}
                 </div>
             </div>
             ${transaction.memo ? `<div class="account-transaction-memo">${escapeHtml(transaction.memo)}</div>` : ''}`;
+    }
+
+    async function cancelTransaction(transactionId) {
+        if (!transactionId) {
+            return;
+        }
+
+        if (!confirm('거래를 취소하시겠습니까?')) {
+            return;
+        }
+
+        isLoading = true;
+
+        try {
+            const response = await fetch(`/api/account/transactions/${encodeURIComponent(transactionId)}/cancel`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                },
+                credentials: 'include',
+            });
+            const json = await response.json();
+
+            if (json.result < 0) {
+                alert(json.message || '거래를 취소할 수 없습니다');
+                return;
+            }
+
+            alert(json.message || '거래가 취소되었습니다');
+            await loadTransactions(currentPage);
+        } catch (error) {
+            console.error(error);
+            alert('거래 취소 중 오류가 발생했습니다');
+        } finally {
+            isLoading = false;
+        }
     }
 
     function getTypeLabel(type) {
@@ -163,6 +209,7 @@
             PAYMENT: '결제',
             REFUND: '환불',
             FEE: '수수료',
+            CANCEL: '취소',
         };
 
         return labels[type] || type || '-';

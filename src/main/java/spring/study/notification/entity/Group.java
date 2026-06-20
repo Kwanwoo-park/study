@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Group {
-    FAVORITE("FAVORITE"), CHAT("CHAT"), COMMENT("COMMENT"), FOLLOW("FOLLOW"), REPLY("REPLY"), ADMIN("ADMIN");
+    FAVORITE("FAVORITE"), CHAT("CHAT"), COMMENT("COMMENT"), FOLLOW("FOLLOW"), REPLY("REPLY"), ADMIN("ADMIN"), TRAN("TRAN");
     private String value;
 }
