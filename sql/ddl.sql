@@ -87,3 +87,18 @@ create table room_member (
     mem_name varchar(100) not null,
     email varchar(200) not null
 );
+
+create table account_transaction (
+    id bigint auto_increment primary key,
+    transaction_type varchar(20) not null,
+    transaction_status varchar(20) not null,
+    amount bigint not null,
+    fee bigint not null default 0,
+    withdrawal_account varchar(255) null,
+    deposit_account varchar(255) null,
+    balance_after_transaction bigint not null,
+    memo varchar(200) null,
+    counterparty_name varchar(100) null,
+    bank_name varchar(100) null,
+    transaction_time datetime not null
+);

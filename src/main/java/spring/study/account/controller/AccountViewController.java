@@ -74,4 +74,22 @@ public class AccountViewController {
 
         return "account/transfer";
     }
+
+    @GetMapping("/transactions")
+    public String transactions(
+            Model model,
+            HttpServletRequest request,
+            @RequestParam String account
+    ) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) {
+            return "redirect:/member/login?error=true&exception=Not Found&url=/account/transactions";
+        }
+
+        model.addAttribute("email", member.getEmail());
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("account", account);
+
+        return "account/transactions";
+    }
 }

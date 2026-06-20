@@ -6,10 +6,15 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import spring.study.account.dto.AccountTranDto;
 import spring.study.account.entity.Account;
+import spring.study.account.entity.AccountTransaction;
+import spring.study.account.entity.AccountTransactionStatus;
+import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.repository.AccountRepository;
+import spring.study.account.repository.AccountTransactionRepository;
 import spring.study.member.entity.Member;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
@@ -18,6 +23,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequiredArgsConstructor
 public class AccountService {
     private final AccountRepository accountRepository;
+    private final AccountTransactionRepository accountTransactionRepository;
 
     @Transactional
     public Account createAccount(Member member) {
@@ -84,6 +90,18 @@ public class AccountService {
 
         account.subAmount(dto.getAmount());
         tranAccount.addAmount(dto.getAmount());
+        accountTransactionRepository.save(AccountTransaction.builder()
+                .transactionType(AccountTransactionType.TRANSFER)
+                .transactionStatus(AccountTransactionStatus.COMPLETED)
+                .amount(dto.getAmount())
+                .fee(0L)
+                .withdrawalAccount(account)
+                .depositAccount(tranAccount)
+                .balanceAfterTransaction(account.getAmount())
+                .counterpartyName(tranAccount.getName())
+                .bankName("Kwanwoo site account")
+                .transactionTime(LocalDateTime.now())
+                .build());
 
         return account;
     }
@@ -96,6 +114,17 @@ public class AccountService {
 
         Account account = findByAccount(accountNum);
         account.addAmount(amount);
+        accountTransactionRepository.save(AccountTransaction.builder()
+                .transactionType(AccountTransactionType.DEPOSIT)
+                .transactionStatus(AccountTransactionStatus.COMPLETED)
+                .amount(amount)
+                .fee(0L)
+                .depositAccount(account)
+                .balanceAfterTransaction(account.getAmount())
+                .counterpartyName(account.getName())
+                .bankName("Kwanwoo site account")
+                .transactionTime(LocalDateTime.now())
+                .build());
 
         return account;
     }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.account.dto.AccountRequestDto;
 import spring.study.account.dto.AccountTranDto;
 import spring.study.account.facade.AccountFacade;
+import spring.study.account.facade.AccountTransactionFacade;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
@@ -19,6 +20,7 @@ import spring.study.member.entity.Member;
 public class AccountApiController {
     private final SessionManager sessionManager;
     private final AccountFacade accountFacade;
+    private final AccountTransactionFacade accountTransactionFacade;
     private final CommonFacade commonFacade;
 
     @PostMapping("/create")
@@ -67,5 +69,17 @@ public class AccountApiController {
         if (member == null) return commonFacade.unauthorized();
 
         return accountFacade.delete(account, member);
+    }
+
+    @GetMapping("/transactions")
+    public ResponseEntity<?> getTransactions(
+            @RequestParam String account,
+            @RequestParam(defaultValue = "0") int page,
+            HttpServletRequest request
+    ) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountTransactionFacade.getListByAccount(account, page, member);
     }
 }

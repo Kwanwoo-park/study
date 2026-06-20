@@ -39,6 +39,11 @@
             return;
         }
 
+        if (action === 'transactions') {
+            window.location.href = `/account/transactions?account=${encodeURIComponent(account)}`;
+            return;
+        }
+
         if (action === 'transfer-submit') {
             await transferAccount(account, actionTarget.dataset.tranAccount);
             return;
@@ -182,6 +187,7 @@
                 </div>
                 <div class="account-page-amount">${formatAmount(account.amount)}원</div>
                 <div class="account-action-group">
+                    <button type="button" class="btn btn-outline-secondary" data-action="transactions" data-account="${accountId}">거래 내역</button>
                     <button type="button" class="btn btn-outline-primary" data-action="deposit-toggle" data-account="${accountId}">입금</button>
                     ${canTransfer ? `<button type="button" class="btn btn-success" data-action="transfer-toggle" data-account="${accountId}">계좌이체</button>` : ''}
                 </div>

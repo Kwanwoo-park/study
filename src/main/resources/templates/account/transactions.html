@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Account Transactions</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/account/page.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+
+<main class="container account-page account-transaction-page"
+      th:attr="data-account=${account}">
+  <section class="account-page-header">
+    <div>
+      <h1 id="transactionPageTitle">거래 내역</h1>
+      <p id="transactionPageDescription" class="account-page-description"></p>
+    </div>
+    <a href="/account" class="btn btn-outline-secondary">계좌 목록</a>
+  </section>
+
+  <section id="transactionPageBody" class="account-page-body"></section>
+</main>
+
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/account/transactions.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+</html>

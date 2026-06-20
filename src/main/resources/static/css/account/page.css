@@ -71,6 +71,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .account-page-message {
@@ -97,17 +98,56 @@
     min-width: 0;
 }
 
+.account-transaction-row {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.account-transaction-accounts {
+    color: #555;
+    line-height: 1.6;
+}
+
+.account-transaction-summary {
+    text-align: right;
+}
+
+.account-transaction-summary.deposit .account-page-amount {
+    color: #0a7d36;
+}
+
+.account-transaction-summary.withdrawal .account-page-amount {
+    color: #b42318;
+}
+
+.account-transaction-memo {
+    margin-top: 8px;
+    color: #555;
+}
+
+.account-transaction-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 18px 0 4px;
+}
+
 @media (max-width: 600px) {
     .account-page-header {
         flex-direction: column;
     }
 
     .account-page-row,
+    .account-transaction-row,
     .account-transfer-form {
         grid-template-columns: 1fr;
     }
 
-    .account-page-amount {
+    .account-page-amount,
+    .account-transaction-summary {
         text-align: left;
     }
 
