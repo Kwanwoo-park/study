@@ -61,6 +61,7 @@ html {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    position: relative;
     height: 700px;
     overflow: auto;
     background: var(--surface-bg);
@@ -80,6 +81,28 @@ html {
 
 .chat-room-controls textarea {
     resize: none;
+}
+
+.chat-room-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    width: 100%;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface-bg);
+}
+
+.chat-room-participants {
+    max-width: 100%;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .chat-room-container .msgArea,
@@ -142,6 +165,62 @@ html {
     text-align: inherit;
 }
 
+.chat-message-time {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1;
+    opacity: 0.72;
+}
+
+.chat-date-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 14px 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    list-style: none;
+    text-align: center;
+}
+
+.chat-date-separator::before,
+.chat-date-separator::after {
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+    content: "";
+}
+
+.chat-date-separator::before {
+    margin-right: 12px;
+}
+
+.chat-date-separator::after {
+    margin-left: 12px;
+}
+
+.chat-new-message-notice {
+    position: sticky;
+    bottom: 14px;
+    align-self: center;
+    z-index: 3;
+    max-width: calc(100% - 32px);
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid #93c5fd;
+    border-radius: 999px;
+    background: #eff6ff;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.14);
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .chat-message-row.mine .chat-message-content pre {
     background: #dbeafe;
     color: #111827;
@@ -175,6 +254,10 @@ body.dark-mode .chat-room-container {
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
 }
 
+body.dark-mode .chat-room-header {
+    background: var(--surface-bg);
+}
+
 body.dark-mode .chat-room-container .list-group-item {
     background: transparent !important;
     border-color: var(--border-color) !important;
@@ -192,6 +275,12 @@ body.dark-mode .chat-message-row.mine .chat-message-content pre {
 
 body.dark-mode .chat-message-row.other .chat-message-content pre {
     background: var(--surface-muted);
+}
+
+body.dark-mode .chat-new-message-notice {
+    border-color: #2563eb;
+    background: #1e3a8a;
+    color: #eff6ff;
 }
 
 body.dark-mode .chatimg {

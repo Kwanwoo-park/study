@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.chat.facade.ChatFacade;
+import spring.study.chat.service.ChatPresenceService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
@@ -22,6 +23,7 @@ public class ChatApiController {
     private final SessionManager sessionManager;
     private final CommonFacade commonFacade;
     private final ChatFacade chatFacade;
+    private final ChatPresenceService chatPresenceService;
 
     @GetMapping("/load")
     public ResponseEntity<?> loadChatting(@RequestParam String roomId,
@@ -75,5 +77,29 @@ public class ChatApiController {
         if (member == null) return commonFacade.unauthorized();
 
         return chatFacade.sendImage(file);
+    }
+
+    @PostMapping("/presence/active")
+    public ResponseEntity<?> activeRoom(@RequestParam String roomId, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        chatPresenceService.active(roomId, member);
+
+        return ResponseEntity.ok(Map.of(
+                "result", 1L
+        ));
+    }
+
+    @PostMapping("/presence/inactive")
+    public ResponseEntity<?> inactiveRoom(@RequestParam String roomId, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        chatPresenceService.inactive(roomId, member);
+
+        return ResponseEntity.ok(Map.of(
+                "result", 1L
+        ));
     }
 }

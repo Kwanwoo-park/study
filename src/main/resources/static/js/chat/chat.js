@@ -4,31 +4,61 @@ const flag = document.querySelector("#flag").value;
 
 const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
+const newMessageNotice = document.getElementById("new-message-notice");
 
 const maxSize = 10;
 const CHAT_LIMIT = 10;
+const PRESENCE_REFRESH_INTERVAL_MS = 60 * 1000;
+const messageTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+});
+const messageDateFormatter = new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+});
 
 let container = document.querySelector(".container");
 let nextCursor = 1;
 let height = 0;
+let presenceRefreshInterval = null;
 
 ignoreWebSocketLogs();
 
 if (btn)
     btn.addEventListener('click', () => upload.click());
 
+if (newMessageNotice) {
+    newMessageNotice.addEventListener('click', () => {
+        scrollToBottom();
+        hideNewMessageNotice();
+    });
+}
+
 window.onload = function() {
+    activateChatPresence();
+    presenceRefreshInterval = setInterval(activateChatPresence, PRESENCE_REFRESH_INTERVAL_MS);
     loadMoreChat();
 }
+
+window.addEventListener('pagehide', () => {
+    deactivateChatPresence();
+});
 
 container.addEventListener('scroll', () => {
     if (container.scrollTop == 0) {
         loadPreviousChat();
     }
+
+    if (isScrolledToBottom()) {
+        hideNewMessageNotice();
+    }
 })
 
-//let socket = new SockJS("http://localhost:8080/ws/chat")
-let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+let socket = new SockJS("http://localhost:8080/ws/chat")
+//let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
 
 const client = Stomp.over(socket)
 client.debug = function() {};
@@ -44,6 +74,38 @@ function onConnected() {
 
 function onError(error) {
     console.error(error);
+}
+
+function activateChatPresence() {
+    fetch(`/api/chat/presence/active?roomId=${encodeURIComponent(roomId)}`, {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        credentials: "include",
+    }).catch((error) => {
+        console.error('채팅방 접속 상태 갱신 오류:', error);
+    });
+}
+
+function deactivateChatPresence() {
+    if (presenceRefreshInterval) {
+        clearInterval(presenceRefreshInterval);
+    }
+
+    const url = `/api/chat/presence/inactive?roomId=${encodeURIComponent(roomId)}`;
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon(url);
+        return;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        credentials: "include",
+        keepalive: true,
+    }).catch((error) => {
+        console.error('채팅방 접속 해제 오류:', error);
+    });
 }
 
 function ignoreWebSocketLogs() {
@@ -92,7 +154,7 @@ async function loadMoreChat() {
         if (data['result'] > 0) {
             fnLoadDraw(data)
 
-            container.scrollTop = container.scrollHeight;
+            scrollToBottom();
             nextCursor = data.nextCursor;
         }
         else
@@ -208,6 +270,7 @@ function sendMsg() {
 
 function fnDraw(data) {
     let msgArea = document.querySelector('.list-group-flush');
+    const mine = isMyMessage(data);
 
     let newMsgLi = document.createElement('li');
     let newMsgArea = document.createElement('span');
@@ -273,11 +336,17 @@ function fnDraw(data) {
         newMsgArea.append(newMsg);
     }
 
+    appendMessageTime(newMsgArea, data);
     newMsgLi.append(newMsgArea);
 
     msgArea.append(newMsgLi);
+    refreshDateSeparators();
 
-    container.scrollTop = container.scrollHeight;
+    if (mine) {
+        scrollToBottom();
+    } else {
+        showNewMessageNotice(data);
+    }
 }
 
 function fnLoadDraw(json) {
@@ -348,18 +417,51 @@ function fnLoadDraw(json) {
             newMsgArea.append(newMsg);
         }
 
+        appendMessageTime(newMsgArea, data);
         newMsgLi.append(newMsgArea);
 
         msgArea.prepend(newMsgLi);
     });
+
+    refreshDateSeparators();
 }
 
 function applyMessageDirection(messageLi, messageArea, data) {
-    const senderEmail = data.member && data.member.email ? data.member.email : data.email;
-    const directionClass = senderEmail == email ? 'mine' : 'other';
+    const directionClass = isMyMessage(data) ? 'mine' : 'other';
 
     messageLi.className = "list-group-item chat-message-row " + directionClass;
+    messageLi.dataset.messageDate = getMessageDateKey(data);
     messageArea.className = "chat-message-content";
+}
+
+function isMyMessage(data) {
+    const senderEmail = data.member && data.member.email ? data.member.email : data.email;
+
+    return senderEmail == email;
+}
+
+function scrollToBottom() {
+    container.scrollTop = container.scrollHeight;
+}
+
+function isScrolledToBottom() {
+    return container.scrollTop + container.clientHeight >= container.scrollHeight - 8;
+}
+
+function showNewMessageNotice(data) {
+    if (!newMessageNotice) return;
+
+    const senderName = data && data.member && data.member.name ? data.member.name : '알 수 없음';
+    const message = data && data.message ? data.message : '새 메시지가 도착했습니다';
+
+    newMessageNotice.innerText = `${senderName}: ${message}`;
+    newMessageNotice.classList.remove('is-hidden');
+}
+
+function hideNewMessageNotice() {
+    if (!newMessageNotice) return;
+
+    newMessageNotice.classList.add('is-hidden');
 }
 
 function appendMessageHeader(messageArea, profile, name) {
@@ -369,6 +471,63 @@ function appendMessageHeader(messageArea, profile, name) {
     header.append(profile);
     header.append(name);
     messageArea.append(header);
+}
+
+function appendMessageTime(messageArea, data) {
+    const time = document.createElement('span');
+
+    time.className = "chat-message-time";
+    time.innerText = formatMessageTime(data);
+    messageArea.append(time);
+}
+
+function refreshDateSeparators() {
+    const msgArea = document.querySelector('.list-group-flush');
+    if (!msgArea) return;
+
+    msgArea.querySelectorAll('.chat-date-separator').forEach(separator => separator.remove());
+
+    let previousDate = '';
+    msgArea.querySelectorAll('.chat-message-row').forEach(messageRow => {
+        const dateKey = messageRow.dataset.messageDate;
+        if (!dateKey || dateKey === previousDate) {
+            return;
+        }
+
+        const separator = document.createElement('li');
+        separator.className = "chat-date-separator";
+        separator.innerText = formatMessageDate(dateKey);
+        msgArea.insertBefore(separator, messageRow);
+        previousDate = dateKey;
+    });
+}
+
+function getMessageDateKey(data) {
+    const date = getMessageDate(data);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function formatMessageTime(data) {
+    return messageTimeFormatter.format(getMessageDate(data));
+}
+
+function formatMessageDate(dateKey) {
+    return messageDateFormatter.format(new Date(`${dateKey}T00:00:00`));
+}
+
+function getMessageDate(data) {
+    const value = data && data.registerTime ? data.registerTime : new Date().toISOString();
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return new Date();
+    }
+
+    return date;
 }
 
 function fnLeft(id, arr) {

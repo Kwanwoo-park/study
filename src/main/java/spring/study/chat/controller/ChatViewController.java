@@ -13,6 +13,7 @@ import spring.study.member.entity.Role;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -61,7 +62,20 @@ public class ChatViewController {
         model.addAttribute("room", room.getRoomId());
         model.addAttribute("member", member.getEmail());
         model.addAttribute("flag", !roomMemberService.exist(member, room));
+        model.addAttribute("participantNames", getParticipantNames(room, member));
 
         return "chat/chatRoom";
+    }
+
+    private List<String> getParticipantNames(ChatRoom room, Member currentMember) {
+        List<String> names = new ArrayList<>(roomMemberService.find(room).stream()
+                .map(roomMember -> roomMember.getMember().getName())
+                .toList());
+
+        if (!names.contains(currentMember.getName())) {
+            names.add(currentMember.getName());
+        }
+
+        return names;
     }
 }

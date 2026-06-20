@@ -13,12 +13,21 @@
     <input type="hidden" id="room" th:value="${room}">
     <input type="hidden" id="email" th:value="${member}">
     <input type="hidden" id="flag" th:value="${flag}">
+    <header class="chat-room-header">
+        <div class="chat-room-participants">
+                <span th:each="name, stat : ${participantNames}"
+                      th:text="${name + (stat.last ? '' : ', ')}">참여자</span>
+        </div>
+    </header>
     <div class="container chat-room-container">
         <form method="dialog" enctype="multipart/form-data">
         <div class="msgArea">
             <ul class="list-group-flush"></ul>
         </div>
         </form>
+        <button type="button" id="new-message-notice" class="chat-new-message-notice is-hidden">
+            새 메시지
+        </button>
     </div>
     <div class="chat-room-controls">
         <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>

@@ -9,9 +9,11 @@ import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.entity.ChatRoomMember;
 import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageImgService;
 import spring.study.chat.service.ChatMessageService;
+import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.kafka.service.MessageProducer;
@@ -35,6 +37,7 @@ public class ChatSendFacade {
     private final ChatMessageImgService chatMessageImgService;
     private final ImageS3Service imageS3Service;
     private final MemberService memberService;
+    private final ChatPresenceService chatPresenceService;
     private final NotificationService notificationService;
     private final MessageProducer producer;
 
@@ -78,8 +81,13 @@ public class ChatSendFacade {
                         "result", 1L
                 ));
             }
-        } else
-            notificationService.createNotification(roomMemberService.findMember(room, member), member, Group.CHAT);
+        } else {
+            List<ChatRoomMember> notificationTargets = roomMemberService.findMember(room, member).stream()
+                    .filter(roomMember -> !chatPresenceService.isActive(room.getRoomId(), roomMember.getMember()))
+                    .toList();
+
+            notificationService.createNotification(notificationTargets, member, Group.CHAT);
+        }
 
         producer.sendMessage(dto);
 

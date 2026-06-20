@@ -22,6 +22,8 @@ class TemplateStaticResourceRegressionTest {
     private static final Path BOARD_MAIN_JS = Path.of("src/main/resources/static/js/board/main.js");
     private static final Path COMMON_JS = Path.of("src/main/resources/static/js/common/common.js");
     private static final Path NOTIFICATION_LIST_JS = Path.of("src/main/resources/static/js/notification/list.js");
+    private static final Path CHAT_JS = Path.of("src/main/resources/static/js/chat/chat.js");
+    private static final Path CHAT_CSS = Path.of("src/main/resources/static/css/chat/chat.css");
     private static final Path COMMON_FRAGMENT = Path.of("src/main/resources/templates/fragments/common.html");
 
     private static final List<Path> THEME_ONLY_TEMPLATES = List.of(
@@ -87,6 +89,41 @@ class TemplateStaticResourceRegressionTest {
         assertTrue(commonActions.contains("classList.add('is-invisible')"), "image navigation should hide with CSS class");
         assertTrue(commonActions.contains("classList.remove('is-invisible')"), "image navigation should show with CSS class");
         assertFalse(commonActions.contains("style.visibility"), "image navigation should not depend on inline visibility");
+    }
+
+    @Test
+    void chatMessagesShouldRenderTimeAndDateSeparators() throws IOException {
+        String chatJs = Files.readString(CHAT_JS);
+        String chatCss = Files.readString(CHAT_CSS);
+
+        assertTrue(chatJs.contains("appendMessageTime(newMsgArea, data);"),
+                "chat messages should append a visible send time");
+        assertTrue(chatJs.contains("refreshDateSeparators();"),
+                "chat rendering should refresh date separators after message changes");
+        assertTrue(chatJs.contains("messageLi.dataset.messageDate = getMessageDateKey(data);"),
+                "chat message rows should keep a date key for separator rendering");
+        assertTrue(chatJs.contains("if (mine) {"),
+                "chat should only force scroll for the current user's realtime messages");
+        assertTrue(chatJs.contains("showNewMessageNotice(data);"),
+                "chat should show a new-message notice for other users' realtime messages");
+        assertTrue(chatJs.contains("const senderName = data && data.member && data.member.name ? data.member.name : '알 수 없음';"),
+                "new-message notice should include the incoming message sender");
+        assertTrue(chatJs.contains("newMessageNotice.innerText = `${senderName}: ${message}`;"),
+                "new-message notice should show the latest message as sender and message");
+        assertTrue(chatJs.contains("newMessageNotice.addEventListener('click'"),
+                "new-message notice should scroll to the latest message on click");
+        assertTrue(chatJs.contains("activateChatPresence();"),
+                "chat room page should mark the current room as active");
+        assertTrue(chatJs.contains("deactivateChatPresence();"),
+                "chat room page should clear active presence when leaving");
+        assertTrue(chatCss.contains(".chat-message-time"),
+                "chat message send time should have muted styling");
+        assertTrue(chatCss.contains(".chat-date-separator"),
+                "chat date separators should be styled");
+        assertTrue(chatCss.contains(".chat-new-message-notice"),
+                "new-message notice should be styled");
+        assertTrue(chatCss.contains("min-height: 44px;"),
+                "new-message notice should have a comfortable height");
     }
 
     @Test
