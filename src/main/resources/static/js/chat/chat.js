@@ -24,6 +24,8 @@ let container = document.querySelector(".container");
 let nextCursor = 1;
 let height = 0;
 let presenceRefreshInterval = null;
+let chatImageModalSources = [];
+let chatImageModalIndex = 0;
 
 ignoreWebSocketLogs();
 
@@ -36,6 +38,8 @@ if (newMessageNotice) {
         hideNewMessageNotice();
     });
 }
+
+initChatImageModal();
 
 window.onload = function() {
     activateChatPresence();
@@ -290,45 +294,15 @@ function fnDraw(data) {
 
     if (data.type == "IMAGE") {
         const img_div = document.createElement('div')
-        const img_idx = document.createElement('input')
-        img_idx.type = 'hidden'
-        img_idx.id = 'idx' + data.id;
-        img_idx.value = 0;
+        const imageSources = normalizeChatImageSources(data.list);
 
-        newMsgArea.append(img_idx)
-
-        if (data.list.length != 1) {
-            const button = document.createElement('button')
-            button.className = 'arrow'
-            button.type = 'button'
-            button.id = 'left' + data.id;
-            button.style.visibility = 'hidden'
-            button.onclick = function() {
-                fnLeft2(data.id, data.list)
-            }
-
-            button.innerText = '←'
-            img_div.append(button);
-        }
-
-        imgTalk.src = data.list[0];
+        imgTalk.src = imageSources[0];
         imgTalk.id = 'img' + data.id;
         imgTalk.className = "chatimg";
+        configureChatImagePreview(imgTalk, imageSources, 0);
 
         img_div.append(imgTalk);
-
-        if (data.list.length > 1) {
-            const button = document.createElement('button')
-            button.className = 'arrow'
-            button.type = 'button'
-            button.id = 'right' + data.id
-            button.onclick = function() {
-                fnRight2(data.id, data.list)
-            }
-
-            button.innerText = '→'
-            img_div.append(button)
-        }
+        appendChatImageCount(img_div, imageSources);
 
         newMsgArea.append(img_div)
     } else {
@@ -371,45 +345,15 @@ function fnLoadDraw(json) {
 
         if (data.type == "IMAGE") {
             const img_div = document.createElement('div')
-            const img_idx = document.createElement('input')
-            img_idx.type = 'hidden'
-            img_idx.id = 'idx' + data.id;
-            img_idx.value = 0;
+            const imageSources = normalizeChatImageSources(json.img[data.id]);
 
-            newMsgArea.append(img_idx)
-
-            if (json.img[data.id].length > 1) {
-                const button = document.createElement('button')
-                button.className = 'arrow'
-                button.type = 'button'
-                button.id = 'left' + data.id;
-                button.style.visibility = 'hidden'
-                button.onclick = function() {
-                    fnLeft(data.id, json.img[data.id])
-                }
-
-                button.innerText = '←'
-                img_div.append(button);
-            }
-
-            imgTalk.src = json.img[data.id][0].imgSrc;
+            imgTalk.src = imageSources[0];
             imgTalk.id = 'img' + data.id;
             imgTalk.className = "chatimg";
+            configureChatImagePreview(imgTalk, imageSources, 0);
 
             img_div.append(imgTalk);
-
-            if (json.img[data.id].length > 1) {
-                const button = document.createElement('button')
-                button.className = 'arrow'
-                button.type = 'button'
-                button.id = 'right' + data.id
-                button.onclick = function() {
-                    fnRight(data.id, json.img[data.id])
-                }
-
-                button.innerText = '→'
-                img_div.append(button)
-            }
+            appendChatImageCount(img_div, imageSources);
 
             newMsgArea.append(img_div)
         } else {
@@ -462,6 +406,163 @@ function hideNewMessageNotice() {
     if (!newMessageNotice) return;
 
     newMessageNotice.classList.add('is-hidden');
+}
+
+function initChatImageModal() {
+    if (document.getElementById('chatImageModal')) return;
+
+    const modal = document.createElement('div');
+    const dialog = document.createElement('div');
+    const closeButton = document.createElement('button');
+    const image = document.createElement('img');
+    const previousButton = document.createElement('button');
+    const nextButton = document.createElement('button');
+
+    modal.id = 'chatImageModal';
+    modal.className = 'chat-image-modal is-hidden';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+
+    dialog.className = 'chat-image-modal-dialog';
+
+    closeButton.type = 'button';
+    closeButton.className = 'chat-image-modal-close';
+    closeButton.setAttribute('aria-label', 'close image preview');
+    closeButton.innerText = 'x';
+
+    image.id = 'chatImageModalImg';
+    image.className = 'chat-image-modal-img';
+    image.alt = 'chat image preview';
+
+    previousButton.type = 'button';
+    previousButton.id = 'chatImageModalPrev';
+    previousButton.className = 'chat-image-modal-nav chat-image-modal-prev';
+    previousButton.setAttribute('aria-label', 'previous image');
+    previousButton.innerText = '<';
+
+    nextButton.type = 'button';
+    nextButton.id = 'chatImageModalNext';
+    nextButton.className = 'chat-image-modal-nav chat-image-modal-next';
+    nextButton.setAttribute('aria-label', 'next image');
+    nextButton.innerText = '>';
+
+    closeButton.addEventListener('click', closeChatImageModal);
+    previousButton.addEventListener('click', showPreviousChatImage);
+    nextButton.addEventListener('click', showNextChatImage);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeChatImageModal();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.classList.contains('is-hidden')) {
+            closeChatImageModal();
+        }
+
+        if (event.key === 'ArrowLeft' && !modal.classList.contains('is-hidden')) {
+            showPreviousChatImage();
+        }
+
+        if (event.key === 'ArrowRight' && !modal.classList.contains('is-hidden')) {
+            showNextChatImage();
+        }
+    });
+
+    dialog.append(closeButton, previousButton, image, nextButton);
+    modal.append(dialog);
+    document.body.append(modal);
+}
+
+function configureChatImagePreview(image, imageSources, initialIndex) {
+    image.tabIndex = 0;
+    image.setAttribute('role', 'button');
+    image.setAttribute('aria-label', 'open image preview');
+    image.addEventListener('click', () => openChatImageModal(imageSources, initialIndex));
+    image.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openChatImageModal(imageSources, initialIndex);
+        }
+    });
+}
+
+function openChatImageModal(sources, initialIndex) {
+    const modal = document.getElementById('chatImageModal');
+    const normalizedSources = normalizeChatImageSources(sources);
+
+    if (!modal || normalizedSources.length === 0) return;
+
+    chatImageModalSources = normalizedSources;
+    chatImageModalIndex = Math.min(Math.max(initialIndex || 0, 0), chatImageModalSources.length - 1);
+    renderChatImageModal();
+    modal.classList.remove('is-hidden');
+    document.body.classList.add('chat-image-modal-open');
+}
+
+function closeChatImageModal() {
+    const modal = document.getElementById('chatImageModal');
+    const image = document.getElementById('chatImageModalImg');
+
+    if (!modal || !image) return;
+
+    modal.classList.add('is-hidden');
+    image.removeAttribute('src');
+    chatImageModalSources = [];
+    chatImageModalIndex = 0;
+    document.body.classList.remove('chat-image-modal-open');
+}
+
+function showPreviousChatImage() {
+    if (chatImageModalSources.length <= 1 || chatImageModalIndex === 0) return;
+
+    chatImageModalIndex -= 1;
+    renderChatImageModal();
+}
+
+function showNextChatImage() {
+    if (chatImageModalSources.length <= 1 || chatImageModalIndex >= chatImageModalSources.length - 1) return;
+
+    chatImageModalIndex += 1;
+    renderChatImageModal();
+}
+
+function renderChatImageModal() {
+    const image = document.getElementById('chatImageModalImg');
+    const previousButton = document.getElementById('chatImageModalPrev');
+    const nextButton = document.getElementById('chatImageModalNext');
+
+    if (!image) return;
+
+    image.src = chatImageModalSources[chatImageModalIndex];
+
+    if (previousButton) {
+        previousButton.classList.toggle('is-hidden', chatImageModalSources.length <= 1);
+        previousButton.disabled = chatImageModalIndex === 0;
+    }
+
+    if (nextButton) {
+        nextButton.classList.toggle('is-hidden', chatImageModalSources.length <= 1);
+        nextButton.disabled = chatImageModalIndex === chatImageModalSources.length - 1;
+    }
+}
+
+function normalizeChatImageSources(images) {
+    if (!Array.isArray(images)) return [];
+
+    return images
+        .map(image => typeof image === 'string' ? image : image.imgSrc)
+        .filter(src => src);
+}
+
+function appendChatImageCount(container, imageSources) {
+    if (imageSources.length <= 1) return;
+
+    const count = document.createElement('span');
+
+    count.className = 'chat-image-count';
+    count.innerText = `1 / ${imageSources.length}`;
+    container.append(count);
 }
 
 function appendMessageHeader(messageArea, profile, name) {
@@ -528,82 +629,6 @@ function getMessageDate(data) {
     }
 
     return date;
-}
-
-function fnLeft(id, arr) {
-    const image = document.getElementById('img' + id);
-    const idx = document.getElementById('idx' + id);
-    const left_arrow = document.getElementById('left' + id);
-    const right_arrow = document.getElementById('right' + id);
-
-    if (parseInt(idx.value) -1 < 0)
-        return;
-
-    image.src = arr[parseInt(idx.value) -1].imgSrc;
-    idx.value = parseInt(idx.value) - 1;
-
-    if (right_arrow.style.visibility == 'hidden')
-        right_arrow.style.visibility = 'visible';
-
-    if (parseInt(idx.value) == 0)
-        left_arrow.style.visibility = 'hidden';
-}
-
-function fnLeft2(id, arr) {
-    const image = document.getElementById('img' + id);
-    const idx = document.getElementById('idx' + id);
-    const left_arrow = document.getElementById('left' + id);
-    const right_arrow = document.getElementById('right' + id);
-
-    if (parseInt(idx.value) -1 < 0)
-        return;
-
-    image.src = arr[parseInt(idx.value) -1];
-    idx.value = parseInt(idx.value) - 1;
-
-    if (right_arrow.style.visibility == 'hidden')
-        right_arrow.style.visibility = 'visible';
-
-    if (parseInt(idx.value) == 0)
-        left_arrow.style.visibility = 'hidden';
-}
-
-function fnRight(id, arr) {
-    const image = document.getElementById('img' + id);
-    const idx = document.getElementById('idx' + id);
-    const left_arrow = document.getElementById('left' + id);
-    const right_arrow = document.getElementById('right' + id);
-
-    if (parseInt(idx.value) + 1 >= arr.length)
-        return;
-
-    image.src = arr[parseInt(idx.value) +1].imgSrc;
-    idx.value = parseInt(idx.value) + 1;
-
-    if (left_arrow.style.visibility === 'hidden')
-        left_arrow.style.visibility = 'visible'
-
-    if (parseInt(idx.value) == arr.length-1)
-        right_arrow.style.visibility = 'hidden'
-}
-
-function fnRight2(id, arr) {
-    const image = document.getElementById('img' + id);
-    const idx = document.getElementById('idx' + id);
-    const left_arrow = document.getElementById('left' + id);
-    const right_arrow = document.getElementById('right' + id);
-
-    if (parseInt(idx.value) + 1 >= arr.length)
-        return;
-
-    image.src = arr[parseInt(idx.value) +1];
-    idx.value = parseInt(idx.value) + 1;
-
-    if (left_arrow.style.visibility === 'hidden')
-        left_arrow.style.visibility = 'visible'
-
-    if (parseInt(idx.value) == arr.length-1)
-        right_arrow.style.visibility = 'hidden'
 }
 
 function fnLoad(input) {

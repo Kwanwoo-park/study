@@ -124,6 +124,36 @@ class TemplateStaticResourceRegressionTest {
                 "new-message notice should be styled");
         assertTrue(chatCss.contains("min-height: 44px;"),
                 "new-message notice should have a comfortable height");
+        assertTrue(chatJs.contains("initChatImageModal();"),
+                "chat room should initialize a modal for large image previews");
+        assertTrue(chatJs.contains("configureChatImagePreview(imgTalk, imageSources, 0);"),
+                "chat image messages should open the modal when selected");
+        assertTrue(chatJs.contains("appendChatImageCount(img_div, imageSources);"),
+                "chat image messages should show a muted count when multiple images were sent");
+        assertTrue(chatJs.contains("count.innerText = `1 / ${imageSources.length}`;"),
+                "chat image count should show the visible thumbnail index and total count");
+        assertTrue(chatJs.contains("openChatImageModal(imageSources, initialIndex);"),
+                "chat image modal should receive the full image list");
+        assertTrue(chatJs.contains("showPreviousChatImage"),
+                "chat image modal should support previous navigation");
+        assertTrue(chatJs.contains("showNextChatImage"),
+                "chat image modal should support next navigation");
+        assertFalse(chatJs.contains("function fnLeft("),
+                "chat message images should not use in-message previous buttons");
+        assertFalse(chatJs.contains("function fnRight("),
+                "chat message images should not use in-message next buttons");
+        assertTrue(chatCss.contains(".chat-image-modal"),
+                "chat image modal overlay should be styled");
+        assertTrue(chatCss.contains(".chat-image-count"),
+                "chat image count should be styled below the thumbnail");
+        assertTrue(chatCss.contains("opacity: 0.55;"),
+                "chat image count should be visually muted");
+        assertTrue(chatCss.contains(".chat-image-modal-nav"),
+                "chat image modal navigation buttons should be styled");
+        assertFalse(chatCss.contains(".chat-room-container .arrow"),
+                "chat room should not keep the old in-message image arrow styling");
+        assertTrue(chatCss.contains("max-height: calc(100vh - 48px);"),
+                "chat image modal should keep the large image inside the viewport");
     }
 
     @Test
