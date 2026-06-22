@@ -6,8 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.facade.ChatFacade;
 import spring.study.chat.service.ChatPresenceService;
+import spring.study.chat.service.ChatRoomMemberService;
+import spring.study.chat.service.ChatRoomService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
@@ -26,6 +29,8 @@ public class ChatApiController {
     private final CommonFacade commonFacade;
     private final ChatFacade chatFacade;
     private final ChatPresenceService chatPresenceService;
+    private final ChatRoomService chatRoomService;
+    private final ChatRoomMemberService chatRoomMemberService;
     private final NotificationService notificationService;
 
     @GetMapping("/load")
@@ -89,6 +94,11 @@ public class ChatApiController {
 
         chatPresenceService.active(roomId, member);
         notificationService.updateReadByGroupAndUrl(member, Group.CHAT, roomId);
+        ChatRoom room = chatRoomService.find(roomId);
+
+        if (room != null) {
+            chatRoomMemberService.markRead(member, room);
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L

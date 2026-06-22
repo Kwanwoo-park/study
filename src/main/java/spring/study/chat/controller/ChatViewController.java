@@ -44,6 +44,7 @@ public class ChatViewController {
 
             model.addAttribute("roomList", list);
             model.addAttribute("member", roomMemberService.findMember(list, member));
+            model.addAttribute("unreadCount", viewFacade.unreadCount(member, list));
 
             return "chat/chatList";
         }

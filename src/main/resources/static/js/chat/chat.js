@@ -26,6 +26,8 @@ let height = 0;
 let presenceRefreshInterval = null;
 let chatImageModalSources = [];
 let chatImageModalIndex = 0;
+let lastKnownReadAt = '';
+let lastReadMarkAt = 0;
 
 ignoreWebSocketLogs();
 
@@ -36,15 +38,17 @@ if (newMessageNotice) {
     newMessageNotice.addEventListener('click', () => {
         scrollToBottom();
         hideNewMessageNotice();
+        markCurrentRoomRead();
     });
 }
 
 initChatImageModal();
 
 window.onload = function() {
-    activateChatPresence();
-    presenceRefreshInterval = setInterval(activateChatPresence, PRESENCE_REFRESH_INTERVAL_MS);
-    loadMoreChat();
+    loadMoreChat().then(() => {
+        activateChatPresence();
+        presenceRefreshInterval = setInterval(activateChatPresence, PRESENCE_REFRESH_INTERVAL_MS);
+    });
 }
 
 window.addEventListener('pagehide', () => {
@@ -58,6 +62,7 @@ container.addEventListener('scroll', () => {
 
     if (isScrolledToBottom()) {
         hideNewMessageNotice();
+        markCurrentRoomRead();
     }
 })
 
@@ -156,6 +161,7 @@ async function loadMoreChat() {
         const data = await res.json();
 
         if (data['result'] > 0) {
+            lastKnownReadAt = data.lastReadAt || '';
             fnLoadDraw(data)
 
             scrollToBottom();
@@ -275,6 +281,7 @@ function sendMsg() {
 function fnDraw(data) {
     let msgArea = document.querySelector('.list-group-flush');
     const mine = isMyMessage(data);
+    const shouldStickToBottom = isScrolledToBottom();
 
     let newMsgLi = document.createElement('li');
     let newMsgArea = document.createElement('span');
@@ -318,6 +325,11 @@ function fnDraw(data) {
 
     if (mine) {
         scrollToBottom();
+        markCurrentRoomRead();
+    } else if (shouldStickToBottom) {
+        scrollToBottom();
+        hideNewMessageNotice();
+        markCurrentRoomRead();
     } else {
         showNewMessageNotice(data);
     }
@@ -375,6 +387,8 @@ function applyMessageDirection(messageLi, messageArea, data) {
 
     messageLi.className = "list-group-item chat-message-row " + directionClass;
     messageLi.dataset.messageDate = getMessageDateKey(data);
+    messageLi.dataset.messageTime = getMessageDate(data).toISOString();
+    messageLi.dataset.mine = String(isMyMessage(data));
     messageArea.className = "chat-message-content";
 }
 
@@ -601,6 +615,53 @@ function refreshDateSeparators() {
         msgArea.insertBefore(separator, messageRow);
         previousDate = dateKey;
     });
+
+    refreshReadBoundary();
+}
+
+function refreshReadBoundary() {
+    const msgArea = document.querySelector('.list-group-flush');
+    if (!msgArea) return;
+
+    msgArea.querySelectorAll('.chat-read-boundary').forEach(separator => separator.remove());
+
+    if (!lastKnownReadAt) {
+        return;
+    }
+
+    const readAt = new Date(lastKnownReadAt);
+    if (Number.isNaN(readAt.getTime())) {
+        return;
+    }
+
+    const firstUnreadMessage = Array.from(msgArea.querySelectorAll('.chat-message-row'))
+        .find(messageRow => {
+            const messageTime = new Date(messageRow.dataset.messageTime);
+
+            return messageRow.dataset.mine !== 'true'
+                && !Number.isNaN(messageTime.getTime())
+                && messageTime > readAt;
+        });
+
+    if (!firstUnreadMessage) {
+        return;
+    }
+
+    const separator = document.createElement('li');
+    separator.className = "chat-read-boundary";
+    separator.innerText = "여기까지 읽었습니다";
+    msgArea.insertBefore(separator, firstUnreadMessage);
+}
+
+function markCurrentRoomRead() {
+    const now = Date.now();
+
+    if (now - lastReadMarkAt < 2000) {
+        return;
+    }
+
+    lastReadMarkAt = now;
+    activateChatPresence();
 }
 
 function getMessageDateKey(data) {

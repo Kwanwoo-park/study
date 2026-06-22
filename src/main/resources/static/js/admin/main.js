@@ -1,8 +1,39 @@
 window.onload = async function() {
+    await loadSystemStatus();
     await loadUserStatus();
     await loadNewUser();
     await loadNewBoard();
     await loadActiveChatting();
+    setInterval(loadSystemStatus, 30000);
+}
+
+async function loadSystemStatus() {
+    const statusDiv = document.getElementById('system-status');
+    const updatedAt = document.getElementById('system-status-updated');
+
+    if (!statusDiv) return;
+
+    try {
+        const res = await fetch(`/api/admin/system/status`, {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            credentials: "include",
+        });
+        const data = await res.json();
+
+        if (data.result > 0) {
+            fnSystemStatusDraw(data);
+
+            if (updatedAt) {
+                updatedAt.innerText = "최근 갱신: " + new Date().toLocaleTimeString('ko-KR');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        statusDiv.innerHTML = '<div class="admin-system-error">서버 상태를 불러오지 못했습니다</div>';
+    }
 }
 
 async function loadUserStatus() {
@@ -182,6 +213,102 @@ function fnChattingActive(data) {
     })
 
     activeChattingDiv.append(ul);
+}
+
+function fnSystemStatusDraw(data) {
+    const statusDiv = document.getElementById('system-status');
+
+    statusDiv.replaceChildren(
+        createMetricCard('CPU', data.cpu.systemPercent + '%', [
+            '프로세스 ' + data.cpu.processPercent + '%',
+            data.cpu.cores + ' cores'
+        ], data.cpu.systemPercent),
+        createMetricCard('RAM', data.memory.usedPercent + '%', [
+            formatBytes(data.memory.usedBytes) + ' / ' + formatBytes(data.memory.totalBytes)
+        ], data.memory.usedPercent),
+        createMetricCard('Disk', data.disk.usedPercent + '%', [
+            formatBytes(data.disk.usedBytes) + ' / ' + formatBytes(data.disk.totalBytes)
+        ], data.disk.usedPercent),
+        createMetricCard('JVM Heap', data.jvm.heapUsedPercent + '%', [
+            formatBytes(data.jvm.heapUsedBytes) + ' / ' + formatBytes(data.jvm.heapMaxBytes)
+        ], data.jvm.heapUsedPercent),
+        createMetricCard('Uptime', data.jvm.uptime, [
+            '시작: ' + formatDateTime(data.jvm.startedAt)
+        ]),
+        createMetricCard('접속', data.traffic.activeSessions + '명', [
+            'WebSocket ' + data.traffic.activeWebSockets + '개'
+        ])
+    );
+}
+
+function createMetricCard(title, value, details, percent) {
+    const card = document.createElement('article');
+    const titleEl = document.createElement('span');
+    const valueEl = document.createElement('strong');
+    const detailList = document.createElement('div');
+
+    card.className = 'admin-system-card';
+    titleEl.className = 'admin-system-title';
+    valueEl.className = 'admin-system-value';
+    detailList.className = 'admin-system-details';
+
+    titleEl.innerText = title;
+    valueEl.innerText = value;
+
+    details.forEach(detail => {
+        const item = document.createElement('span');
+        item.innerText = detail;
+        detailList.append(item);
+    });
+
+    card.append(titleEl);
+    card.append(valueEl);
+
+    if (typeof percent === 'number') {
+        const meter = document.createElement('div');
+        const meterBar = document.createElement('span');
+
+        meter.className = 'admin-system-meter';
+        meterBar.style.width = Math.min(Math.max(percent, 0), 100) + '%';
+
+        if (percent >= 90) {
+            meterBar.className = 'danger';
+        } else if (percent >= 75) {
+            meterBar.className = 'warning';
+        }
+
+        meter.append(meterBar);
+        card.append(meter);
+    }
+
+    card.append(detailList);
+
+    return card;
+}
+
+function formatBytes(bytes) {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let value = Number(bytes || 0);
+    let unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex += 1;
+    }
+
+    return value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1) + units[unitIndex];
+}
+
+function formatDateTime(value) {
+    if (!value) return '-';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleString('ko-KR');
 }
 
 function fnLogout() {

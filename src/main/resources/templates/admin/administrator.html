@@ -23,6 +23,13 @@
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/portfolio'">Portfolio</button>
         <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
       </div>
+      <section class="admin-system-panel">
+        <div class="admin-system-header">
+          <h2>서버 상태</h2>
+          <span id="system-status-updated" class="admin-system-updated">불러오는 중</span>
+        </div>
+        <div id="system-status" class="admin-system-grid"></div>
+      </section>
       <div class="new-status" id="user-status"></div>
       <div class="new-status" id="new-user"></div>
       <div class="new-status" id="new-board"></div>

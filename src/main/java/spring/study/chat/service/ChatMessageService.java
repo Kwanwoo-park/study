@@ -57,6 +57,10 @@ public class ChatMessageService {
                 .toList();
     }
 
+    public long countUnread(ChatRoom room, Member member, LocalDateTime lastReadAt) {
+        return chatMessageRepository.countByRoomAndMemberNotAndRegisterTimeAfter(room, member, lastReadAt);
+    }
+
     public void deleteByRoom(ChatRoom room) {
         chatMessageRepository.deleteByRoom(room);
     }

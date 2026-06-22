@@ -17,6 +17,7 @@ import spring.study.chat.dto.ChatMessageResponseDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageImg;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.entity.ChatRoomMember;
 import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageImgService;
 import spring.study.chat.service.ChatMessageService;
@@ -54,6 +55,10 @@ public class ChatFacade {
         }
 
         List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room);
+        ChatRoomMember roomMember = roomMemberService.find(member, room);
+        String lastReadAt = roomMember == null || roomMember.getLastReadAt() == null
+                ? ""
+                : roomMember.getLastReadAt().toString();
 
         String key = "chat:message:roomId:" + roomId;
 
@@ -83,10 +88,12 @@ public class ChatFacade {
         }
 
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
+        roomMemberService.markRead(member, room);
 
         return ResponseEntity.ok(Map.of(
                 "result", room.getId(),
                 "member", member,
+                "lastReadAt", lastReadAt,
                 "nextCursor", nextCursor,
                 "message", list.stream().sorted(Comparator.comparing(ChatMessageResponseDto::getRegisterTime).reversed()).toList(),
                 "img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)).toList())

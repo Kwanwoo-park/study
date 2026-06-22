@@ -9,6 +9,7 @@ import spring.study.chat.entity.ChatRoomMember;
 import spring.study.member.entity.Member;
 import spring.study.chat.repository.ChatRoomMemberRepository;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -32,6 +33,15 @@ public class ChatRoomMemberService {
 
     public ChatRoomMember find(Member member, ChatRoom room) {
         return chatRoomMemberRepository.findByMemberAndRoom(member, room);
+    }
+
+    @Transactional
+    public void markRead(Member member, ChatRoom room) {
+        ChatRoomMember roomMember = find(member, room);
+
+        if (roomMember != null) {
+            roomMember.markRead(LocalDateTime.now());
+        }
     }
 
     public List<ChatRoomMember> find(Member member) {

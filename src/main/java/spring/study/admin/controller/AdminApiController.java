@@ -106,4 +106,17 @@ public class AdminApiController {
 
         return adminFacade.chattingActive();
     }
+
+    @GetMapping("/system/status")
+    public ResponseEntity<?> systemStatus(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return commonFacade.wrongAccess();
+        }
+
+        return adminFacade.systemStatus();
+    }
 }

@@ -5,6 +5,7 @@ import lombok.*;
 import spring.study.member.entity.Member;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -19,6 +20,8 @@ public class ChatRoomMember implements Serializable {
     @Id @JoinColumn(name = "room_id")
     @ManyToOne
     private ChatRoom room;
+
+    private LocalDateTime lastReadAt;
 
     @Builder
     public ChatRoomMember(Member member, ChatRoom room) {
@@ -35,5 +38,9 @@ public class ChatRoomMember implements Serializable {
 
     public void addRoom(ChatRoom room) {
         room.getChatRoomMembers().add(this);
+    }
+
+    public void markRead(LocalDateTime readAt) {
+        this.lastReadAt = readAt;
     }
 }
