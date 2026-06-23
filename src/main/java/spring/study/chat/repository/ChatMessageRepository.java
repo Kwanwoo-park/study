@@ -17,6 +17,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
 
     List<ChatMessage> findByRoom(ChatRoom room, Pageable pageable);
 
+    long countByRoomAndMemberNot(ChatRoom room, Member member);
+
     long countByRoomAndMemberNotAndRegisterTimeAfter(ChatRoom room, Member member, LocalDateTime registerTime);
 
     List<ChatMessage> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);

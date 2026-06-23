@@ -58,6 +58,10 @@ public class ChatMessageService {
     }
 
     public long countUnread(ChatRoom room, Member member, LocalDateTime lastReadAt) {
+        if (lastReadAt == null) {
+            return chatMessageRepository.countByRoomAndMemberNot(room, member);
+        }
+
         return chatMessageRepository.countByRoomAndMemberNotAndRegisterTimeAfter(room, member, lastReadAt);
     }
 

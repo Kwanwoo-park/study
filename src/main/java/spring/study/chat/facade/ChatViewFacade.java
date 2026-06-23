@@ -81,9 +81,7 @@ public class ChatViewFacade {
 
         for (ChatRoom room : rooms) {
             ChatRoomMember roomMember = chatRoomMemberService.find(member, room);
-            LocalDateTime lastReadAt = roomMember == null || roomMember.getLastReadAt() == null
-                    ? LocalDateTime.MIN
-                    : roomMember.getLastReadAt();
+            LocalDateTime lastReadAt = roomMember == null ? null : roomMember.getLastReadAt();
 
             long unreadCount = chatMessageService.countUnread(room, member, lastReadAt)
                     + countUnreadPendingMessages(room, member, lastReadAt);
@@ -113,7 +111,8 @@ public class ChatViewFacade {
                 .filter(Objects::nonNull)
                 .filter(message -> message.getType() == MessageType.TALK || message.getType() == MessageType.IMAGE)
                 .filter(message -> !Objects.equals(message.getEmail(), member.getEmail()))
-                .filter(message -> message.getRegisterTime() != null && message.getRegisterTime().isAfter(lastReadAt))
+                .filter(message -> lastReadAt == null
+                        || message.getRegisterTime() != null && message.getRegisterTime().isAfter(lastReadAt))
                 .count();
     }
 

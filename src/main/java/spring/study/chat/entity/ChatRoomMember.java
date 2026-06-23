@@ -27,9 +27,6 @@ public class ChatRoomMember implements Serializable {
     public ChatRoomMember(Member member, ChatRoom room) {
         this.member = member;
         this.room = room;
-
-        addMember(member);
-        addRoom(room);
     }
 
     public void addMember(Member member) {
