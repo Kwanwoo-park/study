@@ -11,14 +11,14 @@
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
 <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
-<div class="profileDiv">
-    <h1 class="simple-page-title">소장본</h1>
-    <h4 class="collection-count-title">
-        <label class="form-label">총 개수: </label>
-        <label class="form-label" id="collection-count" th:text="${count}"></label>
-    </h4>
-</div>
 <div class="container">
+    <div class="profileDiv">
+        <h1 class="simple-page-title">소장본</h1>
+        <h4 class="collection-count-title">
+            <label class="form-label">총 개수: </label>
+            <label class="form-label" id="collection-count" th:text="${count}"></label>
+        </h4>
+    </div>
     <div class="mb-3">
         <input class="form-control" id="description" name="description" type="text" placeholder="example" required />
     </div>

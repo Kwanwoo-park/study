@@ -1,4 +1,5 @@
 .admin-system-panel {
+    clear: both;
     width: 100%;
     margin: 16px 0;
     padding: 16px;
@@ -9,10 +10,13 @@
 
 .admin-system-header {
     display: flex;
+    clear: both;
     align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     gap: 12px;
     margin-bottom: 12px;
+    text-align: center;
 }
 
 .admin-system-header h2 {
@@ -37,10 +41,12 @@
     min-height: 128px;
     flex-direction: column;
     justify-content: space-between;
+    align-items: center;
     padding: 14px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     background: var(--surface-bg);
+    text-align: center;
 }
 
 .admin-system-title {
@@ -58,6 +64,7 @@
 .admin-system-details {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 2px;
     color: var(--text-muted);
     font-size: 12px;
