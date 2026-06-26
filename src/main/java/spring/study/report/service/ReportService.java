@@ -16,6 +16,8 @@ import spring.study.report.entity.Report;
 import spring.study.report.entity.ReportStatus;
 import spring.study.report.repository.ReportRepository;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ReportService {
@@ -54,6 +56,13 @@ public class ReportService {
                 : reportRepository.findByStatus(status, pageable);
 
         return reports.map(ReportResponseDto::new);
+    }
+
+    public List<ReportResponseDto> findAllByStatus(ReportStatus status) {
+        return reportRepository.findByStatus(status, Sort.by("registerTime").descending())
+                .stream()
+                .map(ReportResponseDto::new)
+                .toList();
     }
 
     @Transactional

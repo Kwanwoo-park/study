@@ -143,3 +143,12 @@
     width: 35px;
     height: 35px;
 }
+
+.report-button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 700;
+}

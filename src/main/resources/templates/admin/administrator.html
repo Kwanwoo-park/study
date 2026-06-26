@@ -19,6 +19,7 @@
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/board/main'">Board Main</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/forbidden/word/list'">Forbidden word List</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/forbidden/word/apply'">Forbidden word apply List</button>
+        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/report'">Report List</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/chat/chatList'">Chatting</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/portfolio'">Portfolio</button>
         <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
@@ -29,6 +30,16 @@
           <span id="system-status-updated" class="admin-system-updated">불러오는 중</span>
         </div>
         <div id="system-status" class="admin-system-grid"></div>
+      </section>
+      <section class="admin-report-dashboard">
+        <div class="admin-report-dashboard-header">
+          <div>
+            <h2>최근 신고</h2>
+            <span>접수되지 않은 최근 신고 10건</span>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.href='/admin/report'">전체 보기</button>
+        </div>
+        <div id="recent-report-list" class="admin-report-card-grid"></div>
       </section>
       <div class="new-status" id="user-status"></div>
       <div class="new-status" id="new-user"></div>

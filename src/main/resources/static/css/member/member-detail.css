@@ -299,6 +299,15 @@ body.modal-open {
     cursor: pointer;
 }
 
+.board-modal-content .report-button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .board-modal-content .like {
     display: flex;
     align-self: flex-start;

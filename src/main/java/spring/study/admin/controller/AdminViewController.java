@@ -97,4 +97,17 @@ public class AdminViewController {
 
         return "admin/forbidden_word_apply";
     }
+
+    @GetMapping("/report")
+    public String reportList(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report";
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
+
+        return "admin/report_apply";
+    }
 }

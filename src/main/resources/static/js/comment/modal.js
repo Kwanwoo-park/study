@@ -264,7 +264,11 @@
                                 <span data-action="edit" data-comment-id="${item.id}">Edit</span>
                                 <span data-action="delete" data-comment-id="${item.id}">Delete</span>
                             </div>
-                        ` : ''}
+                        ` : `
+                            <div class="comment-modal-actions">
+                                <a class="comment-modal-report-link" href="/report?targetType=COMMENT&targetId=${encodeURIComponent(item.id)}">신고</a>
+                            </div>
+                        `}
                     </div>
                     <pre class="comment-modal-text" id="comment${item.id}">${escapeHtml(item.comments)}</pre>
                     <textarea class="form-control comment-modal-edit" id="edit_comment${item.id}" rows="4">${escapeHtml(item.comments)}</textarea>

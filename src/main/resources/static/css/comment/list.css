@@ -36,3 +36,9 @@ html {
     display: flex;
     flex-direction: row;
 }
+
+.comment-list-page .btn-outline-danger {
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 700;
+}

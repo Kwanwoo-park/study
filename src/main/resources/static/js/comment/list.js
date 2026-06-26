@@ -265,7 +265,11 @@ function buildCommentItem(item, memberEmail) {
                     <button type="button" class="btn btn-primary" onclick="fnEdit(${item.id})">Edit</button>
                     <button type="button" class="btn btn-danger" onclick="fnDelete(${item.id})">Delete</button>
                 </div>
-            ` : ''}
+            ` : `
+                <div class="float-right">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="fnReportComment(${item.id})">신고</button>
+                </div>
+            `}
             <pre id="comment${item.id}">${escapeHtml(item.comments)}</pre>
             <textarea class="form-control" id="edit_comment${item.id}" rows="5" name="Comment edit" style="display: none;">${escapeHtml(item.comments)}</textarea>
             <label class="reply" onclick="fnReply(${item.id}, '${escapeJsString(item.member.name)}')">답글 달기</label>
@@ -278,6 +282,10 @@ function buildCommentItem(item, memberEmail) {
             ` : ''}
         </span>
     `;
+}
+
+function fnReportComment(commentId) {
+    location.href = `/report?targetType=COMMENT&targetId=${encodeURIComponent(commentId)}`;
 }
 
 const replyStateMap = new Map();

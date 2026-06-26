@@ -38,6 +38,9 @@
 				<img th:id="'like' + ${board.id}" th:if="${like}" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${board.id}]])">
 				<img th:id="'like' + ${board.id}" th:unless="${like}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${board.id}]])">
 				<img th:id="'comment' + ${board.id}" th:src="@{/img/} + ic_chat_black.png" class="icon" th:onclick="fnComment([[${board.id}]])">
+				<a th:unless="${#strings.equals(board.member.email, member)}"
+				   class="btn btn-outline-danger btn-sm report-button"
+				   th:href="@{/report(targetType='BOARD',targetId=${board.id})}">신고</a>
 			</div>
 			<div class="like" th:onclick="fnHref([[${board.id}]])">
 				<label class="form-label">좋아요</label>

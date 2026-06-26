@@ -11,6 +11,7 @@ import spring.study.report.dto.ReportResponseDto;
 import spring.study.report.entity.ReportStatus;
 import spring.study.report.service.ReportService;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -30,6 +31,10 @@ public class ReportFacade {
 
     public ResponseEntity<?> findAll(ReportStatus status, int page, int size) {
         return pageResponse(reportService.findAll(status, page, size));
+    }
+
+    public ResponseEntity<?> findAllByStatus(ReportStatus status) {
+        return listResponse(reportService.findAllByStatus(status));
     }
 
     public ResponseEntity<?> findById(Long id) {
@@ -55,6 +60,13 @@ public class ReportFacade {
                 "size", reports.getSize(),
                 "totalPages", reports.getTotalPages(),
                 "totalElements", reports.getTotalElements()
+        ));
+    }
+
+    private ResponseEntity<?> listResponse(List<ReportResponseDto> reports) {
+        return ResponseEntity.ok(Map.of(
+                "result", reports.size(),
+                "list", reports
         ));
     }
 }

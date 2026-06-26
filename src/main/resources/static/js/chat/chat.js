@@ -317,6 +317,7 @@ function fnDraw(data) {
         newMsgArea.append(newMsg);
     }
 
+    appendChatReportButton(newMsgArea, data);
     appendMessageTime(newMsgArea, data);
     newMsgLi.append(newMsgArea);
 
@@ -373,6 +374,7 @@ function fnLoadDraw(json) {
             newMsgArea.append(newMsg);
         }
 
+        appendChatReportButton(newMsgArea, data);
         appendMessageTime(newMsgArea, data);
         newMsgLi.append(newMsgArea);
 
@@ -594,6 +596,21 @@ function appendMessageTime(messageArea, data) {
     time.className = "chat-message-time";
     time.innerText = formatMessageTime(data);
     messageArea.append(time);
+}
+
+function appendChatReportButton(messageArea, data) {
+    if (!data || !data.id || isMyMessage(data)) return;
+
+    const button = document.createElement('button');
+
+    button.type = 'button';
+    button.className = 'chat-report-button';
+    button.innerText = '신고';
+    button.addEventListener('click', () => {
+        location.href = `/report?targetType=CHAT_MESSAGE&targetId=${encodeURIComponent(data.id)}`;
+    });
+
+    messageArea.append(button);
 }
 
 function refreshDateSeparators() {

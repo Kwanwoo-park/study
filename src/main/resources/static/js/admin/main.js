@@ -4,6 +4,7 @@ window.onload = async function() {
     await loadNewUser();
     await loadNewBoard();
     await loadActiveChatting();
+    await loadRecentReports();
     setInterval(loadSystemStatus, 30000);
 }
 
@@ -91,6 +92,62 @@ async function loadActiveChatting() {
 
     if (data.count >= 0)
         fnChattingActive(data);
+}
+
+async function loadRecentReports() {
+    const reportDiv = document.getElementById('recent-report-list');
+    if (!reportDiv) return;
+
+    reportDiv.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오는 중입니다.</div>';
+
+    try {
+        const res = await fetch('/api/report/admin', {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            credentials: "include",
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.result < 0) {
+            reportDiv.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오지 못했습니다.</div>';
+            return;
+        }
+
+        fnRecentReportDraw(data.list || []);
+    } catch (error) {
+        console.error(error);
+        reportDiv.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오지 못했습니다.</div>';
+    }
+}
+
+function fnRecentReportDraw(reports) {
+    const reportDiv = document.getElementById('recent-report-list');
+    reportDiv.innerHTML = '';
+
+    if (reports.length === 0) {
+        reportDiv.innerHTML = '<div class="admin-report-empty">접수 대기 중인 신고가 없습니다.</div>';
+        return;
+    }
+
+    reports.forEach(report => {
+        const card = document.createElement('article');
+        card.className = 'admin-report-card';
+        card.onclick = function() {
+            location.href = '/admin/report';
+        };
+        card.innerHTML = `
+            <div class="admin-report-card-title">
+                <strong>#${report.id} ${formatReportTargetType(report.targetType)}</strong>
+                <span>${formatReportReason(report.reason)}</span>
+            </div>
+            <div class="admin-report-card-meta">대상 ID: ${escapeHtml(report.targetId)}</div>
+            <div class="admin-report-card-meta">신고자: ${escapeHtml(report.reporterName)}</div>
+            <p>${escapeHtml(report.description)}</p>
+        `;
+        reportDiv.append(card);
+    });
 }
 
 function fnDraw(data) {
@@ -309,6 +366,37 @@ function formatDateTime(value) {
     }
 
     return date.toLocaleString('ko-KR');
+}
+
+function formatReportTargetType(value) {
+    return {
+        MEMBER: '회원',
+        BOARD: '게시글',
+        COMMENT: '댓글',
+        CHAT_MESSAGE: '채팅 메시지'
+    }[value] || value;
+}
+
+function formatReportReason(value) {
+    return {
+        SPAM: '스팸/도배',
+        ABUSE: '욕설/괴롭힘',
+        HATE: '혐오 표현',
+        SEXUAL: '성적인 콘텐츠',
+        FRAUD: '사기/허위 정보',
+        PERSONAL_INFO: '개인정보 노출',
+        COPYRIGHT: '저작권 침해',
+        ETC: '기타'
+    }[value] || value;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 }
 
 function fnLogout() {

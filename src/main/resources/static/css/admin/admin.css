@@ -109,6 +109,80 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.admin-report-dashboard {
+    width: 100%;
+    margin: 16px 0;
+    padding: 16px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.admin-report-dashboard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.admin-report-dashboard-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.admin-report-dashboard-header span {
+    color: gray;
+    font-size: 13px;
+}
+
+.admin-report-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.admin-report-card {
+    min-height: 150px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-bg);
+    cursor: pointer;
+}
+
+.admin-report-card:hover {
+    border-color: #0d6efd;
+}
+
+.admin-report-card-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 8px;
+}
+
+.admin-report-card-title strong {
+    color: var(--text-primary);
+    font-size: 16px;
+}
+
+.admin-report-card-title span,
+.admin-report-card-meta {
+    color: gray;
+    font-size: 12px;
+}
+
+.admin-report-card p {
+    display: -webkit-box;
+    margin: 8px 0 0;
+    overflow: hidden;
+    color: var(--text-primary);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
 body.dark-mode .new-status {
     background: var(--surface-muted);
     color: var(--text-primary);
@@ -123,10 +197,130 @@ body.dark-mode .admin-system-panel {
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
 }
 
+body.dark-mode .admin-report-dashboard {
+    background: var(--surface-muted);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
+}
+
 .admin-forbidden-text {
     font-size: 20px;
 }
 
 .admin-forbidden-annotation {
     color: gray;
+}
+
+.admin-report-page {
+    padding-top: 24px;
+    padding-bottom: 40px;
+}
+
+.admin-report-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.admin-report-header h1 {
+    margin: 0 0 6px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.admin-report-header p {
+    margin: 0;
+    color: gray;
+}
+
+.admin-report-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-report-item,
+.admin-report-empty {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-bg);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.admin-report-item-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.admin-report-item-header strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 18px;
+}
+
+.admin-report-item-header span {
+    color: gray;
+    font-size: 13px;
+}
+
+.admin-report-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 0 12px;
+}
+
+.admin-report-meta div {
+    min-width: 0;
+}
+
+.admin-report-meta dt {
+    color: gray;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-report-meta dd {
+    margin: 0;
+    color: var(--text-primary);
+    overflow-wrap: break-word;
+}
+
+.admin-report-description {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.admin-report-snapshot {
+    margin: 12px 0 0;
+    padding: 10px;
+    border-radius: 6px;
+    background: var(--surface-muted);
+    color: var(--text-primary);
+    white-space: pre-wrap;
+}
+
+body.dark-mode .admin-report-item,
+body.dark-mode .admin-report-empty {
+    background: var(--surface-muted);
+    color: var(--text-primary);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 767px) {
+    .admin-report-header {
+        flex-direction: column;
+    }
+
+    .admin-report-meta {
+        grid-template-columns: 1fr;
+    }
 }

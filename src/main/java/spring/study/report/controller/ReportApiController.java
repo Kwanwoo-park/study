@@ -23,10 +23,7 @@ public class ReportApiController {
     private final CommonFacade commonFacade;
 
     @PostMapping
-    public ResponseEntity<?> create(
-            @Valid @RequestBody ReportRequestDto requestDto,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> create(@Valid @RequestBody ReportRequestDto requestDto, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -46,12 +43,7 @@ public class ReportApiController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<?> findReports(
-            @RequestParam(required = false) ReportStatus status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> findReports(HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -60,14 +52,24 @@ public class ReportApiController {
             return commonFacade.wrongAccess();
         }
 
-        return reportFacade.findAll(status, page, size);
+        return reportFacade.findAll(ReportStatus.PENDING, 0, 10);
+    }
+
+    @GetMapping("/admin/pending")
+    public ResponseEntity<?> findPendingReports(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return commonFacade.wrongAccess();
+        }
+
+        return reportFacade.findAllByStatus(ReportStatus.PENDING);
     }
 
     @GetMapping("/admin/{id}")
-    public ResponseEntity<?> findReport(
-            @PathVariable Long id,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> findReport(@PathVariable Long id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -80,11 +82,9 @@ public class ReportApiController {
     }
 
     @PatchMapping("/admin/{id}")
-    public ResponseEntity<?> process(
-            @PathVariable Long id,
-            @Valid @RequestBody ReportProcessRequestDto requestDto,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> process(@PathVariable Long id,
+                                     @Valid @RequestBody ReportProcessRequestDto requestDto,
+                                     HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

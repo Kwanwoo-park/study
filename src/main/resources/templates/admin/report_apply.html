@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Report Apply List</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/admin/admin.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<main class="container admin-report-page">
+  <div class="admin-report-header">
+    <div>
+      <h1>신고 접수</h1>
+      <p>아직 접수되지 않은 최근 신고 10건입니다.</p>
+    </div>
+    <button type="button" class="btn btn-secondary" onclick="location.href='/admin/administrator'">관리자 홈</button>
+  </div>
+
+  <div id="report-list" class="admin-report-list"></div>
+</main>
+
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/admin/reportApply.js"></script>
+</body>
+</html>

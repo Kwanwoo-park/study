@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>신고하기</title>
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/report/form.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="container report-page">
+    <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+    <header class="report-header">
+        <div>
+            <h1 class="report-title">신고하기</h1>
+            <p class="report-description">문제가 있는 회원, 게시글, 댓글, 채팅 메시지를 신고할 수 있습니다.</p>
+        </div>
+    </header>
+
+    <section class="report-panel" aria-labelledby="report-form-title">
+        <h2 id="report-form-title" class="report-section-title">신고 정보</h2>
+        <form id="reportForm" novalidate>
+            <div class="report-grid">
+                <div class="form-group">
+                    <span class="readonly-label">신고 대상</span>
+                    <div id="targetTypeDisplay" class="readonly-value" th:attr="data-value=${targetType}">-</div>
+                </div>
+                <div class="form-group">
+                    <span class="readonly-label">대상 ID</span>
+                    <div id="targetIdDisplay" class="readonly-value"
+                         th:attr="data-value=${targetId}"
+                         th:text="${targetId != null && !targetId.isBlank() ? targetId : '-'}">-</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="reason">신고 사유</label>
+                <select id="reason" class="form-control" required>
+                    <option value="">사유를 선택하세요</option>
+                    <option value="SPAM">스팸/도배</option>
+                    <option value="ABUSE">욕설/괴롭힘</option>
+                    <option value="HATE">혐오 표현</option>
+                    <option value="SEXUAL">성적인 콘텐츠</option>
+                    <option value="FRAUD">사기/허위 정보</option>
+                    <option value="PERSONAL_INFO">개인정보 노출</option>
+                    <option value="COPYRIGHT">저작권 침해</option>
+                    <option value="ETC">기타</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="description">상세 내용</label>
+                <textarea id="description" class="form-control" rows="7" maxlength="1000" required
+                          placeholder="신고가 필요한 이유를 구체적으로 입력하세요."></textarea>
+                <div class="field-help"><span id="descriptionCount">0</span>/1000</div>
+            </div>
+
+            <div class="form-group">
+                <label for="snapshot">참고 내용</label>
+                <textarea id="snapshot" class="form-control" rows="4"
+                          placeholder="문제가 된 문장, 상황, 링크 등 참고할 내용을 입력하세요."></textarea>
+            </div>
+
+            <div id="reportMessage" class="report-message" role="status" aria-live="polite"></div>
+
+            <div class="report-actions">
+                <button type="button" class="btn btn-outline-secondary" id="cancelButton">취소</button>
+                <button type="submit" class="btn btn-primary" id="submitButton">신고 제출</button>
+            </div>
+        </form>
+    </section>
+</main>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/report/form.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>
