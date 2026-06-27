@@ -223,6 +223,39 @@ h3 {
     font-size: 14px;
 }
 
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 26px 0 0;
+}
+
+.hero-stats div {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fbfcfe;
+}
+
+.hero-stats dt,
+.hero-stats dd {
+    margin: 0;
+}
+
+.hero-stats dt {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.hero-stats dd {
+    margin-top: 6px;
+    color: var(--accent-strong);
+    font-size: 17px;
+    font-weight: 900;
+}
+
 .product-shot {
     overflow: hidden;
     border: 1px solid var(--line);
@@ -382,6 +415,23 @@ h3 {
     width: 100%;
 }
 
+.flow-notes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 26px;
+}
+
+.flow-notes span {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: #46515f;
+    background: #ffffff;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
 .stack-table {
     display: grid;
     overflow: hidden;
@@ -409,6 +459,53 @@ h3 {
 .stack-table span {
     color: #46515f;
     font-size: 18px;
+}
+
+.rule-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+.rule-grid section,
+.endpoint-layout div {
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fbfcfe;
+}
+
+.rule-grid span {
+    display: inline-block;
+    margin-bottom: 18px;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.rule-grid p,
+.endpoint-layout p {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.endpoint-layout {
+    display: grid;
+    gap: 16px;
+}
+
+.endpoint-layout code {
+    display: block;
+    overflow-wrap: anywhere;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: var(--accent-strong);
+    background: #eef7f5;
+    font-size: 15px;
+    font-weight: 800;
 }
 
 .deployment {
@@ -451,6 +548,22 @@ h3 {
     background: #ffffff;
     font-weight: 800;
     text-align: center;
+}
+
+.ops-list {
+    display: grid;
+    gap: 10px;
+    max-width: 760px;
+    margin: 22px auto 0;
+}
+
+.ops-list span {
+    padding: 13px 16px;
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    color: #46515f;
+    background: #f4f8fb;
+    font-size: 15px;
 }
 
 .closing {
@@ -553,8 +666,11 @@ h3 {
     .goal-grid,
     .feature-board,
     .highlight-grid,
+    .rule-grid,
+    .flow-notes,
     .service-row,
-    .deploy-resources {
+    .deploy-resources,
+    .hero-stats {
         grid-template-columns: 1fr;
     }
 
@@ -617,8 +733,11 @@ body.mobile-view .hero-layout,
 body.mobile-view .goal-grid,
 body.mobile-view .feature-board,
 body.mobile-view .highlight-grid,
+body.mobile-view .rule-grid,
+body.mobile-view .flow-notes,
 body.mobile-view .service-row,
 body.mobile-view .deploy-resources,
+body.mobile-view .hero-stats,
 body.mobile-view .metric-row {
     grid-template-columns: 1fr;
 }
@@ -743,20 +862,25 @@ body.mobile-view .controls {
 
     .goal-grid,
     .feature-board,
-    .highlight-grid {
+    .highlight-grid,
+    .rule-grid {
         gap: 10px;
     }
 
     .goal-grid > div,
     .feature-board section,
-    .highlight-grid > div {
+    .highlight-grid > div,
+    .rule-grid section,
+    .endpoint-layout div {
         min-height: auto;
         padding: 16px;
     }
 
     .goal-grid p,
     .feature-board p,
-    .highlight-grid p {
+    .highlight-grid p,
+    .rule-grid p,
+    .endpoint-layout p {
         font-size: 15px;
         line-height: 1.48;
     }

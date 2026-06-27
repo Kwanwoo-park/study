@@ -16,9 +16,7 @@
     updateDescriptionCount();
 
     description.addEventListener('input', updateDescriptionCount);
-    cancelButton.addEventListener('click', function() {
-        history.back();
-    });
+    cancelButton.addEventListener('click', moveToOriginalPage);
 
     form.addEventListener('submit', function(event) {
         event.preventDefault();
@@ -82,6 +80,7 @@
 
             if (response.status === 409) {
                 showMessage('이미 신고한 대상입니다.', 'error');
+                moveToOriginalPage();
                 return;
             }
 
@@ -91,8 +90,7 @@
             }
 
             showMessage('신고가 접수되었습니다.', 'success');
-            form.reset();
-            updateDescriptionCount();
+            moveToOriginalPage();
         } catch (error) {
             console.error(error);
             showMessage('신고 제출에 실패했습니다. 다시 시도해주세요.', 'error');
@@ -120,5 +118,26 @@
         message.textContent = text;
         message.classList.remove('error', 'success');
         if (type) message.classList.add(type);
+    }
+
+    function moveToOriginalPage() {
+        if (document.referrer) {
+            try {
+                const referrer = new URL(document.referrer);
+                if (referrer.origin === window.location.origin && referrer.pathname !== window.location.pathname) {
+                    window.location.replace(referrer.href);
+                    return;
+                }
+            } catch (error) {
+                // Ignore invalid referrer values and fall back to browser history.
+            }
+        }
+
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        window.location.replace('/');
     }
 })();
