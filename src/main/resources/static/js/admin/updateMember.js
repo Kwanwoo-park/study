@@ -51,7 +51,7 @@ if (del) {
     del.addEventListener('click', (event) => {
         event.preventDefault();
 
-        fetch(`/api/member/withdrawal?email=` + email.innerText, {
+        fetch(`/api/admin/member/withdrawal?email=` + email.innerText, {
             method: 'DELETE',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",
@@ -73,6 +73,5 @@ if (del) {
         })
     })
 }
-
 
 

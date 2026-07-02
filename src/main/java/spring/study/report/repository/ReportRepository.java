@@ -1,5 +1,6 @@
 package spring.study.report.repository;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -33,9 +34,13 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @EntityGraph(attributePaths = "reporter")
     Optional<Report> findById(Long id);
 
-    boolean existsByReporterAndTargetTypeAndTargetId(
+    boolean existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
             Member reporter,
             ReportTargetType targetType,
-            String targetId
+            String targetId,
+            ReportStatus status
     );
+
+    @Transactional
+    void deleteByReporter(Member reporter);
 }

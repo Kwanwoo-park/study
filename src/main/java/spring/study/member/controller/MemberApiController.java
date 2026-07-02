@@ -96,11 +96,10 @@ public class MemberApiController {
     }
 
     @DeleteMapping("/withdrawal")
-    public ResponseEntity<?> withdrawalAction(@RequestParam(required = false) String email, HttpServletRequest request) {
+    public ResponseEntity<?> withdrawalAction(HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        if (email == null) return memberFacade.deleteMember(member, request);
-        else return memberFacade.deleteMember(email);
+        return memberFacade.deleteMember(member, request);
     }
 }

@@ -8,10 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.entity.Member;
-import spring.study.member.entity.Role;
-import spring.study.report.dto.ReportProcessRequestDto;
 import spring.study.report.dto.ReportRequestDto;
-import spring.study.report.entity.ReportStatus;
 import spring.study.report.facade.ReportFacade;
 
 @RestController
@@ -42,57 +39,11 @@ public class ReportApiController {
         return reportFacade.findByReporter(member, page, size);
     }
 
-    @GetMapping("/admin")
-    public ResponseEntity<?> findReports(HttpServletRequest request) {
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<?> cancel(@PathVariable Long id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
-            return commonFacade.wrongAccess();
-        }
-
-        return reportFacade.findAll(ReportStatus.PENDING, 0, 10);
-    }
-
-    @GetMapping("/admin/pending")
-    public ResponseEntity<?> findPendingReports(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
-
-        if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
-            return commonFacade.wrongAccess();
-        }
-
-        return reportFacade.findAllByStatus(ReportStatus.PENDING);
-    }
-
-    @GetMapping("/admin/{id}")
-    public ResponseEntity<?> findReport(@PathVariable Long id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
-
-        if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
-            return commonFacade.wrongAccess();
-        }
-
-        return reportFacade.findById(id);
-    }
-
-    @PatchMapping("/admin/{id}")
-    public ResponseEntity<?> process(@PathVariable Long id,
-                                     @Valid @RequestBody ReportProcessRequestDto requestDto,
-                                     HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
-
-        if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
-            return commonFacade.wrongAccess();
-        }
-
-        return reportFacade.process(id, requestDto);
+        return reportFacade.cancel(id, member);
     }
 }

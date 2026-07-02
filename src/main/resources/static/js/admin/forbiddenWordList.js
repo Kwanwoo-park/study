@@ -9,7 +9,7 @@ if (btn) {
             div.classList.remove('is-hidden');
             div.style.display = 'inline';
         } else {
-            fetch(`/api/forbidden/word/admin/save`, {
+            fetch(`/api/admin/forbidden/word/save`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",

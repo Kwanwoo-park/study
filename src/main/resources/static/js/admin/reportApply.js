@@ -7,7 +7,7 @@ async function loadPendingReports() {
     list.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오는 중입니다.</div>';
 
     try {
-        const response = await fetch('/api/report/admin/pending', {
+        const response = await fetch('/api/admin/report/pending', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
@@ -71,7 +71,7 @@ function renderReports(reports) {
 
 async function acceptReport(reportId) {
     try {
-        const response = await fetch(`/api/report/admin/${encodeURIComponent(reportId)}`, {
+        const response = await fetch(`/api/admin/report/${encodeURIComponent(reportId)}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',

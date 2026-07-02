@@ -32,6 +32,7 @@ import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
+import spring.study.report.service.ReportService;
 import spring.study.reply.service.ReplyService;
 
 import java.util.List;
@@ -56,6 +57,7 @@ public class MemberFacade {
     private final UserService userService;
     private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
+    private final ReportService reportService;
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
 
@@ -384,6 +386,7 @@ public class MemberFacade {
             favoriteService.deleteByBoard(board);
         }
 
+        reportService.deleteByReporter(member);
         notificationService.deleteByMember(member);
         favoriteService.deleteByMember(member);
         replyService.deleteReplay(member.getComment());

@@ -45,6 +45,10 @@ public class ReportFacade {
         return reportResponse(reportService.process(id, requestDto));
     }
 
+    public ResponseEntity<?> cancel(Long id, Member reporter) {
+        return reportResponse(reportService.cancel(id, reporter));
+    }
+
     private ResponseEntity<?> reportResponse(ReportResponseDto report) {
         return ResponseEntity.ok(Map.of(
                 "result", report.getId(),

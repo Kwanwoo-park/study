@@ -101,7 +101,7 @@ async function loadRecentReports() {
     reportDiv.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오는 중입니다.</div>';
 
     try {
-        const res = await fetch('/api/report/admin', {
+        const res = await fetch('/api/admin/report', {
             method: 'GET',
             headers: {
                 "Content-Type": "application/json; charset=utf-8",

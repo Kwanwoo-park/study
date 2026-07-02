@@ -27,10 +27,11 @@ public class ReportService {
 
     @Transactional
     public ReportResponseDto create(ReportRequestDto requestDto, Member reporter) {
-        boolean alreadyReported = reportRepository.existsByReporterAndTargetTypeAndTargetId(
+        boolean alreadyReported = reportRepository.existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
                 reporter,
                 requestDto.getTargetType(),
-                requestDto.getTargetId()
+                requestDto.getTargetId(),
+                ReportStatus.CANCELED
         );
 
         if (alreadyReported) {
@@ -76,6 +77,28 @@ public class ReportService {
         );
 
         return new ReportResponseDto(report);
+    }
+
+    @Transactional
+    public ReportResponseDto cancel(Long id, Member reporter) {
+        Report report = findEntity(id);
+
+        if (!report.getReporter().getId().equals(reporter.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 신고한 내역만 취소할 수 있습니다");
+        }
+
+        if (report.getStatus() != ReportStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "접수 대기 중인 신고만 취소할 수 있습니다");
+        }
+
+        report.cancel();
+
+        return new ReportResponseDto(report);
+    }
+
+    @Transactional
+    public void deleteByReporter(Member reporter) {
+        reportRepository.deleteByReporter(reporter);
     }
 
     private Report findEntity(Long id) {
