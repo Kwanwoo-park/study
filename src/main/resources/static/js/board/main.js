@@ -93,6 +93,8 @@ function fnDraw(data) {
             main_image_div.append(button)
         }
 
+        const imageCount = board.img.length;
+
         const main_img = document.createElement('img')
         main_img.className = 'main-image';
         main_img.id = 'main_img' + board.id;
@@ -124,6 +126,12 @@ function fnDraw(data) {
             }
             button.innerText = '›'
             main_image_div.append(button);
+
+            const imageCounter = document.createElement('span');
+            imageCounter.className = 'image-counter';
+            imageCounter.id = 'imageCounter' + board.id;
+            imageCounter.innerText = `1 / ${imageCount}`;
+            main_image_div.append(imageCounter);
         }
 
         const info = document.createElement('div');

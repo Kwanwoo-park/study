@@ -20,6 +20,7 @@ class TemplateStaticResourceRegressionTest {
     private static final Path COMMON_CSS = Path.of("src/main/resources/static/css/common/common.css");
     private static final Path COMMON_ACTIONS_JS = Path.of("src/main/resources/static/js/board/common-actions.js");
     private static final Path BOARD_MAIN_JS = Path.of("src/main/resources/static/js/board/main.js");
+    private static final Path BOARD_VIEW_TEMPLATE = Path.of("src/main/resources/templates/board/view.html");
     private static final Path COMMON_JS = Path.of("src/main/resources/static/js/common/common.js");
     private static final Path NOTIFICATION_LIST_JS = Path.of("src/main/resources/static/js/notification/list.js");
     private static final Path CHAT_JS = Path.of("src/main/resources/static/js/chat/chat.js");
@@ -84,11 +85,20 @@ class TemplateStaticResourceRegressionTest {
     void boardImageNavigationShouldUseClassBasedVisibility() throws IOException {
         String commonActions = Files.readString(COMMON_ACTIONS_JS);
         String boardMain = Files.readString(BOARD_MAIN_JS);
+        String boardView = Files.readString(BOARD_VIEW_TEMPLATE);
 
         assertTrue(boardMain.contains("arrow is-invisible"), "initial hidden image arrow should use CSS class");
         assertTrue(commonActions.contains("classList.add('is-invisible')"), "image navigation should hide with CSS class");
         assertTrue(commonActions.contains("classList.remove('is-invisible')"), "image navigation should show with CSS class");
         assertFalse(commonActions.contains("style.visibility"), "image navigation should not depend on inline visibility");
+        assertTrue(boardMain.contains("imageCounter.innerText = `1 / ${imageCount}`;"),
+                "feed posts with multiple images should show the initial image position");
+        assertTrue(boardView.contains("th:id=\"'imageCounter' + ${board.id}\""),
+                "board detail should render an image position indicator for multiple images");
+        assertTrue(commonActions.contains("updateBoardImageIndicator(listId, nextIndex, imageArr.length);"),
+                "shared image navigation should refresh the position indicator");
+        assertTrue(commonActions.contains("indicator.innerText = `${currentIndex + 1} / ${totalCount}`;"),
+                "image position indicator should render as current slash total");
     }
 
     @Test

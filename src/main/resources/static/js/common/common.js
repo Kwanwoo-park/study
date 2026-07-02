@@ -198,6 +198,10 @@ function fnNotification() {
     location.replace(`/notification/list`);
 }
 
+function fnMyReports() {
+    location.replace(`/report/my`);
+}
+
 function fnDetail(email) {
     location.replace(`/member/detail?email=` + email);
 }

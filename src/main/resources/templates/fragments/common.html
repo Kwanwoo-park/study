@@ -10,6 +10,13 @@
       <img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon">
       <span id="notification-unread-count" class="notification-count-badge" aria-hidden="true"></span>
     </div>
+    <button type="button"
+            class="report-nav-btn"
+            onclick="fnMyReports()"
+            aria-label="내 신고 내역"
+            title="내 신고 내역">
+      <span aria-hidden="true">!</span>
+    </button>
     <div onclick="fnForbidden()"><img th:src="@{/img/} + 'ic_chat_black.png'" class="nav-icon"></div>
     <button type="button"
             id="theme-toggle"

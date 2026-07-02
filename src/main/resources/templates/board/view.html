@@ -32,6 +32,7 @@
 			<img th:unless="${board.img.size == 0}" th:src="${board.img[0].imgSrc}" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
 			<input type="hidden" th:id="'img' + ${board.id}" th:value="0">
 			<button th:if="${board.img.size > 1}" type="button" class="arrow" th:id="'right' + ${board.id}" th:onclick="fnRight([[${board.id}]], [[${board.img}]])">›</button>
+			<span th:if="${board.img.size > 1}" class="image-counter" th:id="'imageCounter' + ${board.id}" th:text="'1 / ' + ${board.img.size}"></span>
 		</div>
 		<div class="info">
 			<div class="icon-box">

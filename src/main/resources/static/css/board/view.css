@@ -90,6 +90,23 @@
     right: 12px;
 }
 
+.image-counter {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+    min-width: 46px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.72);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    pointer-events: none;
+}
+
 .left {
     float: left;
     align-items: center;

@@ -31,4 +31,15 @@ public class ReportViewController {
 
         return "report/form";
     }
+
+    @GetMapping("/my")
+    public String getMyReportPage(Model model, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/report/my";
+
+        model.addAttribute("email", member.getEmail());
+        model.addAttribute("profile", member.getProfile());
+
+        return "report/my";
+    }
 }

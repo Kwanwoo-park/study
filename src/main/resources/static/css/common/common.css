@@ -72,7 +72,29 @@ body {
     transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .15s ease;
 }
 
+.report-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(36px, 11vw, 50px);
+    height: clamp(36px, 11vw, 50px);
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--surface-bg);
+    color: #dc2626;
+    font-size: clamp(18px, 5vw, 24px);
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .15s ease;
+}
+
 .theme-toggle-btn:hover {
+    transform: translateY(-1px);
+}
+
+.report-nav-btn:hover {
     transform: translateY(-1px);
 }
 

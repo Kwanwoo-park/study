@@ -32,6 +32,7 @@
               <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
               <button type="button" class="btn btn-primary" onclick="javascript:location.href='/account'">계좌 조회</button>
               <button type="button" class="btn btn-primary" onclick="javascript:location.href='/collection'">Secret</button>
+              <button th:unless="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/report/my'">내 신고 내역</button>
               <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
               <button type="button" class="btn btn-primary is-hidden" id="save" onclick="fnSave()">사진 변경</button>
             </div>

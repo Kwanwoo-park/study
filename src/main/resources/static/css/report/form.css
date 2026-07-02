@@ -115,6 +115,141 @@
     gap: 10px;
 }
 
+.report-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.report-list-header .report-section-title {
+    margin-bottom: 0;
+}
+
+.report-list {
+    display: grid;
+    gap: 14px;
+}
+
+.report-item,
+.report-empty {
+    padding: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-muted);
+}
+
+.report-empty {
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.report-item-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.report-item-header strong {
+    display: inline-block;
+    color: var(--text-primary);
+    font-size: 17px;
+    line-height: 1.4;
+}
+
+.report-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    margin-left: 8px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    color: #374151;
+    font-size: 12px;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.report-status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.report-status.reviewing {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.report-status.resolved {
+    background: #dcfce7;
+    color: #047857;
+}
+
+.report-status.rejected,
+.report-status.canceled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.report-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+    margin: 0 0 12px;
+}
+
+.report-meta div {
+    min-width: 0;
+}
+
+.report-meta dt {
+    margin-bottom: 4px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.report-meta dd {
+    margin: 0;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+.report-item-description,
+.report-item-memo {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.report-item-memo {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.report-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.report-page-info {
+    min-width: 72px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+}
+
 body.dark-mode .report-panel {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
 }
@@ -154,5 +289,20 @@ body.dark-mode .report-message.success {
     .report-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
+    }
+
+    .report-list-header,
+    .report-item-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .report-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .report-status {
+        margin-top: 8px;
+        margin-left: 0;
     }
 }

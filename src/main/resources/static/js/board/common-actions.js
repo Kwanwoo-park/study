@@ -14,6 +14,7 @@ function fnLeft(listId, imageArr) {
     const nextIndex = currentIndex - 1;
     mainImage.src = imageArr[nextIndex].imgSrc;
     imgId.value = nextIndex;
+    updateBoardImageIndicator(listId, nextIndex, imageArr.length);
 
     if (rightArrow) {
         rightArrow.classList.remove('is-invisible');
@@ -40,6 +41,7 @@ function fnRight(listId, imageArr) {
     const nextIndex = currentIndex + 1;
     mainImage.src = imageArr[nextIndex].imgSrc;
     imgId.value = nextIndex;
+    updateBoardImageIndicator(listId, nextIndex, imageArr.length);
 
     if (leftArrow) {
         leftArrow.classList.remove('is-invisible');
@@ -48,6 +50,13 @@ function fnRight(listId, imageArr) {
     if (rightArrow && nextIndex === imageArr.length - 1) {
         rightArrow.classList.add('is-invisible');
     }
+}
+
+function updateBoardImageIndicator(listId, currentIndex, totalCount) {
+    const indicator = document.getElementById('imageCounter' + listId);
+    if (!indicator) return;
+
+    indicator.innerText = `${currentIndex + 1} / ${totalCount}`;
 }
 
 function fnLike(listId) {

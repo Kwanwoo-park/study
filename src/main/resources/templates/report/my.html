@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>내 신고 내역</title>
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/report/form.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="container report-page">
+    <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+    <header class="report-header">
+        <div>
+            <h1 class="report-title">내 신고 내역</h1>
+            <p class="report-description">내가 제출한 신고의 접수 상태와 처리 결과를 확인할 수 있습니다.</p>
+        </div>
+        <a class="btn btn-outline-primary btn-sm" href="/board/main">돌아가기</a>
+    </header>
+
+    <section class="report-panel" aria-labelledby="my-report-title">
+        <div class="report-list-header">
+            <h2 id="my-report-title" class="report-section-title">신고 목록</h2>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="refreshReportsButton">새로고침</button>
+        </div>
+
+        <div id="myReportMessage" class="report-message" role="status" aria-live="polite"></div>
+        <div id="myReportList" class="report-list"></div>
+        <div id="myReportPagination" class="report-pagination" aria-label="신고 목록 페이지"></div>
+    </section>
+</main>
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/report/my.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>
