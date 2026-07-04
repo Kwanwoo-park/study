@@ -35,6 +35,10 @@ Spring Boot 기반 커뮤니티 서비스입니다.
 
 ![시스템 아키텍처](img.png)
 
+프로젝트의 주요 패키지 구조와 애플리케이션 레이어는 아래 다이어그램처럼 구성되어 있습니다.
+
+![프로젝트 구조 다이어그램](docs/project-architecture.png)
+
 - Spring Boot 애플리케이션은 Thymeleaf 화면과 REST API를 함께 제공합니다.
 - MySQL은 회원, 게시글, 댓글, 채팅방, 알림, 신고, 계좌 거래 등 주요 데이터를 저장합니다.
 - Redis는 Spring Session, 온라인 사용자 상태, 채팅 임시 데이터, 캐싱에 사용합니다.
