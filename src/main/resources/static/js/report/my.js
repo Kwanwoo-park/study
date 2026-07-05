@@ -89,7 +89,7 @@
                     </div>
                     <div>
                         <dt>신고 사유</dt>
-                        <dd>${formatReason(report.reason)}</dd>
+                        <dd>${escapeHtml(formatReason(report))}</dd>
                     </div>
                     <div>
                         <dt>신고일</dt>
@@ -220,7 +220,8 @@
         return classes[value] || '';
     }
 
-    function formatReason(value) {
+    function formatReason(report) {
+        const value = report && typeof report === 'object' ? report.reason : report;
         const labels = {
             SPAM: '스팸/도배',
             ABUSE: '욕설/괴롭힘',
@@ -231,7 +232,14 @@
             COPYRIGHT: '저작권 침해',
             ETC: '기타'
         };
-        return labels[value] || value || '-';
+        const label = labels[value] || value || '-';
+        const detail = report && typeof report === 'object' ? report.reasonDetail : '';
+
+        if (value === 'ETC' && detail) {
+            return `${label}: ${detail}`;
+        }
+
+        return label;
     }
 
     function formatAction(value) {

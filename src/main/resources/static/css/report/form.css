@@ -2,6 +2,11 @@
     width: min(880px, calc(100vw - 32px));
 }
 
+.report-history-page {
+    height: 700px;
+    overflow: auto;
+}
+
 .report-header {
     display: flex;
     align-items: flex-end;
@@ -80,6 +85,10 @@
     border-color: var(--input-border);
     background: var(--input-bg);
     color: var(--input-text);
+}
+
+.report-page .is-hidden {
+    display: none;
 }
 
 .report-page textarea.form-control {
@@ -260,6 +269,32 @@ body.dark-mode .report-message.error {
 
 body.dark-mode .report-message.success {
     color: #6ee7b7;
+}
+
+body.dark-mode .report-status {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+body.dark-mode .report-status.pending {
+    background: #78350f;
+    color: #fde68a;
+}
+
+body.dark-mode .report-status.reviewing {
+    background: #1e3a8a;
+    color: #bfdbfe;
+}
+
+body.dark-mode .report-status.resolved {
+    background: #064e3b;
+    color: #a7f3d0;
+}
+
+body.dark-mode .report-status.rejected,
+body.dark-mode .report-status.canceled {
+    background: #7f1d1d;
+    color: #fecaca;
 }
 
 @media (max-width: 640px) {

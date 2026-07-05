@@ -52,6 +52,7 @@ public class BoardFacade {
                 "like", checkFavorite(list, member),
                 "like_count", favoriteService.countFavorites(list),
                 "comment_count", commentService.countComments(list),
+                "email", member.getEmail(),
                 "result", 10L
         ));
     }

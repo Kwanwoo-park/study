@@ -44,7 +44,7 @@ function renderReports(reports) {
             <div class="admin-report-item-header">
                 <div>
                     <strong>#${report.id} ${formatTargetType(report.targetType)}</strong>
-                    <span>${formatReason(report.reason)}</span>
+                    <span>${escapeHtml(formatReason(report))}</span>
                 </div>
                 <button type="button" class="btn btn-success btn-sm" onclick="acceptReport(${report.id})">접수</button>
             </div>
@@ -106,8 +106,9 @@ function formatTargetType(value) {
     }[value] || value;
 }
 
-function formatReason(value) {
-    return {
+function formatReason(report) {
+    const value = report && typeof report === 'object' ? report.reason : report;
+    const label = {
         SPAM: '스팸/도배',
         ABUSE: '욕설/괴롭힘',
         HATE: '혐오 표현',
@@ -117,6 +118,13 @@ function formatReason(value) {
         COPYRIGHT: '저작권 침해',
         ETC: '기타'
     }[value] || value;
+
+    const detail = report && typeof report === 'object' ? report.reasonDetail : '';
+    if (value === 'ETC' && detail) {
+        return `${label}: ${detail}`;
+    }
+
+    return label;
 }
 
 function formatDateTime(value) {

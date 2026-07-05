@@ -36,6 +36,9 @@ public class Report extends BasetimeEntity {
     @Enumerated(EnumType.STRING)
     private ReportReason reason;
 
+    @Column(length = 200)
+    private String reasonDetail;
+
     @NotNull
     @Column(length = 1000)
     private String description;
@@ -62,6 +65,7 @@ public class Report extends BasetimeEntity {
             ReportStatus status,
             ReportTargetType targetType,
             ReportReason reason,
+            String reasonDetail,
             String description,
             String targetId,
             ReportAction action,
@@ -73,6 +77,7 @@ public class Report extends BasetimeEntity {
         this.status = status == null ? ReportStatus.PENDING : status;
         this.targetType = targetType;
         this.reason = reason;
+        this.reasonDetail = reasonDetail;
         this.description = description;
         this.targetId = targetId;
         this.action = action == null ? ReportAction.NONE : action;

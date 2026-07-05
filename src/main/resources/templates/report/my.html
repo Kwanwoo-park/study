@@ -10,7 +10,7 @@
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
-<main class="container report-page">
+<main class="container report-page report-history-page">
     <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
     <header class="report-header">
         <div>

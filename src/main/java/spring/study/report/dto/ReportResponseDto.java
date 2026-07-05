@@ -20,6 +20,7 @@ public class ReportResponseDto {
     private ReportStatus status;
     private ReportTargetType targetType;
     private ReportReason reason;
+    private String reasonDetail;
     private String description;
     private String targetId;
     private ReportAction action;
@@ -36,6 +37,7 @@ public class ReportResponseDto {
         this.status = report.getStatus();
         this.targetType = report.getTargetType();
         this.reason = report.getReason();
+        this.reasonDetail = report.getReasonDetail();
         this.description = report.getDescription();
         this.targetId = report.getTargetId();
         this.action = report.getAction();

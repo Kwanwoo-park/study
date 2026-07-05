@@ -145,6 +145,19 @@ public class AdminApiController {
         return reportFacade.findAllByStatus(ReportStatus.PENDING);
     }
 
+    @GetMapping("/report/reviewing")
+    public ResponseEntity<?> findReviewingReports(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return commonFacade.wrongAccess();
+        }
+
+        return reportFacade.findAllByStatus(ReportStatus.REVIEWING);
+    }
+
     @GetMapping("/report/{id}")
     public ResponseEntity<?> findReport(@PathVariable Long id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);

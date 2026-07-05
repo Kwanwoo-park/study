@@ -140,7 +140,7 @@ function fnRecentReportDraw(reports) {
         card.innerHTML = `
             <div class="admin-report-card-title">
                 <strong>#${report.id} ${formatReportTargetType(report.targetType)}</strong>
-                <span>${formatReportReason(report.reason)}</span>
+                <span>${escapeHtml(formatReportReason(report))}</span>
             </div>
             <div class="admin-report-card-meta">대상 ID: ${escapeHtml(report.targetId)}</div>
             <div class="admin-report-card-meta">신고자: ${escapeHtml(report.reporterName)}</div>
@@ -377,8 +377,9 @@ function formatReportTargetType(value) {
     }[value] || value;
 }
 
-function formatReportReason(value) {
-    return {
+function formatReportReason(report) {
+    const value = report && typeof report === 'object' ? report.reason : report;
+    const label = {
         SPAM: '스팸/도배',
         ABUSE: '욕설/괴롭힘',
         HATE: '혐오 표현',
@@ -388,6 +389,13 @@ function formatReportReason(value) {
         COPYRIGHT: '저작권 침해',
         ETC: '기타'
     }[value] || value;
+
+    const detail = report && typeof report === 'object' ? report.reasonDetail : '';
+    if (value === 'ETC' && detail) {
+        return `${label}: ${detail}`;
+    }
+
+    return label;
 }
 
 function escapeHtml(value) {

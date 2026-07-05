@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Report Apply List</title>
+  <title>Report Process List</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
@@ -13,20 +13,20 @@
 <main class="container admin-report-page">
   <div class="admin-report-header">
     <div>
-      <h1>신고 접수</h1>
-      <p>아직 접수되지 않은 최근 신고 10건입니다.</p>
+      <h1>신고 처리</h1>
+      <p>접수되어 검토 중인 신고를 처리합니다.</p>
     </div>
     <div class="admin-report-header-actions">
-      <button type="button" class="btn btn-outline-primary" onclick="location.href='/admin/report/process'">처리 화면</button>
+      <button type="button" class="btn btn-outline-primary" onclick="location.href='/admin/report'">접수 대기</button>
       <button type="button" class="btn btn-secondary" onclick="location.href='/admin/administrator'">관리자 홈</button>
     </div>
   </div>
 
-  <div id="report-list" class="admin-report-list"></div>
+  <div id="report-process-list" class="admin-report-list"></div>
 </main>
 
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/admin/reportApply.js"></script>
+<script src="/js/admin/reportProcess.js"></script>
 </body>
 </html>

@@ -106,6 +106,49 @@ class ReportServiceTest {
         );
     }
 
+    @Test
+    void createShouldSaveReasonDetailWhenReasonIsEtc() {
+        Member reporter = createMember(1L, "reporter@test.com");
+        ReportRequestDto requestDto = new ReportRequestDto();
+        requestDto.setTargetType(ReportTargetType.BOARD);
+        requestDto.setTargetId("100");
+        requestDto.setReason(ReportReason.ETC);
+        requestDto.setReasonDetail("  other reason  ");
+        requestDto.setDescription("description");
+
+        when(reportRepository.existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
+                reporter,
+                ReportTargetType.BOARD,
+                "100",
+                ReportStatus.CANCELED
+        )).thenReturn(false);
+        when(reportRepository.save(any(Report.class))).thenAnswer(invocation -> {
+            Report report = invocation.getArgument(0);
+            report.setId(20L);
+            return report;
+        });
+
+        ReportResponseDto response = reportService.create(requestDto, reporter);
+
+        assertThat(response.getReason()).isEqualTo(ReportReason.ETC);
+        assertThat(response.getReasonDetail()).isEqualTo("other reason");
+    }
+
+    @Test
+    void createShouldRejectEtcWithoutReasonDetail() {
+        Member reporter = createMember(1L, "reporter@test.com");
+        ReportRequestDto requestDto = new ReportRequestDto();
+        requestDto.setTargetType(ReportTargetType.BOARD);
+        requestDto.setTargetId("100");
+        requestDto.setReason(ReportReason.ETC);
+        requestDto.setReasonDetail(" ");
+        requestDto.setDescription("description");
+
+        assertThatThrownBy(() -> reportService.create(requestDto, reporter))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
+                        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
     private Member createMember(Long id, String email) {
         return Member.builder()
                 .id(id)

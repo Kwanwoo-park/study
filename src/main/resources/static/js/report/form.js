@@ -5,6 +5,9 @@
     const targetTypeDisplay = document.getElementById('targetTypeDisplay');
     const targetIdDisplay = document.getElementById('targetIdDisplay');
     const reason = document.getElementById('reason');
+    const reasonDetailGroup = document.getElementById('reasonDetailGroup');
+    const reasonDetail = document.getElementById('reasonDetail');
+    const reasonDetailCount = document.getElementById('reasonDetailCount');
     const description = document.getElementById('description');
     const snapshot = document.getElementById('snapshot');
     const descriptionCount = document.getElementById('descriptionCount');
@@ -13,8 +16,12 @@
     const cancelButton = document.getElementById('cancelButton');
 
     renderTargetType();
+    toggleReasonDetail();
+    updateReasonDetailCount();
     updateDescriptionCount();
 
+    reason.addEventListener('change', toggleReasonDetail);
+    reasonDetail.addEventListener('input', updateReasonDetailCount);
     description.addEventListener('input', updateDescriptionCount);
     cancelButton.addEventListener('click', moveToOriginalPage);
 
@@ -38,11 +45,27 @@
         descriptionCount.textContent = String(description.value.length);
     }
 
+    function updateReasonDetailCount() {
+        reasonDetailCount.textContent = String(reasonDetail.value.length);
+    }
+
+    function toggleReasonDetail() {
+        const isEtc = reason.value === 'ETC';
+        reasonDetailGroup.classList.toggle('is-hidden', !isEtc);
+        reasonDetail.required = isEtc;
+
+        if (!isEtc) {
+            reasonDetail.value = '';
+            updateReasonDetailCount();
+        }
+    }
+
     async function submitReport() {
         const payload = {
             targetType: targetTypeDisplay.dataset.value || '',
             targetId: (targetIdDisplay.dataset.value || '').trim(),
             reason: reason.value,
+            reasonDetail: reasonDetail.value.trim(),
             description: description.value.trim(),
             snapshot: snapshot.value.trim()
         };
@@ -103,6 +126,8 @@
         if (!payload.targetType) return '신고 대상을 선택해주세요.';
         if (!payload.targetId) return '대상 ID를 입력해주세요.';
         if (!payload.reason) return '신고 사유를 선택해주세요.';
+        if (payload.reason === 'ETC' && !payload.reasonDetail) return '기타 신고 사유를 입력해주세요.';
+        if (payload.reasonDetail.length > 200) return '기타 신고 사유는 200자 이하로 입력해주세요.';
         if (!payload.description) return '상세 내용을 입력해주세요.';
         if (payload.description.length > 1000) return '상세 내용은 1000자 이하로 입력해주세요.';
         if (payload.targetId.length > 100) return '대상 ID는 100자 이하로 입력해주세요.';

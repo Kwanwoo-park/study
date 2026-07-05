@@ -23,6 +23,9 @@ public class ReportRequestDto {
     @NotNull
     private ReportReason reason;
 
+    @Size(max = 200)
+    private String reasonDetail;
+
     @NotBlank
     @Size(max = 1000)
     private String description;
@@ -39,10 +42,20 @@ public class ReportRequestDto {
                 .status(ReportStatus.PENDING)
                 .targetType(targetType)
                 .reason(reason)
+                .reasonDetail(getNormalizedReasonDetail())
                 .description(description)
                 .targetId(targetId)
                 .action(ReportAction.NONE)
                 .snapshot(snapshot)
                 .build();
+    }
+
+    public String getNormalizedReasonDetail() {
+        if (reason != ReportReason.ETC || reasonDetail == null) {
+            return null;
+        }
+
+        String trimmed = reasonDetail.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

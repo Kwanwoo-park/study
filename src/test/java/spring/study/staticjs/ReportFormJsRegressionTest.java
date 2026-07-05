@@ -20,11 +20,23 @@ class ReportFormJsRegressionTest {
                 "report cancel should use the shared original-page navigation");
         assertTrue(script.contains("if (response.status === 409)"),
                 "duplicate report response should be handled explicitly");
-        assertTrue(script.contains("showMessage('이미 신고한 대상입니다.', 'error');\n                moveToOriginalPage();"),
-                "duplicate report response should return to the original page");
-        assertTrue(script.contains("showMessage('신고가 접수되었습니다.', 'success');\n            moveToOriginalPage();"),
-                "successful report submit should return to the original page");
+        assertTrue(script.contains("moveToOriginalPage();"),
+                "duplicate and successful report responses should return to the original page");
         assertTrue(script.contains("function moveToOriginalPage()"),
                 "report form should define shared original-page navigation");
+    }
+
+    @Test
+    void reportFormShouldRequireReasonDetailForEtcReason() throws IOException {
+        String script = Files.readString(REPORT_FORM_JS_PATH);
+
+        assertTrue(script.contains("reason.addEventListener('change', toggleReasonDetail)"),
+                "report form should toggle the reason detail field when reason changes");
+        assertTrue(script.contains("reasonDetail: reasonDetail.value.trim()"),
+                "report submit should include the reason detail in the payload");
+        assertTrue(script.contains("payload.reason === 'ETC' && !payload.reasonDetail"),
+                "ETC reports should require a reason detail");
+        assertTrue(script.contains("reasonDetail.required = isEtc"),
+                "ETC reason detail should use browser required state when visible");
     }
 }

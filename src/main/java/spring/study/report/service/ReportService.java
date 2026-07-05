@@ -13,6 +13,7 @@ import spring.study.report.dto.ReportProcessRequestDto;
 import spring.study.report.dto.ReportRequestDto;
 import spring.study.report.dto.ReportResponseDto;
 import spring.study.report.entity.Report;
+import spring.study.report.entity.ReportReason;
 import spring.study.report.entity.ReportStatus;
 import spring.study.report.repository.ReportRepository;
 
@@ -27,6 +28,8 @@ public class ReportService {
 
     @Transactional
     public ReportResponseDto create(ReportRequestDto requestDto, Member reporter) {
+        validateReasonDetail(requestDto);
+
         boolean alreadyReported = reportRepository.existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
                 reporter,
                 requestDto.getTargetType(),
@@ -39,6 +42,12 @@ public class ReportService {
         }
 
         return new ReportResponseDto(reportRepository.save(requestDto.toEntity(reporter)));
+    }
+
+    private void validateReasonDetail(ReportRequestDto requestDto) {
+        if (requestDto.getReason() == ReportReason.ETC && requestDto.getNormalizedReasonDetail() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "기타 신고 사유를 입력해주세요");
+        }
     }
 
     public ReportResponseDto findById(Long id) {

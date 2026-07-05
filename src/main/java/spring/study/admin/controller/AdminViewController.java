@@ -110,4 +110,17 @@ public class AdminViewController {
 
         return "admin/report_apply";
     }
+
+    @GetMapping("/report/process")
+    public String reportProcessList(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report/process";
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
+
+        return "admin/report_process";
+    }
 }

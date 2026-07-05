@@ -133,6 +133,10 @@ function fnHref(listId) {
     location.href = '/favorites?id=' + listId;
 }
 
+function fnReportBoard(listId) {
+    location.href = `/report?targetType=BOARD&targetId=${encodeURIComponent(listId)}`;
+}
+
 function fnProfile(email) {
     location.href = '/member/search/detail?email=' + email;
 }

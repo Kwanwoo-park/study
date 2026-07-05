@@ -163,6 +163,17 @@ function fnDraw(data) {
         icon_div.append(img_like)
         icon_div.append(img_comment)
 
+        if (board.member.email !== data.email) {
+            const report_button = document.createElement('button');
+            report_button.type = 'button';
+            report_button.className = 'btn btn-outline-danger btn-sm report-button';
+            report_button.innerText = '신고';
+            report_button.onclick = function() {
+                fnReportBoard(board.id);
+            };
+            icon_div.append(report_button);
+        }
+
         const like_div = document.createElement('div')
         like_div.className = 'like'
         like_div.onclick = function() {
