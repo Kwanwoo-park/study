@@ -15,6 +15,7 @@ import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
@@ -85,6 +86,19 @@ public class ChatApiController {
         if (member == null) return commonFacade.unauthorized();
 
         return chatFacade.sendImage(file);
+    }
+
+    @DeleteMapping("/message/delete")
+    public ResponseEntity<?> deleteMessage(@RequestParam String id, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return commonFacade.wrongAccess();
+        }
+
+        return chatFacade.deleteMessage(id);
     }
 
     @PostMapping("/presence/active")

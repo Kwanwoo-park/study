@@ -62,8 +62,13 @@ public class AdminApiController {
             return commonFacade.wrongAccess();
         }
 
+        Long targetMemberId = requestDto.getId();
+        if (targetMemberId == null && requestDto.getEmail() != null && !requestDto.getEmail().isBlank()) {
+            targetMemberId = memberService.findMember(requestDto.getEmail()).getId();
+        }
+
         return ResponseEntity.ok(Map.of(
-                "result", memberService.updateRole(requestDto.getId(), Role.DENIED)
+                "result", memberService.updateRole(targetMemberId, Role.DENIED)
         ));
     }
 

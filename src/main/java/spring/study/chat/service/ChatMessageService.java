@@ -72,4 +72,8 @@ public class ChatMessageService {
     public void deleteByMember(Member member) {
         chatMessageRepository.deleteByMember(member);
     }
+
+    public void deleteById(String id) {
+        chatMessageRepository.deleteById(id);
+    }
 }

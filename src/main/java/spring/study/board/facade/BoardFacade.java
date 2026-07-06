@@ -18,6 +18,7 @@ import spring.study.favorite.entity.Favorite;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
 import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 import spring.study.reply.service.ReplyService;
 
@@ -149,7 +150,7 @@ public class BoardFacade {
     public ResponseEntity<?> deleteBoard(Long boardId, Member member) {
         Board board = boardService.findById(boardId);
 
-        if (!board.getMember().getId().equals(member.getId()))
+        if (!board.getMember().getId().equals(member.getId()) && member.getRole() != Role.ADMIN)
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "result", -1,
                     "message", "본인 게시글만 지울 수 있습니다"

@@ -50,7 +50,7 @@ public class CommentApiController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> commentDelete(@RequestParam Long id,
-                                                 @RequestBody CommentRequestDto commentRequestDto,
+                                                 @RequestBody(required = false) CommentRequestDto commentRequestDto,
                                                  HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();

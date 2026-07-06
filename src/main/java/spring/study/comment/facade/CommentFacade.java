@@ -15,8 +15,10 @@ import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
 import spring.study.common.service.ModerationService;
 import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
+import spring.study.reply.service.ReplyService;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,7 @@ public class CommentFacade {
     private final BoardService boardService;
     private final NotificationService notificationService;
     private final ModerationService moderationService;
+    private final ReplyService replyService;
 
     public ResponseEntity<?> saveComment(CommentRequestDto dto, Member member, HttpServletRequest request) {
         int risk = moderationService.validate(dto.getComments(), member, request);
@@ -90,6 +93,18 @@ public class CommentFacade {
     }
 
     public ResponseEntity<?> deleteComment(Long id, CommentRequestDto dto, Member member, HttpServletRequest request) {
+        if (member.getRole() == Role.ADMIN) {
+            Long commentId = dto != null && dto.getId() != null ? dto.getId() : id;
+            Comment comment = commentService.findById(commentId);
+
+            replyService.deleteReplay(List.of(comment));
+            commentService.deleteById(commentId);
+
+            return ResponseEntity.ok(Map.of(
+                    "result", commentId
+            ));
+        }
+
         Board board = boardService.findById(id);
 
         if (!commentService.existComment(member, board)) {

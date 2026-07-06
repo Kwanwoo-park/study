@@ -228,4 +228,14 @@ public class ChatFacade {
             ));
         }
     }
+
+    public ResponseEntity<?> deleteMessage(String messageId) {
+        imageS3Service.deleteImg(messageImgService.findMessage(messageId));
+        messageImgService.deleteMessage(messageId);
+        messageService.deleteById(messageId);
+
+        return ResponseEntity.ok(Map.of(
+                "result", messageId
+        ));
+    }
 }

@@ -38,6 +38,9 @@ function renderReports(reports) {
     }
 
     reports.forEach((report) => {
+        const contentDeleteOption = report.targetType === 'MEMBER'
+            ? ''
+            : '<option value="CONTENT_DELETE">콘텐츠 삭제</option>';
         const item = document.createElement('article');
         item.className = 'admin-report-item';
         item.innerHTML = `
@@ -64,7 +67,10 @@ function renderReports(reports) {
             </dl>
             <p class="admin-report-description">${escapeHtml(report.description)}</p>
             ${report.snapshot ? `<pre class="admin-report-snapshot">${escapeHtml(report.snapshot)}</pre>` : ''}
-            <form class="admin-report-process-form" data-report-id="${escapeHtml(report.id)}">
+            <form class="admin-report-process-form"
+                  data-report-id="${escapeHtml(report.id)}"
+                  data-target-type="${escapeHtml(report.targetType)}"
+                  data-target-id="${escapeHtml(report.targetId)}">
                 <div class="admin-report-process-grid">
                     <label>
                         <span>처리 상태</span>
@@ -77,7 +83,7 @@ function renderReports(reports) {
                         <span>조치</span>
                         <select class="form-control form-control-sm" name="action">
                             <option value="NONE">없음</option>
-                            <option value="CONTENT_DELETE">콘텐츠 삭제</option>
+                            ${contentDeleteOption}
                             <option value="WARNING">경고</option>
                             <option value="TEMPORARY_SUSPEND">임시 정지</option>
                             <option value="PERMANENT_BAN">영구 정지</option>
@@ -106,6 +112,8 @@ function renderReports(reports) {
 
 async function processReport(form) {
     const reportId = form.dataset.reportId;
+    const targetType = form.dataset.targetType;
+    const targetId = form.dataset.targetId;
     const submitButton = form.querySelector('button[type="submit"]');
     const payload = {
         status: form.elements.status.value,
@@ -118,6 +126,22 @@ async function processReport(form) {
     submitButton.disabled = true;
 
     try {
+        if (payload.status === 'RESOLVED' && payload.action === 'CONTENT_DELETE') {
+            const deleted = await deleteReportedContent(targetType, targetId);
+            if (!deleted) {
+                submitButton.disabled = false;
+                return;
+            }
+        }
+
+        if (payload.status === 'RESOLVED' && payload.action === 'PERMANENT_BAN') {
+            const denied = await denyReportedMember(targetType, targetId);
+            if (!denied) {
+                submitButton.disabled = false;
+                return;
+            }
+        }
+
         const response = await fetch(`/api/admin/report/${encodeURIComponent(reportId)}`, {
             method: 'PATCH',
             headers: {
@@ -140,6 +164,86 @@ async function processReport(form) {
         alert('신고 처리에 실패했습니다.');
         submitButton.disabled = false;
     }
+}
+
+async function deleteReportedContent(targetType, targetId) {
+    if (!targetId) {
+        alert('삭제할 콘텐츠 정보가 없습니다.');
+        return false;
+    }
+
+    let response;
+
+    if (targetType === 'BOARD') {
+        response = await fetch(`/api/board/view/delete?id=${encodeURIComponent(targetId)}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+            },
+            credentials: 'include',
+        });
+    } else if (targetType === 'COMMENT') {
+        response = await fetch(`/api/comment/delete?id=${encodeURIComponent(targetId)}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                id: Number(targetId)
+            })
+        });
+    } else if (targetType === 'CHAT_MESSAGE') {
+        response = await fetch(`/api/chat/message/delete?id=${encodeURIComponent(targetId)}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+            },
+            credentials: 'include',
+        });
+    } else {
+        alert('이 신고 대상은 콘텐츠 삭제를 할 수 없습니다.');
+        return false;
+    }
+
+    const data = await response.json();
+    if (!response.ok || data.result < 0) {
+        alert(data.message || '콘텐츠 삭제에 실패했습니다.');
+        return false;
+    }
+
+    return true;
+}
+
+async function denyReportedMember(targetType, targetId) {
+    if (targetType !== 'MEMBER') {
+        alert('회원 신고만 영구 정지 처리할 수 있습니다.');
+        return false;
+    }
+
+    if (!targetId) {
+        alert('정지할 회원 정보가 없습니다.');
+        return false;
+    }
+
+    const response = await fetch('/api/admin/member/deny', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+            email: targetId
+        })
+    });
+    const data = await response.json();
+
+    if (!response.ok || data.result < 0) {
+        alert(data.message || '회원 영구 정지에 실패했습니다.');
+        return false;
+    }
+
+    return true;
 }
 
 function formatTargetType(value) {
