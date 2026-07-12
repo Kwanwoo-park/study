@@ -92,7 +92,7 @@ public class MemberFacade {
             ));
         }
 
-        if (member.getRole() == Role.DENIED) {
+        if (member.isAccessBlocked()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -2L,
                     "message", "차단된 계정입니다"

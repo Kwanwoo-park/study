@@ -4,12 +4,28 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
+import spring.study.member.repository.MemberRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class SessionManager {
+    private final MemberRepository memberRepository;
+
     public Member getLoginMember(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        return session == null ? null : (Member) session.getAttribute("member");
+        if (session == null) return null;
+
+        Member sessionMember = (Member) session.getAttribute("member");
+        if (sessionMember == null) return null;
+
+        Member member = memberRepository.findById(sessionMember.getId()).orElse(null);
+        if (member == null || member.isAccessBlocked()) {
+            session.invalidate();
+            return null;
+        }
+        session.setAttribute("member", member);
+        return member;
     }
 
     public HttpSession getSession(HttpServletRequest request) {

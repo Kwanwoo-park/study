@@ -51,6 +51,15 @@ public class Member extends BasetimeEntity implements UserDetails {
     @NotNull
     private Role role;
 
+    @Convert(converter = AccountStatusConverter.class)
+    @Column(nullable = false)
+    private AccountStatus accountStatus = AccountStatus.ACTIVE;
+
+    private LocalDateTime suspendedUntil;
+
+    @Column(nullable = false)
+    private int warningCount;
+
     @NotNull
     @Column(unique = true)
     private String phone;
@@ -109,7 +118,8 @@ public class Member extends BasetimeEntity implements UserDetails {
     private List<Account> accountList = new ArrayList<>();
 
     @Builder
-    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth) {
+    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth,
+                  AccountStatus accountStatus, LocalDateTime suspendedUntil, int warningCount) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;
@@ -119,6 +129,9 @@ public class Member extends BasetimeEntity implements UserDetails {
         this.profile = profile;
         this.phone = phone;
         this.birth = birth;
+        this.accountStatus = accountStatus == null ? AccountStatus.ACTIVE : accountStatus;
+        this.suspendedUntil = suspendedUntil;
+        this.warningCount = warningCount;
     }
 
     @Transient
@@ -150,7 +163,7 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !isAccessBlocked();
     }
 
     @Override
@@ -160,7 +173,35 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return !isAccessBlocked();
+    }
+
+    public boolean isAccessBlocked() {
+        if (role == Role.DENIED || accountStatus == AccountStatus.BANNED) return true;
+        return accountStatus == AccountStatus.SUSPENDED
+                && suspendedUntil != null
+                && suspendedUntil.isAfter(LocalDateTime.now());
+    }
+
+    public void addWarning() {
+        warningCount++;
+    }
+
+    public void suspendUntil(LocalDateTime until) {
+        accountStatus = AccountStatus.SUSPENDED;
+        suspendedUntil = until;
+    }
+
+    public void ban() {
+        accountStatus = AccountStatus.BANNED;
+        suspendedUntil = null;
+        role = Role.DENIED;
+    }
+
+    public void activate() {
+        accountStatus = AccountStatus.ACTIVE;
+        suspendedUntil = null;
+        if (role == Role.DENIED) role = Role.USER;
     }
 
     public void removeComment(Comment cmt) {

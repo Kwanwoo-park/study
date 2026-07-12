@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>신고 처리 내역</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/admin/admin.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<main class="container admin-report-page">
+  <div class="admin-report-header">
+    <div>
+      <h1>신고 처리 내역</h1>
+      <p>처리 완료되거나 반려된 신고를 확인합니다.</p>
+    </div>
+    <div class="admin-report-header-actions">
+      <button type="button" class="btn btn-outline-primary" onclick="location.href='/admin/report/process'">신고 처리</button>
+      <button type="button" class="btn btn-secondary" onclick="location.href='/admin/administrator'">관리자 홈</button>
+    </div>
+  </div>
+
+  <div class="admin-report-history-toolbar" role="group" aria-label="처리 상태 필터">
+    <button type="button" class="btn btn-primary btn-sm" data-status="">전체</button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-status="RESOLVED">처리 완료</button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-status="REJECTED">반려</button>
+  </div>
+
+  <div id="report-history-list" class="admin-report-list"></div>
+  <nav id="report-history-pagination" class="admin-report-pagination" aria-label="신고 처리 내역 페이지"></nav>
+</main>
+
+<script src="/js/lib/jquery.min.js"></script>
+<script src="/js/lib/bootstrap.min.js"></script>
+<script src="/js/admin/reportHistory.js"></script>
+</body>
+</html>

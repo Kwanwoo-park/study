@@ -89,6 +89,10 @@ function renderReports(reports) {
                             <option value="PERMANENT_BAN">영구 정지</option>
                         </select>
                     </label>
+                    <label class="temporary-suspend-field" hidden>
+                        <span>정지 종료</span>
+                        <input class="form-control form-control-sm" type="datetime-local" name="suspendedUntil">
+                    </label>
                 </div>
                 <label class="admin-report-process-memo">
                     <span>처리 메모</span>
@@ -101,6 +105,15 @@ function renderReports(reports) {
         `;
 
         const form = item.querySelector('.admin-report-process-form');
+        const actionSelect = form.elements.action;
+        const suspendField = form.querySelector('.temporary-suspend-field');
+        const suspendedUntilInput = form.elements.suspendedUntil;
+        actionSelect.addEventListener('change', function() {
+            const temporary = actionSelect.value === 'TEMPORARY_SUSPEND';
+            suspendField.hidden = !temporary;
+            suspendedUntilInput.required = temporary;
+            if (!temporary) suspendedUntilInput.value = '';
+        });
         form.addEventListener('submit', function(event) {
             event.preventDefault();
             processReport(form);
@@ -118,7 +131,8 @@ async function processReport(form) {
     const payload = {
         status: form.elements.status.value,
         action: form.elements.action.value,
-        reportMemo: form.elements.reportMemo.value.trim()
+        reportMemo: form.elements.reportMemo.value.trim(),
+        suspendedUntil: form.elements.suspendedUntil.value || null
     };
 
     if (!reportId) return;
@@ -129,14 +143,6 @@ async function processReport(form) {
         if (payload.status === 'RESOLVED' && payload.action === 'CONTENT_DELETE') {
             const deleted = await deleteReportedContent(targetType, targetId);
             if (!deleted) {
-                submitButton.disabled = false;
-                return;
-            }
-        }
-
-        if (payload.status === 'RESOLVED' && payload.action === 'PERMANENT_BAN') {
-            const denied = await denyReportedMember(targetType, targetId);
-            if (!denied) {
                 submitButton.disabled = false;
                 return;
             }
@@ -209,37 +215,6 @@ async function deleteReportedContent(targetType, targetId) {
     const data = await response.json();
     if (!response.ok || data.result < 0) {
         alert(data.message || '콘텐츠 삭제에 실패했습니다.');
-        return false;
-    }
-
-    return true;
-}
-
-async function denyReportedMember(targetType, targetId) {
-    if (targetType !== 'MEMBER') {
-        alert('회원 신고만 영구 정지 처리할 수 있습니다.');
-        return false;
-    }
-
-    if (!targetId) {
-        alert('정지할 회원 정보가 없습니다.');
-        return false;
-    }
-
-    const response = await fetch('/api/admin/member/deny', {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-            email: targetId
-        })
-    });
-    const data = await response.json();
-
-    if (!response.ok || data.result < 0) {
-        alert(data.message || '회원 영구 정지에 실패했습니다.');
         return false;
     }
 

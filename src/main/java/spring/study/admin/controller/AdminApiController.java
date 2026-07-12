@@ -47,6 +47,7 @@ public class AdminApiController {
             return commonFacade.wrongAccess();
         }
 
+        memberService.activate(requestDto.getId());
         return ResponseEntity.ok(Map.of(
                 "result", memberService.updateRole(requestDto.getId(), Role.USER)
         ));
@@ -67,6 +68,7 @@ public class AdminApiController {
             targetMemberId = memberService.findMember(requestDto.getEmail()).getId();
         }
 
+        memberService.ban(targetMemberId);
         return ResponseEntity.ok(Map.of(
                 "result", memberService.updateRole(targetMemberId, Role.DENIED)
         ));
@@ -163,6 +165,24 @@ public class AdminApiController {
         return reportFacade.findAllByStatus(ReportStatus.REVIEWING);
     }
 
+    @GetMapping("/report/history")
+    public ResponseEntity<?> findReportHistory(
+            @RequestParam(required = false) ReportStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request
+    ) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return commonFacade.wrongAccess();
+        }
+
+        return reportFacade.findHistory(status, page, size);
+    }
+
     @GetMapping("/report/{id}")
     public ResponseEntity<?> findReport(@PathVariable Long id, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
@@ -188,7 +208,7 @@ public class AdminApiController {
             return commonFacade.wrongAccess();
         }
 
-        return reportFacade.process(id, requestDto);
+        return reportFacade.process(id, requestDto, member);
     }
 
     @GetMapping("/member/online")

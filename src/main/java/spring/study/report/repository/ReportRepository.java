@@ -24,6 +24,9 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Page<Report> findByStatus(ReportStatus status, Pageable pageable);
 
     @EntityGraph(attributePaths = "reporter")
+    Page<Report> findByStatusIn(List<ReportStatus> statuses, Pageable pageable);
+
+    @EntityGraph(attributePaths = "reporter")
     List<Report> findByStatus(ReportStatus status, Sort sort);
 
     @Override

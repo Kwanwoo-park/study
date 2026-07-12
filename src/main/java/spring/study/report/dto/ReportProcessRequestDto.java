@@ -8,6 +8,8 @@ import lombok.Setter;
 import spring.study.report.entity.ReportAction;
 import spring.study.report.entity.ReportStatus;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,4 +22,6 @@ public class ReportProcessRequestDto {
 
     @Size(max = 2000)
     private String reportMemo;
+
+    private LocalDateTime suspendedUntil;
 }

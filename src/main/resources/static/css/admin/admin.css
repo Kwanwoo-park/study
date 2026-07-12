@@ -250,6 +250,48 @@ body.dark-mode .admin-report-dashboard {
     gap: 12px;
 }
 
+.admin-report-history-toolbar,
+.admin-report-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-report-history-toolbar {
+    margin-bottom: 16px;
+}
+
+.admin-report-pagination {
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.admin-report-history-meta {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-report-history-memo {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.admin-report-history-memo strong {
+    color: var(--text-primary);
+    font-size: 12px;
+}
+
+.admin-report-history-memo p {
+    margin: 4px 0 0;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+}
+
+.admin-report-state-rejected {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
 .admin-report-item,
 .admin-report-empty {
     width: 100%;
@@ -373,6 +415,11 @@ body.dark-mode .admin-report-empty {
 body.dark-mode .admin-report-state {
     background: #1e3a8a;
     color: #bfdbfe;
+}
+
+body.dark-mode .admin-report-state-rejected {
+    background: #7f1d1d;
+    color: #fecaca;
 }
 
 @media (max-width: 767px) {

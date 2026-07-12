@@ -37,12 +37,16 @@ public class ReportFacade {
         return listResponse(reportService.findAllByStatus(status));
     }
 
+    public ResponseEntity<?> findHistory(ReportStatus status, int page, int size) {
+        return pageResponse(reportService.findHistory(status, page, size));
+    }
+
     public ResponseEntity<?> findById(Long id) {
         return reportResponse(reportService.findById(id));
     }
 
-    public ResponseEntity<?> process(Long id, ReportProcessRequestDto requestDto) {
-        return reportResponse(reportService.process(id, requestDto));
+    public ResponseEntity<?> process(Long id, ReportProcessRequestDto requestDto, Member admin) {
+        return reportResponse(reportService.process(id, requestDto, admin));
     }
 
     public ResponseEntity<?> cancel(Long id, Member reporter) {

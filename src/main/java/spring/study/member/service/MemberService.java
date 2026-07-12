@@ -86,6 +86,16 @@ public class MemberService implements UserDetailsService {
     public void deleteById(Long id) { memberRepository.deleteById(id); }
 
     @Transactional
+    public void activate(Long id) {
+        memberRepository.findById(id).orElseThrow().activate();
+    }
+
+    @Transactional
+    public void ban(Long id) {
+        memberRepository.findById(id).orElseThrow().ban();
+    }
+
+    @Transactional
     public void updateProfile(Long id, String profile) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."

@@ -123,4 +123,17 @@ public class AdminViewController {
 
         return "admin/report_process";
     }
+
+    @GetMapping("/report/history")
+    public String reportHistory(HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report/history";
+
+        if (member.getRole() != Role.ADMIN) {
+            request.getSession(false).invalidate();
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
+
+        return "admin/report_history";
+    }
 }

@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.entity.AccountStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,4 +27,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Boolean existsByEmail(String email);
 
     Boolean existsByPhone(String phone);
+
+    List<Member> findByAccountStatusAndSuspendedUntilLessThanEqual(
+            AccountStatus accountStatus,
+            LocalDateTime suspendedUntil
+    );
 }
