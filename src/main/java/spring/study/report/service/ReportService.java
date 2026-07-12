@@ -23,14 +23,18 @@ import spring.study.report.entity.ReportReason;
 import spring.study.report.entity.ReportStatus;
 import spring.study.report.entity.ReportAction;
 import spring.study.report.repository.ReportRepository;
+import spring.study.notification.entity.Group;
+import spring.study.notification.service.NotificationService;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ReportService {
     private static final int MAX_PAGE_SIZE = 100;
+    private static final DateTimeFormatter SANCTION_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final ReportRepository reportRepository;
     private final MemberRepository memberRepository;
@@ -38,6 +42,7 @@ public class ReportService {
     private final CommentRepository commentRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final MemberSanctionRepository memberSanctionRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public ReportResponseDto create(ReportRequestDto requestDto, Member reporter) {
@@ -166,6 +171,27 @@ public class ReportService {
                 .startedAt(LocalDateTime.now())
                 .expiredAt(requestDto.getSuspendedUntil())
                 .build());
+
+        if (requestDto.getAction() == ReportAction.TEMPORARY_SUSPEND
+                || requestDto.getAction() == ReportAction.PERMANENT_BAN) {
+            notificationService.createNotification(
+                    target,
+                    createSanctionNotificationMessage(requestDto),
+                    Group.ADMIN
+            );
+        }
+    }
+
+    private String createSanctionNotificationMessage(ReportProcessRequestDto requestDto) {
+        String startedAt = LocalDateTime.now().format(SANCTION_DATE_FORMAT);
+        String sanctionPeriod = requestDto.getAction() == ReportAction.TEMPORARY_SUSPEND
+                ? startedAt + " ~ " + requestDto.getSuspendedUntil().format(SANCTION_DATE_FORMAT)
+                : startedAt + " (영구)";
+        String reason = requestDto.getReportMemo() == null || requestDto.getReportMemo().isBlank()
+                ? "신고 처리에 따른 제재"
+                : requestDto.getReportMemo().trim();
+
+        return "금지일자: " + sanctionPeriod + " / 사유: " + reason;
     }
 
     private Member resolveTargetMember(Report report) {

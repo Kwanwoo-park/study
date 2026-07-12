@@ -52,6 +52,25 @@ if (button) {
 }
 
 if (password) {
+    const removeUnsupportedPasswordCharacters = () => {
+        const sanitizedValue = password.value.replace(/[^\x21-\x7E]/g, '');
+        if (sanitizedValue === password.value) return;
+
+        const cursorPosition = password.selectionStart;
+        const removedBeforeCursor = cursorPosition == null
+            ? 0
+            : password.value.slice(0, cursorPosition).replace(/[\x21-\x7E]/g, '').length;
+
+        password.value = sanitizedValue;
+        if (cursorPosition != null) {
+            const nextCursorPosition = Math.max(0, cursorPosition - removedBeforeCursor);
+            password.setSelectionRange(nextCursorPosition, nextCursorPosition);
+        }
+    };
+
+    password.addEventListener('input', removeUnsupportedPasswordCharacters);
+    password.addEventListener('compositionend', removeUnsupportedPasswordCharacters);
+
     password.addEventListener('keydown', (event) => {
         if (event.key == 'Enter')
             button.click();

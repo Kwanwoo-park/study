@@ -202,6 +202,10 @@ function fnMyReports() {
     location.replace(`/report/my`);
 }
 
+function fnReportProcess() {
+    location.replace(`/admin/report/process`);
+}
+
 function fnDetail(email) {
     location.replace(`/member/detail?email=` + email);
 }

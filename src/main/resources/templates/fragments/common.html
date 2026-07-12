@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <th:block th:fragment="memberNavi(email, profile)">
   <nav class="navi">
     <div onclick="fnMain()"><img th:src="@{/img/} + 'ic_home.png'" class="nav-icon"></div>
@@ -13,8 +14,17 @@
     <button type="button"
             class="report-nav-btn"
             onclick="fnMyReports()"
+            sec:authorize="!hasAuthority('ROLE_ADMIN')"
             aria-label="내 신고 내역"
             title="내 신고 내역">
+      <span aria-hidden="true">!</span>
+    </button>
+    <button type="button"
+            class="report-nav-btn"
+            onclick="fnReportProcess()"
+            sec:authorize="hasAuthority('ROLE_ADMIN')"
+            aria-label="신고 처리"
+            title="신고 처리">
       <span aria-hidden="true">!</span>
     </button>
     <div onclick="fnForbidden()"><img th:src="@{/img/} + 'ic_chat_black.png'" class="nav-icon"></div>

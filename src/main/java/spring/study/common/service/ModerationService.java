@@ -15,11 +15,15 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ModerationService {
+    private static final DateTimeFormatter SANCTION_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
     private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
     private final MemberService memberService;
@@ -32,20 +36,7 @@ public class ModerationService {
         String key = "forbidden:user:" + member.getId();
 
         if (risk == 3) {
-            notificationService.createNotification(
-                    memberService.findAdministrator(),
-                    member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
-                    Group.ADMIN
-            );
-
-            memberService.updateRole(member.getId(), Role.DENIED);
-
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                session.invalidate();
-            }
-
-            stringRedisTemplate.delete(key);
+            blockMember(member, request, key);
         } else if (risk != 0) {
             stringRedisTemplate.opsForValue().setIfAbsent(key, "0", Duration.ofDays(1));
 
@@ -53,24 +44,32 @@ public class ModerationService {
 
             if (count != null && count >= 5) {
                 risk = 3;
-
-                notificationService.createNotification(
-                        memberService.findAdministrator(),
-                        member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
-                        Group.ADMIN
-                );
-
-                memberService.updateRole(member.getId(), Role.DENIED);
-
-                HttpSession session = request.getSession(false);
-                if (session != null) {
-                    session.invalidate();
-                }
-
-                stringRedisTemplate.delete(key);
+                blockMember(member, request, key);
             }
         }
 
         return risk;
+    }
+
+    private void blockMember(Member member, HttpServletRequest request, String key) {
+        notificationService.createNotification(
+                member,
+                "금지일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " (영구) / 사유: 금칙어 사용",
+                Group.ADMIN
+        );
+        notificationService.createNotification(
+                memberService.findAdministrator(),
+                member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
+                Group.ADMIN
+        );
+
+        memberService.updateRole(member.getId(), Role.DENIED);
+
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        stringRedisTemplate.delete(key);
     }
 }

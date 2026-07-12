@@ -313,6 +313,21 @@ body.dark-mode select {
     border-color: var(--input-border) !important;
 }
 
+input[type="date"],
+input[type="datetime-local"] {
+    color-scheme: light;
+}
+
+body.dark-mode input[type="date"],
+body.dark-mode input[type="datetime-local"] {
+    color-scheme: dark;
+}
+
+body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator,
+body.dark-mode input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+}
+
 body.dark-mode .form-control::placeholder,
 body.dark-mode input::placeholder,
 body.dark-mode textarea::placeholder,

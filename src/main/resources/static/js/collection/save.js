@@ -1,5 +1,6 @@
 const upload = document.getElementById('upload');
 const btn = document.getElementById('btn');
+const reselectBtn = document.getElementById('reselectBtn');
 const imgBtn = document.getElementById('imgBtn');
 const submit = document.getElementById('submit');
 const url = document.getElementById('url');
@@ -16,6 +17,7 @@ const COLLECTION_LIMIT = 30;
 
 let imgSrc = null;
 let file;
+let previewUrl = null;
 let nextCursor = 1;
 let isLoading = false;
 let isSelectionMode = false;
@@ -27,7 +29,11 @@ window.onload = async function() {
 };
 
 if (btn) {
-    btn.addEventListener('click', () => upload.click());
+    btn.addEventListener('click', openImagePicker);
+}
+
+if (reselectBtn) {
+    reselectBtn.addEventListener('click', openImagePicker);
 }
 
 if (selectToggle) {
@@ -239,21 +245,39 @@ async function fnDelete() {
 }
 
 function fnLoad(input) {
-    file = input.files[0];
+    const selectedFile = input.files[0];
+    if (!selectedFile) return;
+
+    file = selectedFile;
+
+    if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+    }
+
+    previewUrl = URL.createObjectURL(file);
 
     const preview = document.createElement('img');
     preview.className = 'save-img';
-    preview.src = URL.createObjectURL(file);
+    preview.src = previewUrl;
+    preview.alt = '선택한 이미지 미리보기';
 
-    btn.style.display = 'none';
-    submit.style.display = 'inline';
+    btn.classList.add('is-hidden');
+    reselectBtn.classList.remove('is-hidden');
+    submit.classList.remove('is-hidden');
 
     const oldPreview = imgDiv.querySelector('.save-img');
     if (oldPreview) {
         oldPreview.remove();
     }
 
-    imgDiv.append(preview);
+    imgDiv.insertBefore(preview, reselectBtn);
+}
+
+function openImagePicker() {
+    if (!upload) return;
+
+    upload.value = '';
+    upload.click();
 }
 
 function toggleSelectionMode() {

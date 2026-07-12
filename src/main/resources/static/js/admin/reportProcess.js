@@ -91,7 +91,7 @@ function renderReports(reports) {
                     </label>
                     <label class="temporary-suspend-field" hidden>
                         <span>정지 종료</span>
-                        <input class="form-control form-control-sm" type="datetime-local" name="suspendedUntil">
+                        <input class="form-control form-control-sm" type="date" name="suspendedUntil" max="9999-12-31">
                     </label>
                 </div>
                 <label class="admin-report-process-memo">
@@ -108,6 +108,7 @@ function renderReports(reports) {
         const actionSelect = form.elements.action;
         const suspendField = form.querySelector('.temporary-suspend-field');
         const suspendedUntilInput = form.elements.suspendedUntil;
+        suspendedUntilInput.min = formatLocalDate(new Date());
         actionSelect.addEventListener('change', function() {
             const temporary = actionSelect.value === 'TEMPORARY_SUSPEND';
             suspendField.hidden = !temporary;
@@ -132,7 +133,7 @@ async function processReport(form) {
         status: form.elements.status.value,
         action: form.elements.action.value,
         reportMemo: form.elements.reportMemo.value.trim(),
-        suspendedUntil: form.elements.suspendedUntil.value || null
+        suspendedUntil: toEndOfDay(form.elements.suspendedUntil.value)
     };
 
     if (!reportId) return;
@@ -170,6 +171,17 @@ async function processReport(form) {
         alert('신고 처리에 실패했습니다.');
         submitButton.disabled = false;
     }
+}
+
+function toEndOfDay(value) {
+    return value ? `${value}T23:59:59` : null;
+}
+
+function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 async function deleteReportedContent(targetType, targetId) {

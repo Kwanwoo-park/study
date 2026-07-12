@@ -28,6 +28,8 @@ import spring.study.report.entity.ReportReason;
 import spring.study.report.entity.ReportStatus;
 import spring.study.report.entity.ReportTargetType;
 import spring.study.report.repository.ReportRepository;
+import spring.study.notification.entity.Group;
+import spring.study.notification.service.NotificationService;
 
 import java.util.Optional;
 import java.time.LocalDateTime;
@@ -36,6 +38,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +57,8 @@ class ReportServiceTest {
     private ChatMessageRepository chatMessageRepository;
     @Mock
     private MemberSanctionRepository memberSanctionRepository;
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private ReportService reportService;
@@ -211,6 +217,13 @@ class ReportServiceTest {
 
         assertThat(target.getAccountStatus()).isEqualTo(AccountStatus.SUSPENDED);
         assertThat(target.getSuspendedUntil()).isEqualTo(until);
+        verify(notificationService).createNotification(
+                eq(target),
+                argThat(message -> message.contains("금지일자:")
+                        && message.contains(until.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                        && message.contains("사유: moderation reason")),
+                eq(Group.ADMIN)
+        );
     }
 
     @Test
