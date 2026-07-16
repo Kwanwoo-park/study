@@ -12,7 +12,7 @@ public class MessageProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void sendMessage(ChatMessageRequestDto message){
-        kafkaTemplate.send("topic", message);
+        kafkaTemplate.send("topic", message.getRoomId(), message);
     }
 
     public void sendNotification(Notification notification) {

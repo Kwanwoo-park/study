@@ -181,6 +181,21 @@ class TemplateStaticResourceRegressionTest {
     }
 
     @Test
+    void reportNavigationShouldMoveAdminsToReportApplyPage() throws IOException {
+        String commonFragment = Files.readString(COMMON_FRAGMENT);
+        String commonJs = Files.readString(COMMON_JS);
+
+        assertTrue(commonFragment.contains("onclick=\"fnMyReports()\"\n            sec:authorize=\"!hasAuthority('ROLE_ADMIN')\""),
+                "non-admin report navigation should keep linking to personal report history");
+        assertTrue(commonFragment.contains("onclick=\"fnReportApply()\"\n            sec:authorize=\"hasAuthority('ROLE_ADMIN')\""),
+                "admin report navigation should use the report apply action");
+        assertTrue(commonJs.contains("function fnReportApply() {\n    location.replace(`/admin/report`);\n}"),
+                "admin report navigation should move directly to the report apply page");
+        assertFalse(commonFragment.contains("onclick=\"fnReportProcess()\""),
+                "admin bottom navigation should not move directly to report processing");
+    }
+
+    @Test
     void notificationListClickShouldMarkNotificationAsReadBeforeMoving() throws IOException {
         String notificationListJs = Files.readString(NOTIFICATION_LIST_JS);
 

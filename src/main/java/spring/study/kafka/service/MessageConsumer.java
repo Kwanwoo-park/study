@@ -1,44 +1,30 @@
 package spring.study.kafka.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import spring.study.chat.dto.ChatMessageRequestDto;
+import spring.study.chat.service.ChatMessageBatchService;
 import spring.study.notification.entity.Notification;
 import spring.study.common.service.EmitterService;
 
+import java.util.List;
+
 @Component
-@Slf4j
 @RequiredArgsConstructor
 public class MessageConsumer {
     private final SimpMessagingTemplate messagingTemplate;
     private final EmitterService emitterService;
-    private final ObjectMapper objectMapper;
-    private final RedisTemplate<String, Object> objectRedisTemplate;
-    private final RedisTemplate<String, String> stringRedisTemplate;
+    private final ChatMessageBatchService chatMessageBatchService;
 
-    @KafkaListener(topics = "topic")
-    public void consume(@Payload ChatMessageRequestDto message){
-        messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoom().getRoomId(), message);
+    @KafkaListener(topics = "topic", containerFactory = "chatBatchKafkaListenerContainerFactory")
+    public void consume(@Payload List<ChatMessageRequestDto> messages){
+        List<ChatMessageRequestDto> savedMessages = chatMessageBatchService.saveBatch(messages);
 
-        try {
-            String key = "chat:message:roomId:"+message.getRoomId();
-            String json = objectMapper.writeValueAsString(message);
-
-            objectRedisTemplate.opsForList().rightPush(key, json);
-            stringRedisTemplate.opsForValue().set(
-                    "chat:room:" + message.getRoomId() + ":lastTime", message.getRegisterTime().toString()
-            );
-            stringRedisTemplate.opsForValue().set(
-                    "chat:room:" + message.getRoomId() + ":lastMessage", message.getMessage()
-            );
-        } catch (Exception e) {
-            log.error(e.getMessage());
+        for (ChatMessageRequestDto message : savedMessages) {
+            messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
         }
     }
 

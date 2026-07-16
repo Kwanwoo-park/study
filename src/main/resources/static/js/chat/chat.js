@@ -66,8 +66,7 @@ container.addEventListener('scroll', () => {
     }
 })
 
-//let socket = new SockJS("http://localhost:8080/ws/chat")
-let socket = new SockJS("https://www.kwanwoo.site/ws/chat")
+let socket = new SockJS("/ws/chat")
 
 const client = Stomp.over(socket)
 client.debug = function() {};
@@ -75,10 +74,10 @@ client.debug = function() {};
 client.connect({}, onConnected, onError);
 
 function onConnected() {
-    if (flag == 'true')
-        enterRoom(socket);
-
     client.subscribe("/sub/chat/room/" + roomId, onMessageReceived);
+
+    if (flag == 'true')
+        enterRoom();
 }
 
 function onError(error) {
@@ -279,6 +278,8 @@ function sendMsg() {
 }
 
 function fnDraw(data) {
+    if (!registerMessageForRender(data)) return;
+
     let msgArea = document.querySelector('.list-group-flush');
     const mine = isMyMessage(data);
     const shouldStickToBottom = isScrolledToBottom();
@@ -338,6 +339,8 @@ function fnDraw(data) {
 
 function fnLoadDraw(json) {
     json.message.forEach(data => {
+        if (!registerMessageForRender(data)) return;
+
         let msgArea = document.querySelector('.list-group-flush');
 
         let newMsgLi = document.createElement('li');
@@ -382,6 +385,16 @@ function fnLoadDraw(json) {
     });
 
     refreshDateSeparators();
+}
+
+const renderedMessageIds = new Set();
+
+function registerMessageForRender(data) {
+    if (!data || !data.id) return true;
+    if (renderedMessageIds.has(data.id)) return false;
+
+    renderedMessageIds.add(data.id);
+    return true;
 }
 
 function applyMessageDirection(messageLi, messageArea, data) {

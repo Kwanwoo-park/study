@@ -22,7 +22,6 @@ import spring.study.notification.service.NotificationService;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -89,7 +88,12 @@ class ChatSendFacadeTest {
         ArgumentCaptor<List<ChatRoomMember>> captor = ArgumentCaptor.forClass(List.class);
         verify(notificationService).createNotification(captor.capture(), eq(sender), eq(Group.CHAT));
         assertThat(captor.getValue()).containsExactly(inactiveRoomMember);
-        verify(producer).sendMessage(any(ChatMessageRequestDto.class));
+        ArgumentCaptor<ChatMessageRequestDto> messageCaptor = ArgumentCaptor.forClass(ChatMessageRequestDto.class);
+        verify(producer).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().getRoom()).isNull();
+        assertThat(messageCaptor.getValue().getMember()).isNull();
+        assertThat(messageCaptor.getValue().getRoomId()).isEqualTo(room.getRoomId());
+        assertThat(messageCaptor.getValue().getEmail()).isEqualTo(sender.getEmail());
     }
 
     private Member createMember(Long id, String email) {

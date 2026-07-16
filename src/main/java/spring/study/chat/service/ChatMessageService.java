@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.dto.ChatMessageResponseDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
@@ -25,17 +24,6 @@ public class ChatMessageService {
     @Transactional
     public ChatMessage save(ChatMessage message) {
         return chatMessageRepository.save(message);
-    }
-
-    @Transactional
-    public void saveAll(List<ChatMessageRequestDto> list) {
-        chatMessageRepository.saveAll(list.stream().map(item -> ChatMessage.builder()
-                .id(item.getId())
-                .message(item.getMessage())
-                .room(item.getRoom())
-                .type(item.getType())
-                .member(item.getMember())
-                .build()).toList());
     }
 
     public ChatMessage findById(String id) {

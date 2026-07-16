@@ -21,10 +21,10 @@
     </button>
     <button type="button"
             class="report-nav-btn"
-            onclick="fnReportProcess()"
+            onclick="fnReportApply()"
             sec:authorize="hasAuthority('ROLE_ADMIN')"
-            aria-label="신고 처리"
-            title="신고 처리">
+            aria-label="신고 접수"
+            title="신고 접수">
       <span aria-hidden="true">!</span>
     </button>
     <div onclick="fnForbidden()"><img th:src="@{/img/} + 'ic_chat_black.png'" class="nav-icon"></div>

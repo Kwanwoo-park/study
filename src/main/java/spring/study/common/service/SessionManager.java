@@ -2,6 +2,11 @@ package spring.study.common.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
 import spring.study.member.repository.MemberRepository;
@@ -22,9 +27,11 @@ public class SessionManager {
         Member member = memberRepository.findById(sessionMember.getId()).orElse(null);
         if (member == null || member.isAccessBlocked()) {
             session.invalidate();
+            SecurityContextHolder.clearContext();
             return null;
         }
         session.setAttribute("member", member);
+        synchronizeSecurityContext(session, member);
         return member;
     }
 
@@ -38,14 +45,34 @@ public class SessionManager {
         session.setAttribute("IP", getIp(request));
         session.setAttribute("UA", request.getHeader("User-Agent"));
         session.setAttribute("member", member);
+        synchronizeSecurityContext(session, member);
     }
 
     public void logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
-        session.removeAttribute("member");
-        session.removeAttribute("IP");
-        session.removeAttribute("UA");
+        if (session != null) {
+            session.removeAttribute("member");
+            session.removeAttribute("IP");
+            session.removeAttribute("UA");
+            session.removeAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        }
+        SecurityContextHolder.clearContext();
+    }
+
+    private void synchronizeSecurityContext(HttpSession session, Member member) {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                member,
+                null,
+                member.getAuthorities()
+        );
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        session.setAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                securityContext
+        );
     }
 
     private String getIp(HttpServletRequest request) {

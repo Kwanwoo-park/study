@@ -24,4 +24,8 @@ public class BasetimeEntity {
     public void changeUpdateTime(LocalDateTime update) {
         this.updateTime = update;
     }
+
+    public void changeRegisterTime(LocalDateTime registerTime) {
+        this.registerTime = registerTime;
+    }
 }

@@ -1,12 +1,8 @@
 package spring.study.chat.facade;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -41,8 +37,6 @@ public class ChatFacade {
     private final MemberService memberService;
     private final ModerationService moderationService;
     private final ImageS3Service imageS3Service;
-    private final RedisTemplate<String, Object> objectRedisTemplate;
-    private final ObjectMapper objectMapper;
 
     public ResponseEntity<?> loadChatting(String roomId, Member member, int cursor, int limit) {
         ChatRoom room = roomService.find(roomId);
@@ -59,33 +53,6 @@ public class ChatFacade {
         String lastReadAt = roomMember == null || roomMember.getLastReadAt() == null
                 ? ""
                 : roomMember.getLastReadAt().toString();
-
-        String key = "chat:message:roomId:" + roomId;
-
-        ListOperations<String, Object> ops = objectRedisTemplate.opsForList();
-
-        Long size = ops.size(key);
-
-        if (size != null && size > 0) {
-            List<Object> messages = ops.range(key, 0, size-1);
-
-            if (messages != null) {
-                list.addAll(
-                        messages.stream()
-                                .map(obj -> {
-                                    try {
-                                        return objectMapper.readValue(obj.toString(), ChatMessage.class);
-                                    } catch (JsonProcessingException e) {
-                                        log.error("Redis message parse error", e);
-                                        return null;
-                                    }
-                                })
-                                .filter(Objects::nonNull)
-                                .map(ChatMessageResponseDto::new)
-                                .toList()
-                );
-            }
-        }
 
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
         roomMemberService.markRead(member, room);

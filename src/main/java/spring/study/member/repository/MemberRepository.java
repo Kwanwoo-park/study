@@ -7,6 +7,7 @@ import spring.study.member.entity.Role;
 import spring.study.member.entity.AccountStatus;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
     Optional<Member> findByEmail(String email);
+
+    List<Member> findByEmailIn(Collection<String> emails);
 
     List<Member> findByNameContaining(String name);
 

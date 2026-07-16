@@ -39,9 +39,9 @@ public class SecurityConfig{
         http
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/**", "/login/**", "/register/**", "/detail/**", "/find/**", "/updatePassword/**").permitAll()
                 .requestMatchers("/js/**", "/css/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .anyRequest().permitAll()
                 .and()
                 .oauth2Login()
                 .defaultSuccessUrl("/board/main", true)

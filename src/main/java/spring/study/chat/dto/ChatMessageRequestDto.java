@@ -43,6 +43,7 @@ public class ChatMessageRequestDto {
                 .type(type)
                 .member(member)
                 .room(room)
+                .registerTime(registerTime)
                 .build();
     }
 

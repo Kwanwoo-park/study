@@ -89,6 +89,8 @@ public class ChatSendFacade {
             notificationService.createNotification(notificationTargets, member, Group.CHAT);
         }
 
+        dto.setRoom(null);
+        dto.setMember(null);
         producer.sendMessage(dto);
 
         return ResponseEntity.ok(Map.of(
