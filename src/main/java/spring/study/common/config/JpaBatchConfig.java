@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 public class JpaBatchConfig {
     private final int chatBatchSize;
 
-    public JpaBatchConfig(@Value("${chat.persistence.batch-size:100}") int chatBatchSize) {
+    public JpaBatchConfig(@Value("${spring.jpa.properties.hibernate.jdbc.batch_size}") int chatBatchSize) {
         this.chatBatchSize = chatBatchSize;
     }
 

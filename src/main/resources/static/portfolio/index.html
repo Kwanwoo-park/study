@@ -82,7 +82,7 @@
                 <div>
                     <span class="number">02</span>
                     <h3>실시간 이벤트</h3>
-                    <p>STOMP WebSocket 채팅과 SSE 알림을 Kafka, Redis와 결합해 즉시 전달과 저장 부담 분리를 함께 처리했습니다.</p>
+                    <p>STOMP 요청을 Kafka에서 방별 순서로 버퍼링하고 MySQL 배치 저장 후 WebSocket으로 전달해 저장 안정성과 실시간성을 함께 확보했습니다.</p>
                 </div>
                 <div>
                     <span class="number">03</span>
@@ -94,22 +94,22 @@
 
         <article class="slide" data-title="Architecture">
             <p class="eyebrow">System Architecture</p>
-            <h2>Spring MVC와 이벤트 파이프라인을 분리한 서비스 구조</h2>
+            <h2>Kafka 배치 저장을 중심으로 분리한 실시간 채팅 파이프라인</h2>
             <div class="architecture">
                 <div class="node user">Browser User</div>
                 <div class="line horizontal"></div>
                 <div class="node app">Spring Boot<br>Application</div>
                 <div class="service-row">
                     <div class="node">MySQL / JPA<br><small>도메인 영속성</small></div>
-                    <div class="node">Redis<br><small>세션·온라인·채팅 버퍼</small></div>
-                    <div class="node">Kafka<br><small>채팅·알림 이벤트</small></div>
+                    <div class="node">Redis<br><small>세션·접속 상태·캐시</small></div>
+                    <div class="node">Kafka<br><small>방별 순서·채팅 버퍼</small></div>
                     <div class="node">AWS S3<br><small>게시글·프로필 이미지</small></div>
                 </div>
             </div>
             <div class="flow-notes">
-                <span>HTTP 요청은 Controller → Facade → Service 계층으로 처리</span>
-                <span>채팅/알림은 Kafka Consumer와 Scheduler가 저장 부하를 분산</span>
-                <span>Redis는 세션, 온라인 상태, 임시 메시지 저장에 활용</span>
+                <span>STOMP → Facade → Kafka(topic, roomId key)로 메시지 발행</span>
+                <span>Consumer가 최대 100건을 MySQL에 batch 저장한 뒤 WebSocket 전송</span>
+                <span>Redis는 세션과 온라인·채팅방 접속 상태를 관리하고 조회 데이터를 캐싱</span>
             </div>
         </article>
 
@@ -127,7 +127,7 @@
                 </section>
                 <section>
                     <h3>채팅·알림</h3>
-                    <p>채팅방 생성, 메시지 송수신, 채팅 이미지, Kafka 이벤트 발행, SSE 알림, 읽음 처리</p>
+                    <p>채팅방 생성, Kafka 방별 순서 보장, 배치 저장 후 WebSocket 전송, 채팅 이미지, SSE 알림, 읽음 처리</p>
                 </section>
                 <section>
                     <h3>계좌·컬렉션·관리</h3>
@@ -142,8 +142,8 @@
             <div class="stack-table">
                 <div><strong>Application</strong><span>Java 17, Spring Boot 3.0.5, Spring MVC, Validation, AOP, Thymeleaf</span></div>
                 <div><strong>Security</strong><span>Spring Security, OAuth2 Client, BCrypt, Redis-backed session, role based admin access</span></div>
-                <div><strong>Realtime</strong><span>STOMP WebSocket, SockJS, Kafka Producer/Consumer, Server-Sent Events</span></div>
-                <div><strong>Data</strong><span>Spring Data JPA, MySQL, Redis, H2 test database, scheduled batch cleanup</span></div>
+                <div><strong>Realtime</strong><span>STOMP WebSocket, SockJS, keyed Kafka Producer, batch Consumer, Server-Sent Events</span></div>
+                <div><strong>Data</strong><span>Spring Data JPA, Hibernate JDBC batch, MySQL, Redis, H2 test database</span></div>
                 <div><strong>Storage & Test</strong><span>AWS S3 image storage, Gradle, JUnit, Spring Security Test, Kafka Test</span></div>
             </div>
         </article>
@@ -157,8 +157,8 @@
                     <p>Board, Member, Chat, Notification, Account, Collection 등 복합 유스케이스를 Facade로 모아 Controller를 얇게 유지했습니다.</p>
                 </div>
                 <div>
-                    <h3>Redis 버퍼링</h3>
-                    <p>채팅 메시지는 Kafka 수신 후 Redis List에 적재하고, 스케줄러가 5초 단위로 DB 반영과 채팅방 최신 상태 갱신을 처리합니다.</p>
+                    <h3>Kafka → MySQL 배치 영속화</h3>
+                    <p>roomId를 Kafka key로 사용해 방별 순서를 유지하고, 최대 100건을 JPA batch로 저장한 뒤 성공한 메시지만 WebSocket으로 전달합니다.</p>
                 </div>
                 <div>
                     <h3>운영 자동화</h3>

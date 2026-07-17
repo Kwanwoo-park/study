@@ -30,9 +30,9 @@ public class KafkaConsumerConfig {
     public KafkaConsumerConfig(@Value("${bootstrap-servers}") String server,
                                @Value("${group-id}") String groupId,
                                ObjectMapper mapper,
-                               @Value("${chat.kafka.batch.max-records:100}") int chatBatchMaxRecords,
-                               @Value("${chat.kafka.batch.fetch-min-bytes:32768}") int chatBatchFetchMinBytes,
-                               @Value("${chat.kafka.batch.fetch-max-wait-ms:1000}") int chatBatchFetchMaxWaitMs) {
+                               @Value("${chat.kafka.batch.max-records}") int chatBatchMaxRecords,
+                               @Value("${chat.kafka.batch.fetch-min-bytes}") int chatBatchFetchMinBytes,
+                               @Value("${chat.kafka.batch.fetch-max-wait-ms}") int chatBatchFetchMaxWaitMs) {
         this.server = server;
         this.groupId = groupId;
         this.mapper = mapper;

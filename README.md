@@ -10,6 +10,7 @@ Spring Boot 기반 커뮤니티 서비스입니다.
 
 - [프로젝트 목표](#프로젝트-목표)
 - [시스템 아키텍처](#시스템-아키텍처)
+- [채팅 처리 흐름](#채팅-처리-흐름)
 - [주요 기능](#주요-기능)
 - [기술 스택](#기술-스택)
 - [실행 방법](#실행-방법)
@@ -33,7 +34,7 @@ Spring Boot 기반 커뮤니티 서비스입니다.
 
 ## 시스템 아키텍처
 
-![시스템 아키텍처](img.png)
+![Kafka 배치 기반 채팅 아키텍처](docs/chat-architecture.svg)
 
 프로젝트의 주요 패키지 구조와 애플리케이션 레이어는 아래 다이어그램처럼 구성되어 있습니다.
 
@@ -41,11 +42,34 @@ Spring Boot 기반 커뮤니티 서비스입니다.
 
 - Spring Boot 애플리케이션은 Thymeleaf 화면과 REST API를 함께 제공합니다.
 - MySQL은 회원, 게시글, 댓글, 채팅방, 알림, 신고, 계좌 거래 등 주요 데이터를 저장합니다.
-- Redis는 Spring Session, 온라인 사용자 상태, 채팅 임시 데이터, 캐싱에 사용합니다.
-- Kafka는 채팅 메시지와 알림 이벤트를 비동기로 처리합니다.
-- WebSocket은 채팅 메시지를 실시간으로 전달합니다.
+- Redis는 Spring Session, 온라인 사용자 및 채팅방 접속 상태, 캐싱에 사용합니다.
+- Kafka는 채팅 메시지의 영속화 버퍼와 알림 이벤트 채널로 사용합니다.
+- 채팅 메시지는 방 ID를 Kafka key로 발행해 같은 방의 처리 순서를 유지합니다.
+- Kafka Consumer는 메시지를 최대 100건씩 가져와 MySQL에 JPA batch insert하고, 저장이 끝난 메시지만 WebSocket으로 전달합니다.
 - SSE는 알림을 클라이언트에 실시간 스트림으로 전달합니다.
 - AWS S3는 게시글, 채팅, 프로필, 컬렉션 이미지 저장소로 사용합니다.
+
+## 채팅 처리 흐름
+
+```text
+Browser
+  └─ STOMP SEND /api/chat/message/send
+       └─ ChatSendFacade: 방/회원 검증, 메시지 ID·시간 부여, 알림 생성
+            └─ Kafka Producer: topic, key=roomId
+                 └─ Batch Consumer: 최대 100건 poll
+                      └─ ChatMessageBatchService (@Transactional)
+                           ├─ 채팅방·회원 일괄 조회
+                           ├─ 메시지 ID 중복 제거
+                           ├─ MySQL JPA batch insert
+                           └─ 채팅방 마지막 메시지·시간 갱신
+                                └─ commit 후 /sub/chat/room/{roomId} 브로드캐스트
+```
+
+- Producer는 `acks=all`, idempotence를 활성화해 Kafka 발행 안정성을 높였습니다.
+- 같은 채팅방의 메시지는 `roomId`를 key로 사용해 동일 partition에 기록되므로 방별 순서를 유지합니다.
+- Consumer는 `max.poll.records=100`과 batch listener를 사용하며, Hibernate JDBC batch와 MySQL `rewriteBatchedStatements`를 함께 적용합니다.
+- 저장 전에 이미 존재하는 메시지 ID와 같은 poll 안의 중복 ID를 제외해 재처리 시 중복 저장을 방지합니다.
+- DB 저장과 채팅방 요약 갱신이 끝난 메시지만 WebSocket으로 전송해 조회 데이터와 실시간 화면의 순서를 맞춥니다.
 
 ## 배포 구조
 
@@ -88,7 +112,10 @@ Spring Boot Server (EC2)
 - WebSocket 기반 실시간 메시지 전송
 - 이미지 메시지 업로드
 - Redis 기반 채팅방 접속 상태 관리
-- Kafka Consumer 기반 메시지 저장/처리
+- Kafka room key 기반 채팅방별 메시지 순서 보장
+- Kafka batch Consumer와 JPA batch insert 기반 메시지 저장
+- 메시지 ID 기반 중복 저장·중복 렌더링 방지
+- DB 저장 후 WebSocket 브로드캐스트
 
 ### 알림
 
@@ -241,18 +268,20 @@ java -jar build/libs/study-0.0.1-SNAPSHOT.jar
 
 ### Kafka
 
-채팅 및 알림 시스템에서 이벤트 처리의 확장성을 확보하기 위해 Kafka를 도입했습니다.
+채팅 및 알림 시스템에서 이벤트 처리의 확장성을 확보하기 위해 Kafka를 도입했습니다. 채팅에서는 Kafka가 메시지 영속화 버퍼 역할도 담당합니다.
 
 ```text
-기존 방식: API 요청 -> DB 저장 -> 알림 처리
-Kafka 적용 후: API 요청 -> Kafka Event 발행 -> Consumer가 비동기 처리
+기존 방식: WebSocket 요청 -> Kafka -> WebSocket 전송 -> Redis 임시 저장 -> 5초 Scheduler -> DB 저장
+현재 방식: WebSocket 요청 -> Kafka(roomId key) -> Batch Consumer -> MySQL batch 저장 -> WebSocket 전송
 ```
 
 이를 통해 다음 효과를 얻었습니다.
 
 - 서비스 간 결합도 감소
 - 채팅/알림 처리 비동기화
-- 트래픽 증가 시 Consumer 확장 가능
+- 고트래픽에서 Kafka Consumer와 JDBC batch로 메시지당 DB 저장 비용 절감
+- 방별 메시지 순서 유지 및 메시지 ID 기반 중복 저장 방지
+- DB에 저장된 메시지만 실시간 전송해 저장·전달 순서 일치
 - 이벤트 처리 실패 지점 분리
 
 ### Redis
@@ -262,7 +291,6 @@ Redis는 다음 용도로 사용합니다.
 - Spring Session 저장소
 - 온라인 사용자 상태 관리
 - 채팅방 접속 상태 관리
-- 채팅/알림 처리용 임시 데이터 저장
 - 게시글 등 조회 데이터 캐싱
 
 이를 통해 다음 효과를 얻었습니다.
