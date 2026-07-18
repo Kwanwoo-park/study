@@ -34,7 +34,6 @@ dependencies {
 	implementation 'org.springframework.kafka:spring-kafka'
 	compileOnly 'org.projectlombok:lombok:1.18.32'
 	annotationProcessor 'org.projectlombok:lombok:1.18.32'
-	implementation 'org.springframework.session:spring-session-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'javax.xml.bind:jaxb-api:2.4.0-b180830.0359'
 	runtimeOnly 'com.mysql:mysql-connector-j:8.0.33'

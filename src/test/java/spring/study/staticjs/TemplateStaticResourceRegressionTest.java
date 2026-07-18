@@ -182,8 +182,8 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void reportNavigationShouldMoveAdminsToReportApplyPage() throws IOException {
-        String commonFragment = Files.readString(COMMON_FRAGMENT);
-        String commonJs = Files.readString(COMMON_JS);
+        String commonFragment = Files.readString(COMMON_FRAGMENT).replace("\r\n", "\n");
+        String commonJs = Files.readString(COMMON_JS).replace("\r\n", "\n");
 
         assertTrue(commonFragment.contains("onclick=\"fnMyReports()\"\n            sec:authorize=\"!hasAuthority('ROLE_ADMIN')\""),
                 "non-admin report navigation should keep linking to personal report history");

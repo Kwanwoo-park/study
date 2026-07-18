@@ -94,7 +94,7 @@ public class ChatApiController {
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return commonFacade.wrongAccess();
         }
 

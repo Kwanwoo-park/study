@@ -29,7 +29,7 @@ public class AdminViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/administrator";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -44,7 +44,7 @@ public class AdminViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/memberCheck";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -59,7 +59,7 @@ public class AdminViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/member/detail";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -74,7 +74,7 @@ public class AdminViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/forbidden/word/list";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -89,7 +89,7 @@ public class AdminViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/forbidden/word/apply";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -104,7 +104,7 @@ public class AdminViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -117,7 +117,7 @@ public class AdminViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report/process";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -130,7 +130,7 @@ public class AdminViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report/history";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 

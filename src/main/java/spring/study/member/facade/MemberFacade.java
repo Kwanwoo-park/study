@@ -1,7 +1,7 @@
 package spring.study.member.facade;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,6 @@ import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.collection.service.CollectionService;
 import spring.study.comment.service.CommentService;
-import spring.study.common.service.SessionManager;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
 import spring.study.forbidden.entity.Status;
@@ -28,6 +27,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.jwt.JwtAuthenticationService;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
@@ -42,7 +42,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class MemberFacade {
-    private final SessionManager sessionManager;
     private final MemberService memberService;
     private final BoardService boardService;
     private final BoardImgService boardImgService;
@@ -60,8 +59,9 @@ public class MemberFacade {
     private final ReportService reportService;
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
+    private final JwtAuthenticationService jwtAuthenticationService;
 
-    public ResponseEntity<?> login(MemberRequestDto dto, HttpServletRequest request) {
+    public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
         int check = validateLogin(dto);
 
         if (check == -1) {
@@ -101,7 +101,7 @@ public class MemberFacade {
 
         memberService.updateLastLoginTime(member.getId());
 
-        sessionManager.setLoginMember(request, member);
+        jwtAuthenticationService.login(member, response);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId(),
@@ -212,11 +212,6 @@ public class MemberFacade {
 
             member.setProfile(imageUrl);
             memberService.updateProfile(member.getId(), imageUrl);
-
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                session.setAttribute("member", member);
-            }
 
             if (oldProfile != null && !oldProfile.equals(imageUrl)) {
                 imageS3Service.deleteImage(oldProfile);
@@ -333,11 +328,6 @@ public class MemberFacade {
         int result = memberService.updatePhoneAndBirth(member.getId(), dto.getPhone(), dto.getBirth());
 
         if (result != -2) {
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                session.setAttribute("member", member);
-            }
-
             return ResponseEntity.ok(Map.of(
                     "result", member.getId()
             ));
@@ -365,11 +355,6 @@ public class MemberFacade {
 
     public ResponseEntity<?> deleteMember(Member member, HttpServletRequest request) {
         removeMemberData(member);
-
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
 
         return ResponseEntity.ok(Map.of("result", member.getId()));
     }

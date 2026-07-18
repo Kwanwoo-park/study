@@ -21,7 +21,11 @@ class SecurityConfigRegressionTest {
         assertTrue(config.contains(".requestMatchers(\"/admin/**\").hasRole(\"ADMIN\")"),
                 "admin pages should require the admin role");
         assertTrue(config.contains(".anyRequest().permitAll()"),
-                "non-admin routes should remain publicly reachable under the existing session-based flow");
+                "non-admin routes should remain publicly reachable while controllers enforce JWT authentication");
+        assertTrue(config.contains("SessionCreationPolicy.STATELESS"),
+                "JWT authentication must not create an HTTP session");
+        assertTrue(config.contains("addFilterBefore(jwtAuthenticationFilter"),
+                "the JWT authentication filter must run before username/password authentication");
         assertFalse(config.contains(".requestMatchers(\"/**\""),
                 "a catch-all request matcher must not shadow the admin authorization rule");
         assertTrue(config.indexOf(".requestMatchers(\"/admin/**\").hasRole(\"ADMIN\")")

@@ -1,7 +1,6 @@
 package spring.study.regression;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -46,9 +45,6 @@ class MemberFacadeRegressionTest {
 
         MockMultipartFile file = new MockMultipartFile("file", "new.png", "image/png", "img".getBytes());
         HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpSession session = mock(HttpSession.class);
-
-        when(request.getSession(false)).thenReturn(session);
         when(imageS3Service.uploadImageToS3(file)).thenReturn("https://cdn/new.png");
 
         var response = memberFacade.changeProfileImage(file, member, request);
@@ -60,7 +56,7 @@ class MemberFacadeRegressionTest {
         inOrder.verify(memberService).updateProfile(1L, "https://cdn/new.png");
         inOrder.verify(imageS3Service).deleteImage("https://cdn/old.png");
 
-        verify(session).setAttribute("member", member);
+        verifyNoInteractions(request);
     }
 
     @Test

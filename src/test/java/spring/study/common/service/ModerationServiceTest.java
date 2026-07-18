@@ -1,7 +1,6 @@
 package spring.study.common.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,8 +32,6 @@ class ModerationServiceTest {
     private RedisTemplate<String, String> stringRedisTemplate;
     @Mock
     private HttpServletRequest request;
-    @Mock
-    private HttpSession session;
 
     @InjectMocks
     private ModerationService moderationService;
@@ -46,7 +43,6 @@ class ModerationServiceTest {
 
         when(forbiddenService.findWordList(Status.APPROVAL, "blocked word")).thenReturn(3);
         when(memberService.findAdministrator()).thenReturn(admin);
-        when(request.getSession(false)).thenReturn(session);
 
         int result = moderationService.validate("blocked word", member, request);
 
@@ -56,7 +52,6 @@ class ModerationServiceTest {
                 eq(Group.ADMIN)
         );
         verify(memberService).updateRole(member.getId(), Role.DENIED);
-        verify(session).invalidate();
         verify(stringRedisTemplate).delete("forbidden:user:" + member.getId());
         org.assertj.core.api.Assertions.assertThat(result).isEqualTo(3);
     }

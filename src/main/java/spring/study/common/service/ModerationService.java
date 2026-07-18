@@ -1,10 +1,10 @@
 package spring.study.common.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import spring.study.forbidden.entity.Status;
 import spring.study.forbidden.service.ForbiddenService;
@@ -65,10 +65,7 @@ public class ModerationService {
 
         memberService.updateRole(member.getId(), Role.DENIED);
 
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
+        SecurityContextHolder.clearContext();
 
         stringRedisTemplate.delete(key);
     }

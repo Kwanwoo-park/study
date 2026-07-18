@@ -1,6 +1,7 @@
 package spring.study.member.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import spring.study.common.service.SessionManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
+import spring.study.member.jwt.JwtAuthenticationService;
 import spring.study.member.service.MemberService;
 
 import java.util.Map;
@@ -25,21 +27,20 @@ public class MemberApiController {
     private final CommonFacade commonFacade;
     private final MemberFacade memberFacade;
     private final MemberService memberService;
+    private final JwtAuthenticationService jwtAuthenticationService;
 
     @PatchMapping("/login")
-    public ResponseEntity<?> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request) {
-        return memberFacade.login(dto, request);
+    public ResponseEntity<?> loginAction(@RequestBody MemberRequestDto dto, HttpServletResponse response) {
+        return memberFacade.login(dto, response);
     }
 
     @GetMapping("/logout")
-    public ResponseEntity<?> logoutAction(HttpServletRequest request) {
+    public ResponseEntity<?> logoutAction(HttpServletRequest request, HttpServletResponse response) {
         Member member = sessionManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
-
-        sessionManager.logout(request);
+        jwtAuthenticationService.logout(request, response);
 
         return ResponseEntity.ok(Map.of(
-                "result", member.getId()
+                "result", member == null ? 0L : member.getId()
         ));
     }
 
@@ -72,12 +73,14 @@ public class MemberApiController {
     }
 
     @PatchMapping("/updatePassword")
-    public ResponseEntity<?> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
+    public ResponseEntity<?> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto,
+                                                  HttpServletRequest request,
+                                                  HttpServletResponse response) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) {
             member = memberService.findMember(memberUpdateDto.getEmail());
         } else {
-            request.getSession(false).invalidate();
+            jwtAuthenticationService.logout(request, response);
         }
 
         return memberFacade.updatePassword(memberUpdateDto.getPassword(), member);
@@ -96,10 +99,12 @@ public class MemberApiController {
     }
 
     @DeleteMapping("/withdrawal")
-    public ResponseEntity<?> withdrawalAction(HttpServletRequest request) {
+    public ResponseEntity<?> withdrawalAction(HttpServletRequest request, HttpServletResponse response) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return memberFacade.deleteMember(member, request);
+        ResponseEntity<?> result = memberFacade.deleteMember(member, request);
+        jwtAuthenticationService.logout(request, response);
+        return result;
     }
 }

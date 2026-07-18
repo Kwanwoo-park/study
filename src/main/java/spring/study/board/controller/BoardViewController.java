@@ -32,7 +32,7 @@ public class BoardViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/all";
 
         if (member.getRole() != Role.ADMIN) {
-            request.getSession(false).invalidate();
+            sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 

@@ -43,6 +43,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     private String email;
 
     @NotNull
+    @JsonIgnore
     private String pwd;
 
     @NotNull

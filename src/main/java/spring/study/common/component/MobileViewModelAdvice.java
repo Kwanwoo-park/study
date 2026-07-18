@@ -1,7 +1,6 @@
 package spring.study.common.component;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -16,12 +15,7 @@ public class MobileViewModelAdvice {
 
     @ModelAttribute("isMobile")
     public boolean isMobile(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        String userAgent = session == null ? null : (String) session.getAttribute("UA");
-
-        if (userAgent == null || userAgent.isBlank()) {
-            userAgent = request.getHeader("User-Agent");
-        }
+        String userAgent = request.getHeader("User-Agent");
 
         if (userAgent == null) {
             return false;
