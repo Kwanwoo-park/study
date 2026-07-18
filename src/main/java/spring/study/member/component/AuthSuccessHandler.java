@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import spring.study.member.entity.Member;
-import spring.study.member.jwt.JwtAuthenticationService;
+import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.member.service.MemberService;
 
 import java.io.IOException;

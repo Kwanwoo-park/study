@@ -27,7 +27,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.member.jwt.JwtAuthenticationService;
+import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
@@ -366,6 +366,10 @@ public class MemberFacade {
     }
 
     private void removeMemberData(Member member) {
+        // JWT authentication supplies a Redis-backed detached principal. Load
+        // the managed aggregate only for this account-deletion operation,
+        // which needs the member's lazy associations.
+        member = memberService.findById(member.getId());
         for (Board board : member.getBoard()) {
             boardImgService.deleteBoard(board);
             favoriteService.deleteByBoard(board);

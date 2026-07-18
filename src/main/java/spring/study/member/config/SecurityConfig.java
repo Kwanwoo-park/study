@@ -18,8 +18,8 @@ import spring.study.member.component.AuthFailureHandler;
 import spring.study.member.component.AuthSuccessHandler;
 import spring.study.member.service.MemberService;
 import spring.study.oauth.service.CustomOAuth2UserService;
-import spring.study.member.jwt.CookieOAuth2AuthorizationRequestRepository;
-import spring.study.member.jwt.JwtAuthenticationFilter;
+import spring.study.jwt.component.CookieOAuth2AuthorizationRequestRepository;
+import spring.study.jwt.component.JwtAuthenticationFilter;
 
 @RequiredArgsConstructor
 @EnableWebSecurity

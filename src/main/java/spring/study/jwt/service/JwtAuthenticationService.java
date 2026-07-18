@@ -1,10 +1,11 @@
-package spring.study.member.jwt;
+package spring.study.jwt.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.member.entity.Member;
 
 @Service
@@ -12,12 +13,12 @@ import spring.study.member.entity.Member;
 public class JwtAuthenticationService {
     private final JwtTokenProvider tokenProvider;
     private final JwtCookieService cookieService;
-    private final RefreshTokenStore refreshTokenStore;
+    private final RefreshTokenService refreshTokenService;
 
     public void login(Member member, HttpServletResponse response) {
         JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
         JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
-        refreshTokenStore.save(refreshToken.jti(), member.getId(), tokenProvider.refreshTokenDuration());
+        refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration());
         cookieService.writeAccessToken(response, accessToken.value(), tokenProvider.accessTokenDuration());
         cookieService.writeRefreshToken(response, refreshToken.value(), tokenProvider.refreshTokenDuration());
     }
@@ -26,7 +27,7 @@ public class JwtAuthenticationService {
         String refreshToken = cookieService.read(request, JwtCookieService.REFRESH_COOKIE);
         if (refreshToken != null) {
             try {
-                refreshTokenStore.revoke(tokenProvider.parse(refreshToken, JwtTokenProvider.REFRESH).jti());
+                refreshTokenService.revoke(tokenProvider.parse(refreshToken, JwtTokenProvider.REFRESH).jti());
             } catch (JwtTokenProvider.JwtValidationException ignored) {
                 // Invalid client tokens still result in cookie cleanup.
             }

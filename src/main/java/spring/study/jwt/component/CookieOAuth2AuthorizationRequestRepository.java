@@ -1,4 +1,4 @@
-package spring.study.member.jwt;
+package spring.study.jwt.component;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
+import spring.study.jwt.service.JwtCookieService;
 
 @Component
 @RequiredArgsConstructor

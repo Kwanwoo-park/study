@@ -1,4 +1,4 @@
-package spring.study.member.jwt;
+package spring.study.jwt.service;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -6,12 +6,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Arrays;
 
-@Component
+@Service
 public class JwtCookieService {
     public static final String ACCESS_COOKIE = "access_token";
     public static final String REFRESH_COOKIE = "refresh_token";

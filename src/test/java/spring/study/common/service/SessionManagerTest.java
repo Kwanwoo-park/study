@@ -7,18 +7,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.member.repository.MemberRepository;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class SessionManagerTest {
-    private final MemberRepository memberRepository = mock(MemberRepository.class);
-    private final SessionManager sessionManager = new SessionManager(memberRepository);
+    private final SessionManager sessionManager = new SessionManager();
 
     @AfterEach
     void clearSecurityContext() {
@@ -28,7 +22,6 @@ class SessionManagerTest {
     @Test
     void getLoginMemberShouldUseJwtPopulatedSecurityContextWithoutCreatingSession() {
         Member member = createMember();
-        when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(member, null, member.getAuthorities()));
         MockHttpServletRequest request = new MockHttpServletRequest();

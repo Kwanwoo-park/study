@@ -1,4 +1,4 @@
-package spring.study.member.jwt;
+package spring.study.jwt.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

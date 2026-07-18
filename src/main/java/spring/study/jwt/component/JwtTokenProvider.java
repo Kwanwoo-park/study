@@ -1,4 +1,4 @@
-package spring.study.member.jwt;
+package spring.study.jwt.component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
