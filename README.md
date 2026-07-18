@@ -25,7 +25,8 @@ Spring Boot 기반 커뮤니티 서비스입니다.
 
 - WebSocket 기반 실시간 채팅
 - Kafka 기반 채팅/알림 이벤트 처리
-- Redis 기반 세션 관리, 온라인 상태 관리, 캐싱
+- MySQL 기반 JWT Refresh Token 관리
+- Redis 기반 온라인 상태 관리 및 캐싱
 - SSE 기반 실시간 알림 스트림
 - OAuth2 기반 소셜 로그인
 - AWS S3 이미지 업로드
@@ -41,8 +42,8 @@ Spring Boot 기반 커뮤니티 서비스입니다.
 ![프로젝트 구조 다이어그램](docs/project-architecture.png)
 
 - Spring Boot 애플리케이션은 Thymeleaf 화면과 REST API를 함께 제공합니다.
-- MySQL은 회원, 게시글, 댓글, 채팅방, 알림, 신고, 계좌 거래 등 주요 데이터를 저장합니다.
-- Redis는 JWT Refresh Token, 온라인 사용자 및 채팅방 접속 상태, 캐싱에 사용합니다.
+- MySQL은 회원, 게시글, 댓글, 채팅방, 알림, 신고, 계좌 거래와 JWT Refresh Token을 저장합니다.
+- Redis는 온라인 사용자 및 채팅방 접속 상태, 캐싱에 사용합니다.
 - Kafka는 채팅 메시지의 영속화 버퍼와 알림 이벤트 채널로 사용합니다.
 - 채팅 메시지는 방 ID를 Kafka key로 발행해 같은 방의 처리 순서를 유지합니다.
 - Kafka Consumer는 메시지를 최대 100건씩 가져와 MySQL에 JPA batch insert하고, 저장이 끝난 메시지만 WebSocket으로 전달합니다.
@@ -288,15 +289,13 @@ java -jar build/libs/study-0.0.1-SNAPSHOT.jar
 
 Redis는 다음 용도로 사용합니다.
 
-- JWT Refresh Token 저장소
 - 온라인 사용자 상태 관리
 - 채팅방 접속 상태 관리
 - 게시글 등 조회 데이터 캐싱
 
 이를 통해 다음 효과를 얻었습니다.
 
-- 로그인 세션 공유
-- 서버 확장 시 세션 유지
+- 서버 인스턴스 간 실시간 접속 상태 공유
 - DB 조회 감소
 - 실시간 상태 조회 성능 개선
 
@@ -305,7 +304,8 @@ Redis는 다음 용도로 사용합니다.
 ### JWT 인증 설정
 
 - Access Token은 `HttpOnly` 쿠키에 15분간 저장됩니다.
-- Refresh Token은 `HttpOnly` 쿠키로 전달하고, 활성 토큰의 `jti`는 Redis에서 14일간 관리합니다.
+- Refresh Token은 `HttpOnly` 쿠키로 전달하고, 활성 토큰의 `jti`와 만료 시각은 MySQL에서 관리합니다.
+- 만료된 Refresh Token 레코드는 매시간 정리합니다.
 - 운영 환경에서는 최소 32바이트의 `JWT_SECRET`을 반드시 설정하고 `security.jwt.secure-cookie=true`로 실행해야 합니다.
 - 설정 예시는 `src/main/resources/application-jwt.example.properties`를 참고합니다.
 

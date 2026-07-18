@@ -100,8 +100,8 @@
                 <div class="line horizontal"></div>
                 <div class="node app">Spring Boot<br>Application</div>
                 <div class="service-row">
-                    <div class="node">MySQL / JPA<br><small>도메인 영속성</small></div>
-                    <div class="node">Redis<br><small>세션·접속 상태·캐시</small></div>
+                    <div class="node">MySQL / JPA<br><small>도메인·인증 영속성</small></div>
+                    <div class="node">Redis<br><small>접속 상태·캐시</small></div>
                     <div class="node">Kafka<br><small>방별 순서·채팅 버퍼</small></div>
                     <div class="node">AWS S3<br><small>게시글·프로필 이미지</small></div>
                 </div>
@@ -109,7 +109,7 @@
             <div class="flow-notes">
                 <span>STOMP → Facade → Kafka(topic, roomId key)로 메시지 발행</span>
                 <span>Consumer가 최대 100건을 MySQL에 batch 저장한 뒤 WebSocket 전송</span>
-                <span>Redis는 세션과 온라인·채팅방 접속 상태를 관리하고 조회 데이터를 캐싱</span>
+                <span>Refresh Token은 MySQL에 영속화하고 Redis는 온라인·채팅방 접속 상태와 캐시를 관리</span>
             </div>
         </article>
 
@@ -141,7 +141,7 @@
             <h2>동기 요청, 실시간 메시징, 배치 처리를 나눠 구성</h2>
             <div class="stack-table">
                 <div><strong>Application</strong><span>Java 17, Spring Boot 3.0.5, Spring MVC, Validation, AOP, Thymeleaf</span></div>
-                <div><strong>Security</strong><span>Spring Security, OAuth2 Client, BCrypt, Redis-backed session, role based admin access</span></div>
+                <div><strong>Security</strong><span>Spring Security, OAuth2 Client, BCrypt, MySQL-backed refresh token, role based admin access</span></div>
                 <div><strong>Realtime</strong><span>STOMP WebSocket, SockJS, keyed Kafka Producer, batch Consumer, Server-Sent Events</span></div>
                 <div><strong>Data</strong><span>Spring Data JPA, Hibernate JDBC batch, MySQL, Redis, H2 test database</span></div>
                 <div><strong>Storage & Test</strong><span>AWS S3 image storage, Gradle, JUnit, Spring Security Test, Kafka Test</span></div>
