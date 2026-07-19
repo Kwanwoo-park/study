@@ -14,6 +14,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
     margin-top: 300px;
 }
 
@@ -36,4 +37,21 @@ img {
     font-color: black;
     margin-top: auto;
     margin-bottom: auto;
+}
+
+.image-counter {
+    position: absolute;
+    right: 45px;
+    bottom: 10px;
+    z-index: 2;
+    min-width: 46px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.72);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    pointer-events: none;
 }

@@ -2,7 +2,7 @@ let imgDiv = document.querySelector('.imgDiv');
 let file, fidx;
 let id;
 let img;
-let left, right, size;
+let left, right, size, imageCounter;
 
 let formData = new FormData();
 let imgArr;
@@ -89,6 +89,7 @@ function fnLeft() {
         return;
 
     img.src = URL.createObjectURL(file[--fidx]);
+    updateImageCounter();
 
     if (right.style.visibility === 'hidden')
         right.style.visibility = 'visible';
@@ -102,12 +103,18 @@ function fnRight() {
             return;
 
     img.src = URL.createObjectURL(file[++fidx]);
+    updateImageCounter();
 
     if (left.style.visibility === 'hidden')
         left.style.visibility = 'visible';
 
     if (fidx == size - 1)
         right.style.visibility = 'hidden';
+}
+
+function updateImageCounter() {
+    if (imageCounter)
+        imageCounter.innerText = `${fidx + 1} / ${size}`;
 }
 
 function fnPrevious() {
@@ -123,6 +130,11 @@ function fnPrevious() {
 
     if (right)
         right.style.display = 'none';
+
+    if (imageCounter) {
+        imageCounter.remove();
+        imageCounter = null;
+    }
 
     file = null;
     fidx = 0;
@@ -181,6 +193,11 @@ function fnLoad(input) {
         imgDiv.append(left);
         imgDiv.append(img);
         imgDiv.append(right);
+
+        imageCounter = document.createElement('span');
+        imageCounter.className = 'image-counter';
+        imageCounter.innerText = `1 / ${size}`;
+        imgDiv.append(imageCounter);
     }
     else imgDiv.append(img);
 
