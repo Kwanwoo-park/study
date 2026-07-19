@@ -47,10 +47,21 @@
         </div>
         <div id="recent-report-list" class="admin-report-card-grid"></div>
       </section>
-      <div class="new-status" id="user-status"></div>
-      <div class="new-status" id="new-user"></div>
-      <div class="new-status" id="new-board"></div>
-      <div class="new-status" id="active-chat-room"></div>
+      <section class="admin-activity-panel">
+        <div class="admin-activity-panel-header">
+          <div>
+            <span class="admin-section-label">OVERVIEW</span>
+            <h2>운영 현황</h2>
+          </div>
+          <p>사용자 활동과 최근 등록 현황을 한눈에 확인하세요.</p>
+        </div>
+        <div class="admin-activity-grid">
+          <article class="admin-activity-card admin-activity-card-online" id="user-status"></article>
+          <article class="admin-activity-card admin-activity-card-member" id="new-user"></article>
+          <article class="admin-activity-card admin-activity-card-board" id="new-board"></article>
+          <article class="admin-activity-card admin-activity-card-chat" id="active-chat-room"></article>
+        </div>
+      </section>
   </div>
 
 <!--부트스트랩 js, jquery 추가-->

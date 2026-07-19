@@ -99,14 +99,230 @@
     font-weight: 700;
 }
 
-.new-status {
+.admin-activity-panel {
     width: 100%;
-    height: 100px;
-    overflow: auto;
-    padding: 10px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 16px 0 40px;
+}
+
+.admin-activity-panel-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 14px;
+    padding: 0 2px;
+}
+
+.admin-section-label {
+    display: block;
+    margin-bottom: 3px;
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.admin-activity-panel-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 750;
+}
+
+.admin-activity-panel-header p {
+    margin: 0 0 2px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.admin-activity-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-activity-card {
+    position: relative;
+    min-width: 0;
+    min-height: 280px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--surface-bg);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+}
+
+.admin-activity-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--activity-accent);
+}
+
+.admin-activity-card-online {
+    --activity-accent: #16a34a;
+    --activity-soft: #dcfce7;
+    --activity-ink: #15803d;
+}
+
+.admin-activity-card-member {
+    --activity-accent: #2563eb;
+    --activity-soft: #dbeafe;
+    --activity-ink: #1d4ed8;
+}
+
+.admin-activity-card-board {
+    --activity-accent: #7c3aed;
+    --activity-soft: #ede9fe;
+    --activity-ink: #6d28d9;
+}
+
+.admin-activity-card-chat {
+    --activity-accent: #ea580c;
+    --activity-soft: #ffedd5;
+    --activity-ink: #c2410c;
+}
+
+.admin-activity-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-activity-card-heading {
+    min-width: 0;
+}
+
+.admin-activity-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--activity-ink);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .09em;
+}
+
+.admin-activity-card-heading h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.admin-activity-count {
+    color: var(--text-primary);
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -.04em;
+    white-space: nowrap;
+}
+
+.admin-activity-unit {
+    margin-left: 3px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.admin-activity-list {
+    max-height: 260px;
+    margin: 0;
+    padding: 8px;
+    overflow-y: auto;
+    list-style: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.admin-activity-item {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    min-height: 58px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    transition: background-color .15s ease, transform .15s ease;
+}
+
+.admin-activity-item + .admin-activity-item {
+    border-top: 1px solid var(--border-color);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.admin-activity-item.is-clickable {
+    cursor: pointer;
+}
+
+.admin-activity-item.is-clickable:hover,
+.admin-activity-item.is-clickable:focus-visible {
+    outline: none;
+    background: var(--surface-muted);
+    transform: translateX(2px);
+}
+
+.admin-activity-item-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--activity-soft);
+    color: var(--activity-ink);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.admin-activity-item-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.admin-activity-item-text strong,
+.admin-activity-item-description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-activity-item-text strong {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.admin-activity-item-description {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.admin-activity-item-arrow {
+    color: var(--text-secondary);
+    font-size: 24px;
+    line-height: 1;
+}
+
+.admin-activity-empty {
+    display: flex;
+    min-height: 150px;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
 }
 
 .admin-report-dashboard {
@@ -191,11 +407,16 @@
     -webkit-line-clamp: 3;
 }
 
-body.dark-mode .new-status {
-    background: var(--surface-muted);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
+body.dark-mode .admin-activity-card {
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .2);
+}
+
+body.dark-mode .admin-activity-card-online,
+body.dark-mode .admin-activity-card-member,
+body.dark-mode .admin-activity-card-board,
+body.dark-mode .admin-activity-card-chat {
+    --activity-soft: color-mix(in srgb, var(--activity-accent) 20%, var(--surface-bg));
+    --activity-ink: color-mix(in srgb, var(--activity-accent) 72%, white);
 }
 
 body.dark-mode .admin-system-panel {
@@ -423,6 +644,20 @@ body.dark-mode .admin-report-state-rejected {
 }
 
 @media (max-width: 767px) {
+    .admin-activity-panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .admin-activity-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-activity-card {
+        min-height: 250px;
+    }
+
     .admin-report-header {
         flex-direction: column;
     }

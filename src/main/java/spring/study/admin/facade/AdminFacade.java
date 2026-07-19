@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import spring.study.board.entity.Board;
+import spring.study.admin.dto.AdminNewBoardResponseDto;
 import spring.study.board.service.BoardService;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
@@ -74,7 +74,9 @@ public class AdminFacade {
     public ResponseEntity<?> newBoard() {
         LocalDateTime end = LocalDateTime.now(), start = end.minusDays(7);
 
-        List<Board> list = boardService.findNewBoard(start, end);
+        List<AdminNewBoardResponseDto> list = boardService.findNewBoard(start, end).stream()
+                .map(AdminNewBoardResponseDto::new)
+                .toList();
         int count = list.size();
 
         return ResponseEntity.ok(Map.of(

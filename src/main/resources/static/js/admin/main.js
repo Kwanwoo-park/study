@@ -153,123 +153,151 @@ function fnRecentReportDraw(reports) {
 function fnDraw(data) {
     const userDiv = document.getElementById('user-status');
 
-    const userCount = document.createElement('label');
-    userCount.innerText = "현재 접속자 수: " + data.count;
-
-    userDiv.append(userCount);
-
-    const ul = document.createElement('ul');
-
-    data.list.forEach(member => {
-        const li = document.createElement('li');
-
-        const userName = document.createElement('label');
-        userName.innerText = member.name;
-
-        const email = document.createElement('label');
-        email.innerText = "(" + member.email + ")";
-        email.style.color = 'gray';
-
-        li.append(userName);
-        li.append(email);
-
-        ul.append(li);
-    })
-
-    userDiv.append(ul);
+    renderActivityCard(userDiv, {
+        label: 'LIVE',
+        title: '현재 접속자',
+        count: data.count,
+        unit: '명',
+        emptyMessage: '현재 접속 중인 사용자가 없습니다.',
+        items: data.list.map(member => ({
+            badge: getInitial(member.name),
+            title: member.name,
+            description: member.email
+        }))
+    });
 }
 
 function fnNewUserDraw(data) {
     const newUserDiv = document.getElementById('new-user');
 
-    const userCount = document.createElement('label');
-    userCount.innerText = "신규 가입자 수: " + data.count;
-
-    newUserDiv.append(userCount);
-
-    const ul = document.createElement('ul');
-
-    data.list.forEach(member => {
-        const li = document.createElement('li');
-
-        const userName = document.createElement('label');
-        userName.innerText = member.name;
-
-        const email = document.createElement('label');
-        email.innerText = "(" + member.email + ")";
-        email.style.color = 'gray';
-
-        li.append(userName);
-        li.append(email);
-
-        ul.append(li);
+    renderActivityCard(newUserDiv, {
+        label: 'LAST 24 HOURS',
+        title: '신규 가입자',
+        count: data.count,
+        unit: '명',
+        emptyMessage: '최근 가입한 사용자가 없습니다.',
+        items: data.list.map(member => ({
+            badge: getInitial(member.name),
+            title: member.name,
+            description: member.email
+        }))
     });
-
-    newUserDiv.append(ul);
 }
 
 function fnNewBoardDraw(data) {
     const newBoardDiv = document.getElementById('new-board');
 
-    const boardCount = document.createElement('label');
-    boardCount.innerText = "신규 게시글 수: " + data.count;
-
-    newBoardDiv.append(boardCount);
-
-    const ul = document.createElement('ul');
-
-    data.list.forEach(board => {
-        const li = document.createElement('li');
-        li.onclick = function() {
-            fnBoardMove(board.id);
-        }
-
-        const boardId = document.createElement('label');
-        boardId.innerText = board.id;
-
-        const boardUser = document.createElement('label');
-        boardUser.innerText = "(작성자: " + board.member.name + ")";
-        boardUser.style.color = 'gray';
-
-        li.append(boardId);
-        li.append(boardUser);
-
-        ul.append(li);
-    })
-
-    newBoardDiv.append(ul);
+    renderActivityCard(newBoardDiv, {
+        label: 'LAST 7 DAYS',
+        title: '신규 게시글',
+        count: data.count,
+        unit: '건',
+        emptyMessage: '최근 등록된 게시글이 없습니다.',
+        items: data.list.map(board => ({
+            badge: '#',
+            title: `게시글 #${board.id}`,
+            description: `작성자 · ${board.memberName}`,
+            onClick: () => fnBoardMove(board.id)
+        }))
+    });
 }
 
 function fnChattingActive(data) {
     const activeChattingDiv = document.getElementById('active-chat-room');
 
-    const roomCount = document.createElement('label');
-    roomCount.innerText = "활성화된 채팅방 수: " + data.count;
+    renderActivityCard(activeChattingDiv, {
+        label: 'LAST 1 HOUR',
+        title: '활성 채팅방',
+        count: data.count,
+        unit: '개',
+        emptyMessage: '최근 활성화된 채팅방이 없습니다.',
+        items: data.list.map(room => ({
+            badge: 'C',
+            title: `채팅방 #${room.id}`,
+            description: room.lastMessage ? `최근 메시지 · ${room.lastMessage}` : '아직 메시지가 없습니다.',
+            onClick: () => fnChatRoomMove(room.roomId)
+        }))
+    });
+}
 
-    activeChattingDiv.append(roomCount);
+function renderActivityCard(container, config) {
+    const header = document.createElement('header');
+    const heading = document.createElement('div');
+    const label = document.createElement('span');
+    const title = document.createElement('h3');
+    const count = document.createElement('strong');
+    const unit = document.createElement('span');
+    const list = document.createElement('ul');
 
-    const ul = document.createElement('ul');
+    header.className = 'admin-activity-card-header';
+    heading.className = 'admin-activity-card-heading';
+    label.className = 'admin-activity-label';
+    count.className = 'admin-activity-count';
+    unit.className = 'admin-activity-unit';
+    list.className = 'admin-activity-list';
 
-    data.list.forEach(room => {
-        const li = document.createElement('li');
-        li.onclick = function() {
-            fnChatRoomMove(room.roomId);
-        }
+    label.innerText = config.label;
+    title.innerText = config.title;
+    count.innerText = config.count;
+    unit.innerText = config.unit;
 
-        const roomId = document.createElement('label');
-        roomId.innerText = room.id;
+    heading.append(label, title);
+    count.append(unit);
+    header.append(heading, count);
 
-        const lastMessage = document.createElement('label');
-        lastMessage.innerText = "(마지막 메시지: " + room.lastMessage + ")";
-        lastMessage.style.color = 'gray';
+    if (config.items.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'admin-activity-empty';
+        empty.innerText = config.emptyMessage;
+        list.append(empty);
+    } else {
+        config.items.forEach(item => list.append(createActivityItem(item)));
+    }
 
-        li.append(roomId);
-        li.append(lastMessage);
+    container.replaceChildren(header, list);
+}
 
-        ul.append(li);
-    })
+function createActivityItem(item) {
+    const row = document.createElement('li');
+    const badge = document.createElement('span');
+    const text = document.createElement('span');
+    const title = document.createElement('strong');
+    const description = document.createElement('span');
 
-    activeChattingDiv.append(ul);
+    row.className = 'admin-activity-item';
+    badge.className = 'admin-activity-item-badge';
+    text.className = 'admin-activity-item-text';
+    description.className = 'admin-activity-item-description';
+
+    badge.innerText = item.badge;
+    title.innerText = item.title;
+    description.innerText = item.description;
+    text.append(title, description);
+    row.append(badge, text);
+
+    if (item.onClick) {
+        const arrow = document.createElement('span');
+        arrow.className = 'admin-activity-item-arrow';
+        arrow.innerText = '›';
+        row.classList.add('is-clickable');
+        row.tabIndex = 0;
+        row.setAttribute('role', 'link');
+        row.append(arrow);
+        row.addEventListener('click', item.onClick);
+        row.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                item.onClick();
+            }
+        });
+    }
+
+    return row;
+}
+
+function getInitial(name) {
+    const normalizedName = String(name || '').trim();
+    return normalizedName ? normalizedName.charAt(0).toUpperCase() : '?';
 }
 
 function fnSystemStatusDraw(data) {
