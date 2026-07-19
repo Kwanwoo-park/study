@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import spring.study.jwt.dto.CachedMemberDto;
 import spring.study.member.entity.Member;
+import spring.study.member.repository.MemberRepository;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -18,6 +19,7 @@ public class MemberTokenCacheService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final MemberRepository memberRepository;
 
     public void save(Member member, Duration ttl) {
         try {
@@ -38,6 +40,16 @@ public class MemberTokenCacheService {
             redisTemplate.delete(key(memberId));
             return Optional.empty();
         }
+    }
+
+    public Optional<Member> findOrLoad(Long memberId, Duration ttl) {
+        Optional<Member> cachedMember = find(memberId);
+        if (cachedMember.isPresent()) return cachedMember;
+
+        return memberRepository.findById(memberId).map(member -> {
+            save(member, ttl);
+            return CachedMemberDto.from(member).toMember();
+        });
     }
 
     public void delete(Long memberId) {

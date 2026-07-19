@@ -12,6 +12,7 @@ import spring.study.member.entity.Role;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @DataJpaTest
@@ -57,6 +58,45 @@ class RefreshTokenServiceTest {
 
         assertThat(refreshTokenService.isValid("revoked-jti", 1L)).isFalse();
         verify(memberTokenCacheService).delete(1L);
+    }
+
+    @Test
+    void revokingOneTokenKeepsCacheWhenMemberHasAnotherValidToken() {
+        Member member = member(1L);
+        refreshTokenService.save("first-jti", member, Duration.ofDays(14));
+        refreshTokenService.save("second-jti", member, Duration.ofDays(14));
+
+        refreshTokenService.revoke("first-jti");
+
+        assertThat(refreshTokenService.isValid("first-jti", 1L)).isFalse();
+        assertThat(refreshTokenService.isValid("second-jti", 1L)).isTrue();
+        verify(memberTokenCacheService, never()).delete(1L);
+    }
+
+    @Test
+    void cleanupKeepsCacheWhenMemberHasANewerValidToken() {
+        Member member = member(1L);
+        refreshTokenService.save("expired-jti", member, Duration.ofSeconds(-1));
+        refreshTokenService.save("valid-jti", member, Duration.ofDays(14));
+
+        refreshTokenService.deleteExpiredTokens();
+
+        assertThat(refreshTokenRepository.existsById("expired-jti")).isFalse();
+        assertThat(refreshTokenService.isValid("valid-jti", 1L)).isTrue();
+        verify(memberTokenCacheService, never()).delete(1L);
+    }
+
+    @Test
+    void rotationReplacesTokenWithoutDeletingMemberCache() {
+        Member member = member(1L);
+        Duration ttl = Duration.ofDays(14);
+        refreshTokenService.save("old-jti", member, ttl);
+
+        assertThat(refreshTokenService.rotate("old-jti", "new-jti", member, ttl)).isTrue();
+
+        assertThat(refreshTokenService.isValid("old-jti", 1L)).isFalse();
+        assertThat(refreshTokenService.isValid("new-jti", 1L)).isTrue();
+        verify(memberTokenCacheService, never()).delete(1L);
     }
 
     private Member member(Long id) {

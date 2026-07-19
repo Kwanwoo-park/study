@@ -10,9 +10,11 @@ import spring.study.jwt.dto.CachedMemberDto;
 import spring.study.member.entity.AccountStatus;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.repository.MemberRepository;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -23,12 +25,13 @@ class MemberTokenCacheServiceTest {
     private final RedisTemplate<String, String> redisTemplate = mock(RedisTemplate.class);
     private final ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final MemberRepository memberRepository = mock(MemberRepository.class);
     private MemberTokenCacheService memberTokenCacheService;
 
     @BeforeEach
     void setUp() {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        memberTokenCacheService = new MemberTokenCacheService(redisTemplate, objectMapper);
+        memberTokenCacheService = new MemberTokenCacheService(redisTemplate, objectMapper, memberRepository);
     }
 
     @Test
@@ -57,6 +60,24 @@ class MemberTokenCacheServiceTest {
 
         assertThat(memberTokenCacheService.find(1L)).isEmpty();
         verify(redisTemplate).delete("auth:member:1");
+    }
+
+    @Test
+    void cacheMissLoadsMemberFromDatabaseAndRestoresCache() throws Exception {
+        Duration ttl = Duration.ofDays(14);
+        Member member = member();
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+        Member restored = memberTokenCacheService.findOrLoad(1L, ttl).orElseThrow();
+
+        assertThat(restored.getId()).isEqualTo(member.getId());
+        assertThat(restored.getEmail()).isEqualTo(member.getEmail());
+        assertThat(restored.getPassword()).isNull();
+        verify(valueOperations).set(
+                "auth:member:1",
+                objectMapper.writeValueAsString(CachedMemberDto.from(member)),
+                ttl
+        );
     }
 
     private Member member() {

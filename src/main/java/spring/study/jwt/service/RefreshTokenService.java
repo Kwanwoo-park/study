@@ -24,6 +24,21 @@ public class RefreshTokenService {
         memberTokenCacheService.save(member, ttl);
     }
 
+    public boolean rotate(String oldJti, String newJti, Member member, Duration ttl) {
+        RefreshToken oldToken = refreshTokenRepository.findById(oldJti).orElse(null);
+        Instant now = Instant.now();
+        if (oldToken == null
+                || !oldToken.getMemberId().equals(member.getId())
+                || !oldToken.getExpiresAt().isAfter(now)) {
+            return false;
+        }
+
+        refreshTokenRepository.delete(oldToken);
+        refreshTokenRepository.save(new RefreshToken(newJti, member.getId(), ttl));
+        memberTokenCacheService.save(member, ttl);
+        return true;
+    }
+
     @Transactional(readOnly = true)
     public boolean isValid(String jti, Long memberId) {
         return refreshTokenRepository.existsByJtiAndMemberIdAndExpiresAtAfter(jti, memberId, Instant.now());
@@ -32,7 +47,8 @@ public class RefreshTokenService {
     public void revoke(String jti) {
         refreshTokenRepository.findById(jti).ifPresent(refreshToken -> {
             refreshTokenRepository.delete(refreshToken);
-            memberTokenCacheService.delete(refreshToken.getMemberId());
+            refreshTokenRepository.flush();
+            deleteMemberCacheIfNoValidToken(refreshToken.getMemberId(), Instant.now());
         });
     }
 
@@ -44,6 +60,12 @@ public class RefreshTokenService {
         expiredTokens.stream()
                 .map(RefreshToken::getMemberId)
                 .distinct()
-                .forEach(memberTokenCacheService::delete);
+                .forEach(memberId -> deleteMemberCacheIfNoValidToken(memberId, now));
+    }
+
+    private void deleteMemberCacheIfNoValidToken(Long memberId, Instant now) {
+        if (!refreshTokenRepository.existsByMemberIdAndExpiresAtAfter(memberId, now)) {
+            memberTokenCacheService.delete(memberId);
+        }
     }
 }

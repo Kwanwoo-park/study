@@ -58,10 +58,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return null;
             }
 
-            refreshTokenService.revoke(claims.jti());
             JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
             JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
-            refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration());
+            if (!refreshTokenService.rotate(
+                    claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration())) {
+                cookieService.clearAuthenticationCookies(response);
+                return null;
+            }
             cookieService.writeAccessToken(response, accessToken.value(), tokenProvider.accessTokenDuration());
             cookieService.writeRefreshToken(response, refreshToken.value(), tokenProvider.refreshTokenDuration());
             return member;
@@ -72,7 +75,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Member loadActiveMember(JwtTokenProvider.TokenClaims claims) {
-        Member member = memberTokenCacheService.find(claims.memberId()).orElse(null);
+        Member member = memberTokenCacheService
+                .findOrLoad(claims.memberId(), tokenProvider.refreshTokenDuration())
+                .orElse(null);
         if (member == null || member.isAccessBlocked() || !member.getEmail().equals(claims.email())) return null;
         return member;
     }
