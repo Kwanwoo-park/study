@@ -271,6 +271,7 @@
 }
 
 .admin-activity-item-badge {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -281,6 +282,20 @@
     color: var(--activity-ink);
     font-size: 14px;
     font-weight: 800;
+}
+
+.admin-activity-item-badge.has-image {
+    overflow: hidden;
+    background: var(--surface-muted);
+    color: transparent;
+}
+
+.admin-activity-item-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .admin-activity-item-text {

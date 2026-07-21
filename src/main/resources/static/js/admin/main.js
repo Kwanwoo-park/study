@@ -161,6 +161,8 @@ function fnDraw(data) {
         emptyMessage: '현재 접속 중인 사용자가 없습니다.',
         items: data.list.map(member => ({
             badge: getInitial(member.name),
+            imageUrl: member.profile,
+            imageAlt: `${member.name} 프로필`,
             title: member.name,
             description: member.email
         }))
@@ -178,6 +180,8 @@ function fnNewUserDraw(data) {
         emptyMessage: '최근 가입한 사용자가 없습니다.',
         items: data.list.map(member => ({
             badge: getInitial(member.name),
+            imageUrl: member.profile,
+            imageAlt: `${member.name} 프로필`,
             title: member.name,
             description: member.email
         }))
@@ -195,6 +199,8 @@ function fnNewBoardDraw(data) {
         emptyMessage: '최근 등록된 게시글이 없습니다.',
         items: data.list.map(board => ({
             badge: '#',
+            imageUrl: board.imageUrl,
+            imageAlt: `게시글 #${board.id} 대표 이미지`,
             title: `게시글 #${board.id}`,
             description: `작성자 · ${board.memberName}`,
             onClick: () => fnBoardMove(board.id)
@@ -270,6 +276,20 @@ function createActivityItem(item) {
     description.className = 'admin-activity-item-description';
 
     badge.innerText = item.badge;
+
+    if (item.imageUrl) {
+        const image = document.createElement('img');
+        image.className = 'admin-activity-item-image';
+        image.alt = item.imageAlt || '';
+        image.addEventListener('load', () => badge.classList.add('has-image'));
+        image.addEventListener('error', () => {
+            badge.classList.remove('has-image');
+            image.remove();
+        });
+        image.src = item.imageUrl;
+        badge.append(image);
+    }
+
     title.innerText = item.title;
     description.innerText = item.description;
     text.append(title, description);

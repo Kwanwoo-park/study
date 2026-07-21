@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import spring.study.admin.dto.AdminNewBoardResponseDto;
 import spring.study.admin.facade.AdminFacade;
 import spring.study.board.entity.Board;
+import spring.study.board.entity.BoardImg;
 import spring.study.board.service.BoardService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.member.entity.Member;
@@ -38,7 +39,7 @@ class AdminNewBoardRegressionTest {
     private AdminFacade adminFacade;
 
     @Test
-    void newBoardShouldReturnOnlyTheBoardIdAndMemberName() {
+    void newBoardShouldReturnTheBoardSummaryWithItsFirstImage() {
         Member member = Member.builder()
                 .id(1L)
                 .email("writer@test.com")
@@ -54,6 +55,8 @@ class AdminNewBoardRegressionTest {
                 .content("content")
                 .member(member)
                 .build();
+        board.addImg(BoardImg.builder().id(100L).imgSrc("first-image").build());
+        board.addImg(BoardImg.builder().id(101L).imgSrc("second-image").build());
 
         when(boardService.findNewBoard(any(), any())).thenReturn(List.of(board));
 
@@ -64,6 +67,7 @@ class AdminNewBoardRegressionTest {
         assertEquals(1, body.get("count"));
         assertEquals(10L, response.getId());
         assertEquals("작성자", response.getMemberName());
+        assertEquals("first-image", response.getImageUrl());
     }
 
     @Test
@@ -73,6 +77,8 @@ class AdminNewBoardRegressionTest {
         String adminCss = Files.readString(Path.of("src/main/resources/static/css/admin/admin.css"));
 
         assertTrue(adminJs.contains("board.memberName"));
+        assertTrue(adminJs.contains("imageUrl: member.profile"));
+        assertTrue(adminJs.contains("imageUrl: board.imageUrl"));
         assertFalse(adminJs.contains("board.member.name"));
         assertTrue(adminJs.contains("renderActivityCard(newBoardDiv"));
         assertTrue(adminJs.contains("row.addEventListener('keydown'"));
@@ -80,5 +86,6 @@ class AdminNewBoardRegressionTest {
         assertTrue(adminTemplate.contains("admin-activity-card-board"));
         assertTrue(adminCss.contains("grid-template-columns: repeat(2, minmax(0, 1fr));"));
         assertTrue(adminCss.contains(".admin-activity-item.is-clickable:focus-visible"));
+        assertTrue(adminCss.contains(".admin-activity-item-image"));
     }
 }
