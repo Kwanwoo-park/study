@@ -59,19 +59,6 @@ body {
     object-fit: cover;
 }
 
-.theme-toggle-btn {
-    position: relative;
-    width: clamp(36px, 11vw, 50px);
-    height: clamp(36px, 11vw, 50px);
-    padding: 0;
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
-    background: var(--surface-bg);
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .15s ease;
-}
-
 .report-nav-btn {
     display: inline-flex;
     align-items: center;
@@ -90,36 +77,8 @@ body {
     transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .15s ease;
 }
 
-.theme-toggle-btn:hover {
-    transform: translateY(-1px);
-}
-
 .report-nav-btn:hover {
     transform: translateY(-1px);
-}
-
-.theme-toggle-icon {
-    position: absolute;
-    top: 28%;
-    left: 28%;
-    width: 44%;
-    height: 44%;
-    border-radius: 50%;
-    background: #f59e0b;
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, .18);
-}
-
-.theme-toggle-icon::after {
-    content: '';
-    position: absolute;
-    top: -9%;
-    left: 32%;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: var(--surface-bg);
-    opacity: 0;
-    transition: opacity .2s ease, transform .2s ease, background-color .2s ease;
 }
 
 .notification-dot {
@@ -200,16 +159,6 @@ body.dark-mode {
 body.dark-mode .nav-icon {
     filter: invert(1) brightness(1.35);
     opacity: .9;
-}
-
-body.dark-mode .theme-toggle-icon {
-    background: #e5e7eb;
-    box-shadow: 0 0 0 4px rgba(229, 231, 235, .12);
-}
-
-body.dark-mode .theme-toggle-icon::after {
-    opacity: 1;
-    transform: translate(-5px, -1px);
 }
 
 body.dark-mode a {
@@ -400,8 +349,7 @@ body.mobile-view .navi {
 }
 
 body.mobile-view .nav-icon,
-body.mobile-view .profile-icon,
-body.mobile-view .theme-toggle-btn {
+body.mobile-view .profile-icon {
     width: 38px;
     height: 38px;
 }

@@ -84,6 +84,52 @@
     white-space: normal;
 }
 
+.themeMenu {
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.themeMenuLabel {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.themeMenuChoices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.themeChoice {
+    padding: 7px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--surface-muted);
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.themeChoice:hover,
+.themeChoice:focus-visible {
+    border-color: #6c757d;
+}
+
+.themeChoice.active {
+    border-color: #007bff;
+    background: #007bff;
+    color: #fff;
+}
+
+body.dark-mode .profileActionMenu {
+    border-color: var(--border-color);
+    background: var(--surface-bg);
+}
+
 .profileStats {
     margin-top: 16px;
 }

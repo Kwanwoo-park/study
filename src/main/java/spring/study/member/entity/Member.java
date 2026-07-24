@@ -18,6 +18,7 @@ import spring.study.favorite.entity.Favorite;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoomMember;
 import spring.study.comment.entity.Comment;
+import spring.study.diary.entity.Diary;
 import spring.study.follow.entity.Follow;
 import spring.study.notification.entity.Notification;
 
@@ -117,6 +118,10 @@ public class Member extends BasetimeEntity implements UserDetails {
     @JsonIgnore
     @OneToMany(mappedBy = "member")
     private List<Account> accountList = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member")
+    private List<Diary> diaries = new ArrayList<>();
 
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth,

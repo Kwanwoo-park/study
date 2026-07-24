@@ -27,14 +27,6 @@
             title="신고 접수">
       <span aria-hidden="true">!</span>
     </button>
-    <div onclick="fnForbidden()"><img th:src="@{/img/} + 'ic_chat_black.png'" class="nav-icon"></div>
-    <button type="button"
-            id="theme-toggle"
-            class="theme-toggle-btn"
-            aria-label="다크 모드로 전환"
-            title="다크 모드로 전환">
-      <span class="theme-toggle-icon" aria-hidden="true"></span>
-    </button>
     <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
   </nav>
 </th:block>

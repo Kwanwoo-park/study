@@ -27,6 +27,14 @@
           <div class="profileActions">
             <button type="button" class="btn btn-outline-secondary profileMenuToggle" aria-label="메뉴 열기" aria-expanded="false">☰</button>
             <div class="profileActionMenu">
+              <div class="themeMenu" role="group" aria-label="화면 테마 선택">
+                <span class="themeMenuLabel">화면 테마</span>
+                <div class="themeMenuChoices">
+                  <button type="button" class="themeChoice" data-theme="light" aria-pressed="false">라이트</button>
+                  <button type="button" class="themeChoice" data-theme="dark" aria-pressed="false">다크</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" onclick="fnForbidden()">금칙어 확인</button>
               <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
               <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
               <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>

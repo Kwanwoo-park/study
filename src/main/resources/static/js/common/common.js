@@ -6,7 +6,7 @@
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
-    fnInitThemeToggle();
+    fnInitThemeSelector();
     fnUpdateUnreadNotificationDot();
 
     const eventSource = new EventSource('/api/notification/stream');
@@ -73,19 +73,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function fnInitThemeToggle() {
-    if (fnGetStoredTheme() === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
+function fnInitThemeSelector() {
+    const savedTheme = fnGetStoredTheme() === 'dark' ? 'dark' : 'light';
+    fnApplyTheme(savedTheme);
 
-    const themeToggle = document.getElementById('theme-toggle');
-    if (!themeToggle) return;
-
-    fnUpdateThemeToggleLabel();
-    themeToggle.addEventListener('click', function() {
-        const enabledDarkMode = document.body.classList.toggle('dark-mode');
-        fnSetStoredTheme(enabledDarkMode ? 'dark' : 'light');
-        fnUpdateThemeToggleLabel();
+    document.querySelectorAll('.themeChoice[data-theme]').forEach(function(themeChoice) {
+        themeChoice.addEventListener('click', function() {
+            fnApplyTheme(themeChoice.dataset.theme);
+        });
     });
 }
 
@@ -105,14 +100,16 @@ function fnSetStoredTheme(theme) {
     }
 }
 
-function fnUpdateThemeToggleLabel() {
-    const themeToggle = document.getElementById('theme-toggle');
-    if (!themeToggle) return;
+function fnApplyTheme(theme) {
+    const selectedTheme = theme === 'dark' ? 'dark' : 'light';
+    document.body.classList.toggle('dark-mode', selectedTheme === 'dark');
+    fnSetStoredTheme(selectedTheme);
 
-    const enabledDarkMode = document.body.classList.contains('dark-mode');
-    const label = enabledDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환';
-    themeToggle.setAttribute('aria-label', label);
-    themeToggle.setAttribute('title', label);
+    document.querySelectorAll('.themeChoice[data-theme]').forEach(function(themeChoice) {
+        const isSelected = themeChoice.dataset.theme === selectedTheme;
+        themeChoice.classList.toggle('active', isSelected);
+        themeChoice.setAttribute('aria-pressed', String(isSelected));
+    });
 }
 
 function fnSetUnreadNotificationDot(unreadCount) {

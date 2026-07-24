@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>내 일기</title>
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="container py-4">
+    <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+    <header class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="simple-page-title mb-1">내 일기</h1>
+            <p class="text-muted mb-0">총 <span th:text="${count}">0</span>개의 일기가 있습니다.</p>
+        </div>
+        <a class="btn btn-primary" href="/diary/write">일기 쓰기</a>
+    </header>
+
+    <div class="list-group" th:if="${!diaries.isEmpty()}">
+        <a class="list-group-item list-group-item-action"
+           th:each="diary : ${diaries}"
+           th:href="@{/diary/write(id=${diary.id})}">
+            <div class="d-flex justify-content-between align-items-center">
+                <strong th:text="${diary.title}">제목</strong>
+                <small th:text="${#temporals.format(diary.registerTime, 'yyyy-MM-dd HH:mm')}">작성일</small>
+            </div>
+            <p class="mb-0 text-truncate" th:text="${diary.content}">본문</p>
+        </a>
+    </div>
+    <p class="text-center text-muted py-5" th:if="${diaries.isEmpty()}">작성한 일기가 없습니다.</p>
+
+    <nav class="d-flex justify-content-between mt-4" aria-label="일기 목록 페이지">
+        <a class="btn btn-outline-secondary"
+           th:if="${page > 0}"
+           th:href="@{/diary/list(page=${page - 1},size=${size})}">이전</a>
+        <span th:unless="${page > 0}"></span>
+        <a class="btn btn-outline-secondary"
+           th:if="${(page + 1) * size < count}"
+           th:href="@{/diary/list(page=${page + 1},size=${size})}">다음</a>
+    </nav>
+</main>
+<script src="/js/common/common.js"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>

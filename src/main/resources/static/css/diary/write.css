@@ -1,0 +1,121 @@
+.diary-section {
+    width: 100%;
+    margin: 24px 0;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--surface-bg);
+}
+
+.diary-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.diary-section-header h2 {
+    margin: 0 0 4px;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.diary-section-header p,
+.diary-field-help,
+.diary-empty-message {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.image-preview-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.image-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-muted);
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-remove-button {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(17, 24, 39, .78);
+    color: #fff;
+    font-size: 20px;
+    line-height: 26px;
+    cursor: pointer;
+}
+
+.diary-field-help {
+    margin-top: 8px;
+    text-align: right;
+}
+
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.todo-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.todo-completed {
+    width: 20px;
+    height: 20px;
+}
+
+.todo-item:has(.todo-completed:checked) .todo-content {
+    color: var(--text-secondary);
+    text-decoration: line-through;
+}
+
+.diary-empty-message {
+    padding: 16px 0 4px;
+    text-align: center;
+}
+
+@media (max-width: 576px) {
+    .diary-section {
+        padding: 16px;
+    }
+
+    .diary-section-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .todo-item {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .todo-remove-button {
+        grid-column: 2;
+        justify-self: end;
+    }
+}

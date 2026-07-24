@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${diary == null ? '일기 쓰기' : '일기 수정'}">일기 쓰기</title>
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/diary/write.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="container py-4">
+    <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+    <header class="d-flex align-items-center justify-content-between mb-4">
+        <h1 class="simple-page-title mb-0" th:text="${diary == null ? '일기 쓰기' : '일기 수정'}">일기 쓰기</h1>
+        <a class="btn btn-outline-secondary btn-sm" href="/diary/list">목록</a>
+    </header>
+
+    <form id="diaryForm"
+          th:attr="data-diary-id=${diary != null ? diary.id : ''}">
+        <div class="form-group">
+            <label for="title">제목</label>
+            <input id="title"
+                   class="form-control"
+                   type="text"
+                   maxlength="200"
+                   required
+                   th:value="${diary != null ? diary.title : ''}">
+        </div>
+        <div class="form-group">
+            <label for="content">본문</label>
+            <textarea id="content"
+                      class="form-control"
+                      rows="14"
+                      required
+                      th:text="${diary != null ? diary.content : ''}"></textarea>
+        </div>
+
+        <section class="diary-section" aria-labelledby="diary-image-title">
+            <div class="diary-section-header">
+                <div>
+                    <h2 id="diary-image-title">이미지</h2>
+                    <p>최대 10장의 이미지를 저장할 수 있습니다.</p>
+                </div>
+                <button id="imageSelectButton" class="btn btn-outline-primary btn-sm" type="button">이미지 추가</button>
+            </div>
+            <input id="imageInput" class="is-hidden" type="file"
+                   accept=".jpg,.jpeg,.png,.gif,image/jpeg,image/png,image/gif" multiple>
+            <div id="imagePreviewList" class="image-preview-list">
+                <div class="image-preview-item"
+                     th:each="image : ${diary != null ? diary.images : null}"
+                     th:attr="data-existing-url=${image.imageUrl}">
+                    <img th:src="${image.imageUrl}" alt="일기 이미지 미리보기">
+                    <button class="image-remove-button" type="button" aria-label="이미지 제거">×</button>
+                </div>
+            </div>
+            <p id="imageCount" class="diary-field-help">0 / 10</p>
+        </section>
+
+        <section class="diary-section" aria-labelledby="diary-todo-title">
+            <div class="diary-section-header">
+                <div>
+                    <h2 id="diary-todo-title">To-do list</h2>
+                    <p>할 일을 추가하고 완료 여부를 표시할 수 있습니다.</p>
+                </div>
+                <button id="todoAddButton" class="btn btn-outline-primary btn-sm" type="button">할 일 추가</button>
+            </div>
+            <div id="todoList" class="todo-list">
+                <div class="todo-item" th:each="todo : ${diary != null ? diary.todos : null}">
+                    <input class="todo-completed" type="checkbox"
+                           th:checked="${todo.completed}" aria-label="완료 여부">
+                    <input class="form-control todo-content" type="text"
+                           th:value="${todo.content}" maxlength="255" placeholder="할 일을 입력하세요">
+                    <button class="btn btn-outline-danger btn-sm todo-remove-button"
+                            type="button" aria-label="할 일 삭제">삭제</button>
+                </div>
+            </div>
+            <p id="todoEmptyMessage" class="diary-empty-message">등록된 할 일이 없습니다.</p>
+        </section>
+
+        <div id="diaryMessage" class="mb-3" role="status" aria-live="polite"></div>
+        <button class="btn btn-primary" type="submit"
+                th:text="${diary == null ? '저장' : '수정'}">저장</button>
+    </form>
+</main>
+<script src="/js/diary/write.js"></script>
+<script src="/js/common/common.js"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>
