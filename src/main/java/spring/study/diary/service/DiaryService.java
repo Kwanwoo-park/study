@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.diary.dto.DiaryRequestDto;
+import spring.study.diary.dto.DiaryListResponseDto;
 import spring.study.diary.dto.DiaryResponseDto;
 import spring.study.diary.entity.Diary;
 import spring.study.diary.repository.DiaryRepository;
@@ -55,6 +56,34 @@ public class DiaryService {
         return findByMember(member, page, size).stream()
                 .map(DiaryResponseDto::new)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DiaryListResponseDto> findListByMember(Member member, int page, int size) {
+        return findByMember(member, page, size).stream()
+                .map(DiaryListResponseDto::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DiaryListResponseDto> searchByTitle(Member member, String title, int page, int size) {
+        if (page < 0 || size <= 0) {
+            throw new IllegalArgumentException("페이지와 조회 개수를 확인해 주세요");
+        }
+
+        Sort sort = Sort.by(Sort.Order.desc("registerTime"), Sort.Order.desc("id"));
+        return diaryRepository.findByMemberAndTitleContainingIgnoreCase(
+                        member,
+                        title.trim(),
+                        PageRequest.of(page, size, sort)
+                ).stream()
+                .map(DiaryListResponseDto::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public long countByMemberAndTitle(Member member, String title) {
+        return diaryRepository.countByMemberAndTitleContainingIgnoreCase(member, title.trim());
     }
 
     @Transactional(readOnly = true)

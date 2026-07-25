@@ -6,20 +6,37 @@
     <title>내 일기</title>
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/diary/list.css">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
-<main class="container py-4">
+<main class="container diary-list-page">
     <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
     <header class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h1 class="simple-page-title mb-1">내 일기</h1>
-            <p class="text-muted mb-0">총 <span th:text="${count}">0</span>개의 일기가 있습니다.</p>
+            <p class="text-muted mb-0">총 <span id="diaryCount" th:text="${count}">0</span>개의 일기가 있습니다.</p>
         </div>
         <a class="btn btn-primary" href="/diary/write">일기 쓰기</a>
     </header>
 
-    <div class="list-group" th:if="${!diaries.isEmpty()}">
+    <form id="diarySearchForm" class="diary-search-form" role="search">
+        <label class="sr-only" for="diarySearchInput">일기 제목 검색</label>
+        <input id="diarySearchInput"
+               class="form-control"
+               type="search"
+               maxlength="200"
+               placeholder="일기 제목을 입력하세요"
+               autocomplete="off">
+        <button class="btn btn-primary" type="submit">검색</button>
+        <button id="diarySearchClearButton"
+                class="btn btn-outline-secondary is-hidden"
+                type="button">초기화</button>
+    </form>
+
+    <div id="diaryList"
+         class="list-group"
+         th:attr="data-next-page=${hasNext ? 1 : 0},data-has-next=${hasNext}">
         <a class="list-group-item list-group-item-action"
            th:each="diary : ${diaries}"
            th:href="@{/diary/write(id=${diary.id})}">
@@ -27,21 +44,16 @@
                 <strong th:text="${diary.title}">제목</strong>
                 <small th:text="${#temporals.format(diary.registerTime, 'yyyy-MM-dd HH:mm')}">작성일</small>
             </div>
-            <p class="mb-0 text-truncate" th:text="${diary.content}">본문</p>
         </a>
     </div>
-    <p class="text-center text-muted py-5" th:if="${diaries.isEmpty()}">작성한 일기가 없습니다.</p>
-
-    <nav class="d-flex justify-content-between mt-4" aria-label="일기 목록 페이지">
-        <a class="btn btn-outline-secondary"
-           th:if="${page > 0}"
-           th:href="@{/diary/list(page=${page - 1},size=${size})}">이전</a>
-        <span th:unless="${page > 0}"></span>
-        <a class="btn btn-outline-secondary"
-           th:if="${(page + 1) * size < count}"
-           th:href="@{/diary/list(page=${page + 1},size=${size})}">다음</a>
-    </nav>
+    <p id="diaryEmptyMessage"
+       class="text-center text-muted py-5"
+       th:classappend="${!diaries.isEmpty()} ? ' is-hidden' : ''"
+       >작성한 일기가 없습니다.</p>
+    <div id="diaryLoadStatus" class="diary-load-status" role="status" aria-live="polite"></div>
+    <div id="diaryScrollSentinel" class="diary-scroll-sentinel" aria-hidden="true"></div>
 </main>
+<script src="/js/diary/list.js"></script>
 <script src="/js/common/common.js"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

@@ -5,11 +5,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +30,22 @@ public class DiaryApiController {
     private final DiaryFacade diaryFacade;
     private final SessionManager sessionManager;
     private final CommonFacade commonFacade;
+
+    @GetMapping("/list")
+    public ResponseEntity<?> list(@RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return diaryFacade.load(member, page, 100);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> search(@RequestParam String title, @RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return diaryFacade.search(member, title, page, 100);
+    }
 
     @PostMapping("/image/upload")
     public ResponseEntity<?> uploadImages(@RequestPart("file") List<MultipartFile> files, HttpServletRequest request) {

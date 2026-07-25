@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -48,6 +50,16 @@ public class Diary extends BasetimeEntity {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "visibility",
+            nullable = false,
+            length = 20,
+            columnDefinition = "varchar(20) default 'PRIVATE'"
+    )
+    private DiaryVisibility visibility = DiaryVisibility.PRIVATE;
+
     @JsonIgnore
     @OrderBy("id ASC")
     @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -59,11 +71,12 @@ public class Diary extends BasetimeEntity {
     private List<DiaryTodo> todos = new ArrayList<>();
 
     @Builder
-    public Diary(Long id, Member member, String title, String content) {
+    public Diary(Long id, Member member, String title, String content, DiaryVisibility visibility) {
         this.id = id;
         this.member = member;
         this.title = title;
         this.content = content;
+        this.visibility = visibility == null ? DiaryVisibility.PRIVATE : visibility;
     }
 
     public void addMember(Member member) {
@@ -99,8 +112,11 @@ public class Diary extends BasetimeEntity {
         }
     }
 
-    public void update(String title, String content) {
+    public void update(String title, String content, DiaryVisibility visibility) {
         this.title = title;
         this.content = content;
+        if (visibility != null) {
+            this.visibility = visibility;
+        }
     }
 }

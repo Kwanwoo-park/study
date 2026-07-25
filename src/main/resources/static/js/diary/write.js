@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const payload = {
                 title: document.getElementById('title').value.trim(),
                 content: document.getElementById('content').value,
+                visibility: document.getElementById('visibility').value,
                 images: existingImageUrls.concat(uploadedImageUrls)
                         .map(imageUrl => ({ imageUrl })),
                 todos: getTodoPayload()

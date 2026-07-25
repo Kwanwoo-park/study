@@ -3,6 +3,7 @@ package spring.study.diary.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import spring.study.diary.entity.Diary;
+import spring.study.diary.entity.DiaryVisibility;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +15,7 @@ public class DiaryResponseDto {
     private Long memberId;
     private String title;
     private String content;
+    private DiaryVisibility visibility;
     private LocalDateTime registerTime;
     private LocalDateTime updateTime;
     private List<DiaryImageResponseDto> images;
@@ -24,6 +26,7 @@ public class DiaryResponseDto {
         this.memberId = diary.getMember().getId();
         this.title = diary.getTitle();
         this.content = diary.getContent();
+        this.visibility = diary.getVisibility();
         this.registerTime = diary.getRegisterTime();
         this.updateTime = diary.getUpdateTime();
         this.images = diary.getImages().stream()

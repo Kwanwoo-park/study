@@ -13,9 +13,13 @@ import java.util.Optional;
 public interface DiaryRepository extends JpaRepository<Diary, Long> {
     List<Diary> findByMember(Member member, Pageable pageable);
 
+    List<Diary> findByMemberAndTitleContainingIgnoreCase(Member member, String title, Pageable pageable);
+
     Optional<Diary> findByIdAndMember(Long id, Member member);
 
     long countByMember(Member member);
+
+    long countByMemberAndTitleContainingIgnoreCase(Member member, String title);
 
     void deleteByMember(Member member);
 }

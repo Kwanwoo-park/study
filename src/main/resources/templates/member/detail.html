@@ -34,20 +34,20 @@
                   <button type="button" class="themeChoice" data-theme="dark" aria-pressed="false">다크</button>
                 </div>
               </div>
-              <button type="button" class="btn btn-primary" onclick="fnForbidden()">금칙어 확인</button>
               <button type="button" class="btn btn-primary" onclick="location.href='/diary/list'">내 일기</button>
+              <button type="button" class="btn btn-primary" onclick="javascript:location.href='/account'">계좌 조회</button>
+              <button type="button" class="btn btn-primary" onclick="javascript:location.href='/collection'">Secret</button>
+              <button type="button" class="btn btn-primary" onclick="fnForbidden()">금칙어 확인</button>
+              <button th:unless="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/report/my'">내 신고 내역</button>
+              <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
               <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
               <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
               <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
-              <button type="button" class="btn btn-primary" onclick="javascript:location.href='/account'">계좌 조회</button>
-              <button type="button" class="btn btn-primary" onclick="javascript:location.href='/collection'">Secret</button>
-              <button th:unless="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/report/my'">내 신고 내역</button>
-              <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
-              <button type="button" class="btn btn-primary is-hidden" id="save" onclick="fnSave()">사진 변경</button>
             </div>
           </div>
         </div>
         <input type="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" id="upload">
+        <button type="button" class="btn btn-primary is-hidden" id="save" onclick="fnSave()">사진 변경</button>
         <div class="profileStats">
           <label class="form-label">Posts: </label>
           <label class="form-label" th:text="${board_count}"></label>

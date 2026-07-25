@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.diary.dto.DiaryImageRequestDto;
+import spring.study.diary.dto.DiaryListResponseDto;
 import spring.study.diary.dto.DiaryRequestDto;
 import spring.study.diary.dto.DiaryResponseDto;
 import spring.study.diary.dto.DiaryTodoRequestDto;
@@ -80,11 +81,52 @@ public class DiaryFacade {
     }
 
     @Transactional(readOnly = true)
-    public List<DiaryResponseDto> findByMember(Member member, int page, int size) {
+    public List<DiaryListResponseDto> findByMember(Member member, int page, int size) {
         if (member == null) {
             throw new AccessDeniedException("로그인이 필요합니다");
         }
-        return diaryService.findResponseByMember(member, page, size);
+        return diaryService.findListByMember(member, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> load(Member member, int page, int size) {
+        if (member == null) {
+            throw new AccessDeniedException("로그인이 필요합니다");
+        }
+
+        List<DiaryListResponseDto> diaries = diaryService.findListByMember(member, page, size);
+        long totalCount = diaryService.countByMember(member);
+        boolean hasNext = (long) (page + 1) * size < totalCount;
+
+        return ResponseEntity.ok(Map.of(
+                "result", diaries.size(),
+                "diaries", diaries,
+                "totalCount", totalCount,
+                "hasNext", hasNext,
+                "nextPage", hasNext ? page + 1 : 0
+        ));
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> search(Member member, String title, int page, int size) {
+        if (member == null) {
+            throw new AccessDeniedException("로그인이 필요합니다");
+        }
+        if (title == null || title.isBlank()) {
+            return load(member, page, size);
+        }
+
+        List<DiaryListResponseDto> diaries = diaryService.searchByTitle(member, title, page, size);
+        long totalCount = diaryService.countByMemberAndTitle(member, title);
+        boolean hasNext = (long) (page + 1) * size < totalCount;
+
+        return ResponseEntity.ok(Map.of(
+                "result", diaries.size(),
+                "diaries", diaries,
+                "totalCount", totalCount,
+                "hasNext", hasNext,
+                "nextPage", hasNext ? page + 1 : 0
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -100,7 +142,7 @@ public class DiaryFacade {
         validate(member, requestDto, true);
         Diary diary = getOwnedDiary(requestDto.getId(), member);
         List<String> removedImageUrls = new ArrayList<>();
-        diary.update(requestDto.getTitle(), requestDto.getContent());
+        diary.update(requestDto.getTitle(), requestDto.getContent(), requestDto.getVisibility());
         diary.changeUpdateTime(LocalDateTime.now());
 
         if (requestDto.getImages() != null) {

@@ -15,6 +15,8 @@ import spring.study.member.entity.Member;
 @RequiredArgsConstructor
 @RequestMapping("/diary")
 public class DiaryViewController {
+    private static final int DIARY_LOAD_SIZE = 100;
+
     private final DiaryFacade diaryFacade;
     private final SessionManager sessionManager;
 
@@ -39,8 +41,6 @@ public class DiaryViewController {
 
     @GetMapping({"", "/list"})
     public String list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
             Model model,
             HttpServletRequest request
     ) {
@@ -50,10 +50,10 @@ public class DiaryViewController {
         }
 
         addMemberModel(model, member);
-        model.addAttribute("diaries", diaryFacade.findByMember(member, page, size));
-        model.addAttribute("count", diaryFacade.count(member));
-        model.addAttribute("page", page);
-        model.addAttribute("size", size);
+        long count = diaryFacade.count(member);
+        model.addAttribute("diaries", diaryFacade.findByMember(member, 0, DIARY_LOAD_SIZE));
+        model.addAttribute("count", count);
+        model.addAttribute("hasNext", count > DIARY_LOAD_SIZE);
 
         return "diary/list";
     }
