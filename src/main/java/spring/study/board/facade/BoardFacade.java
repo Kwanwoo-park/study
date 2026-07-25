@@ -14,6 +14,7 @@ import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
 import spring.study.common.service.ModerationService;
+import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.favorite.entity.Favorite;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
@@ -40,6 +41,7 @@ public class BoardFacade {
     private final FavoriteService favoriteService;
     private final ImageS3Service imageS3Service;
     private final ModerationService moderationService;
+    private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     public ResponseEntity<?> load(int cursor, int limit, Member member) {
         List<Member> memberList = followService.getMemberList(member);
@@ -60,7 +62,15 @@ public class BoardFacade {
 
     public ResponseEntity<?> loadMemberBoards(int cursor, int limit, String email, Member loginMember) {
         Member targetMember = memberService.findMember(email);
-        List<BoardResponseDto> list = boardService.getBoardByMember(cursor, limit, targetMember).stream().map(BoardResponseDto::new).toList();
+        if (!visibilityAccessPolicy.canViewMember(targetMember, loginMember)) {
+            return forbiddenVisibility();
+        }
+
+        boolean includePrivate = isOwnerOrFollower(loginMember, targetMember);
+        List<BoardResponseDto> list = boardService.getBoardByMember(cursor, limit, targetMember, includePrivate)
+                .stream()
+                .map(BoardResponseDto::new)
+                .toList();
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
@@ -79,7 +89,11 @@ public class BoardFacade {
         }
 
         Board board = boardService.findById(id);
-        long[] ids = boardService.getBoardIdList(id, board.getMember());
+        boolean includePrivate = isOwnerOrFollower(member, board.getMember());
+        if (!visibilityAccessPolicy.canViewBoard(board, member, includePrivate)) {
+            return forbiddenVisibility();
+        }
+        long[] ids = boardService.getBoardIdList(id, board.getMember(), includePrivate);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10,
@@ -143,7 +157,7 @@ public class BoardFacade {
         }
 
         return ResponseEntity.ok(Map.of(
-                "result", boardService.updateBoard(dto.getId(), dto.getContent())
+                "result", boardService.updateBoard(dto.getId(), dto.getContent(), dto.getVisibility())
         ));
     }
 
@@ -205,5 +219,31 @@ public class BoardFacade {
         }
 
         return false;
+    }
+
+    public boolean canView(Board board, Member member) {
+        return visibilityAccessPolicy.canViewBoard(
+                board,
+                member,
+                isOwnerOrFollower(member, board.getMember())
+        );
+    }
+
+    public boolean canViewPrivateBoards(Member viewer, Member author) {
+        return isOwnerOrFollower(viewer, author);
+    }
+
+    private boolean isOwnerOrFollower(Member viewer, Member author) {
+        if (viewer == null || author == null || viewer.getId() == null || author.getId() == null) {
+            return false;
+        }
+        return viewer.getId().equals(author.getId()) || followService.existFollow(viewer, author);
+    }
+
+    private ResponseEntity<?> forbiddenVisibility() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "result", -1,
+                "message", "비공개 설정으로 조회할 수 없습니다."
+        ));
     }
 }

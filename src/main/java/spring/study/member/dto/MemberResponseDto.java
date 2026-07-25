@@ -2,6 +2,7 @@ package spring.study.member.dto;
 
 import lombok.Getter;
 import lombok.ToString;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
@@ -25,6 +26,7 @@ public class MemberResponseDto implements Serializable {
     private String profile;
     private String phone;
     private String birth;
+    private CommonVisibility visibility;
 
     public MemberResponseDto(Member entity) {
         this.id = entity.getId();
@@ -37,5 +39,6 @@ public class MemberResponseDto implements Serializable {
         this.profile = entity.getProfile();
         this.phone = entity.getPhone();
         this.birth = entity.getBirth();
+        this.visibility = entity.getVisibility();
     }
 }

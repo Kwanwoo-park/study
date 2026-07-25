@@ -10,6 +10,7 @@ function fnEdit() {
     const del = document.getElementById('delete');
     const content = document.getElementById('content');
     const editContent = document.getElementById('editContent');
+    const editVisibility = document.getElementById('editVisibility');
 
     edit.style.display = 'none';
     del.style.display = 'none';
@@ -17,14 +18,17 @@ function fnEdit() {
 
     complete.style.display = 'inline';
     editContent.style.display = 'inline';
+    editVisibility.style.display = 'inline';
 }
 
 function fnEditComplete(boardId) {
     const editContent = document.getElementById('editContent');
+    const editVisibility = document.getElementById('editVisibility');
 
     const data = {
         id: boardId,
-        content: editContent.value
+        content: editContent.value,
+        visibility: editVisibility.value
     }
 
     fetch(`/api/board/view`, {

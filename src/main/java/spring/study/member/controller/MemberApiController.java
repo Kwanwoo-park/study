@@ -91,11 +91,21 @@ public class MemberApiController {
         return memberFacade.updatePhone(memberUpdateDto, request);
     }
 
+    @PatchMapping("/visibility")
+    public ResponseEntity<?> updateVisibility(@RequestBody MemberRequestDto memberUpdateDto,
+                                              HttpServletRequest request) {
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return memberFacade.updateVisibility(memberUpdateDto.getVisibility(), member);
+    }
+
     @GetMapping("/search")
     public ResponseEntity<?> searchMember(@RequestParam() String name, HttpServletRequest request) {
-        if (sessionManager.getLoginMember(request) == null) return commonFacade.unauthorized();
+        Member member = sessionManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
 
-        return memberFacade.search(name);
+        return memberFacade.search(name, member);
     }
 
     @DeleteMapping("/withdrawal")

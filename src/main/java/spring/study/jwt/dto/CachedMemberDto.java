@@ -1,5 +1,6 @@
 package spring.study.jwt.dto;
 
+import spring.study.common.entity.CommonVisibility;
 import spring.study.member.entity.AccountStatus;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -22,6 +23,7 @@ public record CachedMemberDto(
         String phone,
         String birth,
         String profile,
+        CommonVisibility visibility,
         LocalDateTime lastLoginTime
 ) {
     public static CachedMemberDto from(Member member) {
@@ -36,6 +38,7 @@ public record CachedMemberDto(
                 member.getPhone(),
                 member.getBirth(),
                 member.getProfile(),
+                member.getVisibility(),
                 member.getLastLoginTime()
         );
     }
@@ -52,6 +55,7 @@ public record CachedMemberDto(
                 .phone(phone)
                 .birth(birth)
                 .profile(profile)
+                .visibility(visibility)
                 .lastLoginTime(lastLoginTime)
                 .build();
     }

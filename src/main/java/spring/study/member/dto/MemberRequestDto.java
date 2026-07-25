@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
@@ -18,13 +19,14 @@ public class MemberRequestDto {
     private String name;
     private Role role;
     private String profile;
+    private CommonVisibility visibility;
 
     @Pattern(regexp = "^01[016789]-?\\d{3,4}-?\\d{4}$", message = "전화번호 형식이 올바르지 않습니다.")
     private String phone;
     private String birth;
 
     @Builder
-    public MemberRequestDto(Long id, String email, String password, String name, Role role, String profile, String phone, String birth) {
+    public MemberRequestDto(Long id, String email, String password, String name, Role role, String profile, String phone, String birth, CommonVisibility visibility) {
         this.id = id;
         this.email = email;
         this.password = password;
@@ -33,6 +35,7 @@ public class MemberRequestDto {
         this.profile = profile;
         this.phone = phone;
         this.birth = birth;
+        this.visibility = visibility;
     }
 
     public Member toEntity() {
@@ -44,6 +47,7 @@ public class MemberRequestDto {
                 .profile(profile)
                 .phone(phone)
                 .birth(birth)
+                .visibility(visibility)
                 .build();
     }
 }

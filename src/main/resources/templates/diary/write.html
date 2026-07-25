@@ -41,9 +41,9 @@
             <label for="visibility">공개 설정</label>
             <select id="visibility" class="form-control">
                 <option value="PRIVATE"
-                        th:selected="${diary == null || diary.visibility == null || diary.visibility.name() == 'PRIVATE'}">비공개</option>
+                        th:selected="${diary != null && diary.visibility != null && diary.visibility.name() == 'PRIVATE'}">비공개</option>
                 <option value="PUBLIC"
-                        th:selected="${diary != null && diary.visibility != null && diary.visibility.name() == 'PUBLIC'}">공개</option>
+                        th:selected="${diary == null || diary.visibility == null || diary.visibility.name() == 'PUBLIC'}">공개</option>
             </select>
             <small class="form-text text-muted">공개 여부는 언제든지 수정할 수 있습니다.</small>
         </div>

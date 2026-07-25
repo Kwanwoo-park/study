@@ -20,6 +20,13 @@
                 <button type="button" class="btn btn-primary" id="btn">Image</button>
             </div>
             <textarea class="form-control is-hidden" rows="5" cols="" id="content" name="content"></textarea>
+            <div class="form-group">
+                <label for="visibility">공개 설정</label>
+                <select id="visibility" class="form-control">
+                    <option value="PRIVATE">비공개</option>
+                    <option value="PUBLIC" selected>공개</option>
+                </select>
+            </div>
             <div class="btnDiv">
                 <button type="button" class="btn btn-success is-hidden" onclick="fnPrevious()" id="previous">Previous</button>
                 <button type="button" class="btn btn-primary is-hidden" onclick="fnSave()" id="submit">Submit</button>

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.follow.dto.FollowResponseDto;
 import spring.study.follow.entity.Follow;
 import spring.study.follow.service.FollowService;
@@ -27,6 +28,7 @@ public class FollowFacade {
     private final MemberService memberService;
     private final FollowService followService;
     private final NotificationService notificationService;
+    private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     public ResponseEntity<?> getFollower(String email, Member member, int cursor, int limit) {
         if (email == null || email.isBlank()) {
@@ -45,8 +47,14 @@ public class FollowFacade {
             ));
         }
 
+        if (!visibilityAccessPolicy.canViewMember(follower, member)) {
+            return privateMemberResponse();
+        }
+
         long totalCount = followService.countFollowers(follower);
-        List<Follow> followers = followService.getFollowers(follower, cursor, limit);
+        List<Follow> followers = followService.getFollowers(follower, cursor, limit).stream()
+                .filter(follow -> visibilityAccessPolicy.canViewMember(follow.getFollower(), member))
+                .toList();
         int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
@@ -76,8 +84,14 @@ public class FollowFacade {
             ));
         }
 
+        if (!visibilityAccessPolicy.canViewMember(following, member)) {
+            return privateMemberResponse();
+        }
+
         long totalCount = followService.countFollowing(following);
-        List<Follow> followings = followService.getFollowing(following, cursor, limit);
+        List<Follow> followings = followService.getFollowing(following, cursor, limit).stream()
+                .filter(follow -> visibilityAccessPolicy.canViewMember(follow.getFollowing(), member))
+                .toList();
         int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
@@ -186,5 +200,12 @@ public class FollowFacade {
         }
 
         return map;
+    }
+
+    private ResponseEntity<?> privateMemberResponse() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "result", -1L,
+                "message", "비공개 회원은 본인만 조회할 수 있습니다."
+        ));
     }
 }

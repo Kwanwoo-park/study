@@ -21,6 +21,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import spring.study.common.entity.BasetimeEntity;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.member.entity.Member;
 
 import java.util.ArrayList;
@@ -56,9 +57,9 @@ public class Diary extends BasetimeEntity {
             name = "visibility",
             nullable = false,
             length = 20,
-            columnDefinition = "varchar(20) default 'PRIVATE'"
+            columnDefinition = "varchar(20) default 'PUBLIC'"
     )
-    private DiaryVisibility visibility = DiaryVisibility.PRIVATE;
+    private CommonVisibility visibility = CommonVisibility.PUBLIC;
 
     @JsonIgnore
     @OrderBy("id ASC")
@@ -71,12 +72,12 @@ public class Diary extends BasetimeEntity {
     private List<DiaryTodo> todos = new ArrayList<>();
 
     @Builder
-    public Diary(Long id, Member member, String title, String content, DiaryVisibility visibility) {
+    public Diary(Long id, Member member, String title, String content, CommonVisibility visibility) {
         this.id = id;
         this.member = member;
         this.title = title;
         this.content = content;
-        this.visibility = visibility == null ? DiaryVisibility.PRIVATE : visibility;
+        this.visibility = visibility == null ? CommonVisibility.PUBLIC : visibility;
     }
 
     public void addMember(Member member) {
@@ -112,7 +113,7 @@ public class Diary extends BasetimeEntity {
         }
     }
 
-    public void update(String title, String content, DiaryVisibility visibility) {
+    public void update(String title, String content, CommonVisibility visibility) {
         this.title = title;
         this.content = content;
         if (visibility != null) {

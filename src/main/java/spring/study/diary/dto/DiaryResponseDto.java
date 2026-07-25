@@ -2,8 +2,8 @@ package spring.study.diary.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.diary.entity.Diary;
-import spring.study.diary.entity.DiaryVisibility;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,7 +15,7 @@ public class DiaryResponseDto {
     private Long memberId;
     private String title;
     private String content;
-    private DiaryVisibility visibility;
+    private CommonVisibility visibility;
     private LocalDateTime registerTime;
     private LocalDateTime updateTime;
     private List<DiaryImageResponseDto> images;

@@ -13,6 +13,7 @@ const img_btn = document.getElementById("img_btn");
 const previous = document.getElementById('previous');
 const submit = document.getElementById('submit');
 const content = document.getElementById('content')
+const visibility = document.getElementById('visibility');
 
 const maxSize = 10;
 
@@ -20,7 +21,8 @@ btn.addEventListener('click', () => upload.click());
 
 function fnSave() {
     const data = {
-        content: content.value
+        content: content.value,
+        visibility: visibility.value
     }
 
     fetch(`/api/board/write`, {

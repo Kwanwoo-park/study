@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import spring.study.board.entity.Board;
 import spring.study.board.entity.BoardImg;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.member.entity.Member;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ public class BoardResponseDto {
     private Long id;
     private String content;
     private Member member;
+    private CommonVisibility visibility;
     private List<BoardImg> img;
     private LocalDateTime registerTime;
 
@@ -22,6 +24,7 @@ public class BoardResponseDto {
         this.id = entity.getId();
         this.content = entity.getContent();
         this.member = entity.getMember();
+        this.visibility = entity.getVisibility();
         this.img = entity.getImg();
         this.registerTime = entity.getRegisterTime();
     }

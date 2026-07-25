@@ -19,6 +19,7 @@ import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.collection.service.CollectionService;
 import spring.study.comment.service.CommentService;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
 import spring.study.forbidden.entity.Status;
@@ -28,6 +29,7 @@ import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
@@ -60,6 +62,7 @@ public class MemberFacade {
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationService jwtAuthenticationService;
+    private final MemberTokenCacheService memberTokenCacheService;
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
         int check = validateLogin(dto);
@@ -296,6 +299,23 @@ public class MemberFacade {
         ));
     }
 
+    public ResponseEntity<?> updateVisibility(CommonVisibility visibility, Member member) {
+        if (visibility == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -1L,
+                    "message", "공개 설정을 선택해 주세요."
+            ));
+        }
+
+        long memberId = memberService.updateVisibility(member.getId(), visibility);
+        memberTokenCacheService.delete(memberId);
+
+        return ResponseEntity.ok(Map.of(
+                "result", memberId,
+                "visibility", visibility
+        ));
+    }
+
     public ResponseEntity<?> updatePhone(MemberRequestDto dto, HttpServletRequest request) {
         int check = validateMember2(dto);
 
@@ -339,7 +359,7 @@ public class MemberFacade {
         }
     }
 
-    public ResponseEntity<?> search(String name) {
+    public ResponseEntity<?> search(String name, Member viewer) {
         if (name == null || name.isBlank()) {
             return ResponseEntity.ok(Map.of(
                     "result", 10L,
@@ -349,7 +369,7 @@ public class MemberFacade {
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "list", memberService.findName(name.trim())
+                "list", memberService.findName(name.trim(), viewer)
         ));
     }
 

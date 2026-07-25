@@ -16,6 +16,8 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.common.entity.CommonVisibility;
+import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.repository.MemberRepository;
 
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
+    private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     @Transactional
     public Long save(MemberRequestDto memberSaveDto) {
@@ -57,6 +60,13 @@ public class MemberService implements UserDetailsService {
 
     public List<MemberResponseDto> findName(String name) {
         return memberRepository.findByNameContaining(name).stream().map(MemberResponseDto::new).toList();
+    }
+
+    public List<MemberResponseDto> findName(String name, Member viewer) {
+        return memberRepository.findByNameContaining(name).stream()
+                .filter(member -> visibilityAccessPolicy.canViewMember(member, viewer))
+                .map(MemberResponseDto::new)
+                .toList();
     }
 
     public List<Member> findMember(List<Long> list) {
@@ -140,6 +150,16 @@ public class MemberService implements UserDetailsService {
         member.changeRole(role);
 
         return member.getId().intValue();
+    }
+
+    @Transactional
+    public long updateVisibility(Long id, CommonVisibility visibility) {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
+
+        member.changeVisibility(visibility);
+        return member.getId();
     }
 
     @Override

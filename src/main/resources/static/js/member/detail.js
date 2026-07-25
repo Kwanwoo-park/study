@@ -106,6 +106,30 @@ function fnSave() {
     });
 }
 
+function fnSaveVisibility() {
+    const visibility = document.getElementById('memberVisibility');
+
+    fetch('/api/member/visibility', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({ visibility: visibility.value }),
+        credentials: 'include',
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        if (json.result < 0) {
+            alert(json.message || '공개 설정 저장에 실패했습니다.');
+            return;
+        }
+        alert('공개 설정이 저장되었습니다.');
+    })
+    .catch(() => {
+        alert('공개 설정 저장에 실패했습니다.');
+    });
+}
+
 function fnLogout() {
     fetch(`/api/member/logout`, {
         method: 'GET',

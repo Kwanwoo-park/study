@@ -3,12 +3,15 @@ package spring.study.member.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import spring.study.account.dto.AccountResponseDto;
 import spring.study.account.service.AccountService;
 import spring.study.common.service.SessionManager;
+import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -26,6 +29,7 @@ public class MemberViewController {
     private final FollowService followService;
     private final SessionManager sessionManager;
     private final AccountService accountService;
+    private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     @GetMapping("/login")
     public String login(Model model,
@@ -146,10 +150,14 @@ public class MemberViewController {
             return "redirect:/member/detail?email=" + memberEmail;
 
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
+        if (!visibilityAccessPolicy.canViewMember(search_member, member)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비공개 회원입니다.");
+        }
+        boolean includePrivateBoards = followService.existFollow(member, search_member);
 
         model.addAttribute("member", search_member);
-        model.addAttribute("status", followService.existFollow(member, search_member));
-        model.addAttribute("board_count", boardService.countByMember(search_member));
+        model.addAttribute("status", includePrivateBoards);
+        model.addAttribute("board_count", boardService.countByMember(search_member, includePrivateBoards));
         model.addAttribute("follower_count", followService.countFollowers(search_member));
         model.addAttribute("following_count", followService.countFollowing(search_member));
         model.addAttribute("profile", member.getProfile());

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.entity.Board;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.member.entity.Member;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     List<Board> findByMember(Member member, Pageable pageable);
 
+    List<Board> findByMemberAndVisibility(Member member, CommonVisibility visibility, Pageable pageable);
+
     List<Board> findByMember(Member member, Sort sort);
 
     List<Board> findByMember(Member members);
@@ -24,6 +27,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     List<Board> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
     long countByMember(Member member);
+
+    long countByMemberAndVisibility(Member member, CommonVisibility visibility);
 
     @Transactional
     void deleteByMember(Member member);

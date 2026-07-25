@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import spring.study.account.entity.Account;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.common.entity.BasetimeEntity;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.board.entity.Board;
 import spring.study.reply.entity.Reply;
 import spring.study.favorite.entity.Favorite;
@@ -72,6 +73,16 @@ public class Member extends BasetimeEntity implements UserDetails {
     @NotNull
     private String profile;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "visibility",
+            nullable = false,
+            length = 20,
+            columnDefinition = "varchar(20) default 'PUBLIC'"
+    )
+    private CommonVisibility visibility = CommonVisibility.PUBLIC;
+
     @Column(name = "last_login_time")
     private LocalDateTime lastLoginTime;
 
@@ -125,7 +136,7 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth,
-                  AccountStatus accountStatus, LocalDateTime suspendedUntil, int warningCount) {
+                  AccountStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, CommonVisibility visibility) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;
@@ -138,6 +149,7 @@ public class Member extends BasetimeEntity implements UserDetails {
         this.accountStatus = accountStatus == null ? AccountStatus.ACTIVE : accountStatus;
         this.suspendedUntil = suspendedUntil;
         this.warningCount = warningCount;
+        this.visibility = visibility == null ? CommonVisibility.PUBLIC : visibility;
     }
 
     @Transient
@@ -285,6 +297,12 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     public void changeRole(Role role) {
         this.role = role;
+    }
+
+    public void changeVisibility(CommonVisibility visibility) {
+        if (visibility != null) {
+            this.visibility = visibility;
+        }
     }
 
     public boolean checkProfile() {

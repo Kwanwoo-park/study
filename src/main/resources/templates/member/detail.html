@@ -43,6 +43,14 @@
               <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
               <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
               <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
+              <div class="form-group">
+                <label for="memberVisibility">공개 설정</label>
+                <select id="memberVisibility" class="form-control">
+                  <option value="PRIVATE" th:selected="${member.visibility.name() == 'PRIVATE'}">비공개</option>
+                  <option value="PUBLIC" th:selected="${member.visibility.name() == 'PUBLIC'}">공개</option>
+                </select>
+                <button type="button" class="btn btn-primary" onclick="fnSaveVisibility()">공개 설정 저장</button>
+              </div>
             </div>
           </div>
         </div>

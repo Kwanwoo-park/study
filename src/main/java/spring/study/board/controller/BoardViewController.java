@@ -3,9 +3,11 @@ package spring.study.board.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.entity.Board;
 import spring.study.board.facade.BoardFacade;
@@ -72,7 +74,11 @@ public class BoardViewController {
 
         if (boardService.existBoard(boardRequestDto.getId())) {
             Board board = boardService.findById(boardRequestDto.getId());
-            long[] ids = boardService.getBoardIdList(boardRequestDto.getId(), board.getMember());
+            if (!boardFacade.canView(board, member)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비공개 게시물입니다.");
+            }
+            boolean includePrivate = boardFacade.canViewPrivateBoards(member, board.getMember());
+            long[] ids = boardService.getBoardIdList(boardRequestDto.getId(), board.getMember(), includePrivate);
 
             model.addAttribute("board", board);
             model.addAttribute("like", boardFacade.checkFavorite(board, member));

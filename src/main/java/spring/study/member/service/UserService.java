@@ -41,6 +41,7 @@ public class UserService implements UserServiceRepository {
                         .birth(memberRequestDto.getBirth())
                         .role(Role.USER)
                         .profile("KakaoTalk_Photo_2023-04-14-21-36-15.jpeg")
+                        .visibility(memberRequestDto.getVisibility())
                         .build());
 
         return new MemberResponseDto(member);

@@ -35,13 +35,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = document.createElement('div');
         row.className = 'd-flex justify-content-between align-items-center';
 
+        const titleGroup = document.createElement('div');
+        titleGroup.className = 'diary-title-group';
+
+        if (diary.visibility === 'PRIVATE') {
+            const lock = document.createElement('img');
+            lock.className = 'diary-private-lock';
+            lock.src = '/img/diary/private-lock.png';
+            lock.alt = '비공개';
+            lock.title = '비공개 일기';
+            titleGroup.append(lock);
+        }
+
         const title = document.createElement('strong');
         title.textContent = diary.title;
+        titleGroup.append(title);
 
         const registerTime = document.createElement('small');
         registerTime.textContent = formatDate(diary.registerTime);
 
-        row.append(title, registerTime);
+        row.append(titleGroup, registerTime);
         link.append(row);
         diaryList.append(link);
     }

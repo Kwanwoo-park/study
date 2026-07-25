@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.member.entity.Member;
 import spring.study.board.repository.BoardRepository;
 
@@ -41,7 +42,15 @@ public class BoardService {
     }
 
     public List<Board> getBoardByMember(int cursor, int limit, Member member) {
-        return boardRepository.findByMember(member, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()));
+        return getBoardByMember(cursor, limit, member, true);
+    }
+
+    public List<Board> getBoardByMember(int cursor, int limit, Member member, boolean includePrivate) {
+        PageRequest pageable = PageRequest.of(cursor, limit, Sort.by("registerTime").descending());
+        if (includePrivate) {
+            return boardRepository.findByMember(member, pageable);
+        }
+        return boardRepository.findByMemberAndVisibility(member, CommonVisibility.PUBLIC, pageable);
     }
 
     public HashMap<String, Object> findAll(Integer page, Integer size) {
@@ -77,8 +86,22 @@ public class BoardService {
         return boardRepository.countByMember(member);
     }
 
+    public long countByMember(Member member, boolean includePrivate) {
+        if (includePrivate) {
+            return boardRepository.countByMember(member);
+        }
+        return boardRepository.countByMemberAndVisibility(member, CommonVisibility.PUBLIC);
+    }
+
     public long[] getBoardIdList(Long id, Member member) {
-        List<Long> id_list = boardRepository.findByMember(member).stream().map(Board::getId).toList();
+        return getBoardIdList(id, member, true);
+    }
+
+    public long[] getBoardIdList(Long id, Member member, boolean includePrivate) {
+        List<Long> id_list = boardRepository.findByMember(member).stream()
+                .filter(board -> includePrivate || board.getVisibility() == CommonVisibility.PUBLIC)
+                .map(Board::getId)
+                .toList();
 
         int size = id_list.size();
         long[] ids = new long[2];
@@ -98,15 +121,21 @@ public class BoardService {
     }
 
     @Transactional
-    public long updateBoard(Long id, String content) {
+    public long updateBoard(Long id, String content, CommonVisibility visibility) {
         Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(
                 "존재하지 않는 게시글입니다."
         ));
 
         board.changeContent(content);
+        board.changeVisibility(visibility);
         board.changeUpdateTime(LocalDateTime.now());
 
         return board.getId();
+    }
+
+    @Transactional
+    public long updateBoard(Long id, String content) {
+        return updateBoard(id, content, null);
     }
 
     @Transactional

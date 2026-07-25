@@ -8,8 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.diary.entity.Diary;
-import spring.study.diary.entity.DiaryVisibility;
 import spring.study.member.entity.Member;
 
 import java.util.List;
@@ -28,7 +28,7 @@ public class DiaryRequestDto {
     @NotNull
     private String content;
 
-    private DiaryVisibility visibility;
+    private CommonVisibility visibility;
 
     @Valid
     private List<DiaryImageRequestDto> images;
@@ -37,7 +37,7 @@ public class DiaryRequestDto {
     private List<DiaryTodoRequestDto> todos;
 
     @Builder
-    public DiaryRequestDto(Long id, String title, String content, DiaryVisibility visibility, List<DiaryImageRequestDto> images, List<DiaryTodoRequestDto> todos) {
+    public DiaryRequestDto(Long id, String title, String content, CommonVisibility visibility, List<DiaryImageRequestDto> images, List<DiaryTodoRequestDto> todos) {
         this.id = id;
         this.title = title;
         this.content = content;

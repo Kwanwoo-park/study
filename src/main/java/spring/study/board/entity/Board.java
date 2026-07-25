@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import spring.study.common.entity.BasetimeEntity;
+import spring.study.common.entity.CommonVisibility;
 import spring.study.comment.entity.Comment;
 import spring.study.favorite.entity.Favorite;
 import spring.study.member.entity.Member;
@@ -30,6 +31,16 @@ public class Board extends BasetimeEntity implements Serializable {
     @NotNull
     private String content;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "visibility",
+            nullable = false,
+            length = 20,
+            columnDefinition = "varchar(20) default 'PUBLIC'"
+    )
+    private CommonVisibility visibility = CommonVisibility.PUBLIC;
+
     @JsonIgnore
     @JoinColumn(name = "member_id")
     @ManyToOne
@@ -48,10 +59,11 @@ public class Board extends BasetimeEntity implements Serializable {
     private List<BoardImg> img = new ArrayList<>();
 
     @Builder
-    public Board(Long id, String title, String content, int readCnt, Member member) {
+    public Board(Long id, String title, String content, int readCnt, Member member, CommonVisibility visibility) {
         this.id = id;
         this.content = content;
         this.member = member;
+        this.visibility = visibility == null ? CommonVisibility.PUBLIC : visibility;
     }
 
     public void addMember(Member member) {
@@ -73,6 +85,12 @@ public class Board extends BasetimeEntity implements Serializable {
 
     public void changeContent(String content) {
         this.content = content;
+    }
+
+    public void changeVisibility(CommonVisibility visibility) {
+        if (visibility != null) {
+            this.visibility = visibility;
+        }
     }
 
     public void removeComment(Comment cmt) {

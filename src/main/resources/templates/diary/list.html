@@ -41,7 +41,14 @@
            th:each="diary : ${diaries}"
            th:href="@{/diary/write(id=${diary.id})}">
             <div class="d-flex justify-content-between align-items-center">
-                <strong th:text="${diary.title}">제목</strong>
+                <div class="diary-title-group">
+                    <img th:if="${diary.visibility.name() == 'PRIVATE'}"
+                         class="diary-private-lock"
+                         src="/img/diary/private-lock.png"
+                         alt="비공개"
+                         title="비공개 일기">
+                    <strong th:text="${diary.title}">제목</strong>
+                </div>
                 <small th:text="${#temporals.format(diary.registerTime, 'yyyy-MM-dd HH:mm')}">작성일</small>
             </div>
         </a>
