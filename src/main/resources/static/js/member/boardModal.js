@@ -142,6 +142,29 @@
                     <span onclick="fnEditCompleteModal(${board.id})" id="modalComplete" style="display: none;">Complete</span>
                     <br>
                     <span onclick="fnDeleteModal(${board.id})" id="modalDelete">Delete</span>
+                    <button type="button"
+                            id="modalVisibilityEditButton"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="fnModalVisibilityEdit()">
+                        공개 설정: ${board.visibility === 'PRIVATE' ? '비공개' : '공개'}
+                    </button>
+                    <div id="modalVisibilityEditPanel" class="modal-visibility-panel is-hidden">
+                        <label for="modalEditVisibility">공개 설정</label>
+                        <select id="modalEditVisibility" class="form-control">
+                            <option value="PRIVATE" ${board.visibility === 'PRIVATE' ? 'selected' : ''}>비공개</option>
+                            <option value="PUBLIC" ${board.visibility !== 'PRIVATE' ? 'selected' : ''}>공개</option>
+                        </select>
+                        <div class="modal-visibility-actions">
+                            <button type="button"
+                                    id="modalVisibilitySaveButton"
+                                    class="btn btn-primary btn-sm"
+                                    onclick="fnModalVisibilityComplete(${board.id})">저장</button>
+                            <button type="button"
+                                    id="modalVisibilityCancelButton"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    onclick="fnModalVisibilityCancel()">취소</button>
+                        </div>
+                    </div>
                 </div>
                 ` : ''}
                 <div class="modal-profile" onclick="fnProfile('${escapeHtml(board.member.email)}')">
@@ -315,20 +338,61 @@
             const del = document.getElementById('modalDelete');
             const content = document.getElementById('modalContent');
             const editContent = document.getElementById('modalEditContent');
+            const visibilityEditButton = document.getElementById('modalVisibilityEditButton');
+            const visibilityEditPanel = document.getElementById('modalVisibilityEditPanel');
+            const visibilitySaveButton = document.getElementById('modalVisibilitySaveButton');
+            const visibilityCancelButton = document.getElementById('modalVisibilityCancelButton');
 
-            if (!edit || !complete || !del || !content || !editContent) return;
+            if (!edit || !complete || !del || !content || !editContent
+                || !visibilityEditButton || !visibilityEditPanel
+                || !visibilitySaveButton || !visibilityCancelButton) return;
 
             edit.style.display = 'none';
             del.style.display = 'none';
             content.style.display = 'none';
             complete.style.display = 'inline';
             editContent.style.display = 'inline';
+            visibilityEditButton.style.display = 'none';
+            visibilityEditPanel.classList.remove('is-hidden');
+            visibilitySaveButton.style.display = 'none';
+            visibilityCancelButton.style.display = 'none';
         }
 
         function fnEditCompleteModal(boardId) {
             const editContent = document.getElementById('modalEditContent');
-            if (!editContent) return;
+            const editVisibility = document.getElementById('modalEditVisibility');
+            if (!editContent || !editVisibility) return;
 
+            fnUpdateBoardModal(boardId, editContent.value, editVisibility.value);
+        }
+
+        function fnModalVisibilityEdit() {
+            const visibilityEditButton = document.getElementById('modalVisibilityEditButton');
+            const visibilityEditPanel = document.getElementById('modalVisibilityEditPanel');
+            if (!visibilityEditButton || !visibilityEditPanel) return;
+
+            visibilityEditButton.style.display = 'none';
+            visibilityEditPanel.classList.remove('is-hidden');
+        }
+
+        function fnModalVisibilityCancel() {
+            const visibilityEditButton = document.getElementById('modalVisibilityEditButton');
+            const visibilityEditPanel = document.getElementById('modalVisibilityEditPanel');
+            if (!visibilityEditButton || !visibilityEditPanel) return;
+
+            visibilityEditPanel.classList.add('is-hidden');
+            visibilityEditButton.style.display = 'inline-block';
+        }
+
+        function fnModalVisibilityComplete(boardId) {
+            const content = document.getElementById('modalContent');
+            const editVisibility = document.getElementById('modalEditVisibility');
+            if (!content || !editVisibility) return;
+
+            fnUpdateBoardModal(boardId, content.textContent, editVisibility.value);
+        }
+
+        function fnUpdateBoardModal(boardId, content, visibility) {
             fetch(`/api/board/view`, {
                 method: 'PATCH',
                 headers: {
@@ -336,7 +400,8 @@
                 },
                 body: JSON.stringify({
                     id: boardId,
-                    content: editContent.value
+                    content: content,
+                    visibility: visibility
                 }),
                 credentials: "include",
             })
@@ -399,6 +464,9 @@
         global.fnProfile = fnProfile;
         global.fnEditModal = fnEditModal;
         global.fnEditCompleteModal = fnEditCompleteModal;
+        global.fnModalVisibilityEdit = fnModalVisibilityEdit;
+        global.fnModalVisibilityCancel = fnModalVisibilityCancel;
+        global.fnModalVisibilityComplete = fnModalVisibilityComplete;
         global.fnDeleteModal = fnDeleteModal;
     }
 

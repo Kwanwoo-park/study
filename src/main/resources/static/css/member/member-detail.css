@@ -392,6 +392,40 @@ body.modal-open {
     cursor: pointer;
 }
 
+.board-modal-content .editDiv #modalVisibilityEditButton {
+    display: block;
+    margin-top: 8px;
+    margin-left: auto;
+}
+
+.board-modal-content .modal-visibility-panel {
+    width: 180px;
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: var(--surface-bg);
+    text-align: left;
+}
+
+.board-modal-content .modal-visibility-panel.is-hidden {
+    display: none;
+}
+
+.board-modal-content .modal-visibility-panel label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.board-modal-content .modal-visibility-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 8px;
+}
+
 .board-modal-content #modalEditContent {
     margin-top: 8px;
 }
