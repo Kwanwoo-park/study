@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let searchTitle = '';
     let requestGeneration = 0;
     let activeController = null;
+    let searchTimer;
 
     function formatDate(value) {
         if (!value) return '';
@@ -147,12 +148,21 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(sentinel);
     }
 
+    searchInput.addEventListener('input', function() {
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(function() {
+            startQuery(searchInput.value);
+        }, 250);
+    });
+
     searchForm.addEventListener('submit', function(event) {
         event.preventDefault();
+        window.clearTimeout(searchTimer);
         startQuery(searchInput.value);
     });
 
     searchClearButton.addEventListener('click', function() {
+        window.clearTimeout(searchTimer);
         searchInput.value = '';
         startQuery('');
         searchInput.focus();

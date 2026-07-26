@@ -53,12 +53,7 @@ public class Diary extends BasetimeEntity {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "visibility",
-            nullable = false,
-            length = 20,
-            columnDefinition = "varchar(20) default 'PUBLIC'"
-    )
+    @Column(name = "visibility", nullable = false, length = 20, columnDefinition = "varchar(20) default 'PUBLIC'")
     private CommonVisibility visibility = CommonVisibility.PUBLIC;
 
     @JsonIgnore

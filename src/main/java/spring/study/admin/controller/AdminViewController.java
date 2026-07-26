@@ -99,7 +99,7 @@ public class AdminViewController {
     }
 
     @GetMapping("/report")
-    public String reportList(HttpServletRequest request) {
+    public String reportList(Model model, HttpServletRequest request) {
         Member member = sessionManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report";
 
@@ -107,6 +107,9 @@ public class AdminViewController {
             sessionManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
+
+        model.addAttribute("email", member.getEmail());
+        model.addAttribute("profile", member.getProfile());
 
         return "admin/report_apply";
     }

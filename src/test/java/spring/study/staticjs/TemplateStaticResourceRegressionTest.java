@@ -26,6 +26,7 @@ class TemplateStaticResourceRegressionTest {
     private static final Path CHAT_JS = Path.of("src/main/resources/static/js/chat/chat.js");
     private static final Path CHAT_CSS = Path.of("src/main/resources/static/css/chat/chat.css");
     private static final Path COMMON_FRAGMENT = Path.of("src/main/resources/templates/fragments/common.html");
+    private static final Path DIARY_LIST_JS = Path.of("src/main/resources/static/js/diary/list.js");
 
     private static final List<Path> THEME_ONLY_TEMPLATES = List.of(
             Path.of("src/main/resources/templates/admin/administrator.html"),
@@ -193,6 +194,37 @@ class TemplateStaticResourceRegressionTest {
                 "admin report navigation should move directly to the report apply page");
         assertFalse(commonFragment.contains("onclick=\"fnReportProcess()\""),
                 "admin bottom navigation should not move directly to report processing");
+    }
+
+    @Test
+    void adminReportApplyShouldIncludeBottomNavigation() throws IOException {
+        String reportApplyTemplate = Files.readString(
+                Path.of("src/main/resources/templates/admin/report_apply.html"));
+
+        assertTrue(reportApplyTemplate.contains(
+                        "fragments/common :: memberNavi(${email}, ${profile})"),
+                "admin report apply should include the shared bottom navigation");
+        assertTrue(reportApplyTemplate.contains(
+                        "fragments/common :: notificationBanner"),
+                "admin report apply should include the notification banner used by common navigation");
+        assertTrue(reportApplyTemplate.contains(
+                        "<script src=\"/js/common/common.js\"></script>"),
+                "admin report apply should load common navigation actions");
+    }
+
+    @Test
+    void diarySearchShouldRunWhileUserTypes() throws IOException {
+        String diaryListJs = Files.readString(DIARY_LIST_JS).replace("\r\n", "\n");
+
+        assertTrue(diaryListJs.contains("searchInput.addEventListener('input', function()"),
+                "diary search should react whenever the search input changes");
+        assertTrue(diaryListJs.contains(
+                        "searchTimer = window.setTimeout(function() {\n"
+                                + "            startQuery(searchInput.value);\n"
+                                + "        }, 250);"),
+                "diary search should debounce input before requesting results");
+        assertTrue(diaryListJs.contains("window.clearTimeout(searchTimer);"),
+                "diary search should cancel pending searches when input changes");
     }
 
     @Test

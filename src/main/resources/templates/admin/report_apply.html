@@ -10,7 +10,9 @@
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
 <main class="container admin-report-page">
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
   <div class="admin-report-header">
     <div>
       <h1>신고 접수</h1>
@@ -28,5 +30,6 @@
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/admin/reportApply.js"></script>
+<script src="/js/common/common.js"></script>
 </body>
 </html>
