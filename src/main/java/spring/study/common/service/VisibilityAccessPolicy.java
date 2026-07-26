@@ -1,17 +1,24 @@
 package spring.study.common.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.board.entity.Board;
 import spring.study.common.entity.CommonVisibility;
+import spring.study.follow.repository.FollowRepository;
 import spring.study.member.entity.Member;
 
 @Service
+@RequiredArgsConstructor
 public class VisibilityAccessPolicy {
+    private final FollowRepository followRepository;
+
     public boolean canViewMember(Member target, Member viewer) {
         if (target == null || viewer == null) {
             return false;
         }
-        return target.getVisibility() == CommonVisibility.PUBLIC || sameMember(target, viewer);
+        return target.getVisibility() == CommonVisibility.PUBLIC
+                || sameMember(target, viewer)
+                || followRepository.existsByFollowerAndFollowing(viewer, target);
     }
 
     public boolean canViewBoard(Board board, Member viewer, boolean followsAuthor) {

@@ -14,6 +14,7 @@ const previous = document.getElementById('previous');
 const submit = document.getElementById('submit');
 const content = document.getElementById('content')
 const visibility = document.getElementById('visibility');
+const visibilityGroup = document.getElementById('visibilityGroup');
 
 const maxSize = 10;
 
@@ -126,6 +127,7 @@ function fnPrevious() {
     previous.style.display = 'none';
     submit.style.display = 'none';
     content.style.display = 'none';
+    visibilityGroup.style.display = 'none';
 
     if (left)
         left.style.display = 'none';
@@ -159,6 +161,7 @@ function fnLoad(input) {
     previous.style.display = 'flex';
     submit.style.display = 'flex';
     content.style.display = 'inline';
+    visibilityGroup.style.display = 'block';
 
     file = Array.from(input.files);
     fidx = 0;

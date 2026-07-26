@@ -21,6 +21,28 @@
 			<span th:onclick="fnEditComplete([[${board.id}]])" id="complete" class="is-hidden">Complete</span>
 			<br>
 			<span th:onclick="fnDelete([[${board.id}]])" id="delete">Delete</span>
+			<button type="button"
+					id="visibilityEditButton"
+					class="btn btn-outline-primary btn-sm"
+					th:text="${board.visibility.name() == 'PRIVATE' ? '공개 설정: 비공개' : '공개 설정: 공개'}"
+					onclick="fnVisibilityEdit()">공개 설정</button>
+			<div id="visibilityEditPanel" class="board-visibility-panel is-hidden">
+				<label for="editVisibility">공개 설정</label>
+				<select id="editVisibility" class="form-control">
+					<option value="PRIVATE" th:selected="${board.visibility.name() == 'PRIVATE'}">비공개</option>
+					<option value="PUBLIC" th:selected="${board.visibility.name() == 'PUBLIC'}">공개</option>
+				</select>
+				<div class="board-visibility-actions">
+					<button type="button"
+							id="visibilitySaveButton"
+							class="btn btn-primary btn-sm"
+							th:onclick="fnVisibilityComplete([[${board.id}]])">저장</button>
+					<button type="button"
+							id="visibilityCancelButton"
+							class="btn btn-outline-secondary btn-sm"
+							onclick="fnVisibilityCancel()">취소</button>
+				</div>
+			</div>
 		</div>
 		<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
 			<img th:src="${board.member.profile}" class="profile-img">
@@ -51,10 +73,6 @@
 			<span th:text="${board.member.name}" class="name"></span>
 			<pre th:text="${board.content}" id="content"></pre>
 			<textarea th:text="${board.content}" class="form-control is-hidden" rows="5" cols="" id="editContent" name="content"></textarea>
-			<select id="editVisibility" class="form-control is-hidden">
-				<option value="PRIVATE" th:selected="${board.visibility.name() == 'PRIVATE'}">비공개</option>
-				<option value="PUBLIC" th:selected="${board.visibility.name() == 'PUBLIC'}">공개</option>
-			</select>
 			<div class="comment" th:onclick="fnComment([[${board.id}]])">
 				<label class="form-label">댓글</label>
 				<label class="form-label" th:id="'comment_cnt' + ${board.id}" th:text="${board.comment.size}"></label>

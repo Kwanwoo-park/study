@@ -140,6 +140,14 @@ public class BoardFacade {
     }
 
     public ResponseEntity<?> update(BoardRequestDto dto, Member member, HttpServletRequest request) {
+        Board board = boardService.findById(dto.getId());
+        if (!board.getMember().getId().equals(member.getId()) && member.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -1,
+                    "message", "본인 게시글만 수정할 수 있습니다"
+            ));
+        }
+
         int risk = moderationService.validate(dto.getContent(), member, request);
 
         if (risk != 0) {

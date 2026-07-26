@@ -11,25 +11,52 @@ function fnEdit() {
     const content = document.getElementById('content');
     const editContent = document.getElementById('editContent');
     const editVisibility = document.getElementById('editVisibility');
+    const visibilityEditButton = document.getElementById('visibilityEditButton');
+    const visibilityEditPanel = document.getElementById('visibilityEditPanel');
+    const visibilitySaveButton = document.getElementById('visibilitySaveButton');
+    const visibilityCancelButton = document.getElementById('visibilityCancelButton');
 
     edit.style.display = 'none';
     del.style.display = 'none';
     content.style.display = 'none';
+    visibilityEditButton.style.display = 'none';
 
     complete.style.display = 'inline';
     editContent.style.display = 'inline';
-    editVisibility.style.display = 'inline';
+    visibilityEditPanel.classList.remove('is-hidden');
+    visibilitySaveButton.style.display = 'none';
+    visibilityCancelButton.style.display = 'none';
 }
 
 function fnEditComplete(boardId) {
     const editContent = document.getElementById('editContent');
     const editVisibility = document.getElementById('editVisibility');
 
+    fnUpdateBoard(boardId, editContent.value, editVisibility.value);
+}
+
+function fnVisibilityEdit() {
+    document.getElementById('visibilityEditButton').style.display = 'none';
+    document.getElementById('visibilityEditPanel').classList.remove('is-hidden');
+}
+
+function fnVisibilityCancel() {
+    document.getElementById('visibilityEditPanel').classList.add('is-hidden');
+    document.getElementById('visibilityEditButton').style.display = 'inline-block';
+}
+
+function fnVisibilityComplete(boardId) {
+    const content = document.getElementById('content');
+    const editVisibility = document.getElementById('editVisibility');
+    fnUpdateBoard(boardId, content.textContent, editVisibility.value);
+}
+
+function fnUpdateBoard(boardId, content, visibility) {
     const data = {
         id: boardId,
-        content: editContent.value,
-        visibility: editVisibility.value
-    }
+        content: content,
+        visibility: visibility
+    };
 
     fetch(`/api/board/view`, {
         method: 'PATCH',
