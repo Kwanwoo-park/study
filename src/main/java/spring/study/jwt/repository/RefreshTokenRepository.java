@@ -12,4 +12,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
     boolean existsByMemberIdAndExpiresAtAfter(Long memberId, Instant now);
 
     List<RefreshToken> findByExpiresAtLessThanEqual(Instant now);
+
+    void deleteByMemberId(Long memberId);
 }

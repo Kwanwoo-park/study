@@ -52,6 +52,12 @@ public class RefreshTokenService {
         });
     }
 
+    public void revokeAll(Long memberId) {
+        refreshTokenRepository.deleteByMemberId(memberId);
+        refreshTokenRepository.flush();
+        memberTokenCacheService.delete(memberId);
+    }
+
     @Scheduled(cron = "${security.jwt.refresh-token-cleanup-cron:0 0 * * * *}")
     public void deleteExpiredTokens() {
         Instant now = Instant.now();

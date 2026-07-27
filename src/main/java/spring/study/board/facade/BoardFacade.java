@@ -1,6 +1,6 @@
 package spring.study.board.facade;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -107,8 +107,8 @@ public class BoardFacade {
         ));
     }
 
-    public ResponseEntity<?> write(BoardRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = moderationService.validate(dto.getContent(), member, request);
+    public ResponseEntity<?> write(BoardRequestDto dto, Member member, HttpServletResponse response) {
+        int risk = moderationService.validate(dto.getContent(), member, response);
 
         if (risk != 0) {
             if (risk == -99)
@@ -139,7 +139,7 @@ public class BoardFacade {
         ));
     }
 
-    public ResponseEntity<?> update(BoardRequestDto dto, Member member, HttpServletRequest request) {
+    public ResponseEntity<?> update(BoardRequestDto dto, Member member, HttpServletResponse response) {
         Board board = boardService.findById(dto.getId());
         if (!board.getMember().getId().equals(member.getId()) && member.getRole() != Role.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
@@ -148,7 +148,7 @@ public class BoardFacade {
             ));
         }
 
-        int risk = moderationService.validate(dto.getContent(), member, request);
+        int risk = moderationService.validate(dto.getContent(), member, response);
 
         if (risk != 0) {
             if (risk == -99) {

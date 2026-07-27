@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.account.dto.AccountResponseDto;
 import spring.study.account.service.AccountService;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
@@ -27,7 +27,7 @@ public class MemberViewController {
     private final MemberService memberService;
     private final BoardService boardService;
     private final FollowService followService;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final AccountService accountService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
 
@@ -37,7 +37,7 @@ public class MemberViewController {
                         @RequestParam(value = "exception", required = false) String exception,
                         @RequestParam(value = "url", required = false) String url,
                         HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
 
         if (member != null) {
             if (member.getRole() == Role.USER) return "redirect:/board/main";
@@ -58,7 +58,7 @@ public class MemberViewController {
 
     @GetMapping("/detail")
     public String detail(@RequestParam String email, Model model, HttpServletRequest request){
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/detail?email=" + email;
 
         String memberEmail = member.getEmail();
@@ -91,7 +91,7 @@ public class MemberViewController {
 
     @GetMapping("/updatePassword")
     public String updatePassword(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePassword";
 
         model.addAttribute("email", member.getEmail());
@@ -101,7 +101,7 @@ public class MemberViewController {
 
     @GetMapping("/updatePhone")
     public String updatePhone(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePhone";
 
         model.addAttribute("email", member.getEmail());
@@ -120,7 +120,7 @@ public class MemberViewController {
 
     @GetMapping("/withdrawal")
     public String withdrawal(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/withdrawal";
 
         model.addAttribute("name", member.getName());
@@ -130,7 +130,7 @@ public class MemberViewController {
 
     @GetMapping("/search")
     public String memberFind(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/search";
 
         model.addAttribute("profile", member.getProfile());
@@ -141,7 +141,7 @@ public class MemberViewController {
 
     @GetMapping("/search/detail")
     public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/search/detail?email=" + memberRequestDto.getEmail();
 
         String memberEmail = member.getEmail();

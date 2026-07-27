@@ -10,7 +10,7 @@ import spring.study.account.dto.AccountTranDto;
 import spring.study.account.facade.AccountFacade;
 import spring.study.account.facade.AccountTransactionFacade;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 
 @RestController
@@ -18,14 +18,14 @@ import spring.study.member.entity.Member;
 @Slf4j
 @RequestMapping("/api/account")
 public class AccountApiController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final AccountFacade accountFacade;
     private final AccountTransactionFacade accountTransactionFacade;
     private final CommonFacade commonFacade;
 
     @PostMapping("/create")
     public ResponseEntity<?> createAccount(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return accountFacade.create(member);
@@ -33,7 +33,7 @@ public class AccountApiController {
 
     @GetMapping("/list")
     public ResponseEntity<?> getAccountList(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return accountFacade.getList(member);
@@ -41,7 +41,7 @@ public class AccountApiController {
 
     @PatchMapping("/tran")
     public ResponseEntity<?> tranAccount(@RequestBody AccountTranDto dto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return accountFacade.tranAccount(dto, member);
@@ -49,7 +49,7 @@ public class AccountApiController {
 
     @PatchMapping("/deposit")
     public ResponseEntity<?> deposit(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return accountFacade.deposit(dto, member);
@@ -57,7 +57,7 @@ public class AccountApiController {
 
     @PatchMapping("/change/name")
     public ResponseEntity<?> changeAccountName(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return accountFacade.changeAccountName(dto, member);
@@ -65,7 +65,7 @@ public class AccountApiController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteAccount(@RequestParam String account, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return accountFacade.delete(account, member);
@@ -77,7 +77,7 @@ public class AccountApiController {
             @RequestParam(defaultValue = "0") int page,
             HttpServletRequest request
     ) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return accountTransactionFacade.getListByAccount(account, page, member);
@@ -85,7 +85,7 @@ public class AccountApiController {
 
     @PatchMapping("/transactions/{id}/cancel")
     public ResponseEntity<?> cancelTransaction(@PathVariable Long id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return accountTransactionFacade.cancel(id, member);

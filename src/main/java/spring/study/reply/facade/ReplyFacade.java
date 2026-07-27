@@ -1,6 +1,6 @@
 package spring.study.reply.facade;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,8 +29,8 @@ public class ReplyFacade {
     private final NotificationService notificationService;
     private final ModerationService moderationService;
 
-    public ResponseEntity<?> saveReply(ReplyRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = moderationService.validate(dto.getReply(), member, request);
+    public ResponseEntity<?> saveReply(ReplyRequestDto dto, Member member, HttpServletResponse response) {
+        int risk = moderationService.validate(dto.getReply(), member, response);
 
         if (risk != 0) {
             if (risk == -99)

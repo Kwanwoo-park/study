@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.favorite.facade.FavoriteFacade;
 import spring.study.member.entity.Member;
 
@@ -16,7 +16,7 @@ import spring.study.member.entity.Member;
 @Slf4j
 @RequestMapping("/api/favorite")
 public class FavoriteApiController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final FavoriteFacade favoriteFacade;
 
@@ -25,7 +25,7 @@ public class FavoriteApiController {
                                              @RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                              @RequestParam(defaultValue = "10", name = "limit") int limit,
                                              HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return favoriteFacade.getList(id, member, cursor, limit);
@@ -33,7 +33,7 @@ public class FavoriteApiController {
 
     @PostMapping("/like")
     public ResponseEntity<?> favoriteAction(@RequestParam Long id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return favoriteFacade.like(id, member);
@@ -41,7 +41,7 @@ public class FavoriteApiController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> favoriteDelete(@RequestParam Long id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return favoriteFacade.unlike(id, member);

@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.common.service.EmitterService;
@@ -19,14 +19,14 @@ import spring.study.notification.facade.NotificationFacade;
 @RequestMapping("/api/notification")
 @Slf4j
 public class NotificationApiController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final EmitterService emitterService;
     private final NotificationFacade notificationFacade;
 
     @GetMapping(value = "/stream", produces = "text/event-stream")
     public SseEmitter streamNotification(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return null;
 
         return emitterService.addEmitter(member.getId().toString());
@@ -34,7 +34,7 @@ public class NotificationApiController {
 
     @GetMapping("/load")
     public ResponseEntity<?> loadNotification(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.load(member);
@@ -42,7 +42,7 @@ public class NotificationApiController {
 
     @GetMapping({"/count/unread", "/count/Unread"})
     public ResponseEntity<?> countUnreadNotification(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.count(member);
@@ -50,7 +50,7 @@ public class NotificationApiController {
 
     @GetMapping("/sort/{group}")
     public ResponseEntity<?> sortGroup(@PathVariable Group group, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.loadByGroup(member, group);
@@ -58,7 +58,7 @@ public class NotificationApiController {
 
     @PatchMapping("/mark-as-read")
     public ResponseEntity<?> updateAsRead(@RequestParam Long id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.updateAsRead(id);
@@ -66,7 +66,7 @@ public class NotificationApiController {
 
     @PatchMapping("/mark-all-as-read")
     public ResponseEntity<?> updateAllAsRead(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.updateAllAsRead(member);

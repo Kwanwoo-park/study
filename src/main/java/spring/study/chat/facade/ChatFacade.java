@@ -1,6 +1,6 @@
 package spring.study.chat.facade;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -125,8 +125,8 @@ public class ChatFacade {
         ));
     }
 
-    public ResponseEntity<?> messageCheck(String message, Member member, HttpServletRequest request) {
-        int risk = moderationService.validate(message, member, request);
+    public ResponseEntity<?> messageCheck(String message, Member member, HttpServletResponse response) {
+        int risk = moderationService.validate(message, member, response);
 
         if (risk != 0) {
             if (risk == -99) {

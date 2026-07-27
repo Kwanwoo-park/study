@@ -304,9 +304,11 @@ body.mobile-view {
 }
 
 body.mobile-view .container {
-    width: 100%;
-    max-width: 100%;
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
     min-height: auto;
+    margin-left: auto;
+    margin-right: auto;
     padding-left: 12px;
     padding-right: 12px;
     overflow-x: auto;

@@ -11,8 +11,8 @@ import spring.study.member.entity.Role;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-class SessionManagerTest {
-    private final SessionManager sessionManager = new SessionManager();
+class JwtManagerTest {
+    private final JwtManager jwtManager = new JwtManager();
 
     @AfterEach
     void clearSecurityContext() {
@@ -26,7 +26,7 @@ class SessionManagerTest {
                 new UsernamePasswordAuthenticationToken(member, null, member.getAuthorities()));
         MockHttpServletRequest request = new MockHttpServletRequest();
 
-        assertSame(member, sessionManager.getLoginMember(request));
+        assertSame(member, jwtManager.getLoginMember(request));
         assertNull(request.getSession(false));
     }
 
@@ -37,7 +37,7 @@ class SessionManagerTest {
                 new UsernamePasswordAuthenticationToken(member, null, member.getAuthorities()));
         MockHttpServletRequest request = new MockHttpServletRequest();
 
-        sessionManager.logout(request);
+        jwtManager.logout(request);
 
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         assertNull(request.getSession(false));

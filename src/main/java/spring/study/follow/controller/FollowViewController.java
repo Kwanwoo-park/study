@@ -6,7 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
@@ -15,12 +15,12 @@ import spring.study.member.service.MemberService;
 @Controller
 @RequestMapping("/follow")
 public class FollowViewController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final MemberService memberService;
 
     @GetMapping("/follower")
     public String follower(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/follow/follower?email=" + memberRequestDto.getEmail();
 
         model.addAttribute("targetEmail", memberRequestDto.getEmail());
@@ -31,7 +31,7 @@ public class FollowViewController {
 
     @GetMapping("/following")
     public String following(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/follow/following?email=" + memberRequestDto.getEmail();
 
         model.addAttribute("targetEmail", memberRequestDto.getEmail());

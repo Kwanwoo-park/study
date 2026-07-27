@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.board.facade.BoardImgFacade;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 
 import java.util.List;
@@ -20,12 +20,12 @@ import java.util.Map;
 @RequestMapping("/api/boardImg")
 public class BoardImgApiController {
     private final BoardImgFacade boardImgFacade;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
 
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> boardImgSave(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return boardImgFacade.imageSave(file, id);

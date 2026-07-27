@@ -57,10 +57,11 @@
 }
 
 @media (max-width: 768px) {
-    .container.diary-list-page {
+    body .container.diary-list-page {
+        width: calc(100% - 24px);
         min-height: calc(100vh - 130px);
         max-height: none;
-        margin: 16px 12px 86px;
+        margin: 16px auto 86px;
         padding: 20px;
     }
 

@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.admin.facade.AdminFacade;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.forbidden.dto.ForbiddenChangeRequestDto;
 import spring.study.forbidden.dto.ForbiddenRequestDto;
 import spring.study.forbidden.entity.Status;
@@ -30,7 +30,7 @@ import java.util.Map;
 @Slf4j
 public class AdminApiController {
     private final MemberService memberService;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final AdminFacade adminFacade;
     private final MemberFacade memberFacade;
@@ -39,11 +39,11 @@ public class AdminApiController {
 
     @PatchMapping("/member/permit")
     public ResponseEntity<?> memberPermit(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -55,11 +55,11 @@ public class AdminApiController {
 
     @PatchMapping("/member/deny")
     public ResponseEntity<?> memberDeny(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -76,11 +76,11 @@ public class AdminApiController {
 
     @DeleteMapping("/member/withdrawal")
     public ResponseEntity<?> memberWithdrawal(@RequestParam String email, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -89,11 +89,11 @@ public class AdminApiController {
 
     @PostMapping("/forbidden/word/save")
     public ResponseEntity<?> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -102,11 +102,11 @@ public class AdminApiController {
 
     @PatchMapping("/forbidden/word/change/examine")
     public ResponseEntity<?> changeToExamine(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -115,11 +115,11 @@ public class AdminApiController {
 
     @PatchMapping("/forbidden/word/change/approval")
     public ResponseEntity<?> changeToApproval(@RequestBody ForbiddenChangeRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -128,11 +128,11 @@ public class AdminApiController {
 
     @GetMapping("/report")
     public ResponseEntity<?> findReports(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -141,11 +141,11 @@ public class AdminApiController {
 
     @GetMapping("/report/pending")
     public ResponseEntity<?> findPendingReports(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -154,11 +154,11 @@ public class AdminApiController {
 
     @GetMapping("/report/reviewing")
     public ResponseEntity<?> findReviewingReports(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -172,11 +172,11 @@ public class AdminApiController {
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request
     ) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -185,11 +185,11 @@ public class AdminApiController {
 
     @GetMapping("/report/{id}")
     public ResponseEntity<?> findReport(@PathVariable Long id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -200,11 +200,11 @@ public class AdminApiController {
     public ResponseEntity<?> processReport(@PathVariable Long id,
                                            @Valid @RequestBody ReportProcessRequestDto requestDto,
                                            HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -213,11 +213,11 @@ public class AdminApiController {
 
     @GetMapping("/member/online")
     public ResponseEntity<?> memberOnline(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -226,11 +226,11 @@ public class AdminApiController {
 
     @GetMapping("/member/new")
     public ResponseEntity<?> newMember(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -239,11 +239,11 @@ public class AdminApiController {
 
     @GetMapping("/board/new")
     public ResponseEntity<?> newBoard(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -252,11 +252,11 @@ public class AdminApiController {
 
     @GetMapping("/chat/active")
     public ResponseEntity<?> chattingActive(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -265,11 +265,11 @@ public class AdminApiController {
 
     @GetMapping("/system/status")
     public ResponseEntity<?> systemStatus(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 

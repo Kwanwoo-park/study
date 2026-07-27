@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.collection.dto.CollectionRequestDto;
 import spring.study.collection.facade.CollectionFacade;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 
 import java.util.List;
@@ -21,14 +21,14 @@ import java.util.Map;
 @Slf4j
 public class CollectionApiController {
     private final CollectionFacade facade;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
 
     @GetMapping("/load")
     public ResponseEntity<?> getBoard(@RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                       @RequestParam(defaultValue = "30", name = "limit") int limit,
                                       HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return facade.load(cursor, limit, member);
@@ -36,7 +36,7 @@ public class CollectionApiController {
 
     @GetMapping("/check")
     public ResponseEntity<?> check(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return ResponseEntity.ok(Map.of(
@@ -46,7 +46,7 @@ public class CollectionApiController {
 
     @PostMapping("/save/collection")
     public ResponseEntity<?> saveCollection(@RequestBody CollectionRequestDto dto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return facade.save(dto, member);
@@ -54,7 +54,7 @@ public class CollectionApiController {
 
     @PostMapping("/save/img")
     public ResponseEntity<?> saveImg(@RequestPart MultipartFile file, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return facade.saveImage(file);
@@ -62,7 +62,7 @@ public class CollectionApiController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteCollection(@RequestBody List<Long> id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return facade.delete(id, member);

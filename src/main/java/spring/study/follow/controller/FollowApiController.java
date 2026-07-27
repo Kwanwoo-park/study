@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.follow.facade.FollowFacade;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
@@ -17,7 +17,7 @@ import spring.study.member.entity.Member;
 @Slf4j
 @RequestMapping("/api/follow")
 public class FollowApiController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final FollowFacade followFacade;
 
@@ -26,7 +26,7 @@ public class FollowApiController {
                                              @RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                              @RequestParam(defaultValue = "10", name = "limit") int limit,
                                              HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return followFacade.getFollower(email, member, cursor, limit);
@@ -37,7 +37,7 @@ public class FollowApiController {
                                               @RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                               @RequestParam(defaultValue = "10", name = "limit") int limit,
                                               HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return followFacade.getFollowing(email, member, cursor, limit);
@@ -45,7 +45,7 @@ public class FollowApiController {
 
     @PostMapping("")
     public ResponseEntity<?> memberFollow(@RequestBody MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return followFacade.follow(memberRequestDto, member, request);
@@ -53,7 +53,7 @@ public class FollowApiController {
 
     @DeleteMapping("")
     public ResponseEntity<?> memberUnfollow(@RequestBody MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return followFacade.unfollow(memberRequestDto, member, request);

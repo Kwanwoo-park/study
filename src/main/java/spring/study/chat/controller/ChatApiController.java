@@ -1,6 +1,7 @@
 package spring.study.chat.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,7 @@ import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -26,7 +27,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
 public class ChatApiController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final ChatFacade chatFacade;
     private final ChatPresenceService chatPresenceService;
@@ -39,7 +40,7 @@ public class ChatApiController {
                                           @RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                           @RequestParam(defaultValue = "100", name = "limit") int limit,
                                           HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return chatFacade.loadChatting(roomId, member, cursor, limit);
@@ -50,7 +51,7 @@ public class ChatApiController {
                                                   @RequestParam(defaultValue = "0", name = "cursor") int cursor,
                                                   @RequestParam(defaultValue = "100", name = "limit") int limit,
                                                   HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return chatFacade.loadPreviousChatting(roomId, member, cursor, limit);
@@ -58,7 +59,7 @@ public class ChatApiController {
 
     @PostMapping("/createRoom")
     public ResponseEntity<?> createRoom(@RequestParam String name, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return chatFacade.createRoom(name, member);
@@ -66,23 +67,25 @@ public class ChatApiController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createRoomByOneToOne(@RequestBody MemberRequestDto memberRequestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return chatFacade.createRoom(memberRequestDto, member);
     }
 
     @GetMapping("/message/check")
-    public ResponseEntity<?> messageCheck(@RequestParam String message, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+    public ResponseEntity<?> messageCheck(@RequestParam String message,
+                                          HttpServletRequest request,
+                                          HttpServletResponse response) {
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return chatFacade.messageCheck(message, member, request);
+        return chatFacade.messageCheck(message, member, response);
     }
 
     @PostMapping("/sendImage")
     public ResponseEntity<?> sendImage(@RequestPart List<MultipartFile> file, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return chatFacade.sendImage(file);
@@ -90,11 +93,11 @@ public class ChatApiController {
 
     @DeleteMapping("/message/delete")
     public ResponseEntity<?> deleteMessage(@RequestParam String id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return commonFacade.wrongAccess();
         }
 
@@ -103,7 +106,7 @@ public class ChatApiController {
 
     @PostMapping("/presence/active")
     public ResponseEntity<?> activeRoom(@RequestParam String roomId, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         chatPresenceService.active(roomId, member);
@@ -121,7 +124,7 @@ public class ChatApiController {
 
     @PostMapping("/presence/inactive")
     public ResponseEntity<?> inactiveRoom(@RequestParam String roomId, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         chatPresenceService.inactive(roomId, member);

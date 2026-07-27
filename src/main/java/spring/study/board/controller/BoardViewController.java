@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.entity.Board;
 import spring.study.board.facade.BoardFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.board.service.BoardService;
@@ -23,18 +23,18 @@ import spring.study.board.service.BoardService;
 public class BoardViewController {
     private final BoardService boardService;
     private final BoardFacade boardFacade;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
 
     @GetMapping("/all")
     public String getBoardListPage(Model model,
                                    @RequestParam(required = false, defaultValue = "0") Integer page,
                                    @RequestParam(required = false, defaultValue = "5") Integer size,
                                    HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/all";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -46,7 +46,7 @@ public class BoardViewController {
 
     @GetMapping("/main")
     public String mainPage(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/main";
 
         model.addAttribute("profile", member.getProfile());
@@ -57,7 +57,7 @@ public class BoardViewController {
 
     @GetMapping("/write")
     public String getBoardWritePage(Model model, HttpServletRequest request){
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/write";
 
         model.addAttribute("name", member.getName());
@@ -69,7 +69,7 @@ public class BoardViewController {
 
     @GetMapping("/view")
     public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/view?id=" + boardRequestDto.getId();
 
         if (boardService.existBoard(boardRequestDto.getId())) {

@@ -1,6 +1,6 @@
 package spring.study.regression;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -93,7 +93,7 @@ class BoardFacadeRegressionTest {
 
         when(boardService.findById(100L)).thenReturn(board);
 
-        var response = boardFacade.update(requestDto, other, mock(HttpServletRequest.class));
+        var response = boardFacade.update(requestDto, other, mock(HttpServletResponse.class));
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         verify(moderationService, never()).validate(anyString(), any(), any());

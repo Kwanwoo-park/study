@@ -1,6 +1,7 @@
 package spring.study.comment.facade;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -32,8 +33,8 @@ public class CommentFacade {
     private final ModerationService moderationService;
     private final ReplyService replyService;
 
-    public ResponseEntity<?> saveComment(CommentRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = moderationService.validate(dto.getComments(), member, request);
+    public ResponseEntity<?> saveComment(CommentRequestDto dto, Member member, HttpServletResponse response) {
+        int risk = moderationService.validate(dto.getComments(), member, response);
 
         if (risk != 0) {
             if (risk == -99) {
@@ -69,8 +70,8 @@ public class CommentFacade {
         ));
     }
 
-    public ResponseEntity<?> updateComment(CommentRequestDto dto, Member member, HttpServletRequest request) {
-        int risk = moderationService.validate(dto.getComments(), member, request);
+    public ResponseEntity<?> updateComment(CommentRequestDto dto, Member member, HttpServletResponse response) {
+        int risk = moderationService.validate(dto.getComments(), member, response);
 
         if (risk != 0) {
             if (risk == -99) {

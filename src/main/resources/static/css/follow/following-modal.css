@@ -80,15 +80,29 @@
     font-weight: bold;
 }
 
+.following-modal-profile-info {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.following-modal-email {
+    overflow: hidden;
+    color: #6c757d;
+    font-size: 0.875rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .following-modal-actions {
     margin-left: auto;
     display: flex;
     gap: 6px;
 }
 
-.following-modal-text {
-    margin: 8px 0;
-    white-space: pre-wrap;
+body.dark-mode .following-modal-content .following-modal-email {
+    color: var(--text-secondary);
 }
 
 body.following-modal-open {

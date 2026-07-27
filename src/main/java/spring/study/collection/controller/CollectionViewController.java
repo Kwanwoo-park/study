@@ -8,7 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import spring.study.collection.service.CollectionService;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 
 @RequiredArgsConstructor
@@ -16,12 +16,12 @@ import spring.study.member.entity.Member;
 @RequestMapping("/collection")
 @Slf4j
 public class CollectionViewController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CollectionService collectionService;
 
     @GetMapping("")
     public String collectionMain(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/collection";
 
         model.addAttribute("member", member);

@@ -74,6 +74,22 @@ class RefreshTokenServiceTest {
     }
 
     @Test
+    void revokeAllDeletesEveryTokenAndCacheForMember() {
+        Member blockedMember = member(1L);
+        Member otherMember = member(2L);
+        refreshTokenService.save("blocked-first-jti", blockedMember, Duration.ofDays(14));
+        refreshTokenService.save("blocked-second-jti", blockedMember, Duration.ofDays(14));
+        refreshTokenService.save("other-jti", otherMember, Duration.ofDays(14));
+
+        refreshTokenService.revokeAll(blockedMember.getId());
+
+        assertThat(refreshTokenService.isValid("blocked-first-jti", blockedMember.getId())).isFalse();
+        assertThat(refreshTokenService.isValid("blocked-second-jti", blockedMember.getId())).isFalse();
+        assertThat(refreshTokenService.isValid("other-jti", otherMember.getId())).isTrue();
+        verify(memberTokenCacheService).delete(blockedMember.getId());
+    }
+
+    @Test
     void cleanupKeepsCacheWhenMemberHasANewerValidToken() {
         Member member = member(1L);
         refreshTokenService.save("expired-jti", member, Duration.ofSeconds(-1));

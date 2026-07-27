@@ -152,8 +152,10 @@
                 li.innerHTML = `
                     <div class="following-modal-profile-row">
                         <img src="${escapeHtml(item.following.profile)}" class="following-modal-profile-img" alt="profile">
-                        <a class="following-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.following.email)}">${escapeHtml(item.following.name)}</a>
-                        <span class="following-modal-text">${escapeHtml(item.following.email)}</span>
+                        <div class="following-modal-profile-info">
+                            <a class="following-modal-profile-link" href="/member/search/detail?email=${encodeURIComponent(item.following.email)}">${escapeHtml(item.following.name)}</a>
+                            <span class="following-modal-email">${escapeHtml(item.following.email)}</span>
+                        </div>
                         ${item.following.email !== data.email ? `
                             <div class="following-modal-actions">
                                 <button type="button" id="follow${item.id}" class="btn btn-success" data-action="follow" data-follow-id="${item.id}" data-email="${escapeHtml(item.following.email)}">${data.follow[item.id] ? 'Unfollow' : 'Follow'}</button>

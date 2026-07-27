@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.forbidden.dto.ForbiddenRequestDto;
 import spring.study.forbidden.entity.Status;
 import spring.study.forbidden.facade.ForbiddenFacade;
@@ -17,13 +17,13 @@ import spring.study.member.entity.Member;
 @RestController
 @RequestMapping("/api/forbidden/word")
 public class ForbiddenApiController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final ForbiddenFacade forbiddenFacade;
 
     @GetMapping("/search")
     public ResponseEntity<?> forbiddenWordSearch(@RequestParam String word, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return forbiddenFacade.search(word);
@@ -31,7 +31,7 @@ public class ForbiddenApiController {
 
     @GetMapping("/proposal")
     public ResponseEntity<?> forbiddenProposalWordSearch(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return forbiddenFacade.getStatus(Status.PROPOSAL);
@@ -39,7 +39,7 @@ public class ForbiddenApiController {
 
     @GetMapping("/examine")
     public ResponseEntity<?> forbiddenExamineWordSearch(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return forbiddenFacade.getStatus(Status.EXAMINE);
@@ -47,7 +47,7 @@ public class ForbiddenApiController {
 
     @GetMapping("/approval")
     public ResponseEntity<?> forbiddenApprovalWordSearch(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return forbiddenFacade.getStatus(Status.APPROVAL);
@@ -55,7 +55,7 @@ public class ForbiddenApiController {
 
     @PostMapping("/apply")
     public ResponseEntity<?> forbiddenWordApply(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return forbiddenFacade.wordApply(requestDto);

@@ -7,7 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.forbidden.entity.Status;
 import spring.study.member.entity.Member;
@@ -20,16 +20,16 @@ import spring.study.member.service.MemberService;
 @RequestMapping("/admin")
 public class AdminViewController {
     private final MemberService memberService;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final ForbiddenService forbiddenService;
 
     @GetMapping("/administrator")
     public String admin(HttpServletRequest request){
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/administrator";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -40,11 +40,11 @@ public class AdminViewController {
     public String member_check(Model model, HttpServletRequest request,
                                @RequestParam(required = false, defaultValue = "0") Integer page,
                                @RequestParam(required = false, defaultValue = "5") Integer size){
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/memberCheck";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -55,11 +55,11 @@ public class AdminViewController {
 
     @GetMapping("/member/detail")
     public String memberDetail(Model model, MemberRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/member/detail";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -70,11 +70,11 @@ public class AdminViewController {
 
     @GetMapping("/forbidden/word/list")
     public String forbiddenWordList(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/forbidden/word/list";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -85,11 +85,11 @@ public class AdminViewController {
 
     @GetMapping("/forbidden/word/apply")
     public String forbiddenWordAppplyList(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/forbidden/word/apply";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -100,11 +100,11 @@ public class AdminViewController {
 
     @GetMapping("/report")
     public String reportList(Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -116,11 +116,11 @@ public class AdminViewController {
 
     @GetMapping("/report/process")
     public String reportProcessList(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report/process";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 
@@ -129,11 +129,11 @@ public class AdminViewController {
 
     @GetMapping("/report/history")
     public String reportHistory(HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report/history";
 
         if (member.getRole() != Role.ADMIN) {
-            sessionManager.logout(request);
+            jwtManager.logout(request);
             return "redirect:/member/login?error=true&exception=Wrong Accept";
         }
 

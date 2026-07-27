@@ -13,13 +13,13 @@ class BoardAccessRegressionTest {
     private static final Path BOARD_VIEW_CONTROLLER = Path.of("src/main/java/spring/study/board/controller/BoardViewController.java");
 
     @Test
-    void boardAllShouldUseSessionRoleCheckInsteadOfPreAuthorize() throws IOException {
+    void boardAllShouldUseJwtRoleCheckInsteadOfPreAuthorize() throws IOException {
         String controller = Files.readString(BOARD_VIEW_CONTROLLER);
 
         assertFalse(controller.contains("@PreAuthorize"),
-                "board/all should not depend on Spring Security method auth because admin pages use SessionManager role checks");
+                "board/all should not depend on Spring Security method auth because admin pages use JwtManager role checks");
         assertTrue(controller.contains("member.getRole() != Role.ADMIN"),
-                "board/all should reject non-admin session members");
+                "board/all should reject non-admin authenticated members");
         assertTrue(controller.contains("redirect:/member/login?error=true&exception=Wrong Accept"),
                 "board/all should match the existing admin-page rejection flow");
     }

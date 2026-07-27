@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.diary.dto.DiaryRequestDto;
 import spring.study.diary.facade.DiaryFacade;
 import spring.study.member.entity.Member;
@@ -28,12 +28,12 @@ import java.util.List;
 @RequestMapping("/api/diary")
 public class DiaryApiController {
     private final DiaryFacade diaryFacade;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
 
     @GetMapping("/list")
     public ResponseEntity<?> list(@RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return diaryFacade.load(member, page, 100);
@@ -41,7 +41,7 @@ public class DiaryApiController {
 
     @GetMapping("/search")
     public ResponseEntity<?> search(@RequestParam String title, @RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return diaryFacade.search(member, title, page, 100);
@@ -49,7 +49,7 @@ public class DiaryApiController {
 
     @PostMapping("/image/upload")
     public ResponseEntity<?> uploadImages(@RequestPart("file") List<MultipartFile> files, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return diaryFacade.uploadImages(files);
@@ -57,7 +57,7 @@ public class DiaryApiController {
 
     @PostMapping("/write")
     public ResponseEntity<?> create(@Valid @RequestBody DiaryRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return diaryFacade.create(requestDto, member);
@@ -65,7 +65,7 @@ public class DiaryApiController {
 
     @PatchMapping("/update")
     public ResponseEntity<?> update(@Valid @RequestBody DiaryRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return diaryFacade.update(requestDto, member);
@@ -73,7 +73,7 @@ public class DiaryApiController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return diaryFacade.delete(id, member);

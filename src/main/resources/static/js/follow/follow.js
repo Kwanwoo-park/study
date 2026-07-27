@@ -88,21 +88,23 @@ function renderFollow(data, mode, reset) {
     items.forEach((item, index) => {
         const profile = mode === 'follower' ? item.follower : item.following;
         const li = document.createElement('li');
-        li.className = 'list-group-item';
+        li.className = 'list-group-item follow-list-item';
         li.innerHTML = `
-            <span>
-                <span>${startIndex + index + 1}</span>
-                <img src="${escapeHtml(profile.profile)}" width="30vw" height="30vw" style="border-radius: 90px" alt="profile">
-                <a href="/member/search/detail?email=${encodeURIComponent(profile.email)}">
-                    <span>${escapeHtml(profile.name)}</span>
-                </a>
-                <span>${escapeHtml(profile.email)}</span>
+            <div class="follow-list-row">
+                <span class="follow-list-index">${startIndex + index + 1}</span>
+                <img src="${escapeHtml(profile.profile)}" class="follow-list-profile-img" alt="profile">
+                <div class="follow-list-profile-info">
+                    <a class="follow-list-name" href="/member/search/detail?email=${encodeURIComponent(profile.email)}">
+                        ${escapeHtml(profile.name)}
+                    </a>
+                    <span class="follow-list-email">${escapeHtml(profile.email)}</span>
+                </div>
                 ${profile.email !== data.email ? `
-                    <div class="float-right">
+                    <div class="follow-list-actions">
                         <button type="button" id="follow${item.id}" class="btn btn-success" onclick="fnFollow(${item.id}, '${escapeJsString(profile.email)}')">${data.follow[item.id] ? 'Unfollow' : 'Follow'}</button>
                     </div>
                 ` : ''}
-            </span>
+            </div>
         `;
         followList.append(li);
     });

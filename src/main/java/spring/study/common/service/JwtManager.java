@@ -6,11 +6,10 @@ import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
 
 /**
- * Compatibility facade for existing controllers. Authentication is now sourced
- * from the JWT-populated SecurityContext; no HTTP session is created or read.
+ * Provides the authenticated member from the JWT-populated SecurityContext.
  */
 @Service
-public class SessionManager {
+public class JwtManager {
     public Member getLoginMember(HttpServletRequest request) {
         Object principal = SecurityContextHolder.getContext().getAuthentication() == null
                 ? null

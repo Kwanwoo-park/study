@@ -7,7 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.facade.ChatViewFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.chat.service.ChatRoomMemberService;
@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/chat")
 public class ChatViewController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
     private final ChatViewFacade viewFacade;
@@ -29,7 +29,7 @@ public class ChatViewController {
     @GetMapping("/chatList")
     public String chatList(Model model,
                            HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/chat/chatList";
 
         model.addAttribute("profile", member.getProfile());
@@ -52,7 +52,7 @@ public class ChatViewController {
 
     @GetMapping("/chatRoom")
     public String chatRoom(@RequestParam String roomId, Model model, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/chat/chatRoom?roomId=" + roomId;
 
         ChatRoom room = roomService.find(roomId);

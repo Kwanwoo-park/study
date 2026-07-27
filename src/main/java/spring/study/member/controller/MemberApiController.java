@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
@@ -23,7 +23,7 @@ import java.util.Map;
 @RequestMapping("/api/member")
 @Slf4j
 public class MemberApiController {
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final MemberFacade memberFacade;
     private final MemberService memberService;
@@ -36,7 +36,7 @@ public class MemberApiController {
 
     @GetMapping("/logout")
     public ResponseEntity<?> logoutAction(HttpServletRequest request, HttpServletResponse response) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         jwtAuthenticationService.logout(request, response);
 
         return ResponseEntity.ok(Map.of(
@@ -56,7 +56,7 @@ public class MemberApiController {
 
     @PatchMapping("/detail/action")
     public ResponseEntity<?> detailAction(@RequestPart MultipartFile file, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return memberFacade.changeProfileImage(file, member, request);
@@ -76,7 +76,7 @@ public class MemberApiController {
     public ResponseEntity<?> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto,
                                                   HttpServletRequest request,
                                                   HttpServletResponse response) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             member = memberService.findMember(memberUpdateDto.getEmail());
         } else {
@@ -94,7 +94,7 @@ public class MemberApiController {
     @PatchMapping("/visibility")
     public ResponseEntity<?> updateVisibility(@RequestBody MemberRequestDto memberUpdateDto,
                                               HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return memberFacade.updateVisibility(memberUpdateDto.getVisibility(), member);
@@ -102,7 +102,7 @@ public class MemberApiController {
 
     @GetMapping("/search")
     public ResponseEntity<?> searchMember(@RequestParam() String name, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return memberFacade.search(name, member);
@@ -110,7 +110,7 @@ public class MemberApiController {
 
     @DeleteMapping("/withdrawal")
     public ResponseEntity<?> withdrawalAction(HttpServletRequest request, HttpServletResponse response) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         ResponseEntity<?> result = memberFacade.deleteMember(member, request);

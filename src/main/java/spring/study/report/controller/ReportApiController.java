@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.common.facade.CommonFacade;
-import spring.study.common.service.SessionManager;
+import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 import spring.study.report.dto.ReportRequestDto;
 import spring.study.report.facade.ReportFacade;
@@ -16,12 +16,12 @@ import spring.study.report.facade.ReportFacade;
 @RequestMapping("/api/report")
 public class ReportApiController {
     private final ReportFacade reportFacade;
-    private final SessionManager sessionManager;
+    private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody ReportRequestDto requestDto, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return reportFacade.create(requestDto, member);
@@ -33,7 +33,7 @@ public class ReportApiController {
             @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request
     ) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return reportFacade.findByReporter(member, page, size);
@@ -41,7 +41,7 @@ public class ReportApiController {
 
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<?> cancel(@PathVariable Long id, HttpServletRequest request) {
-        Member member = sessionManager.getLoginMember(request);
+        Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return reportFacade.cancel(id, member);
