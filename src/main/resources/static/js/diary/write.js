@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const todoAddButton = document.getElementById('todoAddButton');
     const todoEmptyMessage = document.getElementById('todoEmptyMessage');
     const submitButton = form.querySelector('button[type="submit"]');
+    const deleteButton = document.getElementById('diaryDeleteButton');
     let selectedFiles = [];
 
     function updateImageCount() {
@@ -159,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const diaryId = form.dataset.diaryId;
         submitButton.disabled = true;
+        if (deleteButton) deleteButton.disabled = true;
 
         try {
             const uploadedImageUrls = await uploadImages();
@@ -191,8 +193,35 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             showMessage(error.message);
             submitButton.disabled = false;
+            if (deleteButton) deleteButton.disabled = false;
         }
     });
+
+    if (deleteButton) {
+        deleteButton.addEventListener('click', async function() {
+            const diaryId = form.dataset.diaryId;
+            if (!diaryId || !confirm('이 일기를 삭제하시겠습니까?')) return;
+
+            submitButton.disabled = true;
+            deleteButton.disabled = true;
+
+            try {
+                const response = await fetch(`/api/diary/${encodeURIComponent(diaryId)}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                const body = await response.json();
+                if (!response.ok) {
+                    throw new Error(body.message || '일기를 삭제하지 못했습니다');
+                }
+                window.location.href = '/diary/list';
+            } catch (error) {
+                showMessage(error.message);
+                submitButton.disabled = false;
+                deleteButton.disabled = false;
+            }
+        });
+    }
 
     updateImageCount();
     updateTodoEmptyMessage();
