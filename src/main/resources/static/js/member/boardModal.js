@@ -203,10 +203,20 @@
                     </div>
                 </div>
             `;
+
+            const modalMainImage = document.getElementById('modalMainImage');
+            if (hasMultipleImages && modalMainImage && typeof global.initImageSwipe === 'function') {
+                global.initImageSwipe(modalMainImage, {
+                    canPrevious: () => currentImageIndex > 0,
+                    canNext: () => currentImageIndex < imageList.length - 1,
+                    onPrevious: () => modalImageLeft(),
+                    onNext: () => modalImageRight(),
+                });
+            }
         }
 
         function modalImageLeft(event) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
 
             if (!currentBoardData || !currentBoardData.img || currentBoardData.img.length === 0) return;
             if (currentImageIndex === 0) return;
@@ -216,7 +226,7 @@
         }
 
         function modalImageRight(event) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
 
             if (!currentBoardData || !currentBoardData.img || currentBoardData.img.length === 0) return;
             if (currentImageIndex >= currentBoardData.img.length - 1) return;

@@ -2,12 +2,14 @@ package spring.study.member.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
+import spring.study.member.event.MemberChangedEvent;
 import spring.study.member.repository.MemberRepository;
 import spring.study.member.repository.UserServiceRepository;
 import spring.study.member.entity.Role;
@@ -17,6 +19,7 @@ import spring.study.member.entity.Role;
 public class UserService implements UserServiceRepository {
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     public String replacePhoneNumber(String phone) {
         phone = phone.replaceAll("-", "");
@@ -54,6 +57,7 @@ public class UserService implements UserServiceRepository {
         ));
 
         member.changePwd(bCryptPasswordEncoder.encode(pwd));
+        eventPublisher.publishEvent(new MemberChangedEvent(member.getId()));
 
         return member.getId();
     }

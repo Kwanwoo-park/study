@@ -25,37 +25,19 @@
         <div class="profileNameRow">
           <label class="form-label profileName" th:text="${member.name}"></label>
           <div class="profileActions">
+            <button type="button" class="btn btn-primary is-hidden" id="save" onclick="fnSave()">사진 변경</button>
             <button type="button" class="btn btn-outline-secondary profileMenuToggle" aria-label="메뉴 열기" aria-expanded="false">☰</button>
             <div class="profileActionMenu">
-              <div class="themeMenu" role="group" aria-label="화면 테마 선택">
-                <span class="themeMenuLabel">화면 테마</span>
-                <div class="themeMenuChoices">
-                  <button type="button" class="themeChoice" data-theme="light" aria-pressed="false">라이트</button>
-                  <button type="button" class="themeChoice" data-theme="dark" aria-pressed="false">다크</button>
-                </div>
-              </div>
               <button type="button" class="btn btn-primary" onclick="location.href='/diary/list'">내 일기</button>
               <button type="button" class="btn btn-primary" onclick="javascript:location.href='/account'">계좌 조회</button>
               <button type="button" class="btn btn-primary" onclick="javascript:location.href='/collection'">Secret</button>
               <button type="button" class="btn btn-primary" onclick="fnForbidden()">금칙어 확인</button>
-              <button th:unless="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/report/my'">내 신고 내역</button>
-              <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/administrator'">관리자 페이지</button>
-              <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
-              <button type="button" class="btn btn-danger" onclick="javascript:location.href='/member/withdrawal'">회원 탈퇴</button>
-              <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/updatePassword'">Password Update</button>
-              <div class="form-group">
-                <label for="memberVisibility">공개 설정</label>
-                <select id="memberVisibility" class="form-control">
-                  <option value="PRIVATE" th:selected="${member.visibility.name() == 'PRIVATE'}">비공개</option>
-                  <option value="PUBLIC" th:selected="${member.visibility.name() == 'PUBLIC'}">공개</option>
-                </select>
-                <button type="button" class="btn btn-primary" onclick="fnSaveVisibility()">공개 설정 저장</button>
-              </div>
+              <button th:unless="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="fnMyReports()">내 신고 내역</button>
+              <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="fnReportApply()">신고 접수 내역</button>
             </div>
           </div>
         </div>
         <input type="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" id="upload">
-        <button type="button" class="btn btn-primary is-hidden" id="save" onclick="fnSave()">사진 변경</button>
         <div class="profileStats">
           <label class="form-label">Posts: </label>
           <label class="form-label" th:text="${board_count}"></label>
@@ -81,6 +63,7 @@
 <script src="/js/follow/followingModal.js"></script>
 <script src="/js/comment/modal.js"></script>
 <script src="/js/favorite/modal.js"></script>
+<script src="/js/common/image-swipe.js"></script>
 <script src="/js/member/boardModal.js"></script>
 <script src="/js/member/detail.js"></script>
 <script src="/js/common/common.js"></script>

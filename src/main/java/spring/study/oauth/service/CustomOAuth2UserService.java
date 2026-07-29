@@ -2,6 +2,7 @@ package spring.study.oauth.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -12,6 +13,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
+import spring.study.member.event.MemberChangedEvent;
 import spring.study.member.repository.MemberRepository;
 import spring.study.oauth.dto.OAuthAttributes;
 
@@ -23,6 +25,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -46,6 +49,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             ));
 
             member.changeLastLoginTime(LocalDateTime.now());
+            eventPublisher.publishEvent(new MemberChangedEvent(member.getId()));
             return member;
         }
         else

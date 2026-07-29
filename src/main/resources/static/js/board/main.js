@@ -252,6 +252,7 @@ function fnDraw(data) {
         main.append(info)
 
         container.appendChild(main);
+        enableBoardImageSwipe(board.id, board.img);
     });
 }
 

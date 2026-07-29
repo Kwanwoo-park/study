@@ -2,6 +2,7 @@ package spring.study.report.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.member.entity.Member;
+import spring.study.member.event.MemberChangedEvent;
 import spring.study.member.repository.MemberRepository;
 import spring.study.member.sanction.entity.MemberSanction;
 import spring.study.member.sanction.repository.MemberSanctionRepository;
@@ -43,6 +45,7 @@ public class ReportService {
     private final ChatMessageRepository chatMessageRepository;
     private final MemberSanctionRepository memberSanctionRepository;
     private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ReportResponseDto create(ReportRequestDto requestDto, Member reporter) {
@@ -161,6 +164,7 @@ public class ReportService {
             case PERMANENT_BAN -> target.ban();
             default -> throw new IllegalStateException("지원하지 않는 회원 제재입니다");
         }
+        eventPublisher.publishEvent(new MemberChangedEvent(target.getId()));
 
         memberSanctionRepository.save(MemberSanction.builder()
                 .member(target)

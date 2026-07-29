@@ -59,6 +59,23 @@ function updateBoardImageIndicator(listId, currentIndex, totalCount) {
     indicator.innerText = `${currentIndex + 1} / ${totalCount}`;
 }
 
+function enableBoardImageSwipe(listId, imageArr) {
+    const mainImage = document.getElementById('main_img' + listId);
+    const imgId = document.getElementById('img' + listId);
+
+    if (!mainImage || !imgId || !Array.isArray(imageArr) || imageArr.length <= 1
+            || typeof initImageSwipe !== 'function') {
+        return;
+    }
+
+    initImageSwipe(mainImage, {
+        canPrevious: () => Number(imgId.value) > 0,
+        canNext: () => Number(imgId.value) < imageArr.length - 1,
+        onPrevious: () => fnLeft(listId, imageArr),
+        onNext: () => fnRight(listId, imageArr),
+    });
+}
+
 function fnLike(listId) {
     const like = document.getElementById('like' + listId);
     const likeCnt = document.getElementById('like_cnt' + listId);

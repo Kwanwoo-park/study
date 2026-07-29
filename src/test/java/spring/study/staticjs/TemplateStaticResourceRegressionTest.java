@@ -17,6 +17,7 @@ class TemplateStaticResourceRegressionTest {
     private static final Path BOARD_MAIN_CSS = Path.of("src/main/resources/static/css/board/main.css");
     private static final Path BOARD_VIEW_CSS = Path.of("src/main/resources/static/css/board/view.css");
     private static final Path MEMBER_DETAIL_CSS = Path.of("src/main/resources/static/css/member/member-detail.css");
+    private static final Path MEMBER_DETAIL_TEMPLATE = Path.of("src/main/resources/templates/member/detail.html");
     private static final Path COMMON_CSS = Path.of("src/main/resources/static/css/common/common.css");
     private static final Path COMMON_ACTIONS_JS = Path.of("src/main/resources/static/js/board/common-actions.js");
     private static final Path BOARD_MAIN_JS = Path.of("src/main/resources/static/js/board/main.js");
@@ -26,6 +27,7 @@ class TemplateStaticResourceRegressionTest {
     private static final Path CHAT_JS = Path.of("src/main/resources/static/js/chat/chat.js");
     private static final Path CHAT_CSS = Path.of("src/main/resources/static/css/chat/chat.css");
     private static final Path COMMON_FRAGMENT = Path.of("src/main/resources/templates/fragments/common.html");
+    private static final Path SETTINGS_ICON = Path.of("src/main/resources/static/img/ic_settings.png");
     private static final Path DIARY_LIST_JS = Path.of("src/main/resources/static/js/diary/list.js");
 
     private static final List<Path> THEME_ONLY_TEMPLATES = List.of(
@@ -182,18 +184,59 @@ class TemplateStaticResourceRegressionTest {
     }
 
     @Test
-    void reportNavigationShouldMoveAdminsToReportApplyPage() throws IOException {
+    void reportNavigationShouldBeInsideMemberDetailMenu() throws IOException {
         String commonFragment = Files.readString(COMMON_FRAGMENT).replace("\r\n", "\n");
+        String memberDetail = Files.readString(MEMBER_DETAIL_TEMPLATE).replace("\r\n", "\n");
         String commonJs = Files.readString(COMMON_JS).replace("\r\n", "\n");
 
-        assertTrue(commonFragment.contains("onclick=\"fnMyReports()\"\n            sec:authorize=\"!hasAuthority('ROLE_ADMIN')\""),
-                "non-admin report navigation should keep linking to personal report history");
-        assertTrue(commonFragment.contains("onclick=\"fnReportApply()\"\n            sec:authorize=\"hasAuthority('ROLE_ADMIN')\""),
-                "admin report navigation should use the report apply action");
+        assertFalse(commonFragment.contains("fnMyReports()"),
+                "personal report history should not remain in the bottom navigation");
+        assertFalse(commonFragment.contains("fnReportApply()"),
+                "admin report history should not remain in the bottom navigation");
+        assertTrue(memberDetail.contains("onclick=\"fnMyReports()\">내 신고 내역</button>"),
+                "non-admin report history should be available in the member detail menu");
+        assertTrue(memberDetail.contains("onclick=\"fnReportApply()\">신고 접수 내역</button>"),
+                "admin report history should be available in the member detail menu");
         assertTrue(commonJs.contains("function fnReportApply() {\n    location.replace(`/admin/report`);\n}"),
-                "admin report navigation should move directly to the report apply page");
+                "admin report menu should move directly to the report apply page");
         assertFalse(commonFragment.contains("onclick=\"fnReportProcess()\""),
                 "admin bottom navigation should not move directly to report processing");
+    }
+
+    @Test
+    void personalSettingsShouldBeInBottomNavigationMenu() throws IOException {
+        String commonFragment = Files.readString(COMMON_FRAGMENT);
+        String memberDetail = Files.readString(MEMBER_DETAIL_TEMPLATE);
+
+        assertTrue(Files.exists(SETTINGS_ICON),
+                "bottom navigation should have a project-local settings icon");
+        assertTrue(commonFragment.contains("'ic_settings.png'"),
+                "bottom navigation should render the settings icon");
+        assertTrue(commonFragment.contains("class=\"nav-settings-menu\""),
+                "bottom navigation should contain the personal settings menu");
+        assertTrue(commonFragment.contains("location.href='/admin/administrator'"),
+                "admin settings should be available from bottom navigation");
+        assertTrue(commonFragment.contains("location.href='/member/updatePassword'"),
+                "password settings should be available from bottom navigation");
+        assertTrue(commonFragment.contains("fnSetMemberVisibility('PUBLIC')"),
+                "public profile setting should be available from bottom navigation");
+        assertTrue(commonFragment.contains("fnSetMemberVisibility('PRIVATE')"),
+                "private profile setting should be available from bottom navigation");
+        assertTrue(commonFragment.contains("fnNavigationLogout()"),
+                "logout should be available from bottom navigation");
+        assertTrue(commonFragment.contains("location.href='/member/withdrawal'"),
+                "withdrawal should be available from bottom navigation");
+
+        assertFalse(memberDetail.contains("location.href='/admin/administrator'"),
+                "admin settings should not remain in the member detail hamburger menu");
+        assertFalse(memberDetail.contains("location.href='/member/updatePassword'"),
+                "password settings should not remain in the member detail hamburger menu");
+        assertFalse(memberDetail.contains("fnSaveVisibility()"),
+                "profile visibility settings should not remain in the member detail hamburger menu");
+        assertFalse(memberDetail.contains("onclick=\"fnLogout()\""),
+                "logout should not remain in the member detail hamburger menu");
+        assertFalse(memberDetail.contains("location.href='/member/withdrawal'"),
+                "withdrawal should not remain in the member detail hamburger menu");
     }
 
     @Test

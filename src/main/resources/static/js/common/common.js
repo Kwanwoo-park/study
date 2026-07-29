@@ -7,6 +7,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     fnInitThemeSelector();
+    fnInitNavigationSettings();
     fnUpdateUnreadNotificationDot();
 
     const eventSource = new EventSource('/api/notification/stream');
@@ -72,6 +73,50 @@ document.addEventListener('DOMContentLoaded', function() {
         eventSource.close();
     });
 });
+
+function fnInitNavigationSettings() {
+    const settings = document.querySelector('.nav-settings');
+    const toggle = document.getElementById('navSettingsToggle');
+    const menu = document.getElementById('navSettingsMenu');
+
+    if (!settings || !toggle || !menu) return;
+
+    toggle.addEventListener('click', function(event) {
+        event.stopPropagation();
+        const isOpen = settings.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+        toggle.setAttribute('aria-label', isOpen ? '개인 설정 닫기' : '개인 설정 열기');
+        menu.setAttribute('aria-hidden', String(!isOpen));
+    });
+
+    menu.addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('click', function() {
+        fnCloseNavigationSettings();
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            fnCloseNavigationSettings();
+            toggle.focus();
+        }
+    });
+}
+
+function fnCloseNavigationSettings() {
+    const settings = document.querySelector('.nav-settings');
+    const toggle = document.getElementById('navSettingsToggle');
+    const menu = document.getElementById('navSettingsMenu');
+
+    if (!settings || !toggle || !menu) return;
+
+    settings.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', '개인 설정 열기');
+    menu.setAttribute('aria-hidden', 'true');
+}
 
 function fnInitThemeSelector() {
     const savedTheme = fnGetStoredTheme() === 'dark' ? 'dark' : 'light';
@@ -193,6 +238,52 @@ function fnChatting() {
 
 function fnNotification() {
     location.replace(`/notification/list`);
+}
+
+function fnSetMemberVisibility(visibility) {
+    fetch('/api/member/visibility', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({ visibility: visibility }),
+        credentials: 'include',
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        if (json.result < 0) {
+            alert(json.message || '공개 설정 저장에 실패했습니다.');
+            return;
+        }
+
+        alert(visibility === 'PRIVATE' ? '프로필이 비공개로 설정되었습니다.' : '프로필이 공개로 설정되었습니다.');
+        fnCloseNavigationSettings();
+    })
+    .catch(() => {
+        alert('공개 설정 저장에 실패했습니다.');
+    });
+}
+
+function fnNavigationLogout() {
+    fetch('/api/member/logout', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+        },
+        credentials: 'include',
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        if (json.result > 0) {
+            location.replace('/member/login');
+            return;
+        }
+
+        alert('다시 시도하여주십시오');
+    })
+    .catch(() => {
+        alert('로그아웃에 실패했습니다.');
+    });
 }
 
 function fnMyReports() {

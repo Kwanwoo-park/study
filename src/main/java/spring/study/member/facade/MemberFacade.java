@@ -29,7 +29,6 @@ import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.jwt.service.JwtAuthenticationService;
-import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
@@ -62,7 +61,6 @@ public class MemberFacade {
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationService jwtAuthenticationService;
-    private final MemberTokenCacheService memberTokenCacheService;
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
         int check = validateLogin(dto);
@@ -102,7 +100,7 @@ public class MemberFacade {
             ));
         }
 
-        memberService.updateLastLoginTime(member.getId());
+        member = memberService.updateLastLoginTime(member.getId());
 
         jwtAuthenticationService.login(member, response);
 
@@ -308,7 +306,6 @@ public class MemberFacade {
         }
 
         long memberId = memberService.updateVisibility(member.getId(), visibility);
-        memberTokenCacheService.delete(memberId);
 
         return ResponseEntity.ok(Map.of(
                 "result", memberId,

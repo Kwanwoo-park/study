@@ -15,9 +15,11 @@ import spring.study.member.repository.MemberRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,6 +80,31 @@ class MemberTokenCacheServiceTest {
                 objectMapper.writeValueAsString(CachedMemberDto.from(member)),
                 ttl
         );
+    }
+
+    @Test
+    void refreshesExistingCacheWithChangedMemberAndPreservesRemainingTtl() throws Exception {
+        Member changedMember = member();
+        changedMember.changeProfile("changed-profile.png");
+        when(redisTemplate.getExpire("auth:member:1", TimeUnit.MILLISECONDS)).thenReturn(120_000L);
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(changedMember));
+
+        memberTokenCacheService.refreshIfPresent(1L);
+
+        verify(valueOperations).set(
+                "auth:member:1",
+                objectMapper.writeValueAsString(CachedMemberDto.from(changedMember)),
+                Duration.ofMinutes(2)
+        );
+    }
+
+    @Test
+    void refreshDoesNothingWhenMemberIsNotCurrentlyCached() {
+        when(redisTemplate.getExpire("auth:member:1", TimeUnit.MILLISECONDS)).thenReturn(-2L);
+
+        memberTokenCacheService.refreshIfPresent(1L);
+
+        verify(memberRepository, never()).findById(1L);
     }
 
     private Member member() {

@@ -175,6 +175,15 @@ function fnLoad(input) {
         size = maxSize;
     }
 
+    if (size > 1 && typeof initImageSwipe === 'function') {
+        initImageSwipe(img, {
+            canPrevious: () => fidx > 0,
+            canNext: () => fidx < size - 1,
+            onPrevious: fnLeft,
+            onNext: fnRight,
+        });
+    }
+
     if (size > 1) {
         left = document.createElement('button');
         left.type = "button";

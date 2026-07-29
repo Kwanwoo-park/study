@@ -11,6 +11,7 @@ import spring.study.member.repository.MemberRepository;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +51,19 @@ public class MemberTokenCacheService {
             save(member, ttl);
             return CachedMemberDto.from(member).toMember();
         });
+    }
+
+    public void refreshIfPresent(Long memberId) {
+        String cacheKey = key(memberId);
+        Long remainingTtlMillis = redisTemplate.getExpire(cacheKey, TimeUnit.MILLISECONDS);
+        if (remainingTtlMillis == null || remainingTtlMillis <= 0) {
+            return;
+        }
+
+        memberRepository.findById(memberId).ifPresentOrElse(
+                member -> save(member, Duration.ofMillis(remainingTtlMillis)),
+                () -> redisTemplate.delete(cacheKey)
+        );
     }
 
     public void delete(Long memberId) {

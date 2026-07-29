@@ -11,22 +11,44 @@
       <img th:src="@{/img/} + 'ic_favorite_border.png'" class="nav-icon">
       <span id="notification-unread-count" class="notification-count-badge" aria-hidden="true"></span>
     </div>
-    <button type="button"
-            class="report-nav-btn"
-            onclick="fnMyReports()"
-            sec:authorize="!hasAuthority('ROLE_ADMIN')"
-            aria-label="내 신고 내역"
-            title="내 신고 내역">
-      <span aria-hidden="true">!</span>
-    </button>
-    <button type="button"
-            class="report-nav-btn"
-            onclick="fnReportApply()"
-            sec:authorize="hasAuthority('ROLE_ADMIN')"
-            aria-label="신고 접수"
-            title="신고 접수">
-      <span aria-hidden="true">!</span>
-    </button>
+    <div class="nav-settings">
+      <button type="button"
+              id="navSettingsToggle"
+              class="nav-settings-toggle"
+              aria-label="개인 설정 열기"
+              aria-expanded="false"
+              aria-controls="navSettingsMenu">
+        <img th:src="@{/img/} + 'ic_settings.png'" class="nav-icon" alt="">
+      </button>
+      <div id="navSettingsMenu" class="nav-settings-menu" aria-hidden="true">
+        <span class="nav-settings-title">개인 설정</span>
+        <button type="button"
+                class="nav-settings-item"
+                sec:authorize="hasAuthority('ROLE_ADMIN')"
+                onclick="location.href='/admin/administrator'">관리자 페이지</button>
+        <button type="button"
+                class="nav-settings-item"
+                onclick="location.href='/member/updatePassword'">비밀번호 변경</button>
+        <div class="nav-settings-section">
+          <span class="nav-settings-label">프로필 공개 설정</span>
+          <div class="nav-settings-choices">
+            <button type="button" onclick="fnSetMemberVisibility('PUBLIC')">공개</button>
+            <button type="button" onclick="fnSetMemberVisibility('PRIVATE')">비공개</button>
+          </div>
+        </div>
+        <div class="nav-settings-section">
+          <span class="nav-settings-label">화면 테마</span>
+          <div class="nav-settings-choices">
+            <button type="button" class="themeChoice" data-theme="light" aria-pressed="false">라이트</button>
+            <button type="button" class="themeChoice" data-theme="dark" aria-pressed="false">다크</button>
+          </div>
+        </div>
+        <button type="button" class="nav-settings-item" onclick="fnNavigationLogout()">로그아웃</button>
+        <button type="button"
+                class="nav-settings-item nav-settings-danger"
+                onclick="location.href='/member/withdrawal'">회원 탈퇴</button>
+      </div>
+    </div>
     <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
   </nav>
 </th:block>

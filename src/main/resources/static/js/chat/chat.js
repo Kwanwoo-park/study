@@ -478,6 +478,14 @@ function initChatImageModal() {
     closeButton.addEventListener('click', closeChatImageModal);
     previousButton.addEventListener('click', showPreviousChatImage);
     nextButton.addEventListener('click', showNextChatImage);
+    if (typeof initImageSwipe === 'function') {
+        initImageSwipe(image, {
+            canPrevious: () => chatImageModalIndex > 0,
+            canNext: () => chatImageModalIndex < chatImageModalSources.length - 1,
+            onPrevious: showPreviousChatImage,
+            onNext: showNextChatImage,
+        });
+    }
     modal.addEventListener('click', (event) => {
         if (event.target === modal) {
             closeChatImageModal();

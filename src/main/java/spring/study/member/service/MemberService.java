@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,6 +17,8 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.event.MemberChangedEvent;
+import spring.study.member.event.MemberDeletedEvent;
 import spring.study.common.entity.CommonVisibility;
 import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.repository.MemberRepository;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
 public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Long save(MemberRequestDto memberSaveDto) {
@@ -93,16 +97,22 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findByRegisterTimeBetween(start, end);
     }
 
-    public void deleteById(Long id) { memberRepository.deleteById(id); }
+    @Transactional
+    public void deleteById(Long id) {
+        memberRepository.deleteById(id);
+        eventPublisher.publishEvent(new MemberDeletedEvent(id));
+    }
 
     @Transactional
     public void activate(Long id) {
         memberRepository.findById(id).orElseThrow().activate();
+        publishMemberChanged(id);
     }
 
     @Transactional
     public void ban(Long id) {
         memberRepository.findById(id).orElseThrow().ban();
+        publishMemberChanged(id);
     }
 
     @Transactional
@@ -112,15 +122,18 @@ public class MemberService implements UserDetailsService {
         ));
 
         member.changeProfile(profile);
+        publishMemberChanged(id);
     }
 
     @Transactional
-    public void updateLastLoginTime(Long id) {
+    public Member updateLastLoginTime(Long id) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));
 
         member.changeLastLoginTime(LocalDateTime.now());
+        publishMemberChanged(id);
+        return member;
     }
 
     @Transactional
@@ -137,6 +150,7 @@ public class MemberService implements UserDetailsService {
         phone = phone.replaceAll(regEx, "$1-$2-$3");
 
         member.changePhoneAndBirth(phone, birth);
+        publishMemberChanged(id);
 
         return member.getId().intValue();
     }
@@ -148,6 +162,7 @@ public class MemberService implements UserDetailsService {
         ));
 
         member.changeRole(role);
+        publishMemberChanged(id);
 
         return member.getId().intValue();
     }
@@ -159,7 +174,12 @@ public class MemberService implements UserDetailsService {
         ));
 
         member.changeVisibility(visibility);
+        publishMemberChanged(id);
         return member.getId();
+    }
+
+    private void publishMemberChanged(Long memberId) {
+        eventPublisher.publishEvent(new MemberChangedEvent(memberId));
     }
 
     @Override
