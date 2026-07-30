@@ -6,15 +6,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.dto.ChatMessageResponseDto;
+import spring.study.chat.dto.ChatMessageEventDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageImg;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.ChatRoomMember;
 import spring.study.chat.entity.MessageType;
+import spring.study.chat.entity.ChatMessageDeleteScope;
+import spring.study.chat.entity.ChatMessageStatus;
 import spring.study.chat.service.ChatMessageImgService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
@@ -22,6 +27,7 @@ import spring.study.chat.service.ChatRoomService;
 import spring.study.common.service.ModerationService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 
 import java.util.*;
@@ -37,6 +43,7 @@ public class ChatFacade {
     private final MemberService memberService;
     private final ModerationService moderationService;
     private final ImageS3Service imageS3Service;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ResponseEntity<?> loadChatting(String roomId, Member member, int cursor, int limit) {
         ChatRoom room = roomService.find(roomId);
@@ -48,7 +55,7 @@ public class ChatFacade {
             ));
         }
 
-        List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room);
+        List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room, member);
         ChatRoomMember roomMember = roomMemberService.find(member, room);
         String lastReadAt = roomMember == null || roomMember.getLastReadAt() == null
                 ? ""
@@ -63,7 +70,10 @@ public class ChatFacade {
                 "lastReadAt", lastReadAt,
                 "nextCursor", nextCursor,
                 "message", list.stream().sorted(Comparator.comparing(ChatMessageResponseDto::getRegisterTime).reversed()).toList(),
-                "img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)).toList())
+                "img", messageImgService.findMessageImg(list.stream()
+                        .filter(item -> item.getType().equals(MessageType.IMAGE))
+                        .filter(item -> item.getStatus() != ChatMessageStatus.DELETED_FOR_ALL)
+                        .toList())
         ));
     }
 
@@ -77,7 +87,7 @@ public class ChatFacade {
             ));
         }
 
-        List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room);
+        List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room, member);
 
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
 
@@ -86,7 +96,10 @@ public class ChatFacade {
                 "member", member,
                 "message", list,
                 "nextCursor", nextCursor,
-                "img", messageImgService.findMessageImg(list.stream().filter(item -> item.getType().equals(MessageType.IMAGE)).toList())
+                "img", messageImgService.findMessageImg(list.stream()
+                        .filter(item -> item.getType().equals(MessageType.IMAGE))
+                        .filter(item -> item.getStatus() != ChatMessageStatus.DELETED_FOR_ALL)
+                        .toList())
         ));
     }
 
@@ -196,13 +209,82 @@ public class ChatFacade {
         }
     }
 
-    public ResponseEntity<?> deleteMessage(String messageId) {
-        imageS3Service.deleteImg(messageImgService.findMessage(messageId));
-        messageImgService.deleteMessage(messageId);
-        messageService.deleteById(messageId);
+    public ResponseEntity<?> updateMessage(String messageId,
+                                           ChatMessageRequestDto requestDto,
+                                           Member member,
+                                           HttpServletResponse response) {
+        ChatMessage originalMessage = messageService.findById(messageId);
+        validateParticipant(originalMessage, member);
+
+        String content = requestDto.getMessage();
+        int risk = moderationService.validate(content, member, response);
+        if (risk != 0) {
+            if (risk == -99) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                        "result", -10L,
+                        "message", "메시지가 입력되지 않았습니다"
+                ));
+            }
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -risk,
+                    "message", "금칙어를 사용하였습니다"
+            ));
+        }
+
+        ChatMessage message = messageService.edit(messageId, content, member);
+        ChatMessageEventDto event = ChatMessageEventDto.updated(message);
+        updateRoomSummary(message.getRoom());
+        broadcast(event);
 
         return ResponseEntity.ok(Map.of(
-                "result", messageId
+                "result", messageId,
+                "event", event
         ));
+    }
+
+    public ResponseEntity<?> deleteMessage(String messageId,
+                                           ChatMessageDeleteScope scope,
+                                           Member member) {
+        ChatMessage message = messageService.findById(messageId);
+        validateParticipant(message, member);
+
+        if (scope == ChatMessageDeleteScope.ME) {
+            messageService.hideForMember(messageId, member);
+            return ResponseEntity.ok(Map.of(
+                    "result", messageId,
+                    "scope", scope
+            ));
+        }
+
+        ChatMessage deletedMessage = messageService.deleteForAll(messageId, member);
+        ChatMessageEventDto event = ChatMessageEventDto.deletedForAll(deletedMessage);
+        updateRoomSummary(deletedMessage.getRoom());
+        broadcast(event);
+
+        return ResponseEntity.ok(Map.of(
+                "result", messageId,
+                "scope", scope,
+                "event", event
+        ));
+    }
+
+    private void validateParticipant(ChatMessage message, Member member) {
+        if (!roomMemberService.exist(member, message.getRoom()) && member.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "채팅방 참여자만 메시지를 삭제할 수 있습니다.");
+        }
+    }
+
+    private void updateRoomSummary(ChatRoom room) {
+        messageService.findLatestVisible(room).ifPresentOrElse(
+                latest -> {
+                    roomService.updateLastMessage(room.getRoomId(), latest.getMessage());
+                    roomService.updateLastTime(room.getRoomId(), latest.getRegisterTime());
+                },
+                () -> roomService.updateLastMessage(room.getRoomId(), "")
+        );
+    }
+
+    private void broadcast(ChatMessageEventDto event) {
+        messagingTemplate.convertAndSend("/sub/chat/room/" + event.roomId(), event);
     }
 }

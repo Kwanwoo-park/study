@@ -62,6 +62,7 @@ public class ChatViewController {
 
         model.addAttribute("room", room.getRoomId());
         model.addAttribute("member", member.getEmail());
+        model.addAttribute("isAdmin", member.getRole() == Role.ADMIN);
         model.addAttribute("flag", !roomMemberService.exist(member, room));
         model.addAttribute("participantNames", getParticipantNames(room, member));
 

@@ -33,6 +33,13 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
     @NotNull
     private MessageType type;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30, columnDefinition = "varchar(30) default 'ACTIVE'")
+    private ChatMessageStatus status = ChatMessageStatus.ACTIVE;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean edited;
+
     @JoinColumn(name = "member_id")
     @ManyToOne
     private Member member;
@@ -51,6 +58,7 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
         this.id = id;
         this.message = message;
         this.type = type;
+        this.status = ChatMessageStatus.ACTIVE;
         this.member = member;
         this.room = room;
         changeRegisterTime(registerTime);
@@ -66,6 +74,9 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
     @PostPersist
     void markNotNew() {
         newEntity = false;
+        if (status == null) {
+            status = ChatMessageStatus.ACTIVE;
+        }
     }
 
     public void addMember(Member member) {
@@ -76,5 +87,14 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
     public void addRoom(ChatRoom room) {
         this.room = room;
         room.getMessages().add(this);
+    }
+
+    public void edit(String message) {
+        this.message = message;
+        this.edited = true;
+    }
+
+    public void deleteForAll() {
+        this.status = ChatMessageStatus.DELETED_FOR_ALL;
     }
 }

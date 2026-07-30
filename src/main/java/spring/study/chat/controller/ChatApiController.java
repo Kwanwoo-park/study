@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.entity.ChatMessageDeleteScope;
+import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.facade.ChatFacade;
 import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
@@ -101,7 +103,28 @@ public class ChatApiController {
             return commonFacade.wrongAccess();
         }
 
-        return chatFacade.deleteMessage(id);
+        return chatFacade.deleteMessage(id, ChatMessageDeleteScope.ALL, member);
+    }
+
+    @PatchMapping("/message/{id}")
+    public ResponseEntity<?> updateMessage(@PathVariable String id,
+                                           @RequestBody ChatMessageRequestDto message,
+                                           HttpServletRequest request,
+                                           HttpServletResponse response) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return chatFacade.updateMessage(id, message, member, response);
+    }
+
+    @DeleteMapping("/message/{id}")
+    public ResponseEntity<?> deleteMessage(@PathVariable String id,
+                                           @RequestParam(defaultValue = "ME") ChatMessageDeleteScope scope,
+                                           HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return chatFacade.deleteMessage(id, scope, member);
     }
 
     @PostMapping("/presence/active")

@@ -26,6 +26,7 @@ class TemplateStaticResourceRegressionTest {
     private static final Path NOTIFICATION_LIST_JS = Path.of("src/main/resources/static/js/notification/list.js");
     private static final Path CHAT_JS = Path.of("src/main/resources/static/js/chat/chat.js");
     private static final Path CHAT_CSS = Path.of("src/main/resources/static/css/chat/chat.css");
+    private static final Path CHAT_ROOM_TEMPLATE = Path.of("src/main/resources/templates/chat/chatRoom.html");
     private static final Path COMMON_FRAGMENT = Path.of("src/main/resources/templates/fragments/common.html");
     private static final Path SETTINGS_ICON = Path.of("src/main/resources/static/img/ic_settings.png");
     private static final Path DIARY_LIST_JS = Path.of("src/main/resources/static/js/diary/list.js");
@@ -108,6 +109,7 @@ class TemplateStaticResourceRegressionTest {
     void chatMessagesShouldRenderTimeAndDateSeparators() throws IOException {
         String chatJs = Files.readString(CHAT_JS);
         String chatCss = Files.readString(CHAT_CSS);
+        String chatRoom = Files.readString(CHAT_ROOM_TEMPLATE);
 
         assertTrue(chatJs.contains("appendMessageTime(newMsgArea, data);"),
                 "chat messages should append a visible send time");
@@ -139,9 +141,9 @@ class TemplateStaticResourceRegressionTest {
                 "new-message notice should have a comfortable height");
         assertTrue(chatJs.contains("initChatImageModal();"),
                 "chat room should initialize a modal for large image previews");
-        assertTrue(chatJs.contains("configureChatImagePreview(imgTalk, imageSources, 0);"),
+        assertTrue(chatJs.contains("configureChatImagePreview(image, imageSources, 0);"),
                 "chat image messages should open the modal when selected");
-        assertTrue(chatJs.contains("appendChatImageCount(img_div, imageSources);"),
+        assertTrue(chatJs.contains("appendChatImageCount(body, imageSources);"),
                 "chat image messages should show a muted count when multiple images were sent");
         assertTrue(chatJs.contains("count.innerText = `1 / ${imageSources.length}`;"),
                 "chat image count should show the visible thumbnail index and total count");
@@ -167,6 +169,32 @@ class TemplateStaticResourceRegressionTest {
                 "chat room should not keep the old in-message image arrow styling");
         assertTrue(chatCss.contains("max-height: calc(100vh - 48px);"),
                 "chat image modal should keep the large image inside the viewport");
+        assertTrue(chatJs.contains("appendChatMessageMain(newMsgArea, data"),
+                "chat messages should render edit and delete actions");
+        assertTrue(chatJs.contains("createMessageActionButton('신고'"),
+                "chat reports should be available from the message action menu");
+        assertFalse(chatJs.contains("appendChatReportButton("),
+                "chat reports should not render as a separate button below the message");
+        assertTrue(chatJs.contains("editChatMessage(messageId)"),
+                "chat text messages should support editing");
+        assertTrue(chatJs.contains("deleteChatMessage(data.id, 'ME')"),
+                "chat messages should support hiding for the current member");
+        assertTrue(chatJs.contains("deleteChatMessage(data.id, 'ALL')"),
+                "owned chat messages should support deletion for everyone");
+        assertTrue(chatJs.contains("DELETE_FOR_ALL_LIMIT_MS = 30 * 60 * 1000"),
+                "delete for everyone should only be offered during the first thirty minutes");
+        assertTrue(chatJs.contains("canDeleteForAll(data)"),
+                "expired messages should hide the delete-for-everyone action");
+        assertTrue(chatJs.contains("isAdmin || (isMyMessage(data) && canDeleteForAll(data))"),
+                "administrators should be able to delete every member's message for everyone");
+        assertTrue(chatRoom.contains("id=\"isAdmin\""),
+                "chat room should expose the signed-in member's administrator status");
+        assertTrue(chatJs.contains("applyChatMessageEvent(json);"),
+                "chat message updates and global deletions should be applied in real time");
+        assertTrue(chatCss.contains(".chat-message-actions-menu"),
+                "chat message action menu should be styled");
+        assertTrue(chatCss.contains(".chat-message-main"),
+                "chat message body and action toggle should share one horizontal row");
     }
 
     @Test

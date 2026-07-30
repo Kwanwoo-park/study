@@ -1,5 +1,6 @@
 const roomId = document.querySelector("#room").value;
 const email = document.querySelector("#email").value;
+const isAdmin = document.querySelector("#isAdmin").value === 'true';
 const flag = document.querySelector("#flag").value;
 
 const upload = document.getElementById("upload");
@@ -8,6 +9,7 @@ const newMessageNotice = document.getElementById("new-message-notice");
 
 const maxSize = 10;
 const CHAT_LIMIT = 10;
+const DELETE_FOR_ALL_LIMIT_MS = 30 * 60 * 1000;
 const PRESENCE_REFRESH_INTERVAL_MS = 60 * 1000;
 const messageTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
     hour: '2-digit',
@@ -41,6 +43,8 @@ if (newMessageNotice) {
         markCurrentRoomRead();
     });
 }
+
+document.addEventListener('click', closeChatActionMenus);
 
 initChatImageModal();
 
@@ -144,6 +148,11 @@ function ignoreWebSocketLogs() {
 
 function onMessageReceived(e) {
     const json = JSON.parse(e.body);
+
+    if (json.action) {
+        applyChatMessageEvent(json);
+        return;
+    }
 
     fnDraw(json)
 }
@@ -287,9 +296,7 @@ function fnDraw(data) {
     let newMsgLi = document.createElement('li');
     let newMsgArea = document.createElement('span');
     let name = document.createElement('span');
-    let newMsg = document.createElement('pre');
     let profile = document.createElement('img');
-    let imgTalk = document.createElement('img');
 
     applyMessageDirection(newMsgLi, newMsgArea, data);
 
@@ -300,25 +307,8 @@ function fnDraw(data) {
 
     appendMessageHeader(newMsgArea, profile, name);
 
-    if (data.type == "IMAGE") {
-        const img_div = document.createElement('div')
-        const imageSources = normalizeChatImageSources(data.list);
-
-        imgTalk.src = imageSources[0];
-        imgTalk.id = 'img' + data.id;
-        imgTalk.className = "chatimg";
-        configureChatImagePreview(imgTalk, imageSources, 0);
-
-        img_div.append(imgTalk);
-        appendChatImageCount(img_div, imageSources);
-
-        newMsgArea.append(img_div)
-    } else {
-        newMsg.innerText = data.message;
-        newMsgArea.append(newMsg);
-    }
-
-    appendChatReportButton(newMsgArea, data);
+    appendChatMessageMain(newMsgArea, data, normalizeChatImageSources(data.list));
+    appendEditedIndicator(newMsgArea, data);
     appendMessageTime(newMsgArea, data);
     newMsgLi.append(newMsgArea);
 
@@ -346,9 +336,7 @@ function fnLoadDraw(json) {
         let newMsgLi = document.createElement('li');
         let newMsgArea = document.createElement('span');
         let name = document.createElement('span');
-        let newMsg = document.createElement('pre');
         let profile = document.createElement('img');
-        let imgTalk = document.createElement('img');
 
         applyMessageDirection(newMsgLi, newMsgArea, data);
 
@@ -359,25 +347,8 @@ function fnLoadDraw(json) {
 
         appendMessageHeader(newMsgArea, profile, name);
 
-        if (data.type == "IMAGE") {
-            const img_div = document.createElement('div')
-            const imageSources = normalizeChatImageSources(json.img[data.id]);
-
-            imgTalk.src = imageSources[0];
-            imgTalk.id = 'img' + data.id;
-            imgTalk.className = "chatimg";
-            configureChatImagePreview(imgTalk, imageSources, 0);
-
-            img_div.append(imgTalk);
-            appendChatImageCount(img_div, imageSources);
-
-            newMsgArea.append(img_div)
-        } else {
-            newMsg.innerText = data.message;
-            newMsgArea.append(newMsg);
-        }
-
-        appendChatReportButton(newMsgArea, data);
+        appendChatMessageMain(newMsgArea, data, normalizeChatImageSources(json.img[data.id]));
+        appendEditedIndicator(newMsgArea, data);
         appendMessageTime(newMsgArea, data);
         newMsgLi.append(newMsgArea);
 
@@ -404,6 +375,9 @@ function applyMessageDirection(messageLi, messageArea, data) {
     messageLi.dataset.messageDate = getMessageDateKey(data);
     messageLi.dataset.messageTime = getMessageDate(data).toISOString();
     messageLi.dataset.mine = String(isMyMessage(data));
+    messageLi.dataset.messageId = data.id || '';
+    messageLi.dataset.messageType = data.type || '';
+    messageLi.id = data.id ? 'chat-message-' + data.id : '';
     messageArea.className = "chat-message-content";
 }
 
@@ -611,27 +585,238 @@ function appendMessageHeader(messageArea, profile, name) {
     messageArea.append(header);
 }
 
+function appendChatMessageMain(messageArea, data, imageSources) {
+    const main = document.createElement('div');
+
+    main.className = 'chat-message-main';
+    appendChatMessageBody(main, data, imageSources);
+    appendMessageActions(main, data);
+    messageArea.append(main);
+}
+
+function appendChatMessageBody(messageMain, data, imageSources) {
+    const body = document.createElement('div');
+    body.className = 'chat-message-body';
+
+    if (data.type === 'IMAGE' && imageSources.length > 0) {
+        const image = document.createElement('img');
+        image.src = imageSources[0];
+        image.id = 'img' + data.id;
+        image.className = 'chatimg';
+        configureChatImagePreview(image, imageSources, 0);
+
+        body.append(image);
+        appendChatImageCount(body, imageSources);
+    } else {
+        const text = document.createElement('pre');
+        text.className = 'chat-message-text';
+        text.innerText = data.message || '';
+        body.append(text);
+    }
+
+    messageMain.append(body);
+}
+
+function appendEditedIndicator(messageArea, data) {
+    if (!data.edited) return;
+
+    const indicator = document.createElement('span');
+    indicator.className = 'chat-message-edited';
+    indicator.innerText = '수정됨';
+    messageArea.append(indicator);
+}
+
+function appendMessageActions(messageArea, data) {
+    if (!data || !data.id || (data.type !== 'TALK' && data.type !== 'IMAGE')) return;
+
+    const actions = document.createElement('div');
+    const toggle = document.createElement('button');
+    const menu = document.createElement('div');
+
+    actions.className = 'chat-message-actions';
+    toggle.type = 'button';
+    toggle.className = 'chat-message-actions-toggle';
+    toggle.setAttribute('aria-label', '메시지 메뉴 열기');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerText = '⋯';
+    menu.className = 'chat-message-actions-menu';
+
+    if (isMyMessage(data) && data.type === 'TALK') {
+        menu.append(createMessageActionButton('수정', () => editChatMessage(data.id)));
+    }
+
+    if (!isMyMessage(data)) {
+        menu.append(createMessageActionButton('신고', () => {
+            location.href = `/report?targetType=CHAT_MESSAGE&targetId=${encodeURIComponent(data.id)}`;
+        }));
+    }
+
+    menu.append(createMessageActionButton('나만 삭제', () => deleteChatMessage(data.id, 'ME')));
+
+    if (isAdmin || (isMyMessage(data) && canDeleteForAll(data))) {
+        menu.append(createMessageActionButton(
+                '모두에게 삭제',
+                () => deleteChatMessage(data.id, 'ALL'),
+                'danger'
+        ));
+    }
+
+    toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const shouldOpen = !actions.classList.contains('open');
+        closeChatActionMenus();
+        actions.classList.toggle('open', shouldOpen);
+        toggle.setAttribute('aria-expanded', String(shouldOpen));
+    });
+    menu.addEventListener('click', (event) => event.stopPropagation());
+
+    actions.append(toggle, menu);
+    messageArea.append(actions);
+}
+
+function canDeleteForAll(data) {
+    if (!data || !data.registerTime) return false;
+
+    const sentAt = getMessageDate(data).getTime();
+    const elapsed = Date.now() - sentAt;
+
+    return elapsed >= 0 && elapsed < DELETE_FOR_ALL_LIMIT_MS;
+}
+
+function createMessageActionButton(label, handler, variant) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.innerText = label;
+    if (variant) button.classList.add(variant);
+    button.addEventListener('click', () => {
+        closeChatActionMenus();
+        handler();
+    });
+    return button;
+}
+
+function closeChatActionMenus() {
+    document.querySelectorAll('.chat-message-actions.open').forEach(actions => {
+        actions.classList.remove('open');
+        const toggle = actions.querySelector('.chat-message-actions-toggle');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    });
+}
+
+async function editChatMessage(messageId) {
+    const row = document.getElementById('chat-message-' + messageId);
+    const messageText = row ? row.querySelector('.chat-message-text') : null;
+    if (!messageText) return;
+
+    const editedMessage = window.prompt('수정할 메시지를 입력해 주세요.', messageText.innerText);
+    if (editedMessage === null) return;
+    if (!editedMessage.trim()) {
+        alert('메시지를 입력해 주세요.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/chat/message/${encodeURIComponent(messageId)}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+            },
+            body: JSON.stringify({ message: editedMessage.trim() }),
+            credentials: 'include',
+        });
+        const json = await response.json();
+        if (!response.ok || !json.event) {
+            alert(json.message || '메시지 수정에 실패했습니다.');
+            return;
+        }
+        applyChatMessageEvent(json.event);
+    } catch (error) {
+        alert('메시지 수정에 실패했습니다.');
+    }
+}
+
+async function deleteChatMessage(messageId, scope) {
+    if (scope === 'ALL') {
+        const row = document.getElementById('chat-message-' + messageId);
+        const sentAt = row && row.dataset.messageTime
+            ? new Date(row.dataset.messageTime).getTime()
+            : Number.NaN;
+
+        if (!Number.isNaN(sentAt) && Date.now() - sentAt >= DELETE_FOR_ALL_LIMIT_MS) {
+            alert('전송 후 30분이 지난 메시지는 모두에게 삭제할 수 없습니다.');
+            return;
+        }
+    }
+
+    const confirmation = scope === 'ALL'
+        ? '이 메시지를 모두에게서 삭제할까요? 원본은 DB에 보존됩니다.'
+        : '이 메시지를 나에게만 보이지 않게 할까요?';
+    if (!window.confirm(confirmation)) return;
+
+    try {
+        const response = await fetch(
+                `/api/chat/message/${encodeURIComponent(messageId)}?scope=${encodeURIComponent(scope)}`,
+                {
+                    method: 'DELETE',
+                    credentials: 'include',
+                }
+        );
+        const json = await response.json();
+        if (!response.ok) {
+            alert(json.message || '메시지 삭제에 실패했습니다.');
+            return;
+        }
+
+        if (scope === 'ME') {
+            removeChatMessageRow(messageId);
+        } else if (json.event) {
+            applyChatMessageEvent(json.event);
+        }
+    } catch (error) {
+        alert('메시지 삭제에 실패했습니다.');
+    }
+}
+
+function applyChatMessageEvent(event) {
+    if (!event || !event.id) return;
+
+    if (event.action === 'DELETED_FOR_ALL') {
+        removeChatMessageRow(event.id);
+        return;
+    }
+
+    if (event.action !== 'UPDATED') return;
+
+    const row = document.getElementById('chat-message-' + event.id);
+    if (!row) return;
+
+    const messageText = row.querySelector('.chat-message-text');
+    if (messageText) messageText.innerText = event.message;
+
+    const messageArea = row.querySelector('.chat-message-content');
+    if (messageArea && !messageArea.querySelector('.chat-message-edited')) {
+        const indicator = document.createElement('span');
+        indicator.className = 'chat-message-edited';
+        indicator.innerText = '수정됨';
+        const time = messageArea.querySelector('.chat-message-time');
+        messageArea.insertBefore(indicator, time);
+    }
+}
+
+function removeChatMessageRow(messageId) {
+    const row = document.getElementById('chat-message-' + messageId);
+    if (!row) return;
+
+    row.remove();
+    refreshDateSeparators();
+}
+
 function appendMessageTime(messageArea, data) {
     const time = document.createElement('span');
 
     time.className = "chat-message-time";
     time.innerText = formatMessageTime(data);
     messageArea.append(time);
-}
-
-function appendChatReportButton(messageArea, data) {
-    if (!data || !data.id || isMyMessage(data)) return;
-
-    const button = document.createElement('button');
-
-    button.type = 'button';
-    button.className = 'chat-report-button';
-    button.innerText = '신고';
-    button.addEventListener('click', () => {
-        location.href = `/report?targetType=CHAT_MESSAGE&targetId=${encodeURIComponent(data.id)}`;
-    });
-
-    messageArea.append(button);
 }
 
 function refreshDateSeparators() {
