@@ -647,7 +647,7 @@ function appendMessageActions(messageArea, data) {
     toggle.className = 'chat-message-actions-toggle';
     toggle.setAttribute('aria-label', '메시지 메뉴 열기');
     toggle.setAttribute('aria-expanded', 'false');
-    toggle.innerText = '⋯';
+    toggle.innerText = '⋮';
     menu.className = 'chat-message-actions-menu';
 
     if (isMyMessage(data) && data.type === 'TALK') {

@@ -213,6 +213,8 @@ class TemplateStaticResourceRegressionTest {
                 "chat message action menu should be styled");
         assertTrue(chatCss.contains(".chat-message-main"),
                 "chat message body and action toggle should share one horizontal row");
+        assertTrue(chatJs.contains("toggle.innerText = '⋮';"),
+                "chat message action toggle should use a vertical ellipsis");
     }
 
     @Test
