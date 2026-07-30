@@ -749,7 +749,7 @@ async function deleteChatMessage(messageId, scope) {
     }
 
     const confirmation = scope === 'ALL'
-        ? '이 메시지를 모두에게서 삭제할까요? 원본은 DB에 보존됩니다.'
+        ? '이 메시지를 모두에게서 삭제할까요?'
         : '이 메시지를 나에게만 보이지 않게 할까요?';
     if (!window.confirm(confirmation)) return;
 
