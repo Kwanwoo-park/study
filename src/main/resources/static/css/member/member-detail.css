@@ -232,6 +232,7 @@ body.modal-open {
 
 .modal-image-arrow {
     position: absolute;
+    z-index: 2;
     top: 50%;
     transform: translateY(-50%);
     width: 36px;
@@ -277,6 +278,7 @@ body.modal-open {
 
 .modal-image-counter {
     position: absolute;
+    z-index: 2;
     right: 12px;
     bottom: 12px;
     padding: 4px 9px;

@@ -450,14 +450,16 @@ function initChatImageModal() {
     nextButton.innerText = '>';
 
     closeButton.addEventListener('click', closeChatImageModal);
-    previousButton.addEventListener('click', showPreviousChatImage);
-    nextButton.addEventListener('click', showNextChatImage);
+    previousButton.addEventListener('click', () => showPreviousChatImage());
+    nextButton.addEventListener('click', () => showNextChatImage());
     if (typeof initImageSwipe === 'function') {
         initImageSwipe(image, {
             canPrevious: () => chatImageModalIndex > 0,
             canNext: () => chatImageModalIndex < chatImageModalSources.length - 1,
-            onPrevious: showPreviousChatImage,
-            onNext: showNextChatImage,
+            getPreviousSource: () => chatImageModalSources[chatImageModalIndex - 1],
+            getNextSource: () => chatImageModalSources[chatImageModalIndex + 1],
+            onPrevious: () => showPreviousChatImage(true),
+            onNext: () => showNextChatImage(true),
         });
     }
     modal.addEventListener('click', (event) => {
@@ -506,6 +508,7 @@ function openChatImageModal(sources, initialIndex) {
 
     chatImageModalSources = normalizedSources;
     chatImageModalIndex = Math.min(Math.max(initialIndex || 0, 0), chatImageModalSources.length - 1);
+    preloadAdjacentImages(chatImageModalSources, chatImageModalIndex);
     renderChatImageModal();
     modal.classList.remove('is-hidden');
     document.body.classList.add('chat-image-modal-open');
@@ -524,15 +527,19 @@ function closeChatImageModal() {
     document.body.classList.remove('chat-image-modal-open');
 }
 
-function showPreviousChatImage() {
+function showPreviousChatImage(skipAnimation) {
     if (chatImageModalSources.length <= 1 || chatImageModalIndex === 0) return;
+    const image = document.getElementById('chatImageModalImg');
+    if (!skipAnimation && animateImageSwipe(image, 'previous')) return;
 
     chatImageModalIndex -= 1;
     renderChatImageModal();
 }
 
-function showNextChatImage() {
+function showNextChatImage(skipAnimation) {
     if (chatImageModalSources.length <= 1 || chatImageModalIndex >= chatImageModalSources.length - 1) return;
+    const image = document.getElementById('chatImageModalImg');
+    if (!skipAnimation && animateImageSwipe(image, 'next')) return;
 
     chatImageModalIndex += 1;
     renderChatImageModal();
@@ -546,6 +553,7 @@ function renderChatImageModal() {
     if (!image) return;
 
     image.src = chatImageModalSources[chatImageModalIndex];
+    preloadAdjacentImages(chatImageModalSources, chatImageModalIndex);
 
     if (previousButton) {
         previousButton.classList.toggle('is-hidden', chatImageModalSources.length <= 1);
@@ -604,6 +612,7 @@ function appendChatMessageBody(messageMain, data, imageSources) {
         image.id = 'img' + data.id;
         image.className = 'chatimg';
         configureChatImagePreview(image, imageSources, 0);
+        preloadAdjacentImages(imageSources, 0);
 
         body.append(image);
         appendChatImageCount(body, imageSources);

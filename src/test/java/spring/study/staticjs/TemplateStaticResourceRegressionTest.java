@@ -20,6 +20,7 @@ class TemplateStaticResourceRegressionTest {
     private static final Path MEMBER_DETAIL_TEMPLATE = Path.of("src/main/resources/templates/member/detail.html");
     private static final Path COMMON_CSS = Path.of("src/main/resources/static/css/common/common.css");
     private static final Path COMMON_ACTIONS_JS = Path.of("src/main/resources/static/js/board/common-actions.js");
+    private static final Path IMAGE_SWIPE_JS = Path.of("src/main/resources/static/js/common/image-swipe.js");
     private static final Path BOARD_MAIN_JS = Path.of("src/main/resources/static/js/board/main.js");
     private static final Path BOARD_VIEW_TEMPLATE = Path.of("src/main/resources/templates/board/view.html");
     private static final Path COMMON_JS = Path.of("src/main/resources/static/js/common/common.js");
@@ -82,12 +83,15 @@ class TemplateStaticResourceRegressionTest {
         assertTrue(memberDetailCss.contains("height: auto;"), "member board images should keep their intrinsic ratio");
         assertTrue(memberDetailCss.contains("max-height: 375px;"), "member board images should be capped at 375px");
         assertTrue(memberDetailCss.contains("object-fit: contain;"), "member board images should not be cropped");
+        assertTrue(memberDetailCss.contains("z-index: 2;"),
+                "member board modal arrows should stay above the image and remain clickable");
         assertTrue(commonCss.contains("max-height: 375px;"), "mobile board image override should preserve the height cap");
     }
 
     @Test
     void boardImageNavigationShouldUseClassBasedVisibility() throws IOException {
         String commonActions = Files.readString(COMMON_ACTIONS_JS);
+        String imageSwipe = Files.readString(IMAGE_SWIPE_JS);
         String boardMain = Files.readString(BOARD_MAIN_JS);
         String boardView = Files.readString(BOARD_VIEW_TEMPLATE);
 
@@ -103,6 +107,18 @@ class TemplateStaticResourceRegressionTest {
                 "shared image navigation should refresh the position indicator");
         assertTrue(commonActions.contains("indicator.innerText = `${currentIndex + 1} / ${totalCount}`;"),
                 "image position indicator should render as current slash total");
+        assertTrue(imageSwipe.contains("function preloadAdjacentImages(images, currentIndex)"),
+                "shared image navigation should preload adjacent images");
+        assertTrue(imageSwipe.contains("createIncomingImage(incomingSource, enterX)"),
+                "swipe animation should move the preloaded adjacent image alongside the current image");
+        assertTrue(imageSwipe.contains("global.animateImageSwipe = animateImageSwipe;"),
+                "arrow buttons should be able to trigger the same shared swipe animation");
+        assertTrue(commonActions.contains("getNextSource: () => imageArr[Number(imgId.value) + 1].imgSrc"),
+                "board swipe should provide the next preloaded image to the animation");
+        assertTrue(commonActions.contains("animateImageSwipe(mainImage, 'next')"),
+                "board arrow navigation should animate both images instead of replacing src immediately");
+        assertTrue(commonActions.contains("preloadAdjacentImages(imageArr, nextIndex);"),
+                "board navigation should keep the next adjacent images warm");
     }
 
     @Test
@@ -153,6 +169,8 @@ class TemplateStaticResourceRegressionTest {
                 "chat image modal should support previous navigation");
         assertTrue(chatJs.contains("showNextChatImage"),
                 "chat image modal should support next navigation");
+        assertTrue(chatJs.contains("preloadAdjacentImages(chatImageModalSources, chatImageModalIndex);"),
+                "chat image modal should preload adjacent images while navigating");
         assertFalse(chatJs.contains("function fnLeft("),
                 "chat message images should not use in-message previous buttons");
         assertFalse(chatJs.contains("function fnRight("),

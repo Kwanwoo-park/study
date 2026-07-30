@@ -134,6 +134,7 @@
             const currentImage = imageList[currentImageIndex];
             const liked = Boolean(data.like);
             const hasMultipleImages = imageList.length > 1;
+            global.preloadAdjacentImages(imageList, currentImageIndex);
 
             modalBody.innerHTML = `
                 ${canEdit ? `
@@ -209,27 +210,33 @@
                 global.initImageSwipe(modalMainImage, {
                     canPrevious: () => currentImageIndex > 0,
                     canNext: () => currentImageIndex < imageList.length - 1,
-                    onPrevious: () => modalImageLeft(),
-                    onNext: () => modalImageRight(),
+                    getPreviousSource: () => imageList[currentImageIndex - 1].imgSrc,
+                    getNextSource: () => imageList[currentImageIndex + 1].imgSrc,
+                    onPrevious: () => modalImageLeft(null, true),
+                    onNext: () => modalImageRight(null, true),
                 });
             }
         }
 
-        function modalImageLeft(event) {
+        function modalImageLeft(event, skipAnimation) {
             if (event) event.stopPropagation();
 
             if (!currentBoardData || !currentBoardData.img || currentBoardData.img.length === 0) return;
             if (currentImageIndex === 0) return;
+            const modalMainImage = document.getElementById('modalMainImage');
+            if (!skipAnimation && global.animateImageSwipe(modalMainImage, 'previous')) return;
 
             currentImageIndex -= 1;
             redrawModalImage();
         }
 
-        function modalImageRight(event) {
+        function modalImageRight(event, skipAnimation) {
             if (event) event.stopPropagation();
 
             if (!currentBoardData || !currentBoardData.img || currentBoardData.img.length === 0) return;
             if (currentImageIndex >= currentBoardData.img.length - 1) return;
+            const modalMainImage = document.getElementById('modalMainImage');
+            if (!skipAnimation && global.animateImageSwipe(modalMainImage, 'next')) return;
 
             currentImageIndex += 1;
             redrawModalImage();
@@ -246,6 +253,7 @@
 
             if (modalMainImage) {
                 modalMainImage.src = imageList[currentImageIndex].imgSrc;
+                global.preloadAdjacentImages(imageList, currentImageIndex);
             }
 
             if (leftArrow) {

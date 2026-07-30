@@ -91,7 +91,9 @@
 			<script src="/js/comment/modal.js"></script>
 			<script src="/js/board/view.js"></script>
 			<script th:if="${board.img.size > 1}" th:inline="javascript">
-				enableBoardImageSwipe(/*[[${board.id}]]*/ 0, /*[[${board.img}]]*/ []);
+				const boardImages = /*[[${board.img}]]*/ [];
+				enableBoardImageSwipe(/*[[${board.id}]]*/ 0, boardImages);
+				preloadAdjacentImages(boardImages, 0);
 			</script>
 	</body>
 	<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

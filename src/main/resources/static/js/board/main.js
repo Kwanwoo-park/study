@@ -109,6 +109,8 @@ function fnDraw(data) {
 
         main_image_div.append(main_img);
 
+        preloadAdjacentImages(board.img, 0);
+
         const img_idx = document.createElement('input')
         img_idx.type = 'hidden'
         img_idx.id = 'img' + board.id;

@@ -1,4 +1,4 @@
-function fnLeft(listId, imageArr) {
+function fnLeft(listId, imageArr, skipAnimation) {
     if (!Array.isArray(imageArr) || imageArr.length === 0) return;
 
     const mainImage = document.getElementById('main_img' + listId);
@@ -10,11 +10,13 @@ function fnLeft(listId, imageArr) {
 
     const currentIndex = parseInt(imgId.value, 10);
     if (Number.isNaN(currentIndex) || currentIndex <= 0) return;
+    if (!skipAnimation && animateImageSwipe(mainImage, 'previous')) return;
 
     const nextIndex = currentIndex - 1;
     mainImage.src = imageArr[nextIndex].imgSrc;
     imgId.value = nextIndex;
     updateBoardImageIndicator(listId, nextIndex, imageArr.length);
+    preloadAdjacentImages(imageArr, nextIndex);
 
     if (rightArrow) {
         rightArrow.classList.remove('is-invisible');
@@ -25,7 +27,7 @@ function fnLeft(listId, imageArr) {
     }
 }
 
-function fnRight(listId, imageArr) {
+function fnRight(listId, imageArr, skipAnimation) {
     if (!Array.isArray(imageArr) || imageArr.length === 0) return;
 
     const mainImage = document.getElementById('main_img' + listId);
@@ -37,11 +39,13 @@ function fnRight(listId, imageArr) {
 
     const currentIndex = parseInt(imgId.value, 10);
     if (Number.isNaN(currentIndex) || currentIndex >= imageArr.length - 1) return;
+    if (!skipAnimation && animateImageSwipe(mainImage, 'next')) return;
 
     const nextIndex = currentIndex + 1;
     mainImage.src = imageArr[nextIndex].imgSrc;
     imgId.value = nextIndex;
     updateBoardImageIndicator(listId, nextIndex, imageArr.length);
+    preloadAdjacentImages(imageArr, nextIndex);
 
     if (leftArrow) {
         leftArrow.classList.remove('is-invisible');
@@ -71,8 +75,10 @@ function enableBoardImageSwipe(listId, imageArr) {
     initImageSwipe(mainImage, {
         canPrevious: () => Number(imgId.value) > 0,
         canNext: () => Number(imgId.value) < imageArr.length - 1,
-        onPrevious: () => fnLeft(listId, imageArr),
-        onNext: () => fnRight(listId, imageArr),
+        getPreviousSource: () => imageArr[Number(imgId.value) - 1].imgSrc,
+        getNextSource: () => imageArr[Number(imgId.value) + 1].imgSrc,
+        onPrevious: () => fnLeft(listId, imageArr, true),
+        onNext: () => fnRight(listId, imageArr, true),
     });
 }
 
