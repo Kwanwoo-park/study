@@ -300,6 +300,14 @@ function fnDraw(data) {
 
     applyMessageDirection(newMsgLi, newMsgArea, data);
 
+    if (data.status === 'DELETED_FOR_ALL') {
+        renderDeletedMessage(newMsgLi, newMsgArea);
+        newMsgLi.append(newMsgArea);
+        msgArea.append(newMsgLi);
+        refreshDateSeparators();
+        return;
+    }
+
     profile.src = data.member.profile;
     profile.className = "profile";
 
@@ -339,6 +347,13 @@ function fnLoadDraw(json) {
         let profile = document.createElement('img');
 
         applyMessageDirection(newMsgLi, newMsgArea, data);
+
+        if (data.status === 'DELETED_FOR_ALL') {
+            renderDeletedMessage(newMsgLi, newMsgArea);
+            newMsgLi.append(newMsgArea);
+            msgArea.prepend(newMsgLi);
+            return;
+        }
 
         profile.src = data.member.profile;
         profile.className = "profile";
@@ -441,13 +456,13 @@ function initChatImageModal() {
     previousButton.id = 'chatImageModalPrev';
     previousButton.className = 'chat-image-modal-nav chat-image-modal-prev';
     previousButton.setAttribute('aria-label', 'previous image');
-    previousButton.innerText = '<';
+    previousButton.innerText = '←';
 
     nextButton.type = 'button';
     nextButton.id = 'chatImageModalNext';
     nextButton.className = 'chat-image-modal-nav chat-image-modal-next';
     nextButton.setAttribute('aria-label', 'next image');
-    nextButton.innerText = '>';
+    nextButton.innerText = '→';
 
     closeButton.addEventListener('click', closeChatImageModal);
     previousButton.addEventListener('click', () => showPreviousChatImage());
@@ -790,7 +805,12 @@ function applyChatMessageEvent(event) {
     if (!event || !event.id) return;
 
     if (event.action === 'DELETED_FOR_ALL') {
-        removeChatMessageRow(event.id);
+        const row = document.getElementById('chat-message-' + event.id);
+        const messageArea = row ? row.querySelector('.chat-message-content') : null;
+        if (row && messageArea) {
+            renderDeletedMessage(row, messageArea);
+            refreshDateSeparators();
+        }
         return;
     }
 
@@ -810,6 +830,15 @@ function applyChatMessageEvent(event) {
         const time = messageArea.querySelector('.chat-message-time');
         messageArea.insertBefore(indicator, time);
     }
+}
+
+function renderDeletedMessage(row, messageArea) {
+    const deletedText = document.createElement('span');
+
+    row.classList.add('deleted');
+    deletedText.className = 'chat-message-deleted-text';
+    deletedText.innerText = '삭제된 메시지입니다';
+    messageArea.replaceChildren(deletedText);
 }
 
 function removeChatMessageRow(messageId) {

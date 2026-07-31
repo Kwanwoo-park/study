@@ -32,6 +32,7 @@
           <input type="hidden" name="tranAccount" th:value="${account.account}">
           <div>
             <div class="account-page-name" th:text="${account.name}">계좌</div>
+            <div class="account-type-badge" th:text="${account.accountTypeName}">입출금</div>
             <div class="account-page-number" th:text="${account.account}">0000000000</div>
           </div>
           <div class="account-page-amount" th:text="${#numbers.formatInteger(account.amount, 0, 'COMMA') + '원'}">0원</div>

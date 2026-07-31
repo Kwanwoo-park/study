@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import spring.study.account.dto.AccountRequestDto;
 import spring.study.account.dto.AccountResponseDto;
 import spring.study.account.dto.AccountTranDto;
+import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.entity.Account;
+import spring.study.account.entity.AccountType;
+import spring.study.account.entity.AccountStatus;
 import spring.study.account.service.AccountService;
 import spring.study.member.entity.Member;
 
@@ -20,12 +23,21 @@ import java.util.Map;
 public class AccountFacade {
     private final AccountService accountService;
 
-    public ResponseEntity<?> create(Member member) {
-        Account account = accountService.createAccount(member);
+    public ResponseEntity<?> create(Member member, AccountType accountType) {
+        Account account;
+        try {
+            account = accountService.createAccount(member, accountType);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", e.getMessage()
+            ));
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "accountNum", account.getAccount()
+                "accountNum", account.getAccount(),
+                "accountType", account.getAccountType()
         ));
     }
 
@@ -112,11 +124,47 @@ public class AccountFacade {
             return validation;
         }
 
+        Account target = accountService.findByAccount(account);
+        if (target.isInterestBearing() && target.getAccountStatus() != AccountStatus.TERMINATED) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", "예적금 계좌는 해지 정산 기능을 이용해주세요"
+            ));
+        }
+
         accountService.deleteByAccount(account);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L
         ));
+    }
+
+    public ResponseEntity<?> terminate(String accountNumber,
+                                       String settlementAccountNumber,
+                                       Member member) {
+        try {
+            AccountSettlementResult settlement = accountService.terminateInterestAccount(
+                    accountNumber,
+                    settlementAccountNumber,
+                    member
+            );
+
+            return ResponseEntity.ok(Map.of(
+                    "result", 10L,
+                    "settlement", settlement,
+                    "message", settlement.matured() ? "만기 해지가 완료되었습니다" : "중도 해지가 완료되었습니다"
+            ));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -10L,
+                    "message", e.getMessage()
+            ));
+        } catch (IllegalArgumentException | ArithmeticException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", e.getMessage()
+            ));
+        }
     }
 
     private ResponseEntity<?> validateOwner(String accountNumber, Member member) {

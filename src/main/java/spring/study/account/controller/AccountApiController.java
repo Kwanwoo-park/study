@@ -7,8 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.account.dto.AccountRequestDto;
 import spring.study.account.dto.AccountTranDto;
+import spring.study.account.dto.AccountTerminationRequestDto;
 import spring.study.account.facade.AccountFacade;
 import spring.study.account.facade.AccountTransactionFacade;
+import spring.study.account.entity.AccountType;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
@@ -24,11 +26,14 @@ public class AccountApiController {
     private final CommonFacade commonFacade;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createAccount(HttpServletRequest request) {
+    public ResponseEntity<?> createAccount(
+            @RequestParam(defaultValue = "DEPOSIT_WITHDRAWAL") AccountType accountType,
+            HttpServletRequest request
+    ) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountFacade.create(member);
+        return accountFacade.create(member, accountType);
     }
 
     @GetMapping("/list")
@@ -69,6 +74,16 @@ public class AccountApiController {
         if (member == null) return commonFacade.unauthorized();
 
         return accountFacade.delete(account, member);
+    }
+
+    @PostMapping("/{account}/terminate")
+    public ResponseEntity<?> terminateAccount(@PathVariable String account,
+                                              @RequestBody AccountTerminationRequestDto dto,
+                                              HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountFacade.terminate(account, dto.getSettlementAccount(), member);
     }
 
     @GetMapping("/transactions")

@@ -167,6 +167,8 @@ class TemplateStaticResourceRegressionTest {
                 "chat image modal should receive the full image list");
         assertTrue(chatJs.contains("showPreviousChatImage"),
                 "chat image modal should support previous navigation");
+        assertTrue(chatJs.contains("previousButton.innerText = '←';"),
+                "chat image modal should show a visible left-arrow button");
         assertTrue(chatJs.contains("showNextChatImage"),
                 "chat image modal should support next navigation");
         assertTrue(chatJs.contains("preloadAdjacentImages(chatImageModalSources, chatImageModalIndex);"),
@@ -209,6 +211,10 @@ class TemplateStaticResourceRegressionTest {
                 "chat room should expose the signed-in member's administrator status");
         assertTrue(chatJs.contains("applyChatMessageEvent(json);"),
                 "chat message updates and global deletions should be applied in real time");
+        assertTrue(chatJs.contains("renderDeletedMessage(row, messageArea);"),
+                "global deletions should replace the message with a deleted-message notice");
+        assertTrue(chatCss.contains(".chat-message-row.deleted"),
+                "deleted-message notices should be centered in the chat room");
         assertTrue(chatCss.contains(".chat-message-actions-menu"),
                 "chat message action menu should be styled");
         assertTrue(chatCss.contains(".chat-message-main"),

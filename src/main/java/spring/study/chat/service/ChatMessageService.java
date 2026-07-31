@@ -52,7 +52,6 @@ public class ChatMessageService {
         return chatMessageRepository.findVisibleByRoom(
                         room,
                         member,
-                        ChatMessageStatus.ACTIVE,
                         PageRequest.of(cursor, limit, Sort.by("registerTime").descending())
                 )
                 .stream()

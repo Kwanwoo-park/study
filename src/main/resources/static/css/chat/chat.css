@@ -181,6 +181,11 @@ html {
     text-align: right;
 }
 
+.chat-message-row.deleted {
+    justify-content: center;
+    text-align: center;
+}
+
 .chat-message-content {
     display: flex;
     flex-direction: column;
@@ -194,6 +199,21 @@ html {
 
 .chat-message-row.mine .chat-message-content {
     align-items: flex-end;
+}
+
+.chat-message-row.deleted .chat-message-content {
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+}
+
+.chat-message-deleted-text {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: center;
 }
 
 .chat-message-header {
@@ -476,6 +496,7 @@ html {
 .chat-image-modal-nav {
     position: absolute;
     top: 50%;
+    z-index: 2;
     width: 44px;
     height: 44px;
     border: 0;
@@ -485,12 +506,13 @@ html {
     font-size: 24px;
     font-weight: 700;
     line-height: 1;
+    cursor: pointer;
     transform: translateY(-50%);
 }
 
 .chat-image-modal-nav:disabled {
     cursor: default;
-    opacity: 0.35;
+    opacity: 0.65;
 }
 
 .chat-image-modal-prev {

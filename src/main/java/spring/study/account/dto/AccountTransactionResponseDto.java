@@ -40,6 +40,8 @@ public class AccountTransactionResponseDto {
         this.transactionTime = entity.getTransactionTime();
         this.cancelable = entity.getTransactionStatus() == AccountTransactionStatus.COMPLETED
                 && entity.getTransactionType() != AccountTransactionType.CANCEL
+                && entity.getTransactionType() != AccountTransactionType.INTEREST
+                && entity.getTransactionType() != AccountTransactionType.TERMINATION
                 && entity.getTransactionTime().plusDays(1).isAfter(LocalDateTime.now());
     }
 }

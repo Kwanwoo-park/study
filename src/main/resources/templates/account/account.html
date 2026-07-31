@@ -19,7 +19,15 @@
       <h1 id="accountPageTitle">계좌</h1>
       <p id="accountPageDescription" class="account-page-description"></p>
     </div>
-    <button type="button" id="accountCreateBtn" class="btn btn-primary">계좌 생성</button>
+    <div id="accountCreateControls" class="account-create-controls">
+      <label class="sr-only" for="accountTypeSelect">계좌 종류</label>
+      <select id="accountTypeSelect" class="form-control" aria-label="계좌 종류">
+        <option value="DEPOSIT_WITHDRAWAL">입출금</option>
+        <option value="INSTALLMENT_SAVINGS">적금</option>
+        <option value="TIME_DEPOSIT">예금</option>
+      </select>
+      <button type="button" id="accountCreateBtn" class="btn btn-primary">계좌 생성</button>
+    </div>
   </section>
 
   <section id="accountPageBody" class="account-page-body"></section>

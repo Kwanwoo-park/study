@@ -210,6 +210,8 @@
             REFUND: '환불',
             FEE: '수수료',
             CANCEL: '취소',
+            INTEREST: '이자',
+            TERMINATION: '해지 정산',
         };
 
         return labels[type] || type || '-';

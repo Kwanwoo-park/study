@@ -25,6 +25,16 @@
     font-weight: 700;
 }
 
+.account-create-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.account-create-controls select {
+    width: 140px;
+}
+
 .account-page-description {
     min-height: 21px;
     margin: 8px 0 0;
@@ -56,6 +66,47 @@
 
 .account-page-name {
     font-weight: 700;
+}
+
+.account-type-badge {
+    display: inline-block;
+    margin: 4px 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eef4ff;
+    color: #2458a6;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.account-status-badge {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e8f7ed;
+    color: #176b36;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.account-status-badge.matured {
+    background: #fff4dc;
+    color: #8a5a00;
+}
+
+.account-status-badge.terminated {
+    background: #f1f1f1;
+    color: #666;
+}
+
+.account-interest-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 6px;
+    color: #555;
+    font-size: 12px;
 }
 
 .account-page-number {
@@ -142,6 +193,10 @@
 @media (max-width: 600px) {
     .account-page-header {
         flex-direction: column;
+    }
+
+    .account-create-controls {
+        width: 100%;
     }
 
     .account-page-row,

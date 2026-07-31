@@ -57,7 +57,7 @@ public class AccountViewController {
         }
 
         Member transferMember = memberService.findMember(email);
-        List<AccountResponseDto> transferAccounts = accountService.findByMember(transferMember).stream()
+        List<AccountResponseDto> transferAccounts = accountService.findActiveByMember(transferMember).stream()
                 .map(AccountResponseDto::new)
                 .toList();
 

@@ -7,5 +7,7 @@ public enum AccountTransactionType {
     PAYMENT,
     REFUND,
     FEE,
-    CANCEL
+    CANCEL,
+    INTEREST,
+    TERMINATION
 }

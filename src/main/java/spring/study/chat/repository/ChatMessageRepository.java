@@ -25,7 +25,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
             select m
             from message m
             where m.room = :room
-              and (m.status is null or m.status = :activeStatus)
               and not exists (
                   select h.id
                   from ChatMessageHidden h
@@ -34,7 +33,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
             """)
     List<ChatMessage> findVisibleByRoom(@Param("room") ChatRoom room,
                                         @Param("member") Member member,
-                                        @Param("activeStatus") ChatMessageStatus activeStatus,
                                         Pageable pageable);
 
     @Query("""

@@ -162,7 +162,7 @@ public class MemberViewController {
         model.addAttribute("following_count", followService.countFollowing(search_member));
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
-        model.addAttribute("transferAccounts", accountService.findByMember(search_member).stream()
+        model.addAttribute("transferAccounts", accountService.findActiveByMember(search_member).stream()
                 .map(AccountResponseDto::new)
                 .toList());
 

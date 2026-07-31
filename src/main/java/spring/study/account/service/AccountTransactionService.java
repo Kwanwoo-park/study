@@ -59,8 +59,10 @@ public class AccountTransactionService {
 
         Account reversalWithdrawalAccount = transaction.getDepositAccount();
         Account reversalDepositAccount = transaction.getWithdrawalAccount();
+        LocalDateTime cancellationTime = LocalDateTime.now();
 
         if (reversalWithdrawalAccount != null) {
+            accountService.accrueInterest(reversalWithdrawalAccount, cancellationTime);
             if (reversalWithdrawalAccount.getAmount() < transaction.getAmount()) {
                 throw new IllegalArgumentException("취소할 계좌의 잔액이 부족합니다");
             }
@@ -68,6 +70,7 @@ public class AccountTransactionService {
         }
 
         if (reversalDepositAccount != null) {
+            accountService.accrueInterest(reversalDepositAccount, cancellationTime);
             reversalDepositAccount.addAmount(transaction.getAmount());
         }
 
@@ -84,7 +87,7 @@ public class AccountTransactionService {
                 .memo("원 거래 번호 " + transaction.getId() + " 취소")
                 .counterpartyName(transaction.getCounterpartyName())
                 .bankName(transaction.getBankName())
-                .transactionTime(LocalDateTime.now())
+                .transactionTime(cancellationTime)
                 .build());
 
         accountService.notifyTransaction(transaction);
@@ -98,6 +101,11 @@ public class AccountTransactionService {
 
         if (transaction.getTransactionType() == AccountTransactionType.CANCEL) {
             throw new IllegalArgumentException("취소 거래는 다시 취소할 수 없습니다");
+        }
+
+        if (transaction.getTransactionType() == AccountTransactionType.INTEREST
+                || transaction.getTransactionType() == AccountTransactionType.TERMINATION) {
+            throw new IllegalArgumentException("이자 및 해지 정산 거래는 취소할 수 없습니다");
         }
 
         if (transaction.getTransactionStatus() != AccountTransactionStatus.COMPLETED) {

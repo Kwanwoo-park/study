@@ -4,7 +4,9 @@
     const title = document.getElementById('accountPageTitle');
     const description = document.getElementById('accountPageDescription');
     const body = document.getElementById('accountPageBody');
+    const accountCreateControls = document.getElementById('accountCreateControls');
     const accountCreateBtn = document.getElementById('accountCreateBtn');
+    const accountTypeSelect = document.getElementById('accountTypeSelect');
 
     if (!page || !body) {
         return;
@@ -16,9 +18,10 @@
     };
     const isTransferPage = Boolean(transferTarget.account);
     let isLoading = false;
+    let loadedAccounts = [];
 
     if (accountCreateBtn) {
-        accountCreateBtn.classList.toggle('hidden', isTransferPage);
+        accountCreateControls?.classList.toggle('hidden', isTransferPage);
         accountCreateBtn.addEventListener('click', createAccount);
     }
 
@@ -51,6 +54,22 @@
 
         if (action === 'deposit-submit') {
             await depositAccount(account);
+            return;
+        }
+
+        if (action === 'terminate-toggle') {
+            const settlementAccount = actionTarget.dataset.settlementAccount;
+            if (settlementAccount) {
+                await terminateAccount(account, settlementAccount);
+            } else {
+                toggleForm(`terminationForm${account}`);
+            }
+            return;
+        }
+
+        if (action === 'terminate-submit') {
+            const settlementSelect = document.getElementById(`settlementAccount${account}`);
+            await terminateAccount(account, settlementSelect?.value);
         }
     });
 
@@ -97,7 +116,19 @@
         accountCreateBtn.disabled = true;
 
         try {
-            const response = await fetch('/api/account/create', {
+            const accountType = accountTypeSelect?.value || 'DEPOSIT_WITHDRAWAL';
+            const requiresCheckingAccount = accountType === 'INSTALLMENT_SAVINGS'
+                || accountType === 'TIME_DEPOSIT';
+            const hasCheckingAccount = loadedAccounts.some((account) =>
+                account.accountType === 'DEPOSIT_WITHDRAWAL'
+                && normalizeAccountStatus(account) === 'ACTIVE'
+            );
+            if (requiresCheckingAccount && !hasCheckingAccount) {
+                alert('예적금 계좌를 만들려면 먼저 입출금 계좌를 생성해주세요');
+                return;
+            }
+
+            const response = await fetch(`/api/account/create?accountType=${encodeURIComponent(accountType)}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json; charset=utf-8',
@@ -123,7 +154,10 @@
     }
 
     function renderAccounts(data) {
-        const accounts = data.list || [];
+        loadedAccounts = data.list || [];
+        const accounts = (data.list || []).filter((account) =>
+            !isTransferPage || normalizeAccountStatus(account) === 'ACTIVE'
+        );
 
         title.innerText = isTransferPage
             ? `${transferTarget.name}님에게 이체`
@@ -139,15 +173,20 @@
 
         const list = document.createElement('ul');
         list.className = 'account-page-list';
+        const checkingAccounts = accounts.filter((account) =>
+            account.accountType === 'DEPOSIT_WITHDRAWAL'
+            && normalizeAccountStatus(account) === 'ACTIVE'
+        );
 
         accounts.forEach((account) => {
             const accountId = escapeAttribute(account.account);
-            const canTransfer = Number(account.amount || 0) >= 10000;
+            const canTransfer = normalizeAccountStatus(account) === 'ACTIVE'
+                && Number(account.amount || 0) >= 10000;
             const item = document.createElement('li');
             item.className = 'account-page-item';
             item.innerHTML = isTransferPage
                 ? renderTransferTargetAccount(account, accountId)
-                : renderOwnAccount(account, accountId, canTransfer);
+                : renderOwnAccount(account, accountId, canTransfer, checkingAccounts);
             list.append(item);
         });
 
@@ -160,6 +199,7 @@
             <div class="account-page-row">
                 <div>
                     <div class="account-page-name">${escapeHtml(account.name || '계좌')}</div>
+                    <div class="account-type-badge">${escapeHtml(getAccountTypeName(account))}</div>
                     <div class="account-page-number">${escapeHtml(formatAccountNumber(account.account))}</div>
                 </div>
                 <div class="account-page-amount">${formatAmount(account.amount)}원</div>
@@ -178,29 +218,80 @@
             </div>`;
     }
 
-    function renderOwnAccount(account, accountId, canTransfer) {
+    function renderOwnAccount(account, accountId, canTransfer, checkingAccounts) {
+        const accountStatus = normalizeAccountStatus(account);
+        const isActive = accountStatus === 'ACTIVE';
+        const isInterestAccount = account.accountType === 'INSTALLMENT_SAVINGS'
+            || account.accountType === 'TIME_DEPOSIT';
+        const canTerminate = isInterestAccount && accountStatus !== 'TERMINATED';
+
         return `
             <div class="account-page-row">
                 <div>
                     <div class="account-page-name">${escapeHtml(account.name || '계좌')}</div>
+                    <div class="account-type-badge">${escapeHtml(getAccountTypeName(account))}</div>
+                    <div class="account-status-badge ${accountStatus.toLowerCase()}">${escapeHtml(getAccountStatusName(accountStatus))}</div>
                     <div class="account-page-number">${escapeHtml(formatAccountNumber(account.account))}</div>
+                    ${renderInterestDetails(account)}
                 </div>
                 <div class="account-page-amount">${formatAmount(account.amount)}원</div>
                 <div class="account-action-group">
                     <button type="button" class="btn btn-outline-secondary" data-action="transactions" data-account="${accountId}">거래 내역</button>
-                    <button type="button" class="btn btn-outline-primary" data-action="deposit-toggle" data-account="${accountId}">입금</button>
+                    ${isActive ? `<button type="button" class="btn btn-outline-primary" data-action="deposit-toggle" data-account="${accountId}">입금</button>` : ''}
                     ${canTransfer ? `<button type="button" class="btn btn-success" data-action="transfer-toggle" data-account="${accountId}">계좌이체</button>` : ''}
+                    ${canTerminate ? renderTerminationButton(accountId, checkingAccounts, accountStatus) : ''}
                 </div>
             </div>
-            <div class="account-transfer-form hidden" id="depositForm${accountId}">
+            ${isActive ? `<div class="account-transfer-form hidden" id="depositForm${accountId}">
                 <input type="number" class="form-control account-transfer-input" id="depositAmount${accountId}" min="10000" step="10000" placeholder="입금 금액">
                 <button type="button" class="btn btn-primary" data-action="deposit-submit" data-account="${accountId}">입금</button>
-            </div>
+            </div>` : ''}
             ${canTransfer ? `<div class="account-transfer-form hidden" id="transferForm${accountId}">
                 <input type="text" class="form-control account-transfer-input" id="transferAccount${accountId}" placeholder="받는 계좌번호">
                 <input type="number" class="form-control account-transfer-input" id="transferAmount${accountId}" min="10000" step="10000" placeholder="이체 금액">
                 <button type="button" class="btn btn-primary" data-action="transfer-submit" data-account="${accountId}">이체</button>
-            </div>` : ''}`;
+            </div>` : ''}
+            ${canTerminate && checkingAccounts.length > 1 ? renderTerminationForm(accountId, checkingAccounts, accountStatus) : ''}`;
+    }
+
+    function renderTerminationButton(accountId, checkingAccounts, accountStatus) {
+        if (checkingAccounts.length === 0) {
+            return '<button type="button" class="btn btn-outline-danger" disabled title="정산받을 입출금 계좌가 필요합니다">입출금 계좌 필요</button>';
+        }
+
+        const settlementAccount = checkingAccounts.length === 1
+            ? ` data-settlement-account="${escapeAttribute(checkingAccounts[0].account)}"`
+            : '';
+        const label = accountStatus === 'MATURED' ? '만기 해지' : '중도 해지';
+
+        return `<button type="button" class="btn btn-outline-danger" data-action="terminate-toggle" data-account="${accountId}"${settlementAccount}>${label}</button>`;
+    }
+
+    function renderTerminationForm(accountId, checkingAccounts, accountStatus) {
+        const options = checkingAccounts.map((checkingAccount) => `
+            <option value="${escapeAttribute(checkingAccount.account)}">
+                ${escapeHtml(checkingAccount.name)} (${escapeHtml(formatAccountNumber(checkingAccount.account))})
+            </option>`).join('');
+        const label = accountStatus === 'MATURED' ? '만기 해지' : '중도 해지';
+
+        return `<div class="account-transfer-form hidden" id="terminationForm${accountId}">
+            <select class="form-control" id="settlementAccount${accountId}" aria-label="정산받을 입출금 계좌">${options}</select>
+            <button type="button" class="btn btn-danger" data-action="terminate-submit" data-account="${accountId}">${label}</button>
+        </div>`;
+    }
+
+    function renderInterestDetails(account) {
+        if (account.accountType === 'DEPOSIT_WITHDRAWAL') return '';
+
+        const rate = Number(account.annualInterestRatePercent || 0);
+        const maturity = account.maturityAt ? formatDate(account.maturityAt) : '-';
+        const interestLabel = normalizeAccountStatus(account) === 'TERMINATED' ? '지급 이자' : '예상 이자';
+
+        return `<div class="account-interest-info">
+            <span>연 ${escapeHtml(rate)}%</span>
+            <span>만기 ${escapeHtml(maturity)}</span>
+            <span>${interestLabel} ${formatAmount(account.estimatedInterest)}원</span>
+        </div>`;
     }
 
     function toggleForm(formId) {
@@ -310,8 +401,80 @@
         }
     }
 
+    async function terminateAccount(account, settlementAccount) {
+        if (isLoading || !settlementAccount) return;
+
+        if (!window.confirm('원금과 해지일까지의 이자를 선택한 입출금 계좌로 정산할까요?')) {
+            return;
+        }
+
+        isLoading = true;
+        try {
+            const response = await fetch(`/api/account/${encodeURIComponent(account)}/terminate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                },
+                body: JSON.stringify({ settlementAccount }),
+                credentials: 'include',
+            });
+            const json = await response.json();
+            if (!response.ok || json.result < 0) {
+                alert(json.message || '계좌 해지에 실패했습니다');
+                return;
+            }
+
+            const settlement = json.settlement;
+            alert(`${json.message}\n원금 ${formatAmount(settlement.principal)}원 + 이자 ${formatAmount(settlement.interest)}원`);
+            isLoading = false;
+            await loadAccounts();
+        } catch (error) {
+            console.error(error);
+            alert('계좌 해지 중 오류가 발생했습니다');
+        } finally {
+            isLoading = false;
+        }
+    }
+
     function formatAmount(value) {
         return amountFormatter.format(Number(value || 0));
+    }
+
+    function getAccountTypeName(account) {
+        if (account.accountTypeName) return account.accountTypeName;
+
+        const names = {
+            DEPOSIT_WITHDRAWAL: '입출금',
+            INSTALLMENT_SAVINGS: '적금',
+            TIME_DEPOSIT: '예금',
+        };
+
+        return names[account.accountType] || '입출금';
+    }
+
+    function normalizeAccountStatus(account) {
+        return account.accountStatus || 'ACTIVE';
+    }
+
+    function getAccountStatusName(status) {
+        const names = {
+            ACTIVE: '정상',
+            MATURED: '만기',
+            TERMINATED: '해지',
+        };
+
+        return names[status] || status;
+    }
+
+    function formatDate(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '-';
+
+        return new Intl.DateTimeFormat('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(date);
     }
 
     function formatAccountNumber(value) {
