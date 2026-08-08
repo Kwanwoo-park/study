@@ -9,5 +9,7 @@ public enum AccountTransactionType {
     FEE,
     CANCEL,
     INTEREST,
-    TERMINATION
+    TERMINATION,
+    SAVINGS_PAYMENT,
+    TIME_DEPOSIT_OPENING
 }

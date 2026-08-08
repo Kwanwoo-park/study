@@ -11,7 +11,9 @@ public record ChatMessageEventDto(
         String roomId,
         String message,
         ChatMessageStatus status,
-        LocalDateTime updateTime
+        LocalDateTime updateTime,
+        boolean editedByAdmin,
+        boolean deletedByAdmin
 ) {
     public static ChatMessageEventDto updated(ChatMessage message) {
         return new ChatMessageEventDto(
@@ -20,7 +22,9 @@ public record ChatMessageEventDto(
                 message.getRoom().getRoomId(),
                 message.getMessage(),
                 message.getStatus(),
-                message.getUpdateTime()
+                message.getUpdateTime(),
+                message.isEditedByAdmin(),
+                message.isDeletedByAdmin()
         );
     }
 
@@ -29,9 +33,13 @@ public record ChatMessageEventDto(
                 "DELETED_FOR_ALL",
                 message.getId(),
                 message.getRoom().getRoomId(),
-                "삭제된 메시지입니다.",
+                message.isDeletedByAdmin()
+                        ? "관리자에 의해 삭제된 메시지입니다"
+                        : "삭제된 메시지입니다",
                 message.getStatus(),
-                message.getUpdateTime()
+                message.getUpdateTime(),
+                message.isEditedByAdmin(),
+                message.isDeletedByAdmin()
         );
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.account.dto.AccountRequestDto;
 import spring.study.account.dto.AccountTranDto;
 import spring.study.account.dto.AccountTerminationRequestDto;
+import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.facade.AccountFacade;
 import spring.study.account.facade.AccountTransactionFacade;
 import spring.study.account.entity.AccountType;
@@ -27,13 +28,19 @@ public class AccountApiController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createAccount(
-            @RequestParam(defaultValue = "DEPOSIT_WITHDRAWAL") AccountType accountType,
+            @RequestParam(required = false) AccountType accountType,
+            @RequestBody(required = false) AccountCreateRequestDto requestDto,
             HttpServletRequest request
     ) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountFacade.create(member, accountType);
+        AccountCreateRequestDto resolvedRequest = requestDto == null ? new AccountCreateRequestDto() : requestDto;
+        if (resolvedRequest.getAccountType() == null) {
+            resolvedRequest.setAccountType(accountType == null ? AccountType.DEPOSIT_WITHDRAWAL : accountType);
+        }
+
+        return accountFacade.create(member, resolvedRequest);
     }
 
     @GetMapping("/list")

@@ -7,6 +7,20 @@
     const accountCreateControls = document.getElementById('accountCreateControls');
     const accountCreateBtn = document.getElementById('accountCreateBtn');
     const accountTypeSelect = document.getElementById('accountTypeSelect');
+    const savingsCreateOptions = document.getElementById('savingsCreateOptions');
+    const savingsSourceAccountSelect = document.getElementById('savingsSourceAccountSelect');
+    const monthlySavingsAmount = document.getElementById('monthlySavingsAmount');
+    const monthlySavingsDay = document.getElementById('monthlySavingsDay');
+    const savingsAutoTerminationAcknowledged = document.getElementById('savingsAutoTerminationAcknowledged');
+    const savingsSourceAccountLabel = document.getElementById('savingsSourceAccountLabel');
+    const savingsAutoSourceInfo = document.getElementById('savingsAutoSourceInfo');
+    const timeDepositCreateOptions = document.getElementById('timeDepositCreateOptions');
+    const timeDepositSourceAccountLabel = document.getElementById('timeDepositSourceAccountLabel');
+    const timeDepositSourceAccountSelect = document.getElementById('timeDepositSourceAccountSelect');
+    const timeDepositAutoSourceInfo = document.getElementById('timeDepositAutoSourceInfo');
+    const timeDepositSourceBalance = document.getElementById('timeDepositSourceBalance');
+    const timeDepositAmount = document.getElementById('timeDepositAmount');
+    const timeDepositMaturityMonths = document.getElementById('timeDepositMaturityMonths');
 
     if (!page || !body) {
         return;
@@ -23,6 +37,15 @@
     if (accountCreateBtn) {
         accountCreateControls?.classList.toggle('hidden', isTransferPage);
         accountCreateBtn.addEventListener('click', createAccount);
+        accountTypeSelect?.addEventListener('change', updateAccountCreateOptions);
+        timeDepositSourceAccountSelect?.addEventListener('change', updateTimeDepositBalance);
+        timeDepositAmount?.addEventListener('input', updateTimeDepositBalance);
+        if (timeDepositMaturityMonths) {
+            timeDepositMaturityMonths.innerHTML = Array.from({ length: 24 }, (_, index) => {
+                const months = index + 1;
+                return `<option value="${months}"${months === 12 ? ' selected' : ''}>${months}개월</option>`;
+            }).join('');
+        }
     }
 
     body.addEventListener('click', async (event) => {
@@ -128,11 +151,60 @@
                 return;
             }
 
-            const response = await fetch(`/api/account/create?accountType=${encodeURIComponent(accountType)}`, {
+            const payload = { accountType };
+            if (accountType === 'INSTALLMENT_SAVINGS') {
+                const amount = Number(monthlySavingsAmount?.value || 0);
+                const paymentDay = Number(monthlySavingsDay?.value || 0);
+                if (amount < 10000) {
+                    alert('적금 월 납입액은 1만원 이상으로 입력해주세요');
+                    return;
+                }
+                if (paymentDay < 1 || paymentDay > 31) {
+                    alert('자동이체일은 1일부터 31일 사이로 입력해주세요');
+                    return;
+                }
+                if (!savingsAutoTerminationAcknowledged?.checked) {
+                    alert('3일 내 미납 시 자동 해지되는 정책을 확인하고 동의해주세요');
+                    return;
+                }
+
+                payload.savingsSourceAccount = savingsSourceAccountSelect?.value || null;
+                payload.monthlySavingsAmount = amount;
+                payload.monthlySavingsDay = paymentDay;
+                payload.autoTerminationAcknowledged = true;
+            }
+            if (accountType === 'TIME_DEPOSIT') {
+                const amount = Number(timeDepositAmount?.value || 0);
+                const maturityMonths = Number(timeDepositMaturityMonths?.value || 0);
+                const sourceAccount = getSelectedCheckingAccount(timeDepositSourceAccountSelect);
+                if (!sourceAccount) {
+                    alert('예금 원금을 출금할 입출금 계좌를 선택해주세요');
+                    return;
+                }
+                if (amount < 10000) {
+                    alert('예금 금액은 1만원 이상으로 입력해주세요');
+                    return;
+                }
+                if (amount > Number(sourceAccount.amount || 0)) {
+                    alert('선택한 입출금 계좌의 잔액이 부족합니다');
+                    return;
+                }
+                if (maturityMonths < 1 || maturityMonths > 24) {
+                    alert('예금 만기 기간은 최대 24개월까지 선택할 수 있습니다');
+                    return;
+                }
+
+                payload.timeDepositSourceAccount = sourceAccount.account;
+                payload.timeDepositAmount = amount;
+                payload.maturityMonths = maturityMonths;
+            }
+
+            const response = await fetch('/api/account/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json; charset=utf-8',
                 },
+                body: JSON.stringify(payload),
                 credentials: 'include',
             });
             const json = await response.json();
@@ -155,6 +227,7 @@
 
     function renderAccounts(data) {
         loadedAccounts = data.list || [];
+        updateAccountCreateOptions();
         const accounts = (data.list || []).filter((account) =>
             !isTransferPage || normalizeAccountStatus(account) === 'ACTIVE'
         );
@@ -287,11 +360,93 @@
         const maturity = account.maturityAt ? formatDate(account.maturityAt) : '-';
         const interestLabel = normalizeAccountStatus(account) === 'TERMINATED' ? '지급 이자' : '예상 이자';
 
+        const savingsDetails = account.accountType === 'INSTALLMENT_SAVINGS'
+            ? `<span>자동이체 ${formatAmount(account.monthlySavingsAmount)}원 / 매월 ${escapeHtml(account.monthlySavingsDay || '-')}일</span>
+               <span>출금 계좌 ${escapeHtml(formatAccountNumber(account.savingsSourceAccount))}</span>
+               <span>다음 납입일 ${escapeHtml(account.nextSavingsPaymentDate ? formatDate(account.nextSavingsPaymentDate) : '-')}</span>`
+            : '';
+        const timeDepositDetails = account.accountType === 'TIME_DEPOSIT'
+            ? `<span>약정 기간 ${escapeHtml(account.maturityMonths || '-')}개월</span>`
+            : '';
+
         return `<div class="account-interest-info">
             <span>연 ${escapeHtml(rate)}%</span>
             <span>만기 ${escapeHtml(maturity)}</span>
             <span>${interestLabel} ${formatAmount(account.estimatedInterest)}원</span>
+            ${savingsDetails}
+            ${timeDepositDetails}
         </div>`;
+    }
+
+    function updateAccountCreateOptions() {
+        const isSavings = accountTypeSelect?.value === 'INSTALLMENT_SAVINGS';
+        const isTimeDeposit = accountTypeSelect?.value === 'TIME_DEPOSIT';
+        savingsCreateOptions?.classList.toggle('hidden', !isSavings);
+        timeDepositCreateOptions?.classList.toggle('hidden', !isTimeDeposit);
+
+        const checkingAccounts = loadedAccounts.filter((account) =>
+            account.accountType === 'DEPOSIT_WITHDRAWAL'
+            && normalizeAccountStatus(account) === 'ACTIVE'
+        );
+        if (isSavings) {
+            configureSourceAccountSelection(
+                checkingAccounts,
+                savingsSourceAccountSelect,
+                savingsSourceAccountLabel,
+                savingsAutoSourceInfo
+            );
+        }
+        if (isTimeDeposit) {
+            configureSourceAccountSelection(
+                checkingAccounts,
+                timeDepositSourceAccountSelect,
+                timeDepositSourceAccountLabel,
+                timeDepositAutoSourceInfo
+            );
+            updateTimeDepositBalance();
+        }
+    }
+
+    function configureSourceAccountSelection(checkingAccounts, select, label, autoInfo) {
+        if (!select) return;
+
+        select.innerHTML = checkingAccounts.length === 0
+            ? '<option value="">활성 입출금 계좌가 없습니다</option>'
+            : checkingAccounts.map((account) => `<option value="${escapeAttribute(account.account)}">${escapeHtml(account.name)} (${escapeHtml(formatAccountNumber(account.account))})</option>`).join('');
+        const isSingleAccount = checkingAccounts.length === 1;
+        select.disabled = checkingAccounts.length <= 1;
+        select.classList.toggle('hidden', isSingleAccount);
+        label?.classList.toggle('hidden', isSingleAccount);
+        autoInfo?.classList.toggle('hidden', !isSingleAccount);
+        if (autoInfo && isSingleAccount) {
+            const account = checkingAccounts[0];
+            autoInfo.innerHTML = `입출금 계좌 자동 선택: ${escapeHtml(account.name)} (${escapeHtml(formatAccountNumber(account.account))})`;
+        }
+    }
+
+    function getSelectedCheckingAccount(select) {
+        const selectedAccount = select?.value;
+        return loadedAccounts.find((account) =>
+            account.account === selectedAccount
+            && account.accountType === 'DEPOSIT_WITHDRAWAL'
+            && normalizeAccountStatus(account) === 'ACTIVE'
+        );
+    }
+
+    function updateTimeDepositBalance() {
+        if (!timeDepositSourceBalance) return;
+
+        const sourceAccount = getSelectedCheckingAccount(timeDepositSourceAccountSelect);
+        if (!sourceAccount) {
+            timeDepositSourceBalance.innerText = '출금 가능한 입출금 계좌가 없습니다';
+            return;
+        }
+        const balance = Number(sourceAccount.amount || 0);
+        const requestedAmount = Math.max(Number(timeDepositAmount?.value || 0), 0);
+        const remainingBalance = Math.max(balance - requestedAmount, 0);
+        timeDepositSourceBalance.innerText = requestedAmount > 0
+            ? `현재 잔액 ${formatAmount(balance)}원 · 개설 후 잔액 ${formatAmount(remainingBalance)}원`
+            : `현재 잔액 ${formatAmount(balance)}원`;
     }
 
     function toggleForm(formId) {

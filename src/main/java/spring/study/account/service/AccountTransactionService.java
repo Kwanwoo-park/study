@@ -104,8 +104,10 @@ public class AccountTransactionService {
         }
 
         if (transaction.getTransactionType() == AccountTransactionType.INTEREST
-                || transaction.getTransactionType() == AccountTransactionType.TERMINATION) {
-            throw new IllegalArgumentException("이자 및 해지 정산 거래는 취소할 수 없습니다");
+                || transaction.getTransactionType() == AccountTransactionType.TERMINATION
+                || transaction.getTransactionType() == AccountTransactionType.SAVINGS_PAYMENT
+                || transaction.getTransactionType() == AccountTransactionType.TIME_DEPOSIT_OPENING) {
+            throw new IllegalArgumentException("이자, 해지 정산 및 예적금 개설 거래는 취소할 수 없습니다");
         }
 
         if (transaction.getTransactionStatus() != AccountTransactionStatus.COMPLETED) {

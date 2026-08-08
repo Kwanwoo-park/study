@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatMessageService {
     private static final long DELETE_FOR_ALL_LIMIT_MINUTES = 30L;
+    private static final long EDIT_LIMIT_DAYS = 1L;
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatMessageHiddenRepository chatMessageHiddenRepository;
@@ -70,6 +71,13 @@ public class ChatMessageService {
     @Transactional
     public ChatMessage edit(String id, String content, Member member) {
         ChatMessage message = findRequired(id);
+        validateEditable(message, member);
+
+        message.edit(content, member.getRole() == Role.ADMIN);
+        return message;
+    }
+
+    public void validateEditable(ChatMessage message, Member member) {
         validateOwner(message, member);
 
         if (message.getType() != MessageType.TALK) {
@@ -78,9 +86,13 @@ public class ChatMessageService {
         if (message.getStatus() == ChatMessageStatus.DELETED_FOR_ALL) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "삭제된 메시지는 수정할 수 없습니다.");
         }
-
-        message.edit(content);
-        return message;
+        if (message.isCensored()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "금칙어 사용으로 검열된 메시지는 수정할 수 없습니다.");
+        }
+        if (message.getRegisterTime() == null
+                || !message.getRegisterTime().plusDays(EDIT_LIMIT_DAYS).isAfter(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "전송 후 1일이 지난 메시지는 수정할 수 없습니다.");
+        }
     }
 
     @Transactional
@@ -115,7 +127,7 @@ public class ChatMessageService {
             );
         }
 
-        message.deleteForAll();
+        message.deleteForAll(member.getRole() == Role.ADMIN);
         return message;
     }
 
@@ -132,8 +144,8 @@ public class ChatMessageService {
     }
 
     private void validateOwner(ChatMessage message, Member member) {
-        if (!message.getMember().getId().equals(member.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 작성한 메시지만 수정할 수 있습니다.");
+        if (!message.getMember().getId().equals(member.getId()) && member.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인 또는 관리자만 메시지를 수정할 수 있습니다.");
         }
     }
 

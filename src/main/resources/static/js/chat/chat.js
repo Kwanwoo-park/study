@@ -10,6 +10,8 @@ const newMessageNotice = document.getElementById("new-message-notice");
 const maxSize = 10;
 const CHAT_LIMIT = 10;
 const DELETE_FOR_ALL_LIMIT_MS = 30 * 60 * 1000;
+const EDIT_MESSAGE_LIMIT_MS = 24 * 60 * 60 * 1000;
+const CENSORED_MESSAGE = '<부적절한 내용이 포함되어 검열되었습니다>';
 const PRESENCE_REFRESH_INTERVAL_MS = 60 * 1000;
 const messageTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
     hour: '2-digit',
@@ -301,7 +303,7 @@ function fnDraw(data) {
     applyMessageDirection(newMsgLi, newMsgArea, data);
 
     if (data.status === 'DELETED_FOR_ALL') {
-        renderDeletedMessage(newMsgLi, newMsgArea);
+        renderDeletedMessage(newMsgLi, newMsgArea, data);
         newMsgLi.append(newMsgArea);
         msgArea.append(newMsgLi);
         refreshDateSeparators();
@@ -349,7 +351,7 @@ function fnLoadDraw(json) {
         applyMessageDirection(newMsgLi, newMsgArea, data);
 
         if (data.status === 'DELETED_FOR_ALL') {
-            renderDeletedMessage(newMsgLi, newMsgArea);
+            renderDeletedMessage(newMsgLi, newMsgArea, data);
             newMsgLi.append(newMsgArea);
             msgArea.prepend(newMsgLi);
             return;
@@ -646,7 +648,7 @@ function appendEditedIndicator(messageArea, data) {
 
     const indicator = document.createElement('span');
     indicator.className = 'chat-message-edited';
-    indicator.innerText = '수정됨';
+    indicator.innerText = data.editedByAdmin ? '관리자에 의해 수정됨' : '수정됨';
     messageArea.append(indicator);
 }
 
@@ -665,7 +667,7 @@ function appendMessageActions(messageArea, data) {
     toggle.innerText = '⋮';
     menu.className = 'chat-message-actions-menu';
 
-    if (isMyMessage(data) && data.type === 'TALK') {
+    if (canEditMessage(data)) {
         menu.append(createMessageActionButton('수정', () => editChatMessage(data.id)));
     }
 
@@ -705,6 +707,21 @@ function canDeleteForAll(data) {
     const elapsed = Date.now() - sentAt;
 
     return elapsed >= 0 && elapsed < DELETE_FOR_ALL_LIMIT_MS;
+}
+
+function canEditMessage(data) {
+    if (!data || (!isMyMessage(data) && !isAdmin) || data.type !== 'TALK' || isCensoredMessage(data)
+            || !data.registerTime) {
+        return false;
+    }
+
+    const sentAt = getMessageDate(data).getTime();
+    const elapsed = Date.now() - sentAt;
+    return elapsed >= 0 && elapsed < EDIT_MESSAGE_LIMIT_MS;
+}
+
+function isCensoredMessage(data) {
+    return Boolean(data && (data.censored || data.message === CENSORED_MESSAGE));
 }
 
 function createMessageActionButton(label, handler, variant) {
@@ -760,7 +777,7 @@ async function editChatMessage(messageId) {
 }
 
 async function deleteChatMessage(messageId, scope) {
-    if (scope === 'ALL') {
+    if (scope === 'ALL' && !isAdmin) {
         const row = document.getElementById('chat-message-' + messageId);
         const sentAt = row && row.dataset.messageTime
             ? new Date(row.dataset.messageTime).getTime()
@@ -808,7 +825,7 @@ function applyChatMessageEvent(event) {
         const row = document.getElementById('chat-message-' + event.id);
         const messageArea = row ? row.querySelector('.chat-message-content') : null;
         if (row && messageArea) {
-            renderDeletedMessage(row, messageArea);
+            renderDeletedMessage(row, messageArea, event);
             refreshDateSeparators();
         }
         return;
@@ -823,21 +840,26 @@ function applyChatMessageEvent(event) {
     if (messageText) messageText.innerText = event.message;
 
     const messageArea = row.querySelector('.chat-message-content');
-    if (messageArea && !messageArea.querySelector('.chat-message-edited')) {
-        const indicator = document.createElement('span');
-        indicator.className = 'chat-message-edited';
-        indicator.innerText = '수정됨';
-        const time = messageArea.querySelector('.chat-message-time');
-        messageArea.insertBefore(indicator, time);
+    if (messageArea) {
+        let indicator = messageArea.querySelector('.chat-message-edited');
+        if (!indicator) {
+            indicator = document.createElement('span');
+            indicator.className = 'chat-message-edited';
+            const time = messageArea.querySelector('.chat-message-time');
+            messageArea.insertBefore(indicator, time);
+        }
+        indicator.innerText = event.editedByAdmin ? '관리자에 의해 수정됨' : '수정됨';
     }
 }
 
-function renderDeletedMessage(row, messageArea) {
+function renderDeletedMessage(row, messageArea, data) {
     const deletedText = document.createElement('span');
 
     row.classList.add('deleted');
     deletedText.className = 'chat-message-deleted-text';
-    deletedText.innerText = '삭제된 메시지입니다';
+    deletedText.innerText = data && data.deletedByAdmin
+        ? '관리자에 의해 삭제된 메시지입니다'
+        : '삭제된 메시지입니다';
     messageArea.replaceChildren(deletedText);
 }
 

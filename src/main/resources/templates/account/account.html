@@ -20,13 +20,41 @@
       <p id="accountPageDescription" class="account-page-description"></p>
     </div>
     <div id="accountCreateControls" class="account-create-controls">
-      <label class="sr-only" for="accountTypeSelect">계좌 종류</label>
-      <select id="accountTypeSelect" class="form-control" aria-label="계좌 종류">
-        <option value="DEPOSIT_WITHDRAWAL">입출금</option>
-        <option value="INSTALLMENT_SAVINGS">적금</option>
-        <option value="TIME_DEPOSIT">예금</option>
-      </select>
-      <button type="button" id="accountCreateBtn" class="btn btn-primary">계좌 생성</button>
+      <div class="account-create-primary">
+        <label class="sr-only" for="accountTypeSelect">계좌 종류</label>
+        <select id="accountTypeSelect" class="form-control" aria-label="계좌 종류">
+          <option value="DEPOSIT_WITHDRAWAL">입출금</option>
+          <option value="INSTALLMENT_SAVINGS">적금</option>
+          <option value="TIME_DEPOSIT">예금</option>
+        </select>
+        <button type="button" id="accountCreateBtn" class="btn btn-primary">계좌 생성</button>
+      </div>
+      <div id="savingsCreateOptions" class="account-savings-create-options hidden">
+        <label id="savingsSourceAccountLabel" for="savingsSourceAccountSelect">자동이체 입출금 계좌</label>
+        <select id="savingsSourceAccountSelect" class="form-control"></select>
+        <div id="savingsAutoSourceInfo" class="account-auto-source-info hidden"></div>
+        <label for="monthlySavingsAmount">매월 납입 금액</label>
+        <input id="monthlySavingsAmount" class="form-control" type="number" min="10000" step="10000" placeholder="10,000원 이상">
+        <label for="monthlySavingsDay">매월 자동이체일</label>
+        <div>
+          <input id="monthlySavingsDay" class="form-control" type="number" min="1" max="31" placeholder="1~31일">
+          <small class="account-savings-date-help">선택한 일자가 없는 달에는 해당 달의 말일에 자동이체됩니다.</small>
+        </div>
+        <label class="account-savings-policy">
+          <input id="savingsAutoTerminationAcknowledged" type="checkbox">
+          <span>자동이체일에 잔액이 부족하면 최대 3일간 매일 재시도 및 알림이 진행되며, 3일 내 납입되지 않으면 적금 계좌가 자동 해지됩니다.</span>
+        </label>
+      </div>
+      <div id="timeDepositCreateOptions" class="account-savings-create-options hidden">
+        <label id="timeDepositSourceAccountLabel" for="timeDepositSourceAccountSelect">출금 입출금 계좌</label>
+        <select id="timeDepositSourceAccountSelect" class="form-control"></select>
+        <div id="timeDepositAutoSourceInfo" class="account-auto-source-info hidden"></div>
+        <div id="timeDepositSourceBalance" class="account-source-balance"></div>
+        <label for="timeDepositAmount">예금 금액</label>
+        <input id="timeDepositAmount" class="form-control" type="number" min="10000" step="10000" placeholder="10,000원 이상">
+        <label for="timeDepositMaturityMonths">만기 기간</label>
+        <select id="timeDepositMaturityMonths" class="form-control" aria-label="예금 만기 기간"></select>
+      </div>
     </div>
   </section>
 

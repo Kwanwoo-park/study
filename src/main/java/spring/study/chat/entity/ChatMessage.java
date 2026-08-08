@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 public class ChatMessage extends BasetimeEntity implements Serializable, Persistable<String> {
     @Serial
     private static final long serialVersionUID = 10L;
+    public static final String CENSORED_MESSAGE = "<부적절한 내용이 포함되어 검열되었습니다>";
 
     @Id
     @Column(name = "message_id")
@@ -39,6 +40,12 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
 
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean edited;
+
+    @Column(name = "edited_by_admin", nullable = false, columnDefinition = "boolean default false")
+    private boolean editedByAdmin;
+
+    @Column(name = "deleted_by_admin", nullable = false, columnDefinition = "boolean default false")
+    private boolean deletedByAdmin;
 
     @JoinColumn(name = "member_id")
     @ManyToOne
@@ -90,11 +97,25 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
     }
 
     public void edit(String message) {
+        edit(message, false);
+    }
+
+    public void edit(String message, boolean byAdmin) {
         this.message = message;
         this.edited = true;
+        this.editedByAdmin = byAdmin;
+    }
+
+    public boolean isCensored() {
+        return CENSORED_MESSAGE.equals(message);
     }
 
     public void deleteForAll() {
+        deleteForAll(false);
+    }
+
+    public void deleteForAll(boolean byAdmin) {
         this.status = ChatMessageStatus.DELETED_FOR_ALL;
+        this.deletedByAdmin = byAdmin;
     }
 }

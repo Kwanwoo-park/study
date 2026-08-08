@@ -42,6 +42,8 @@ public class AccountTransactionResponseDto {
                 && entity.getTransactionType() != AccountTransactionType.CANCEL
                 && entity.getTransactionType() != AccountTransactionType.INTEREST
                 && entity.getTransactionType() != AccountTransactionType.TERMINATION
+                && entity.getTransactionType() != AccountTransactionType.SAVINGS_PAYMENT
+                && entity.getTransactionType() != AccountTransactionType.TIME_DEPOSIT_OPENING
                 && entity.getTransactionTime().plusDays(1).isAfter(LocalDateTime.now());
     }
 }

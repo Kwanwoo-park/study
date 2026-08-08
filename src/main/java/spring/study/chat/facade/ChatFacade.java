@@ -215,6 +215,7 @@ public class ChatFacade {
                                            HttpServletResponse response) {
         ChatMessage originalMessage = messageService.findById(messageId);
         validateParticipant(originalMessage, member);
+        messageService.validateEditable(originalMessage, member);
 
         String content = requestDto.getMessage();
         int risk = moderationService.validate(content, member, response);

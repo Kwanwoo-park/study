@@ -9,6 +9,7 @@ import spring.study.account.entity.AccountStatus;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Getter
 @NoArgsConstructor
@@ -25,6 +26,11 @@ public class AccountResponseDto {
     private LocalDateTime maturityAt;
     private long estimatedInterest;
     private long interestPaidAmount;
+    private String savingsSourceAccount;
+    private Long monthlySavingsAmount;
+    private Integer monthlySavingsDay;
+    private LocalDate nextSavingsPaymentDate;
+    private Integer maturityMonths;
 
     public AccountResponseDto(Account entity) {
         this.account = entity.getAccount();
@@ -41,6 +47,13 @@ public class AccountResponseDto {
                 ? entity.getInterestPaidAmount()
                 : entity.calculateAccruedInterestAt(LocalDateTime.now()).setScale(0, RoundingMode.DOWN).longValue();
         this.interestPaidAmount = entity.getInterestPaidAmount();
+        this.savingsSourceAccount = entity.getSavingsSourceAccount() == null
+                ? null
+                : entity.getSavingsSourceAccount().getAccount();
+        this.monthlySavingsAmount = entity.getMonthlySavingsAmount();
+        this.monthlySavingsDay = entity.getMonthlySavingsDay();
+        this.nextSavingsPaymentDate = entity.getNextSavingsPaymentDate();
+        this.maturityMonths = entity.getMaturityMonths();
     }
 
     @Override

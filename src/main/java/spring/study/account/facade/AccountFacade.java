@@ -9,6 +9,7 @@ import spring.study.account.dto.AccountRequestDto;
 import spring.study.account.dto.AccountResponseDto;
 import spring.study.account.dto.AccountTranDto;
 import spring.study.account.dto.AccountSettlementResult;
+import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountType;
 import spring.study.account.entity.AccountStatus;
@@ -24,9 +25,15 @@ public class AccountFacade {
     private final AccountService accountService;
 
     public ResponseEntity<?> create(Member member, AccountType accountType) {
+        AccountCreateRequestDto requestDto = new AccountCreateRequestDto();
+        requestDto.setAccountType(accountType);
+        return create(member, requestDto);
+    }
+
+    public ResponseEntity<?> create(Member member, AccountCreateRequestDto requestDto) {
         Account account;
         try {
-            account = accountService.createAccount(member, accountType);
+            account = accountService.createAccount(member, requestDto);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
@@ -125,6 +132,13 @@ public class AccountFacade {
         }
 
         Account target = accountService.findByAccount(account);
+        if (target.getAccountType() == AccountType.DEPOSIT_WITHDRAWAL
+                && accountService.hasActiveSavingsUsingSource(target)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", "적금 자동이체에 사용 중인 입출금 계좌는 삭제할 수 없습니다"
+            ));
+        }
         if (target.isInterestBearing() && target.getAccountStatus() != AccountStatus.TERMINATED) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,

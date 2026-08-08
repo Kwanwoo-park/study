@@ -24,6 +24,16 @@ class AccountInterestUiRegressionTest {
                 "interest-bearing accounts should call the termination settlement API");
         assertTrue(accountJs.contains("account.estimatedInterest"),
                 "the account page should show currently estimated interest");
+        assertTrue(accountJs.contains("autoTerminationAcknowledged"),
+                "savings creation should acknowledge automatic termination");
+        assertTrue(accountJs.contains("payload.savingsSourceAccount"),
+                "savings creation should send the selected checking account");
+        assertTrue(accountJs.contains("payload.timeDepositAmount"),
+                "time deposit creation should send the opening principal");
+        assertTrue(accountJs.contains("payload.maturityMonths"),
+                "time deposit creation should send a term of at most 24 months");
+        assertTrue(accountJs.contains("현재 잔액"),
+                "the selected checking account balance should be shown");
     }
 
     @Test
@@ -32,5 +42,7 @@ class AccountInterestUiRegressionTest {
 
         assertTrue(transactionJs.contains("INTEREST: '이자'"));
         assertTrue(transactionJs.contains("TERMINATION: '해지 정산'"));
+        assertTrue(transactionJs.contains("SAVINGS_PAYMENT: '적금 자동이체'"));
+        assertTrue(transactionJs.contains("TIME_DEPOSIT_OPENING: '예금 개설 입금'"));
     }
 }

@@ -203,16 +203,28 @@ class TemplateStaticResourceRegressionTest {
                 "owned chat messages should support deletion for everyone");
         assertTrue(chatJs.contains("DELETE_FOR_ALL_LIMIT_MS = 30 * 60 * 1000"),
                 "delete for everyone should only be offered during the first thirty minutes");
+        assertTrue(chatJs.contains("EDIT_MESSAGE_LIMIT_MS = 24 * 60 * 60 * 1000"),
+                "chat editing should only be offered during the first day");
+        assertTrue(chatJs.contains("isCensoredMessage(data)"),
+                "censored chat messages should hide the edit action");
+        assertTrue(chatJs.contains("(!isMyMessage(data) && !isAdmin)"),
+                "administrators should be able to edit another member's message");
         assertTrue(chatJs.contains("canDeleteForAll(data)"),
                 "expired messages should hide the delete-for-everyone action");
         assertTrue(chatJs.contains("isAdmin || (isMyMessage(data) && canDeleteForAll(data))"),
                 "administrators should be able to delete every member's message for everyone");
+        assertTrue(chatJs.contains("scope === 'ALL' && !isAdmin"),
+                "administrators should bypass the client-side delete time limit");
         assertTrue(chatRoom.contains("id=\"isAdmin\""),
                 "chat room should expose the signed-in member's administrator status");
         assertTrue(chatJs.contains("applyChatMessageEvent(json);"),
                 "chat message updates and global deletions should be applied in real time");
-        assertTrue(chatJs.contains("renderDeletedMessage(row, messageArea);"),
+        assertTrue(chatJs.contains("renderDeletedMessage(row, messageArea, event);"),
                 "global deletions should replace the message with a deleted-message notice");
+        assertTrue(chatJs.contains("관리자에 의해 수정됨"),
+                "administrator edits should be identified in the chat UI");
+        assertTrue(chatJs.contains("관리자에 의해 삭제된 메시지입니다"),
+                "administrator deletions should be identified in the chat UI");
         assertTrue(chatCss.contains(".chat-message-row.deleted"),
                 "deleted-message notices should be centered in the chat room");
         assertTrue(chatCss.contains(".chat-message-actions-menu"),

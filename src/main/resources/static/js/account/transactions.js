@@ -212,6 +212,8 @@
             CANCEL: '취소',
             INTEREST: '이자',
             TERMINATION: '해지 정산',
+            SAVINGS_PAYMENT: '적금 자동이체',
+            TIME_DEPOSIT_OPENING: '예금 개설 입금',
         };
 
         return labels[type] || type || '-';
