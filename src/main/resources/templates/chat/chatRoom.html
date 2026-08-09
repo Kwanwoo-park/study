@@ -19,6 +19,8 @@
                 <span th:each="name, stat : ${participantNames}"
                       th:text="${name + (stat.last ? '' : ', ')}">참여자</span>
         </div>
+        <button th:if="${audioCallAvailable}" type="button" id="audio-call-start"
+                class="btn btn-success btn-sm">음성 통화</button>
     </header>
     <div class="container chat-room-container">
         <form method="dialog" enctype="multipart/form-data">
@@ -30,6 +32,17 @@
             새 메시지
         </button>
     </div>
+
+    <section id="audio-call-panel" class="audio-call-panel is-hidden" role="dialog" aria-live="polite">
+        <p id="audio-call-status" class="audio-call-status">통화 준비 중</p>
+        <div class="audio-call-actions">
+            <button type="button" id="audio-call-accept" class="btn btn-success is-hidden">받기</button>
+            <button type="button" id="audio-call-reject" class="btn btn-secondary is-hidden">거절</button>
+            <button type="button" id="audio-call-mute" class="btn btn-outline-secondary is-hidden">음소거</button>
+            <button type="button" id="audio-call-hangup" class="btn btn-danger is-hidden">통화 종료</button>
+        </div>
+        <audio id="audio-call-remote" autoplay></audio>
+    </section>
     <div class="chat-room-controls">
         <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>
         <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
@@ -44,6 +57,7 @@
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
     <script src="/js/chat/chat.js"></script>
+    <script src="/js/chat/audio-call.js"></script>
 </body>
 <footer>
     <div class="card">

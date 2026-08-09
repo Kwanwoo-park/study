@@ -183,6 +183,10 @@ Spring Boot Server (EC2)
 
 ```env
 MYSQL_ROOT_PASSWORD=your-password
+TURN_SHARED_SECRET=replace-with-a-long-random-secret
+TURN_REALM=turn.example.com
+TURN_EXTERNAL_IP=your-ip
+WEBRTC_TURN_URLS=turn:turn.example.com:3478?transport=udp,turn:turn.example.com:3478?transport=tcp
 ```
 
 애플리케이션과 인프라 컨테이너를 함께 실행합니다.
@@ -192,6 +196,12 @@ docker-compose up -d --build
 ```
 
 실행 후 `http://localhost:8080`으로 접속합니다.
+
+음성 통화를 서로 다른 네트워크에서 사용하려면 `TURN_EXTERNAL_IP`에 TURN 서버의
+공인 IP를 입력하고 방화벽에서 TCP/UDP 3478 및 UDP 49160-49200을 허용해야 합니다.
+`TURN_SHARED_SECRET`은 애플리케이션과 Coturn이 동일한 값을 사용해야 하며 저장소에
+커밋하지 않습니다. 운영 웹 페이지와 WebSocket은 HTTPS/WSS로 제공해야 브라우저가
+마이크 접근을 허용합니다.
 
 ### 로컬 jar 실행
 

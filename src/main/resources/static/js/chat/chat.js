@@ -82,6 +82,10 @@ client.connect({}, onConnected, onError);
 function onConnected() {
     client.subscribe("/sub/chat/room/" + roomId, onMessageReceived);
 
+    if (window.audioCallClient) {
+        window.audioCallClient.onStompConnected(client);
+    }
+
     if (flag == 'true')
         enterRoom();
 }

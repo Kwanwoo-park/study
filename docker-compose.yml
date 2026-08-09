@@ -59,6 +59,29 @@ services:
     networks:
       - backend
 
+  turn:
+    image: coturn/coturn:4.6.3
+    container_name: turn
+    restart: always
+    command:
+      - --log-file=stdout
+      - --fingerprint
+      - --use-auth-secret
+      - --static-auth-secret=${TURN_SHARED_SECRET}
+      - --realm=${TURN_REALM}
+      - --external-ip=${TURN_EXTERNAL_IP}
+      - --listening-port=3478
+      - --min-port=49160
+      - --max-port=49200
+      - --no-multicast-peers
+      - --no-cli
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "49160-49200:49160-49200/udp"
+    networks:
+      - backend
+
   app:
     build:
       context: .
@@ -82,6 +105,8 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
 
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      WEBRTC_TURN_URLS: ${WEBRTC_TURN_URLS}
+      TURN_SHARED_SECRET: ${TURN_SHARED_SECRET}
     volumes:
       - app-data:/app/data/img
     networks:
