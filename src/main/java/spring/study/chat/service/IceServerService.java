@@ -21,10 +21,10 @@ public class IceServerService {
     private final long credentialTtlSeconds;
 
     public IceServerService(
-            @Value("${WEBRTC_STUN_URL:stun:stun.l.google.com:19302}") String stunUrl,
-            @Value("${WEBRTC_TURN_URLS:}") List<String> turnUrls,
-            @Value("${TURN_SHARED_SECRET:}") String turnSharedSecret,
-            @Value("${TURN_CREDENTIAL_TTL_SECONDS:3600}") long credentialTtlSeconds) {
+            @Value("${webrtc.ice.stun-url}") String stunUrl,
+            @Value("${webrtc.ice.turn-urls}") List<String> turnUrls,
+            @Value("${webrtc.ice.turn-shared-secret}") String turnSharedSecret,
+            @Value("${webrtc.ice.turn-credential-ttl-seconds}") long credentialTtlSeconds) {
         this.stunUrl = stunUrl;
         this.turnUrls = turnUrls.stream().filter(url -> url != null && !url.isBlank()).toList();
         this.turnSharedSecret = turnSharedSecret;
