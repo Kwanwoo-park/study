@@ -23,6 +23,11 @@ public class AdminViewController {
     private final JwtManager jwtManager;
     private final ForbiddenService forbiddenService;
 
+    @GetMapping("/access-denied")
+    public String accessDenied() {
+        return "error/404";
+    }
+
     @GetMapping("/administrator")
     public String admin(HttpServletRequest request){
         Member member = jwtManager.getLoginMember(request);

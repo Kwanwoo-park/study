@@ -1,25 +1,30 @@
 package spring.study.jwt.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.member.entity.Member;
+import spring.study.member.repository.MemberRepository;
 import spring.study.jwt.entity.RefreshToken;
 import spring.study.jwt.repository.RefreshTokenRepository;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class RefreshTokenService {
+    private static final long INACTIVE_MEMBER_DAYS = 15L;
+
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberTokenCacheService memberTokenCacheService;
+    private final MemberRepository memberRepository;
 
     public void save(String jti, Member member, Duration ttl) {
+        recordAccess(member);
         refreshTokenRepository.save(new RefreshToken(jti, member.getId(), ttl));
         memberTokenCacheService.save(member, ttl);
     }
@@ -34,6 +39,7 @@ public class RefreshTokenService {
         }
 
         refreshTokenRepository.delete(oldToken);
+        recordAccess(member);
         refreshTokenRepository.save(new RefreshToken(newJti, member.getId(), ttl));
         memberTokenCacheService.save(member, ttl);
         return true;
@@ -58,7 +64,6 @@ public class RefreshTokenService {
         memberTokenCacheService.delete(memberId);
     }
 
-    @Scheduled(cron = "${security.jwt.refresh-token-cleanup-cron:0 0 * * * *}")
     public void deleteExpiredTokens() {
         Instant now = Instant.now();
         List<RefreshToken> expiredTokens = refreshTokenRepository.findByExpiresAtLessThanEqual(now);
@@ -67,6 +72,23 @@ public class RefreshTokenService {
                 .map(RefreshToken::getMemberId)
                 .distinct()
                 .forEach(memberId -> deleteMemberCacheIfNoValidToken(memberId, now));
+    }
+
+    public void deleteInactiveMemberTokens() {
+        List<Long> tokenMemberIds = refreshTokenRepository.findDistinctMemberIds();
+        if (tokenMemberIds.isEmpty()) return;
+
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(INACTIVE_MEMBER_DAYS);
+        List<Long> inactiveMemberIds = memberRepository.findInactiveMemberIds(tokenMemberIds, cutoff);
+        inactiveMemberIds.forEach(refreshTokenRepository::deleteByMemberId);
+        refreshTokenRepository.flush();
+        inactiveMemberIds.forEach(memberTokenCacheService::delete);
+    }
+
+    private void recordAccess(Member member) {
+        LocalDateTime accessedAt = LocalDateTime.now();
+        memberRepository.updateLastLoginTime(member.getId(), accessedAt);
+        member.changeLastLoginTime(accessedAt);
     }
 
     private void deleteMemberCacheIfNoValidToken(Long memberId, Instant now) {

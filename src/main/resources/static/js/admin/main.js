@@ -1,11 +1,16 @@
 window.onload = async function() {
     await loadSystemStatus();
+    await loadSystemIncidents();
     await loadUserStatus();
     await loadNewUser();
     await loadNewBoard();
     await loadActiveChatting();
     await loadRecentReports();
     setInterval(loadSystemStatus, 30000);
+    setInterval(loadSystemIncidents, 30000);
+
+    const incidentRefresh = document.getElementById('incident-refresh');
+    if (incidentRefresh) incidentRefresh.addEventListener('click', loadSystemIncidents);
 }
 
 async function loadSystemStatus() {
@@ -34,6 +39,103 @@ async function loadSystemStatus() {
     } catch (error) {
         console.error(error);
         statusDiv.innerHTML = '<div class="admin-system-error">서버 상태를 불러오지 못했습니다</div>';
+    }
+}
+
+async function loadSystemIncidents() {
+    const incidentList = document.getElementById('system-incident-list');
+    const incidentCount = document.getElementById('incident-unacknowledged-count');
+    if (!incidentList) return;
+
+    try {
+        const response = await fetch('/api/admin/system/incidents', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+            },
+            credentials: 'include',
+        });
+        const data = await response.json();
+        if (!response.ok || data.result < 0) {
+            throw new Error('장애 기록 조회 실패');
+        }
+
+        if (incidentCount) {
+            incidentCount.innerText = `${Number(data.unacknowledgedCount || 0)}건 미확인`;
+            incidentCount.classList.toggle('has-incidents', Number(data.unacknowledgedCount || 0) > 0);
+        }
+        renderSystemIncidents(data.list || []);
+    } catch (error) {
+        console.error(error);
+        incidentList.innerHTML = '<div class="admin-incident-empty error">장애 기록을 불러오지 못했습니다.</div>';
+    }
+}
+
+function renderSystemIncidents(incidents) {
+    const incidentList = document.getElementById('system-incident-list');
+    if (!incidentList) return;
+    incidentList.replaceChildren();
+
+    if (incidents.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'admin-incident-empty';
+        empty.innerText = '기록된 서버 장애가 없습니다.';
+        incidentList.append(empty);
+        return;
+    }
+
+    incidents.forEach(incident => incidentList.append(createIncidentCard(incident)));
+}
+
+function createIncidentCard(incident) {
+    const card = document.createElement('article');
+    const header = document.createElement('div');
+    const status = document.createElement('span');
+    const time = document.createElement('time');
+    const route = document.createElement('strong');
+    const type = document.createElement('div');
+    const message = document.createElement('p');
+    const acknowledge = document.createElement('button');
+
+    card.className = `admin-incident-card${incident.acknowledged ? ' acknowledged' : ''}`;
+    header.className = 'admin-incident-card-header';
+    status.className = 'admin-incident-http-status';
+    status.innerText = String(incident.httpStatus || 500);
+    time.innerText = formatDateTime(incident.occurredAt);
+    route.className = 'admin-incident-route';
+    route.innerText = `${incident.requestMethod || 'UNKNOWN'} ${incident.requestPath || 'UNKNOWN'}`;
+    type.className = 'admin-incident-type';
+    type.innerText = incident.exceptionType || 'UnknownException';
+    message.className = 'admin-incident-message';
+    message.innerText = incident.message || '메시지 없는 서버 오류';
+    acknowledge.type = 'button';
+    acknowledge.className = 'btn btn-sm ' + (incident.acknowledged ? 'btn-outline-secondary' : 'btn-outline-danger');
+    acknowledge.disabled = Boolean(incident.acknowledged);
+    acknowledge.innerText = incident.acknowledged ? '확인 완료' : '확인 처리';
+    if (!incident.acknowledged) {
+        acknowledge.addEventListener('click', () => acknowledgeSystemIncident(incident.id));
+    }
+
+    header.append(status, time);
+    card.append(header, route, type, message, acknowledge);
+    return card;
+}
+
+async function acknowledgeSystemIncident(incidentId) {
+    try {
+        const response = await fetch(`/api/admin/system/incidents/${encodeURIComponent(incidentId)}/acknowledge`, {
+            method: 'PATCH',
+            credentials: 'include',
+        });
+        const data = await response.json();
+        if (!response.ok || data.result < 0) {
+            alert(data.message || '장애 기록을 확인 처리하지 못했습니다.');
+            return;
+        }
+        await loadSystemIncidents();
+    } catch (error) {
+        console.error(error);
+        alert('장애 기록을 확인 처리하지 못했습니다.');
     }
 }
 

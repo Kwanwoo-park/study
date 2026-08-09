@@ -20,6 +20,10 @@ class SecurityConfigRegressionTest {
 
         assertTrue(config.contains(".requestMatchers(\"/admin/**\").hasRole(\"ADMIN\")"),
                 "admin pages should require the admin role");
+        assertTrue(config.contains(".requestMatchers(\"/admin/access-denied\").permitAll()"),
+                "the access guidance page must remain reachable after authorization fails");
+        assertTrue(config.contains(".accessDeniedPage(\"/admin/access-denied\")"),
+                "forbidden admin page requests should display the access guidance page");
         assertTrue(config.contains(".anyRequest().permitAll()"),
                 "non-admin routes should remain publicly reachable while controllers enforce JWT authentication");
         assertTrue(config.contains("SessionCreationPolicy.STATELESS"),
@@ -31,5 +35,8 @@ class SecurityConfigRegressionTest {
         assertTrue(config.indexOf(".requestMatchers(\"/admin/**\").hasRole(\"ADMIN\")")
                         < config.indexOf(".anyRequest().permitAll()"),
                 "the admin rule should be evaluated before the fallback rule");
+        assertTrue(config.indexOf(".requestMatchers(\"/admin/access-denied\").permitAll()")
+                        < config.indexOf(".requestMatchers(\"/admin/**\").hasRole(\"ADMIN\")"),
+                "the guidance page exception must be declared before the admin wildcard rule");
     }
 }

@@ -46,8 +46,11 @@ public class SecurityConfig{
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/js/**", "/css/**").permitAll()
+                        .requestMatchers("/admin/access-denied").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().permitAll())
+                .exceptionHandling(exception -> exception
+                        .accessDeniedPage("/admin/access-denied"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .securityContext(context -> context.requireExplicitSave(false))
                 .oauth2Login(oauth -> oauth

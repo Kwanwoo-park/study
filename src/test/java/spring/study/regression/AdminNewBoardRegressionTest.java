@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import spring.study.admin.dto.AdminNewBoardResponseDto;
 import spring.study.admin.facade.AdminFacade;
+import spring.study.admin.service.SystemIncidentService;
 import spring.study.board.entity.Board;
 import spring.study.board.entity.BoardImg;
 import spring.study.board.service.BoardService;
@@ -34,6 +35,7 @@ class AdminNewBoardRegressionTest {
     @Mock private BoardService boardService;
     @Mock private ChatMessageService chatMessageService;
     @Mock private RedisTemplate<String, String> redisTemplate;
+    @Mock private SystemIncidentService systemIncidentService;
 
     @InjectMocks
     private AdminFacade adminFacade;
@@ -87,5 +89,9 @@ class AdminNewBoardRegressionTest {
         assertTrue(adminCss.contains("grid-template-columns: repeat(2, minmax(0, 1fr));"));
         assertTrue(adminCss.contains(".admin-activity-item.is-clickable:focus-visible"));
         assertTrue(adminCss.contains(".admin-activity-item-image"));
+        assertTrue(adminTemplate.contains("id=\"system-incident-list\""));
+        assertTrue(adminJs.contains("/api/admin/system/incidents"));
+        assertTrue(adminJs.contains("acknowledgeSystemIncident"));
+        assertTrue(adminCss.contains(".admin-incident-dashboard"));
     }
 }

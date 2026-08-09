@@ -1,6 +1,6 @@
 package spring.study.member.entity;
 
-public enum AccountStatus {
+public enum MemberStatus {
     ACTIVE,
     SUSPENDED,
     BANNED

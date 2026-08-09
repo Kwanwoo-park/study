@@ -31,6 +31,9 @@ class TemplateStaticResourceRegressionTest {
     private static final Path COMMON_FRAGMENT = Path.of("src/main/resources/templates/fragments/common.html");
     private static final Path SETTINGS_ICON = Path.of("src/main/resources/static/img/ic_settings.png");
     private static final Path DIARY_LIST_JS = Path.of("src/main/resources/static/js/diary/list.js");
+    private static final Path ADMIN_TEMPLATE = Path.of("src/main/resources/templates/admin/administrator.html");
+    private static final Path NOT_FOUND_TEMPLATE = Path.of("src/main/resources/templates/error/404.html");
+    private static final Path NOT_FOUND_CSS = Path.of("src/main/resources/static/css/error/404.css");
 
     private static final List<Path> THEME_ONLY_TEMPLATES = List.of(
             Path.of("src/main/resources/templates/admin/administrator.html"),
@@ -38,8 +41,25 @@ class TemplateStaticResourceRegressionTest {
             Path.of("src/main/resources/templates/admin/update_member.html"),
             Path.of("src/main/resources/templates/admin/forbidden_word_list.html"),
             Path.of("src/main/resources/templates/admin/forbidden_word_apply.html"),
+            Path.of("src/main/resources/templates/error/404.html"),
             Path.of("src/main/resources/templates/chat/chatRoom.html")
     );
+
+    @Test
+    void notFoundPageShouldExplainTheMissingPageAndLinkHome() throws IOException {
+        String template = Files.readString(NOT_FOUND_TEMPLATE);
+        String css = Files.readString(NOT_FOUND_CSS);
+
+        assertTrue(template.contains("페이지를 찾을 수 없습니다"));
+        assertTrue(template.contains("PAGE NOT FOUND"));
+        assertFalse(template.contains("관리자 전용"));
+        assertFalse(template.contains("접근할 권한"));
+        assertTrue(template.contains("href=\"/board/main\""));
+        assertTrue(template.contains("홈으로 이동"));
+        assertFalse(template.contains("access-denied"));
+        assertTrue(css.contains(".not-found-card"));
+        assertTrue(css.contains("body.dark-mode .not-found-card"));
+    }
 
     @Test
     void templatesShouldNotContainInlineStylesOrStyleAttributes() throws IOException {
@@ -65,6 +85,23 @@ class TemplateStaticResourceRegressionTest {
             assertTrue(template.contains("<script src=\"/js/common/theme.js\"></script>"),
                     templatePath + ": should load shared theme script");
         }
+    }
+
+    @Test
+    void administratorTopNavigationShouldOnlyShowPrimaryDestinations() throws IOException {
+        String template = Files.readString(ADMIN_TEMPLATE);
+        int navigationStart = template.indexOf("<div class=\"float-left\">");
+        int navigationEnd = template.indexOf("</div>", navigationStart);
+        String navigation = template.substring(navigationStart, navigationEnd);
+
+        assertTrue(navigation.contains("Member List"));
+        assertTrue(navigation.contains("Board List"));
+        assertTrue(navigation.contains("Board Main"));
+        assertTrue(navigation.contains("Portfolio"));
+        assertFalse(navigation.contains("Forbidden word"));
+        assertFalse(navigation.contains("Report"));
+        assertFalse(navigation.contains("Chatting"));
+        assertFalse(navigation.contains("Logout"));
     }
 
     @Test

@@ -1,7 +1,7 @@
 package spring.study.jwt.dto;
 
 import spring.study.common.entity.CommonVisibility;
-import spring.study.member.entity.AccountStatus;
+import spring.study.member.entity.MemberStatus;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
@@ -17,7 +17,7 @@ public record CachedMemberDto(
         String email,
         String name,
         Role role,
-        AccountStatus accountStatus,
+        MemberStatus accountStatus,
         LocalDateTime suspendedUntil,
         int warningCount,
         String phone,

@@ -275,4 +275,30 @@ public class AdminApiController {
 
         return adminFacade.systemStatus();
     }
+
+    @GetMapping("/system/incidents")
+    public ResponseEntity<?> systemIncidents(HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            jwtManager.logout(request);
+            return commonFacade.wrongAccess();
+        }
+
+        return adminFacade.systemIncidents();
+    }
+
+    @PatchMapping("/system/incidents/{id}/acknowledge")
+    public ResponseEntity<?> acknowledgeSystemIncident(@PathVariable Long id, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            jwtManager.logout(request);
+            return commonFacade.wrongAccess();
+        }
+
+        return adminFacade.acknowledgeIncident(id);
+    }
 }

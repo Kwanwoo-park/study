@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import spring.study.jwt.dto.CachedMemberDto;
-import spring.study.member.entity.AccountStatus;
+import spring.study.member.entity.MemberStatus;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.repository.MemberRepository;
@@ -114,7 +114,7 @@ class MemberTokenCacheServiceTest {
                 .pwd("must-not-be-cached")
                 .name("user")
                 .role(Role.USER)
-                .accountStatus(AccountStatus.SUSPENDED)
+                .accountStatus(MemberStatus.SUSPENDED)
                 .suspendedUntil(LocalDateTime.now().minusMinutes(1))
                 .warningCount(2)
                 .phone("01000000000")

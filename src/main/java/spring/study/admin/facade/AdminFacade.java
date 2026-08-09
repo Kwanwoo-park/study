@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.admin.dto.AdminNewBoardResponseDto;
+import spring.study.admin.service.SystemIncidentService;
 import spring.study.board.service.BoardService;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
@@ -32,6 +33,7 @@ public class AdminFacade {
     private final BoardService boardService;
     private final ChatMessageService chatMessageService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final SystemIncidentService systemIncidentService;
 
     public ResponseEntity<?> memberOnline() {
         Set<String> onlineUserKeys = redisTemplate.keys("online:user:*");
@@ -149,6 +151,22 @@ public class AdminFacade {
         ));
 
         return ResponseEntity.ok(status);
+    }
+
+    public ResponseEntity<?> systemIncidents() {
+        return ResponseEntity.ok(Map.of(
+                "result", 1L,
+                "unacknowledgedCount", systemIncidentService.countUnacknowledged(),
+                "list", systemIncidentService.findRecent()
+        ));
+    }
+
+    public ResponseEntity<?> acknowledgeIncident(Long id) {
+        systemIncidentService.acknowledge(id);
+        return ResponseEntity.ok(Map.of(
+                "result", 1L,
+                "message", "장애 기록을 확인 처리했습니다"
+        ));
     }
 
     private long countKeys(String pattern) {

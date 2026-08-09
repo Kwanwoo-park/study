@@ -1,5 +1,7 @@
 package spring.study.common.component;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
@@ -8,13 +10,17 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import spring.study.admin.service.SystemIncidentService;
 
 import java.io.IOException;
 import java.util.Map;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+    private final SystemIncidentService systemIncidentService;
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleBadRequest(IllegalArgumentException e) {
         return ResponseEntity.badRequest()
@@ -55,8 +61,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleEtc(Exception e) {
+    public ResponseEntity<?> handleEtc(Exception e, HttpServletRequest request) {
         log.error("서버 오류", e);
+        try {
+            systemIncidentService.record(request, e);
+        } catch (Exception recordException) {
+            log.error("장애 기록 저장 실패", recordException);
+        }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("result", -500));
     }

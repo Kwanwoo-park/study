@@ -5,14 +5,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import spring.study.jwt.entity.RefreshToken;
 import spring.study.jwt.repository.RefreshTokenRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.repository.MemberRepository;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.verify;
 
 @DataJpaTest
@@ -23,6 +27,9 @@ class RefreshTokenServiceTest {
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private MemberRepository memberRepository;
 
     @MockBean
     private MemberTokenCacheService memberTokenCacheService;
@@ -35,6 +42,7 @@ class RefreshTokenServiceTest {
 
         assertThat(refreshTokenService.isValid("valid-jti", 1L)).isTrue();
         assertThat(refreshTokenService.isValid("valid-jti", 2L)).isFalse();
+        assertThat(member.getLastLoginTime()).isNotNull();
         verify(memberTokenCacheService).save(member, ttl);
     }
 
@@ -113,6 +121,42 @@ class RefreshTokenServiceTest {
         assertThat(refreshTokenService.isValid("old-jti", 1L)).isFalse();
         assertThat(refreshTokenService.isValid("new-jti", 1L)).isTrue();
         verify(memberTokenCacheService, never()).delete(1L);
+    }
+
+    @Test
+    void cleanupDeletesAllTokensAndCacheOnlyForMembersInactiveForFifteenDays() {
+        Member inactiveMember = persistedMember(
+                "inactive@example.com", "01011112222", LocalDateTime.now().minusDays(16));
+        Member activeMember = persistedMember(
+                "active@example.com", "01033334444", LocalDateTime.now().minusDays(1));
+        refreshTokenRepository.save(new RefreshToken(
+                "inactive-first-jti", inactiveMember.getId(), Duration.ofDays(30)));
+        refreshTokenRepository.save(new RefreshToken(
+                "inactive-second-jti", inactiveMember.getId(), Duration.ofDays(30)));
+        refreshTokenRepository.save(new RefreshToken(
+                "active-jti", activeMember.getId(), Duration.ofDays(30)));
+        clearInvocations(memberTokenCacheService);
+
+        refreshTokenService.deleteInactiveMemberTokens();
+
+        assertThat(refreshTokenRepository.existsById("inactive-first-jti")).isFalse();
+        assertThat(refreshTokenRepository.existsById("inactive-second-jti")).isFalse();
+        assertThat(refreshTokenRepository.existsById("active-jti")).isTrue();
+        verify(memberTokenCacheService).delete(inactiveMember.getId());
+        verify(memberTokenCacheService, never()).delete(activeMember.getId());
+    }
+
+    private Member persistedMember(String email, String phone, LocalDateTime lastLoginTime) {
+        return memberRepository.saveAndFlush(Member.builder()
+                .email(email)
+                .pwd("encoded-password")
+                .name("user")
+                .role(Role.USER)
+                .phone(phone)
+                .birth("20000101")
+                .profile("profile.png")
+                .lastLoginTime(lastLoginTime)
+                .build());
     }
 
     private Member member(Long id) {

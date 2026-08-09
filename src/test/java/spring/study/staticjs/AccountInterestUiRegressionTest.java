@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AccountInterestUiRegressionTest {
     private static final Path ACCOUNT_JS = Path.of("src/main/resources/static/js/account/page.js");
     private static final Path TRANSACTION_JS = Path.of("src/main/resources/static/js/account/transactions.js");
+    private static final Path ACCOUNT_CSS = Path.of("src/main/resources/static/css/account/page.css");
 
     @Test
     void accountPageShouldSupportInterestSettlementSelection() throws IOException {
@@ -44,5 +45,16 @@ class AccountInterestUiRegressionTest {
         assertTrue(transactionJs.contains("TERMINATION: '해지 정산'"));
         assertTrue(transactionJs.contains("SAVINGS_PAYMENT: '적금 자동이체'"));
         assertTrue(transactionJs.contains("TIME_DEPOSIT_OPENING: '예금 개설 입금'"));
+    }
+
+    @Test
+    void accountTypeAndStatusBadgesShouldSupportDarkMode() throws IOException {
+        String accountCss = Files.readString(ACCOUNT_CSS);
+
+        assertTrue(accountCss.contains("body.dark-mode .account-page .account-type-badge"));
+        assertTrue(accountCss.contains("body.dark-mode .account-page .account-status-badge.matured"));
+        assertTrue(accountCss.contains("body.dark-mode .account-page .account-status-badge.terminated"));
+        assertTrue(accountCss.contains("body.dark-mode .account-page .account-product-create-options .form-control:focus"));
+        assertTrue(accountCss.contains("body.dark-mode .account-page .account-savings-policy"));
     }
 }

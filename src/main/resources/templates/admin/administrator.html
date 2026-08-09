@@ -17,14 +17,7 @@
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/memberCheck'">Member List</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/board/all'">Board List</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/board/main'">Board Main</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/forbidden/word/list'">Forbidden word List</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/forbidden/word/apply'">Forbidden word apply List</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/report'">Report List</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/report/process'">Report Process</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/report/history'">Report History</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/chat/chatList'">Chatting</button>
         <button type="button" class="btn btn-primary" onclick="javascript:location.href='/portfolio'">Portfolio</button>
-        <button type="button" class="btn btn-danger" onclick="fnLogout()">Logout</button>
       </div>
       <section class="admin-system-panel">
         <div class="admin-system-header">
@@ -32,6 +25,22 @@
           <span id="system-status-updated" class="admin-system-updated">불러오는 중</span>
         </div>
         <div id="system-status" class="admin-system-grid"></div>
+      </section>
+      <section class="admin-incident-dashboard">
+        <div class="admin-incident-header">
+          <div>
+            <span class="admin-section-label">INCIDENTS</span>
+            <h2>최근 서버 장애</h2>
+            <p>처리되지 않은 서버 예외를 최근 발생 순으로 표시합니다.</p>
+          </div>
+          <div class="admin-incident-summary">
+            <span id="incident-unacknowledged-count" class="admin-incident-count">0건 미확인</span>
+            <button type="button" id="incident-refresh" class="btn btn-outline-secondary btn-sm">새로고침</button>
+          </div>
+        </div>
+        <div id="system-incident-list" class="admin-incident-list">
+          <div class="admin-incident-empty">장애 기록을 불러오는 중입니다.</div>
+        </div>
       </section>
       <section class="admin-report-dashboard">
         <div class="admin-report-dashboard-header">

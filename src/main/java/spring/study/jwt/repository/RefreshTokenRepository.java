@@ -1,6 +1,7 @@
 package spring.study.jwt.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import spring.study.jwt.entity.RefreshToken;
 
 import java.time.Instant;
@@ -12,6 +13,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
     boolean existsByMemberIdAndExpiresAtAfter(Long memberId, Instant now);
 
     List<RefreshToken> findByExpiresAtLessThanEqual(Instant now);
+
+    @Query("select distinct token.memberId from RefreshToken token")
+    List<Long> findDistinctMemberIds();
 
     void deleteByMemberId(Long memberId);
 }

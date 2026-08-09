@@ -54,9 +54,9 @@ public class Member extends BasetimeEntity implements UserDetails {
     @NotNull
     private Role role;
 
-    @Convert(converter = AccountStatusConverter.class)
+    @Convert(converter = MemberStatusConverter.class)
     @Column(nullable = false)
-    private AccountStatus accountStatus = AccountStatus.ACTIVE;
+    private MemberStatus accountStatus = MemberStatus.ACTIVE;
 
     private LocalDateTime suspendedUntil;
 
@@ -136,7 +136,7 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     @Builder
     public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth,
-                  AccountStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, CommonVisibility visibility) {
+                  MemberStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, CommonVisibility visibility) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;
@@ -146,7 +146,7 @@ public class Member extends BasetimeEntity implements UserDetails {
         this.profile = profile;
         this.phone = phone;
         this.birth = birth;
-        this.accountStatus = accountStatus == null ? AccountStatus.ACTIVE : accountStatus;
+        this.accountStatus = accountStatus == null ? MemberStatus.ACTIVE : accountStatus;
         this.suspendedUntil = suspendedUntil;
         this.warningCount = warningCount;
         this.visibility = visibility == null ? CommonVisibility.PUBLIC : visibility;
@@ -195,8 +195,8 @@ public class Member extends BasetimeEntity implements UserDetails {
     }
 
     public boolean isAccessBlocked() {
-        if (role == Role.DENIED || accountStatus == AccountStatus.BANNED) return true;
-        return accountStatus == AccountStatus.SUSPENDED
+        if (role == Role.DENIED || accountStatus == MemberStatus.BANNED) return true;
+        return accountStatus == MemberStatus.SUSPENDED
                 && suspendedUntil != null
                 && suspendedUntil.isAfter(LocalDateTime.now());
     }
@@ -206,18 +206,18 @@ public class Member extends BasetimeEntity implements UserDetails {
     }
 
     public void suspendUntil(LocalDateTime until) {
-        accountStatus = AccountStatus.SUSPENDED;
+        accountStatus = MemberStatus.SUSPENDED;
         suspendedUntil = until;
     }
 
     public void ban() {
-        accountStatus = AccountStatus.BANNED;
+        accountStatus = MemberStatus.BANNED;
         suspendedUntil = null;
         role = Role.DENIED;
     }
 
     public void activate() {
-        accountStatus = AccountStatus.ACTIVE;
+        accountStatus = MemberStatus.ACTIVE;
         suspendedUntil = null;
         if (role == Role.DENIED) role = Role.USER;
     }
