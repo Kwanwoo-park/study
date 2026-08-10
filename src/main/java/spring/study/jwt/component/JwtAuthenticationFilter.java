@@ -36,7 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Member authenticateAccessToken(HttpServletRequest request) {
-        String token = cookieService.read(request, JwtCookieService.ACCESS_COOKIE);
+        String token = readBearerToken(request);
+        if (token == null) token = cookieService.read(request, JwtCookieService.ACCESS_COOKIE);
         if (token == null) return null;
         try {
             return loadActiveMember(tokenProvider.parse(token, JwtTokenProvider.ACCESS));
@@ -46,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Member refreshAuthentication(HttpServletRequest request, HttpServletResponse response) {
+        if (readBearerToken(request) != null) return null;
         String token = cookieService.read(request, JwtCookieService.REFRESH_COOKIE);
         if (token == null) return null;
         try {
@@ -86,5 +88,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 member, null, member.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private String readBearerToken(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        if (authorization == null || !authorization.startsWith("Bearer ")) return null;
+        String token = authorization.substring(7).trim();
+        return token.isEmpty() ? null : token;
     }
 }

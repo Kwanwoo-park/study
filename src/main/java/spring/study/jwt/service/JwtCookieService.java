@@ -16,6 +16,7 @@ public class JwtCookieService {
     public static final String ACCESS_COOKIE = "access_token";
     public static final String REFRESH_COOKIE = "refresh_token";
     public static final String OAUTH2_REQUEST_COOKIE = "oauth2_request";
+    public static final String MOBILE_OAUTH_COOKIE = "mobile_oauth";
 
     @Value("${security.jwt.secure-cookie}")
     private boolean secureCookie;
@@ -41,6 +42,14 @@ public class JwtCookieService {
         write(response, OAUTH2_REQUEST_COOKIE, value, Duration.ofMinutes(5), true);
     }
 
+    public void writeMobileOAuthMarker(HttpServletResponse response) {
+        write(response, MOBILE_OAUTH_COOKIE, "1", Duration.ofMinutes(10), true);
+    }
+
+    public boolean isMobileOAuth(HttpServletRequest request) {
+        return "1".equals(read(request, MOBILE_OAUTH_COOKIE));
+    }
+
     public void clearAuthenticationCookies(HttpServletResponse response) {
         clear(response, ACCESS_COOKIE);
         clear(response, REFRESH_COOKIE);
@@ -48,6 +57,10 @@ public class JwtCookieService {
 
     public void clearOAuth2Request(HttpServletResponse response) {
         clear(response, OAUTH2_REQUEST_COOKIE);
+    }
+
+    public void clearMobileOAuthMarker(HttpServletResponse response) {
+        clear(response, MOBILE_OAUTH_COOKIE);
     }
 
     private void clear(HttpServletResponse response, String name) {

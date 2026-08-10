@@ -10,7 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.ChatMessageDeleteScope;
 import spring.study.chat.dto.ChatMessageRequestDto;
+import spring.study.chat.dto.MobileChatRoomResponse;
 import spring.study.chat.facade.ChatFacade;
+import spring.study.chat.facade.ChatSendFacade;
+import spring.study.chat.facade.ChatViewFacade;
 import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
@@ -38,6 +41,43 @@ public class ChatApiController {
     private final ChatRoomMemberService chatRoomMemberService;
     private final NotificationService notificationService;
     private final IceServerService iceServerService;
+    private final ChatSendFacade chatSendFacade;
+    private final ChatViewFacade chatViewFacade;
+
+    @GetMapping("/rooms")
+    public ResponseEntity<?> rooms(HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        List<ChatRoom> rooms = chatViewFacade.chatList(member);
+        Map<String, List<Member>> participants = chatRoomMemberService.findMember(rooms, member);
+        Map<String, Long> unreadCounts = chatViewFacade.unreadCount(member, rooms);
+        List<MobileChatRoomResponse> list = rooms.stream()
+                .map(room -> MobileChatRoomResponse.from(
+                        room,
+                        participants.getOrDefault(room.getRoomId(), List.of()),
+                        unreadCounts.getOrDefault(room.getRoomId(), 0L)
+                ))
+                .toList();
+
+        return ResponseEntity.ok(Map.of("result", 1L, "list", list));
+    }
+
+    @PostMapping("/send")
+    public ResponseEntity<?> sendMessage(@RequestBody ChatMessageRequestDto message,
+                                         HttpServletRequest request,
+                                         HttpServletResponse response) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+        ChatRoom room = chatRoomService.find(message.getRoomId());
+        if (room == null || !chatRoomMemberService.exist(member, room)) return commonFacade.wrongAccess();
+
+        ResponseEntity<?> validation = chatFacade.messageCheck(message.getMessage(), member, response);
+        if (!validation.getStatusCode().is2xxSuccessful()) return validation;
+
+        message.setEmail(member.getEmail());
+        return chatSendFacade.messageSend(message);
+    }
 
     @GetMapping("/audio/ice-servers")
     public ResponseEntity<?> getAudioIceServers(HttpServletRequest request) {

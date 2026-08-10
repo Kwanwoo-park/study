@@ -9,7 +9,10 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 import spring.study.member.entity.Member;
 import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.service.JwtCookieService;
+import spring.study.jwt.service.MobileOAuthCodeService;
 import spring.study.member.service.MemberService;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
@@ -18,6 +21,8 @@ import java.io.IOException;
 public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final MemberService memberService;
     private final JwtAuthenticationService jwtAuthenticationService;
+    private final JwtCookieService cookieService;
+    private final MobileOAuthCodeService mobileOAuthCodeService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -26,6 +31,17 @@ public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
                 ? oauth2User.getAttribute("email")
                 : authentication.getName();
         Member member = memberService.findMember(email);
+        if (cookieService.isMobileOAuth(request)) {
+            String code = mobileOAuthCodeService.create(member);
+            cookieService.clearMobileOAuthMarker(response);
+            String redirectUrl = UriComponentsBuilder.fromUriString("kwanwooapp://oauth/callback")
+                    .queryParam("code", code)
+                    .build()
+                    .encode()
+                    .toUriString();
+            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+            return;
+        }
         jwtAuthenticationService.login(member, response);
         setDefaultTargetUrl("/board/main");
         super.onAuthenticationSuccess(request, response, authentication);
