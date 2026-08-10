@@ -12,6 +12,7 @@ import spring.study.board.service.BoardService;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.service.ChatMessageService;
+import spring.study.chat.service.AudioCallSignalingService;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 
@@ -34,6 +35,7 @@ public class AdminFacade {
     private final ChatMessageService chatMessageService;
     private final RedisTemplate<String, String> redisTemplate;
     private final SystemIncidentService systemIncidentService;
+    private final AudioCallSignalingService audioCallSignalingService;
 
     public ResponseEntity<?> memberOnline() {
         Set<String> onlineUserKeys = redisTemplate.keys("online:user:*");
@@ -166,6 +168,14 @@ public class AdminFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "message", "장애 기록을 확인 처리했습니다"
+        ));
+    }
+
+    public ResponseEntity<?> forceTerminateAudioCall(String callId) {
+        audioCallSignalingService.forceTerminate(callId);
+        return ResponseEntity.ok(Map.of(
+                "result", 1L,
+                "message", "통화를 강제로 종료했습니다"
         ));
     }
 

@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -92,6 +93,50 @@ class AudioCallSignalingServiceTest {
         verify(messagingTemplate).convertAndSendToUser(
                 eq(caller.getEmail()), eq("/queue/audio-call"), response.capture());
         assertEquals("채팅방 참여자만 통화할 수 있습니다.", response.getValue().error());
+    }
+
+    @Test
+    void websocketDisconnectShouldEndTheCallAndNotifyTheOtherParticipant() {
+        service.handle(caller.getEmail(), request("call-1", AudioCallSignalType.CALL));
+
+        service.handleDisconnect(caller.getEmail());
+
+        ArgumentCaptor<AudioCallSignalResponse> response = ArgumentCaptor.forClass(AudioCallSignalResponse.class);
+        verify(messagingTemplate, times(2)).convertAndSendToUser(
+                eq(receiver.getEmail()), eq("/queue/audio-call"), response.capture());
+        AudioCallSignalResponse disconnectSignal = response.getAllValues().get(1);
+        assertEquals(AudioCallSignalType.DISCONNECTED, disconnectSignal.type());
+        assertEquals("call-1", disconnectSignal.callId());
+        assertEquals(caller.getEmail(), disconnectSignal.senderEmail());
+
+        service.handle(receiver.getEmail(), request("call-1", AudioCallSignalType.HANGUP));
+        ArgumentCaptor<AudioCallSignalResponse> responsesAfterDisconnect =
+                ArgumentCaptor.forClass(AudioCallSignalResponse.class);
+        verify(messagingTemplate, times(3)).convertAndSendToUser(
+                eq(receiver.getEmail()), eq("/queue/audio-call"), responsesAfterDisconnect.capture());
+        assertEquals("유효한 통화가 아닙니다.", responsesAfterDisconnect.getAllValues().get(2).error());
+    }
+
+    @Test
+    void administratorShouldForceTerminateTheCallAndNotifyBothParticipants() {
+        service.handle(caller.getEmail(), request("call-1", AudioCallSignalType.CALL));
+
+        service.forceTerminate("call-1");
+
+        ArgumentCaptor<AudioCallSignalResponse> callerResponse =
+                ArgumentCaptor.forClass(AudioCallSignalResponse.class);
+        verify(messagingTemplate).convertAndSendToUser(
+                eq(caller.getEmail()), eq("/queue/audio-call"), callerResponse.capture());
+        assertEquals(AudioCallSignalType.ADMIN_TERMINATED, callerResponse.getValue().type());
+
+        ArgumentCaptor<AudioCallSignalResponse> receiverResponses =
+                ArgumentCaptor.forClass(AudioCallSignalResponse.class);
+        verify(messagingTemplate, times(2)).convertAndSendToUser(
+                eq(receiver.getEmail()), eq("/queue/audio-call"), receiverResponses.capture());
+        assertEquals(
+                AudioCallSignalType.ADMIN_TERMINATED,
+                receiverResponses.getAllValues().get(1).type()
+        );
     }
 
     private AudioCallSignalRequest request(String callId, AudioCallSignalType type) {

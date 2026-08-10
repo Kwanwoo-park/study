@@ -7,5 +7,7 @@ public enum AudioCallSignalType {
     OFFER,
     ANSWER,
     ICE_CANDIDATE,
-    HANGUP
+    HANGUP,
+    DISCONNECTED,
+    ADMIN_TERMINATED
 }

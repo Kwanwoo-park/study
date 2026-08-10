@@ -24,4 +24,17 @@ public record AudioCallSignalResponse(
                 request.callId(), request.roomId(), request.type(), null, null,
                 null, null, null, null, message);
     }
+
+    public static AudioCallSignalResponse disconnected(
+            String callId, String roomId, String disconnectedMemberEmail) {
+        return new AudioCallSignalResponse(
+                callId, roomId, AudioCallSignalType.DISCONNECTED,
+                disconnectedMemberEmail, null, null, null, null, null, null);
+    }
+
+    public static AudioCallSignalResponse adminTerminated(String callId, String roomId) {
+        return new AudioCallSignalResponse(
+                callId, roomId, AudioCallSignalType.ADMIN_TERMINATED,
+                null, null, null, null, null, null, null);
+    }
 }

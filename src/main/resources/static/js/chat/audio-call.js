@@ -19,11 +19,20 @@
     let incomingCaller = '';
     let pendingCandidates = [];
     let callTimeout = null;
+    let callNoticeTimeout = null;
 
     function onStompConnected(connectedClient) {
         stompClient = connectedClient;
         if (!subscription) {
             subscription = stompClient.subscribe('/user/queue/audio-call', onSignalReceived);
+        }
+    }
+
+    function onStompDisconnected() {
+        stompClient = null;
+        subscription = null;
+        if (activeCallId) {
+            endCallWithMessage('채팅 서버 연결이 끊어져 통화가 종료되었습니다.');
         }
     }
 
@@ -125,8 +134,13 @@
                 await receiveCandidate(signal);
                 break;
             case 'HANGUP':
-                showError('상대방이 통화를 종료했습니다.');
-                window.setTimeout(cleanupCall, 1200);
+                endCallWithMessage('상대방이 통화를 종료했습니다.');
+                break;
+            case 'DISCONNECTED':
+                endCallWithMessage('상대방의 연결이 끊어져 통화가 종료되었습니다.');
+                break;
+            case 'ADMIN_TERMINATED':
+                endCallWithMessage('관리자에 의해 통화가 종료되었습니다.');
                 break;
         }
     }
@@ -240,6 +254,8 @@
 
     function cleanupCall() {
         clearCallTimeout();
+        if (callNoticeTimeout) window.clearTimeout(callNoticeTimeout);
+        callNoticeTimeout = null;
         if (peerConnection) peerConnection.close();
         if (localStream) localStream.getTracks().forEach(track => track.stop());
         remoteAudio.srcObject = null;
@@ -252,6 +268,12 @@
         panel.classList.add('is-hidden');
         [acceptButton, rejectButton, muteButton, hangupButton].forEach(button => button.classList.add('is-hidden'));
         if (startButton) startButton.disabled = false;
+    }
+
+    function endCallWithMessage(message) {
+        cleanupCall();
+        showError(message);
+        callNoticeTimeout = window.setTimeout(cleanupCall, 1500);
     }
 
     function showPanel(message) {
@@ -301,6 +323,9 @@
         cleanupCall();
     });
 
-    window.audioCallClient = {onStompConnected: onStompConnected};
+    window.audioCallClient = {
+        onStompConnected: onStompConnected,
+        onStompDisconnected: onStompDisconnected
+    };
     if (typeof client !== 'undefined' && client.connected) onStompConnected(client);
 })();

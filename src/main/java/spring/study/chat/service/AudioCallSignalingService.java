@@ -49,6 +49,36 @@ public class AudioCallSignalingService {
         }
     }
 
+    public void handleDisconnect(String disconnectedMemberEmail) {
+        if (disconnectedMemberEmail == null || disconnectedMemberEmail.isBlank()) return;
+
+        activeCalls.forEach((callId, call) -> {
+            if (call.contains(disconnectedMemberEmail) && activeCalls.remove(callId, call)) {
+                forward(
+                        call.other(disconnectedMemberEmail),
+                        AudioCallSignalResponse.disconnected(
+                                call.callId(), call.roomId(), disconnectedMemberEmail)
+                );
+            }
+        });
+    }
+
+    public void forceTerminate(String callId) {
+        if (callId == null || callId.isBlank()) {
+            throw new IllegalArgumentException("통화 ID가 필요합니다.");
+        }
+
+        ActiveCall call = activeCalls.remove(callId);
+        if (call == null) {
+            throw new IllegalArgumentException("진행 중인 통화를 찾을 수 없습니다.");
+        }
+
+        AudioCallSignalResponse signal = AudioCallSignalResponse.adminTerminated(
+                call.callId(), call.roomId());
+        forward(call.callerEmail(), signal);
+        forward(call.receiverEmail(), signal);
+    }
+
     private void startCall(Member sender, ChatRoom room, AudioCallSignalRequest request) {
         List<ChatRoomMember> members = roomMemberService.find(room);
         if (members.size() != 2) {
@@ -96,6 +126,10 @@ public class AudioCallSignalingService {
 
     private void validateRequest(AudioCallSignalRequest request) {
         if (request == null || request.type() == null || request.roomId() == null || request.roomId().isBlank()) {
+            throw new IllegalArgumentException("잘못된 통화 요청입니다.");
+        }
+        if (request.type() == AudioCallSignalType.DISCONNECTED
+                || request.type() == AudioCallSignalType.ADMIN_TERMINATED) {
             throw new IllegalArgumentException("잘못된 통화 요청입니다.");
         }
         if (request.type() != AudioCallSignalType.CALL

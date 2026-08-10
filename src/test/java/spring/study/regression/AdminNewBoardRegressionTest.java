@@ -13,6 +13,7 @@ import spring.study.board.entity.Board;
 import spring.study.board.entity.BoardImg;
 import spring.study.board.service.BoardService;
 import spring.study.chat.service.ChatMessageService;
+import spring.study.chat.service.AudioCallSignalingService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class AdminNewBoardRegressionTest {
@@ -36,9 +38,18 @@ class AdminNewBoardRegressionTest {
     @Mock private ChatMessageService chatMessageService;
     @Mock private RedisTemplate<String, String> redisTemplate;
     @Mock private SystemIncidentService systemIncidentService;
+    @Mock private AudioCallSignalingService audioCallSignalingService;
 
     @InjectMocks
     private AdminFacade adminFacade;
+
+    @Test
+    void administratorShouldBeAbleToForceTerminateAnAudioCall() {
+        Map<?, ?> body = (Map<?, ?>) adminFacade.forceTerminateAudioCall("call-1").getBody();
+
+        verify(audioCallSignalingService).forceTerminate("call-1");
+        assertEquals(1L, body.get("result"));
+    }
 
     @Test
     void newBoardShouldReturnTheBoardSummaryWithItsFirstImage() {

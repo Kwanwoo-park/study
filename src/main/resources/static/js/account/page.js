@@ -40,6 +40,7 @@
         accountTypeSelect?.addEventListener('change', updateAccountCreateOptions);
         timeDepositSourceAccountSelect?.addEventListener('change', updateTimeDepositBalance);
         timeDepositAmount?.addEventListener('input', updateTimeDepositBalance);
+        fillTodayAsDefaultSavingsDay();
         if (timeDepositMaturityMonths) {
             timeDepositMaturityMonths.innerHTML = Array.from({ length: 24 }, (_, index) => {
                 const months = index + 1;
@@ -135,11 +136,15 @@
             return;
         }
 
+        const accountType = accountTypeSelect?.value || 'DEPOSIT_WITHDRAWAL';
+        if (accountType === 'DEPOSIT_WITHDRAWAL' && !confirmCheckingAccountCreation()) {
+            return;
+        }
+
         isLoading = true;
         accountCreateBtn.disabled = true;
 
         try {
-            const accountType = accountTypeSelect?.value || 'DEPOSIT_WITHDRAWAL';
             const requiresCheckingAccount = accountType === 'INSTALLMENT_SAVINGS'
                 || accountType === 'TIME_DEPOSIT';
             const hasCheckingAccount = loadedAccounts.some((account) =>
@@ -223,6 +228,13 @@
             isLoading = false;
             accountCreateBtn.disabled = false;
         }
+    }
+
+    function confirmCheckingAccountCreation() {
+        return window.confirm([
+            '입출금 계좌를 생성할까요?',
+            '생성 직후 잔액은 0원이며, 송금과 예·적금 자동이체 및 만기 정산 계좌로 사용할 수 있습니다.'
+        ].join('\n\n'));
     }
 
     function renderAccounts(data) {
@@ -389,6 +401,7 @@
             && normalizeAccountStatus(account) === 'ACTIVE'
         );
         if (isSavings) {
+            fillTodayAsDefaultSavingsDay();
             configureSourceAccountSelection(
                 checkingAccounts,
                 savingsSourceAccountSelect,
@@ -404,6 +417,12 @@
                 timeDepositAutoSourceInfo
             );
             updateTimeDepositBalance();
+        }
+    }
+
+    function fillTodayAsDefaultSavingsDay() {
+        if (monthlySavingsDay && !monthlySavingsDay.value) {
+            monthlySavingsDay.value = String(new Date().getDate());
         }
     }
 

@@ -92,6 +92,9 @@ function onConnected() {
 
 function onError(error) {
     console.error(error);
+    if (window.audioCallClient) {
+        window.audioCallClient.onStompDisconnected();
+    }
 }
 
 function activateChatPresence() {

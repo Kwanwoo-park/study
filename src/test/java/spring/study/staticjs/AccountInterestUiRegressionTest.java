@@ -29,6 +29,12 @@ class AccountInterestUiRegressionTest {
                 "savings creation should acknowledge automatic termination");
         assertTrue(accountJs.contains("payload.savingsSourceAccount"),
                 "savings creation should send the selected checking account");
+        assertTrue(accountJs.contains("monthlySavingsDay.value = String(new Date().getDate())"),
+                "savings creation should default the payment day to today's day of month");
+        assertTrue(accountJs.contains("!confirmCheckingAccountCreation()"),
+                "checking account creation should require confirmation before sending the request");
+        assertTrue(accountJs.contains("생성 직후 잔액은 0원이며"),
+                "checking account confirmation should explain the initial balance and intended uses");
         assertTrue(accountJs.contains("payload.timeDepositAmount"),
                 "time deposit creation should send the opening principal");
         assertTrue(accountJs.contains("payload.maturityMonths"),
