@@ -52,13 +52,16 @@ public class AccountTransactionService {
 
     @Transactional
     public AccountTransaction cancelTransaction(Long transactionId, Member member) {
-        AccountTransaction transaction = accountTransactionRepository.findById(transactionId)
+        AccountTransaction transaction = accountTransactionRepository.findByIdForUpdate(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 거래입니다"));
 
         validateCancelable(transaction, member);
 
-        Account reversalWithdrawalAccount = transaction.getDepositAccount();
-        Account reversalDepositAccount = transaction.getWithdrawalAccount();
+        Account originalDepositAccount = transaction.getDepositAccount();
+        Account originalWithdrawalAccount = transaction.getWithdrawalAccount();
+        Account[] lockedAccounts = lockAccounts(originalDepositAccount, originalWithdrawalAccount);
+        Account reversalWithdrawalAccount = accountByNumber(lockedAccounts, originalDepositAccount);
+        Account reversalDepositAccount = accountByNumber(lockedAccounts, originalWithdrawalAccount);
         LocalDateTime cancellationTime = LocalDateTime.now();
 
         if (reversalWithdrawalAccount != null) {
@@ -124,7 +127,32 @@ public class AccountTransactionService {
         Account withdrawalAccount = transaction.getWithdrawalAccount();
         Account depositAccount = transaction.getDepositAccount();
 
-        return isAccountOwner(withdrawalAccount, memberId) || isAccountOwner(depositAccount, memberId);
+        return switch (transaction.getTransactionType()) {
+            case DEPOSIT, REFUND -> isAccountOwner(depositAccount, memberId);
+            default -> isAccountOwner(withdrawalAccount, memberId);
+        };
+    }
+
+    private Account[] lockAccounts(Account first, Account second) {
+        if (first == null && second == null) return new Account[0];
+        if (first == null) return new Account[]{accountService.findByAccountForUpdate(second.getAccount())};
+        if (second == null) return new Account[]{accountService.findByAccountForUpdate(first.getAccount())};
+
+        String firstNumber = first.getAccount().compareTo(second.getAccount()) <= 0
+                ? first.getAccount() : second.getAccount();
+        String secondNumber = firstNumber.equals(first.getAccount()) ? second.getAccount() : first.getAccount();
+        return new Account[]{
+                accountService.findByAccountForUpdate(firstNumber),
+                accountService.findByAccountForUpdate(secondNumber)
+        };
+    }
+
+    private Account accountByNumber(Account[] accounts, Account original) {
+        if (original == null) return null;
+        for (Account account : accounts) {
+            if (account.getAccount().equals(original.getAccount())) return account;
+        }
+        throw new IllegalStateException("거래 계좌 잠금에 실패했습니다");
     }
 
     private boolean isAccountOwner(Account account, Long memberId) {

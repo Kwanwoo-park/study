@@ -37,6 +37,10 @@ public class CollectionService {
         return collectionRepository.findAll().stream().map(CollectionResponseDto::new).toList();
     }
 
+    public List<Collection> findByMember(Member member) {
+        return collectionRepository.findByMember(member);
+    }
+
     public Collection findById(Long id) {
         return collectionRepository.findById(id).orElseThrow();
     }

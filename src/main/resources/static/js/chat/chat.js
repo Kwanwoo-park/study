@@ -32,6 +32,11 @@ let chatImageModalSources = [];
 let chatImageModalIndex = 0;
 let lastKnownReadAt = '';
 let lastReadMarkAt = 0;
+let socket = null;
+let client = null;
+let reconnectTimer = null;
+let reconnectAttempt = 0;
+let pageLeaving = false;
 
 ignoreWebSocketLogs();
 
@@ -58,7 +63,16 @@ window.onload = function() {
 }
 
 window.addEventListener('pagehide', () => {
+    pageLeaving = true;
+    if (reconnectTimer) clearTimeout(reconnectTimer);
     deactivateChatPresence();
+});
+
+window.addEventListener('pageshow', event => {
+    if (!event.persisted) return;
+    pageLeaving = false;
+    if (!client || !client.connected) connectChatSocket();
+    activateChatPresence();
 });
 
 container.addEventListener('scroll', () => {
@@ -72,14 +86,21 @@ container.addEventListener('scroll', () => {
     }
 })
 
-let socket = new SockJS("/ws/chat")
+connectChatSocket();
 
-const client = Stomp.over(socket)
-client.debug = function() {};
-
-client.connect({}, onConnected, onError);
+function connectChatSocket() {
+    if (pageLeaving || reconnectTimer) return;
+    socket = new SockJS('/ws/chat');
+    client = Stomp.over(socket);
+    client.debug = function() {};
+    client.heartbeat.outgoing = 10000;
+    client.heartbeat.incoming = 10000;
+    client.connect({}, onConnected, onError);
+}
 
 function onConnected() {
+    reconnectAttempt = 0;
+    reconnectTimer = null;
     client.subscribe("/sub/chat/room/" + roomId, onMessageReceived);
 
     if (window.audioCallClient) {
@@ -95,6 +116,17 @@ function onError(error) {
     if (window.audioCallClient) {
         window.audioCallClient.onStompDisconnected();
     }
+    scheduleChatReconnect();
+}
+
+function scheduleChatReconnect() {
+    if (pageLeaving || reconnectTimer) return;
+    const delay = Math.min(30000, 1000 * Math.pow(2, reconnectAttempt));
+    reconnectAttempt += 1;
+    reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = null;
+        connectChatSocket();
+    }, delay);
 }
 
 function activateChatPresence() {

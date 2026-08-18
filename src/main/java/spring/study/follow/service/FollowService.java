@@ -70,11 +70,31 @@ public class FollowService {
         );
     }
 
+    public List<Follow> getVisibleFollowers(Member target, Member viewer, int cursor, int limit) {
+        return followRepository.findVisibleFollowers(
+                target, viewer, PageRequest.of(cursor, limit, Sort.by("id").descending())
+        );
+    }
+
     public List<Follow> getFollowing(Member member, int cursor, int limit) {
         return followRepository.findByFollower(
                 member,
                 PageRequest.of(cursor, limit, Sort.by("id").descending())
         );
+    }
+
+    public List<Follow> getVisibleFollowing(Member target, Member viewer, int cursor, int limit) {
+        return followRepository.findVisibleFollowing(
+                target, viewer, PageRequest.of(cursor, limit, Sort.by("id").descending())
+        );
+    }
+
+    public long countVisibleFollowers(Member target, Member viewer) {
+        return followRepository.countVisibleFollowers(target, viewer);
+    }
+
+    public long countVisibleFollowing(Member target, Member viewer) {
+        return followRepository.countVisibleFollowing(target, viewer);
     }
 
     public long countFollowers(Member member) {

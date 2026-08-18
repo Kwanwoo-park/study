@@ -7,9 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.UUID;
+import java.util.Comparator;
 
 @Repository
 public class EmitterRepository {
+    private static final int MAX_CACHED_EVENTS_PER_MEMBER = 100;
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
     private final Map<String, Object> eventCache = new ConcurrentHashMap<>();
 
@@ -19,8 +22,14 @@ public class EmitterRepository {
     }
 
     public void saveEventCache(String memberId, Object event) {
-        String eventId = memberId + ":" + System.currentTimeMillis();
+        String eventId = memberId + ":" + System.currentTimeMillis() + ":" + UUID.randomUUID();
         eventCache.put(eventId, event);
+        eventCache.keySet().stream()
+                .filter(key -> key.startsWith(memberId + ":"))
+                .sorted(Comparator.reverseOrder())
+                .skip(MAX_CACHED_EVENTS_PER_MEMBER)
+                .toList()
+                .forEach(eventCache::remove);
     }
 
     public Map<String, SseEmitter> findAllEmitters() {

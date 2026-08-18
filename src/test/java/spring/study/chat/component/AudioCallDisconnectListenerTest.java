@@ -20,11 +20,12 @@ class AudioCallDisconnectListenerTest {
         Principal member = mock(Principal.class);
         when(event.getUser()).thenReturn(member);
         when(member.getName()).thenReturn("member@test.com");
+        when(event.getSessionId()).thenReturn("session-1");
         AudioCallDisconnectListener listener = new AudioCallDisconnectListener(signalingService);
 
         listener.handleSessionDisconnect(event);
 
-        verify(signalingService).handleDisconnect("member@test.com");
+        verify(signalingService).handleDisconnect("member@test.com", "session-1");
     }
 
     @Test
@@ -35,6 +36,7 @@ class AudioCallDisconnectListenerTest {
 
         listener.handleSessionDisconnect(event);
 
-        verify(signalingService, never()).handleDisconnect(org.mockito.ArgumentMatchers.anyString());
+        verify(signalingService, never()).handleDisconnect(
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
     }
 }

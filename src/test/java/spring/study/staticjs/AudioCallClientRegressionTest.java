@@ -25,4 +25,34 @@ class AudioCallClientRegressionTest {
         assertTrue(audioCallJs.contains("if (peerConnection) peerConnection.close()"));
         assertTrue(audioCallJs.contains("localStream.getTracks().forEach(track => track.stop())"));
     }
+
+    @Test
+    void rtcFailureShouldAttemptRecoveryAndEventuallyReleaseCallResources() throws Exception {
+        String audioCallJs = Files.readString(AUDIO_CALL_JS);
+
+        assertTrue(audioCallJs.contains("beginConnectionRecovery()"));
+        assertTrue(audioCallJs.contains("createOffer({iceRestart: true})"));
+        assertTrue(audioCallJs.contains("sendSignal('HANGUP')"));
+        assertTrue(audioCallJs.contains("clearConnectionFailureTimeout()"));
+        assertTrue(audioCallJs.contains("startKeepAlive()"));
+        assertTrue(audioCallJs.contains("sendSignal('KEEP_ALIVE')"));
+    }
+
+    @Test
+    void audioCallClientShouldProvideCallUxDevicesAndMobileRecovery() throws Exception {
+        String chatJs = Files.readString(CHAT_JS);
+        String audioCallJs = Files.readString(AUDIO_CALL_JS);
+
+        assertTrue(audioCallJs.contains("startRingtone()"));
+        assertTrue(audioCallJs.contains("startIncomingCallTimeout()"));
+        assertTrue(audioCallJs.contains("startDurationTimer()"));
+        assertTrue(audioCallJs.contains("enumerateDevices()"));
+        assertTrue(audioCallJs.contains("replaceTrack(newTrack)"));
+        assertTrue(audioCallJs.contains("remoteAudio.setSinkId"));
+        assertTrue(audioCallJs.contains("navigator.wakeLock.request('screen')"));
+        assertTrue(audioCallJs.contains("document.addEventListener('visibilitychange'"));
+        assertTrue(audioCallJs.contains("/api/chat/audio/incoming"));
+        assertTrue(chatJs.contains("client.heartbeat.outgoing = 10000"));
+        assertTrue(chatJs.contains("scheduleChatReconnect()"));
+    }
 }

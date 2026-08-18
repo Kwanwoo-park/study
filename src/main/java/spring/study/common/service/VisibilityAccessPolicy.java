@@ -30,6 +30,16 @@ public class VisibilityAccessPolicy {
                 || followsAuthor;
     }
 
+    public boolean canViewBoard(Board board, Member viewer) {
+        if (board == null || viewer == null) {
+            return false;
+        }
+        if (board.getVisibility() == CommonVisibility.PUBLIC || sameMember(board.getMember(), viewer)) {
+            return true;
+        }
+        return followRepository.existsByFollowerAndFollowing(viewer, board.getMember());
+    }
+
     private boolean sameMember(Member first, Member second) {
         return first != null
                 && second != null

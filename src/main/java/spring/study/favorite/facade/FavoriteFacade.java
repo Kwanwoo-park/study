@@ -16,6 +16,7 @@ import spring.study.follow.service.FollowService;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
+import spring.study.common.service.VisibilityAccessPolicy;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,9 +31,11 @@ public class FavoriteFacade {
     private final FollowService followService;
     private final BoardService boardService;
     private final NotificationService notificationService;
+    private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     public ResponseEntity<?> getList(Long id, Member member, int cursor, int limit) {
         Board board = boardService.findById(id);
+        if (!visibilityAccessPolicy.canViewBoard(board, member)) return forbiddenBoard();
         long totalCount = favoriteService.countFavorites(board);
         List<Favorite> favorites = favoriteService.getFavorites(board, cursor, limit);
         int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
@@ -49,6 +52,7 @@ public class FavoriteFacade {
 
     public ResponseEntity<?> like(Long id, Member member) {
         Board board = boardService.findById(id);
+        if (!visibilityAccessPolicy.canViewBoard(board, member)) return forbiddenBoard();
 
         if (board == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -81,6 +85,7 @@ public class FavoriteFacade {
 
     public ResponseEntity<?> unlike(Long id, Member member) {
         Board board = boardService.findById(id);
+        if (!visibilityAccessPolicy.canViewBoard(board, member)) return forbiddenBoard();
 
         Favorite favorite = favoriteService.findByMemberAndBoard(member, board);
 
@@ -115,5 +120,12 @@ public class FavoriteFacade {
         }
 
         return map;
+    }
+
+    private ResponseEntity<?> forbiddenBoard() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "result", -403L,
+                "message", "접근할 수 없는 게시글입니다"
+        ));
     }
 }

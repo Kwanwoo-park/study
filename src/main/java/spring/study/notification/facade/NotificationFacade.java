@@ -20,11 +20,20 @@ public class NotificationFacade {
     private final NotificationService notificationService;
 
     public ResponseEntity<?> load(Member member) {
-        List<Notification> list = notificationService.findByMember(member);
+        return load(member, 0, 100);
+    }
+
+    public ResponseEntity<?> load(Member member, int page, int size) {
+        int resolvedPage = Math.max(page, 0);
+        int resolvedSize = Math.min(Math.max(size, 1), 100);
+        List<Notification> list = notificationService.findByMember(member, resolvedPage, resolvedSize);
+        long totalCount = notificationService.countByMember(member);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "list", list
+                "list", list,
+                "totalCount", totalCount,
+                "nextCursor", (long) (resolvedPage + 1) * resolvedSize >= totalCount ? 0 : resolvedPage + 2
         ));
     }
 
@@ -36,24 +45,23 @@ public class NotificationFacade {
     }
 
     public ResponseEntity<?> loadByGroup(Member member, Group group) {
-        List<Notification> list = notificationService.findByMember(member)
-                .stream()
-                .filter(noti -> noti.getNotiGroup().equals(group))
-                .toList();
+        List<Notification> list = notificationService.findByMemberAndGroup(member, group);
+        long totalCount = notificationService.countByMemberAndGroup(member, group);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "list", list
+                "list", list,
+                "totalCount", totalCount
         ));
     }
 
-    public ResponseEntity<?> updateAsRead(Long id) {
+    public ResponseEntity<?> updateAsRead(Long id, Member member) {
         Notification notification = notificationService.findById(id);
 
-        if (notification == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -1L,
-                    "message", "존재하지 않는 알림입니다"
+        if (notification.getMember() == null || !notification.getMember().getId().equals(member.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -403L,
+                    "message", "본인의 알림만 변경할 수 있습니다"
             ));
         }
 

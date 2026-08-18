@@ -26,13 +26,29 @@ public class SystemIncidentService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(HttpServletRequest request, Exception exception) {
         Throwable cause = NestedExceptionUtils.getMostSpecificCause(exception);
+        LocalDateTime occurredAt = LocalDateTime.now();
+        String requestMethod = limit(valueOrDefault(request.getMethod(), "UNKNOWN"), 10);
+        String requestPath = limit(valueOrDefault(request.getRequestURI(), "UNKNOWN"), MAX_PATH_LENGTH);
+        String exceptionType = limit(cause.getClass().getName(), MAX_TYPE_LENGTH);
+        String errorMessage = limit(sanitize(valueOrDefault(cause.getMessage(), "메시지 없는 서버 오류")), MAX_MESSAGE_LENGTH);
+
+        SystemIncident existing = systemIncidentRepository
+                .findFirstByRequestMethodAndRequestPathAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(
+                        requestMethod, requestPath, exceptionType, errorMessage
+                )
+                .orElse(null);
+        if (existing != null) {
+            existing.recordRecurrence(occurredAt);
+            return;
+        }
+
         systemIncidentRepository.save(SystemIncident.builder()
-                .occurredAt(LocalDateTime.now())
-                .requestMethod(limit(valueOrDefault(request.getMethod(), "UNKNOWN"), 10))
-                .requestPath(limit(valueOrDefault(request.getRequestURI(), "UNKNOWN"), MAX_PATH_LENGTH))
+                .occurredAt(occurredAt)
+                .requestMethod(requestMethod)
+                .requestPath(requestPath)
                 .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .exceptionType(limit(cause.getClass().getName(), MAX_TYPE_LENGTH))
-                .errorMessage(limit(sanitize(valueOrDefault(cause.getMessage(), "메시지 없는 서버 오류")), MAX_MESSAGE_LENGTH))
+                .exceptionType(exceptionType)
+                .errorMessage(errorMessage)
                 .build());
     }
 

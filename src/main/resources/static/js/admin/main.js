@@ -105,7 +105,8 @@ function createIncidentCard(incident) {
     route.className = 'admin-incident-route';
     route.innerText = `${incident.requestMethod || 'UNKNOWN'} ${incident.requestPath || 'UNKNOWN'}`;
     type.className = 'admin-incident-type';
-    type.innerText = incident.exceptionType || 'UnknownException';
+    const occurrenceCount = Number(incident.occurrenceCount || 1);
+    type.innerText = `${incident.exceptionType || 'UnknownException'}${occurrenceCount > 1 ? ` · ${occurrenceCount}회 발생` : ''}`;
     message.className = 'admin-incident-message';
     message.innerText = incident.message || '메시지 없는 서버 오류';
     acknowledge.type = 'button';
@@ -444,6 +445,10 @@ function fnSystemStatusDraw(data) {
         ]),
         createMetricCard('접속', data.traffic.activeSessions + '명', [
             'WebSocket ' + data.traffic.activeWebSockets + '개'
+        ]),
+        createMetricCard('작업 대기열', Number(data.queues?.kafkaPending || 0) + '건', [
+            'Kafka 실패 ' + Number(data.queues?.kafkaDeadLetters || 0) + '건',
+            '이미지 정리 ' + Number(data.queues?.imageCleanupPending || 0) + '건'
         ])
     );
 }

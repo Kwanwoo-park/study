@@ -116,7 +116,8 @@ public class ReportService {
 
     @Transactional
     public ReportResponseDto process(Long id, ReportProcessRequestDto requestDto, Member admin) {
-        Report report = findEntity(id);
+        Report report = reportRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 신고입니다"));
 
         validateProcess(report, requestDto);
         if (requestDto.getStatus() == ReportStatus.RESOLVED && isMemberSanction(requestDto.getAction())) {
@@ -224,7 +225,8 @@ public class ReportService {
 
     @Transactional
     public ReportResponseDto cancel(Long id, Member reporter) {
-        Report report = findEntity(id);
+        Report report = reportRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 신고입니다"));
 
         if (!report.getReporter().getId().equals(reporter.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 신고한 내역만 취소할 수 있습니다");

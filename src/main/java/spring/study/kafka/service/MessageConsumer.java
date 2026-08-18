@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.service.ChatMessageBatchService;
 import spring.study.notification.entity.Notification;
-import spring.study.common.service.EmitterService;
+import spring.study.notification.service.NotificationRealtimePublisher;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageConsumer {
     private final SimpMessagingTemplate messagingTemplate;
-    private final EmitterService emitterService;
+    private final NotificationRealtimePublisher notificationRealtimePublisher;
     private final ChatMessageBatchService chatMessageBatchService;
 
     @KafkaListener(topics = "topic", containerFactory = "chatBatchKafkaListenerContainerFactory")
@@ -30,7 +30,6 @@ public class MessageConsumer {
 
     @KafkaListener(topics = "topic2")
     public void consume(@Payload Notification notification) {
-        String id = notification.getMember().getId().toString();
-        emitterService.save(id, notification);
+        notificationRealtimePublisher.publish(notification);
     }
 }

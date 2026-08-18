@@ -49,10 +49,12 @@ function fnSave() {
             alert("다시 시도하여주십시오.");
         }
         else {
-            if (file)
+            if (file) {
                 img_btn.click();
-
-            alert("게시글이 저장되었습니다.");
+            } else {
+                alert("게시글이 저장되었습니다.");
+                location.replace(`/board/main`);
+            }
         }
     })
     .catch((error) => {
@@ -84,6 +86,7 @@ function fnImgSave() {
     })
     .catch((error) => {
         alert("게시글 사진 등록 실패");
+        if (id) fnDelete(id);
     })
 }
 

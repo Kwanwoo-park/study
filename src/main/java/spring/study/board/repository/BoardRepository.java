@@ -11,6 +11,7 @@ import spring.study.member.entity.Member;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BoardRepository extends JpaRepository<Board, Long> {
@@ -29,7 +30,13 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     long countByMember(Member member);
 
     long countByMemberAndVisibility(Member member, CommonVisibility visibility);
+    long countByMemberIn(List<Member> members);
 
     @Transactional
     void deleteByMember(Member member);
+
+    Optional<Board> findFirstByMemberAndIdGreaterThanOrderByIdAsc(Member member, Long id);
+    Optional<Board> findFirstByMemberAndIdLessThanOrderByIdDesc(Member member, Long id);
+    Optional<Board> findFirstByMemberAndVisibilityAndIdGreaterThanOrderByIdAsc(Member member, CommonVisibility visibility, Long id);
+    Optional<Board> findFirstByMemberAndVisibilityAndIdLessThanOrderByIdDesc(Member member, CommonVisibility visibility, Long id);
 }

@@ -17,7 +17,7 @@ public class AudioCallDisconnectListener {
     public void handleSessionDisconnect(SessionDisconnectEvent event) {
         Principal member = event.getUser();
         if (member != null) {
-            audioCallSignalingService.handleDisconnect(member.getName());
+            audioCallSignalingService.handleDisconnect(member.getName(), event.getSessionId());
         }
     }
 }

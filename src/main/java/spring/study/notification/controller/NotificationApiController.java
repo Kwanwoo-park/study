@@ -33,11 +33,13 @@ public class NotificationApiController {
     }
 
     @GetMapping("/load")
-    public ResponseEntity<?> loadNotification(HttpServletRequest request) {
+    public ResponseEntity<?> loadNotification(@RequestParam(defaultValue = "0") int cursor,
+                                              @RequestParam(defaultValue = "100") int limit,
+                                              HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return notificationFacade.load(member);
+        return notificationFacade.load(member, cursor, limit);
     }
 
     @GetMapping({"/count/unread", "/count/Unread"})
@@ -61,7 +63,7 @@ public class NotificationApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return notificationFacade.updateAsRead(id);
+        return notificationFacade.updateAsRead(id, member);
     }
 
     @PatchMapping("/mark-all-as-read")

@@ -57,11 +57,17 @@ public class FavoriteService {
 
     public HashMap<Long, Long> countFavorites(List<Board> boardList) {
         HashMap<Long, Long> map = new HashMap<>();
-
-        for (Board board : boardList)
-            map.put(board.getId(), favoriteRepository.countByBoard(board));
+        boardList.forEach(board -> map.put(board.getId(), 0L));
+        if (boardList.isEmpty()) return map;
+        favoriteRepository.countByBoardIds(boardList.stream().map(Board::getId).toList())
+                .forEach(row -> map.put((Long) row[0], (Long) row[1]));
 
         return map;
+    }
+
+    public List<Long> findLikedBoardIds(Member member, List<Board> boards) {
+        if (boards.isEmpty()) return List.of();
+        return favoriteRepository.findLikedBoardIds(member, boards.stream().map(Board::getId).toList());
     }
 
     @Transactional

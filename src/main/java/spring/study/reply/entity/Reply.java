@@ -51,4 +51,8 @@ public class Reply extends BasetimeEntity implements Serializable {
         this.comment = comment;
         comment.getReply().add(this);
     }
+
+    public void changeReply(String reply) {
+        this.reply = reply;
+    }
 }

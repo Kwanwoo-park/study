@@ -13,6 +13,8 @@ import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.AudioCallSignalingService;
+import spring.study.kafka.repository.KafkaOutboxEventRepository;
+import spring.study.aws.repository.ImageCleanupTaskRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 
@@ -36,6 +38,8 @@ public class AdminFacade {
     private final RedisTemplate<String, String> redisTemplate;
     private final SystemIncidentService systemIncidentService;
     private final AudioCallSignalingService audioCallSignalingService;
+    private final KafkaOutboxEventRepository kafkaOutboxEventRepository;
+    private final ImageCleanupTaskRepository imageCleanupTaskRepository;
 
     public ResponseEntity<?> memberOnline() {
         Set<String> onlineUserKeys = redisTemplate.keys("online:user:*");
@@ -151,6 +155,11 @@ public class AdminFacade {
                 "activeSessions", countKeys("online:user:*"),
                 "activeWebSockets", countKeys("chat:room:*:active:*")
         ));
+        status.put("queues", Map.of(
+                "kafkaPending", kafkaOutboxEventRepository.countByDeadLetteredFalse(),
+                "kafkaDeadLetters", kafkaOutboxEventRepository.countByDeadLetteredTrue(),
+                "imageCleanupPending", imageCleanupTaskRepository.count()
+        ));
 
         return ResponseEntity.ok(status);
     }
@@ -181,8 +190,7 @@ public class AdminFacade {
 
     private long countKeys(String pattern) {
         Set<String> keys = redisTemplate.keys(pattern);
-
-        return keys.size();
+        return keys == null ? 0L : keys.size();
     }
 
     private double percent(double ratio) {

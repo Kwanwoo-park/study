@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.service.SystemIncidentService;
+import spring.study.common.exception.BusinessStateException;
+import spring.study.common.exception.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.util.Map;
@@ -31,8 +33,24 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<?> handleAuth() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    public ResponseEntity<?> handleIllegalState(IllegalStateException e, HttpServletRequest request) {
+        return handleEtc(e, request);
+    }
+
+    @ExceptionHandler(BusinessStateException.class)
+    public ResponseEntity<?> handleBusinessState(BusinessStateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "result", -409,
+                "message", e.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<?> handleNotFound(ResourceNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "result", -404,
+                "message", e.getMessage()
+        ));
     }
 
     @ExceptionHandler(ClientAbortException.class)

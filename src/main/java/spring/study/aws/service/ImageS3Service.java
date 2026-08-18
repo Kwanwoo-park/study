@@ -153,6 +153,7 @@ public class ImageS3Service {
     }
 
     public void deleteImage(String name) {
+        if (name == null || name.isBlank()) return;
         String[] splitString = name.split("/");
         String fileName = splitString[splitString.length-1];
 

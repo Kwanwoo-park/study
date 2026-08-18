@@ -38,4 +38,17 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
+
+    @Test
+    void illegalStateShouldBeRecordedInsteadOfBeingReportedAsUnauthorized() {
+        SystemIncidentService incidentService = mock(SystemIncidentService.class);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        IllegalStateException exception = new IllegalStateException("redis unavailable");
+        GlobalExceptionHandler handler = new GlobalExceptionHandler(incidentService);
+
+        ResponseEntity<?> response = handler.handleIllegalState(exception, request);
+
+        verify(incidentService).record(request, exception);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
 }

@@ -18,6 +18,7 @@ import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.chat.service.IceServerService;
+import spring.study.chat.service.AudioCallSignalingService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
@@ -43,6 +44,7 @@ public class ChatApiController {
     private final IceServerService iceServerService;
     private final ChatSendFacade chatSendFacade;
     private final ChatViewFacade chatViewFacade;
+    private final AudioCallSignalingService audioCallSignalingService;
 
     @GetMapping("/rooms")
     public ResponseEntity<?> rooms(HttpServletRequest request) {
@@ -85,6 +87,19 @@ public class ChatApiController {
         if (member == null) return commonFacade.unauthorized();
 
         return ResponseEntity.ok(Map.of("iceServers", iceServerService.createIceServers(member)));
+    }
+
+    @GetMapping("/audio/incoming")
+    public ResponseEntity<?> getIncomingAudioCall(
+            @RequestParam String roomId,
+            HttpServletRequest request
+    ) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return audioCallSignalingService.findIncomingCall(member.getEmail(), roomId)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @GetMapping("/load")

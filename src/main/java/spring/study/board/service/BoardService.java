@@ -10,6 +10,7 @@ import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.common.entity.CommonVisibility;
+import spring.study.common.exception.ResourceNotFoundException;
 import spring.study.member.entity.Member;
 import spring.study.board.repository.BoardRepository;
 
@@ -75,7 +76,7 @@ public class BoardService {
     }
 
     public Board findById(Long id) {
-        return boardRepository.findById(id).orElseThrow();
+        return boardRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다"));
     }
 
     public Boolean existBoard(Long id) {
@@ -93,36 +94,29 @@ public class BoardService {
         return boardRepository.countByMemberAndVisibility(member, CommonVisibility.PUBLIC);
     }
 
+    public long countByMembers(List<Member> members) {
+        return members.isEmpty() ? 0L : boardRepository.countByMemberIn(members);
+    }
+
     public long[] getBoardIdList(Long id, Member member) {
         return getBoardIdList(id, member, true);
     }
 
     public long[] getBoardIdList(Long id, Member member, boolean includePrivate) {
-        List<Long> id_list = boardRepository.findByMember(member).stream()
-                .filter(board -> includePrivate || board.getVisibility() == CommonVisibility.PUBLIC)
-                .map(Board::getId)
-                .toList();
-
-        int size = id_list.size();
-        long[] ids = new long[2];
-
-        if (size > 1) {
-            int idx = id_list.indexOf(id);
-
-            if (idx == 0) ids[0] = id_list.get(idx+1);
-            else if (idx == size-1) ids[1] = id_list.get(idx-1);
-            else {
-                ids[0] = id_list.get(idx+1);
-                ids[1] = id_list.get(idx-1);
-            }
-        }
-
-        return ids;
+        Board previous = includePrivate
+                ? boardRepository.findFirstByMemberAndIdGreaterThanOrderByIdAsc(member, id).orElse(null)
+                : boardRepository.findFirstByMemberAndVisibilityAndIdGreaterThanOrderByIdAsc(
+                        member, CommonVisibility.PUBLIC, id).orElse(null);
+        Board next = includePrivate
+                ? boardRepository.findFirstByMemberAndIdLessThanOrderByIdDesc(member, id).orElse(null)
+                : boardRepository.findFirstByMemberAndVisibilityAndIdLessThanOrderByIdDesc(
+                        member, CommonVisibility.PUBLIC, id).orElse(null);
+        return new long[]{previous == null ? 0L : previous.getId(), next == null ? 0L : next.getId()};
     }
 
     @Transactional
     public long updateBoard(Long id, String content, CommonVisibility visibility) {
-        Board board = boardRepository.findById(id).orElseThrow(() -> new RuntimeException(
+        Board board = boardRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(
                 "존재하지 않는 게시글입니다."
         ));
 

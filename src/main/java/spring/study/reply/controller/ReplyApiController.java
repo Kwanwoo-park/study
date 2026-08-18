@@ -42,4 +42,21 @@ public class ReplyApiController {
 
         return replyFacade.getList(id, member, cursor, limit);
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateReply(@PathVariable Long id,
+                                         @RequestBody ReplyRequestDto replyRequestDto,
+                                         HttpServletRequest request,
+                                         HttpServletResponse response) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+        return replyFacade.updateReply(id, replyRequestDto, member, response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteReply(@PathVariable Long id, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+        return replyFacade.deleteReply(id, member);
+    }
 }

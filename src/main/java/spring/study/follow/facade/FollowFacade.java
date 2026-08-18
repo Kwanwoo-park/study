@@ -51,10 +51,8 @@ public class FollowFacade {
             return privateMemberResponse();
         }
 
-        long totalCount = followService.countFollowers(follower);
-        List<Follow> followers = followService.getFollowers(follower, cursor, limit).stream()
-                .filter(follow -> visibilityAccessPolicy.canViewMember(follow.getFollower(), member))
-                .toList();
+        long totalCount = followService.countVisibleFollowers(follower, member);
+        List<Follow> followers = followService.getVisibleFollowers(follower, member, cursor, limit);
         int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
@@ -88,10 +86,8 @@ public class FollowFacade {
             return privateMemberResponse();
         }
 
-        long totalCount = followService.countFollowing(following);
-        List<Follow> followings = followService.getFollowing(following, cursor, limit).stream()
-                .filter(follow -> visibilityAccessPolicy.canViewMember(follow.getFollowing(), member))
-                .toList();
+        long totalCount = followService.countVisibleFollowing(following, member);
+        List<Follow> followings = followService.getVisibleFollowing(following, member, cursor, limit);
         int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(

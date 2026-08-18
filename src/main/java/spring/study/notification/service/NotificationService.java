@@ -12,10 +12,12 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Status;
 import spring.study.notification.repository.NotificationRepository;
+import spring.study.common.exception.ResourceNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
 
 @Slf4j
 @Service
@@ -115,13 +117,27 @@ public class NotificationService {
     }
 
     public Notification findById(Long id) {
-        return notificationRepository.findById(id).orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다"));
+        return notificationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("알림을 찾을 수 없습니다"));
     }
 
     public List<Notification> findByMember(Member member) {
-        return notificationRepository.findByMember(member).stream()
-                .sorted(Comparator.comparing(this::notificationSortTime).reversed())
-                .toList();
+        return findByMember(member, 0, 100);
+    }
+
+    public List<Notification> findByMember(Member member, int page, int size) {
+        return notificationRepository.findRecentByMember(member, PageRequest.of(page, Math.min(Math.max(size, 1), 100)));
+    }
+
+    public List<Notification> findByMemberAndGroup(Member member, Group group) {
+        return notificationRepository.findRecentByMemberAndGroup(member, group, PageRequest.of(0, 100));
+    }
+
+    public long countByMember(Member member) {
+        return notificationRepository.countByMember(member);
+    }
+
+    public long countByMemberAndGroup(Member member, Group group) {
+        return notificationRepository.countByMemberAndNotiGroup(member, group);
     }
 
     public List<Notification> findUnReadNotification(Member member) {
@@ -162,7 +178,4 @@ public class NotificationService {
         ).orElse(null);
     }
 
-    private LocalDateTime notificationSortTime(Notification notification) {
-        return notification.getUpdateTime() == null ? notification.getRegisterTime() : notification.getUpdateTime();
-    }
 }

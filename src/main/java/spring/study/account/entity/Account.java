@@ -248,11 +248,11 @@ public class Account implements Serializable {
     }
 
     public void addAmount(long amount) {
-        this.amount += amount;
+        this.amount = Math.addExact(this.amount, amount);
     }
 
     public void subAmount(long amount) {
-        this.amount -= amount;
+        this.amount = Math.subtractExact(this.amount, amount);
     }
 
     private void initializeInterestDetail() {

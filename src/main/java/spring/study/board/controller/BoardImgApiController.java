@@ -28,6 +28,6 @@ public class BoardImgApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return boardImgFacade.imageSave(file, id);
+        return boardImgFacade.imageSave(file, id, member);
     }
 }

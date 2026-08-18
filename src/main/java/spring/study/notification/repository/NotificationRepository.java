@@ -14,6 +14,7 @@ import spring.study.notification.entity.Status;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
@@ -33,6 +34,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findByMember(Member member);
 
+    @Query("select n from Notification n where n.member = :member order by coalesce(n.updateTime, n.registerTime) desc")
+    List<Notification> findRecentByMember(@Param("member") Member member, Pageable pageable);
+
+    @Query("select n from Notification n where n.member = :member and n.notiGroup = :group order by coalesce(n.updateTime, n.registerTime) desc")
+    List<Notification> findRecentByMemberAndGroup(@Param("member") Member member, @Param("group") Group group, Pageable pageable);
+
     List<Notification> findByMemberAndReadStatus(Member member, Status readStatus);
 
     Optional<Notification> findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(
@@ -45,6 +52,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByReadStatusAndRegisterTimeBefore(Status readStatus, LocalDateTime registerTime);
 
     long countByMemberAndReadStatus(Member member, Status readStatus);
+    long countByMember(Member member);
+    long countByMemberAndNotiGroup(Member member, Group group);
 
     @Transactional
     void deleteByRegisterTimeBefore(LocalDateTime registerTime);

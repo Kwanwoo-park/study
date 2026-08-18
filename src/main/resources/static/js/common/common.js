@@ -19,15 +19,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const notificationMessage = json['message'];
             const notificationGroup = json['notiGroup'];
             const notificationUrl = json['url'];
+            const isAudioCall = notificationMessage && notificationMessage.includes('음성 통화를 요청했습니다.');
 
             if (notificationMessage) {
                 fnUpdateUnreadNotificationDot();
                 if (typeof fnHandleIncomingNotificationCount === 'function') fnHandleIncomingNotificationCount(json);
+                if (isAudioCall) fnAnnounceIncomingAudioCall(notificationMessage, notificationUrl);
 
-                const notificationElement = document.getElementById('notification-message');
+                const notificationBanner = fnEnsureNotificationBanner();
+                const notificationElement = notificationBanner.querySelector('#notification-message');
                 notificationElement.textContent = notificationMessage;
 
-                const notificationBanner = document.getElementById('notification-banner');
                 notificationBanner.classList.remove('d-none');
                 notificationBanner.style.cursor = 'pointer';
                 notificationBanner.dataset.notificationId = notificationId || '';
@@ -38,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 setTimeout(() => {
                     notificationBanner.classList.add('d-none');
-                }, 5000);
+                }, isAudioCall ? 30000 : 5000);
             }
         } catch (error) {
             console.error('SSE 메시지 처리 오류:', error);
@@ -73,6 +75,53 @@ document.addEventListener('DOMContentLoaded', function() {
         eventSource.close();
     });
 });
+
+function fnAnnounceIncomingAudioCall(message, roomId) {
+    if (navigator.vibrate) navigator.vibrate([250, 150, 250, 500, 250]);
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const notification = new Notification('음성 통화 요청', {
+        body: message,
+        tag: `audio-call-${roomId || 'incoming'}`,
+        renotify: true
+    });
+    notification.onclick = function() {
+        window.focus();
+        notification.close();
+        if (roomId) location.href = `/chat/chatRoom?roomId=${encodeURIComponent(roomId)}`;
+    };
+    setTimeout(() => notification.close(), 30000);
+}
+
+function fnEnsureNotificationBanner() {
+    const existing = document.getElementById('notification-banner');
+    if (existing) return existing;
+
+    const banner = document.createElement('div');
+    banner.id = 'notification-banner';
+    banner.className = 'alert alert-info d-none position-fixed top-0 end-0 m-3';
+    banner.setAttribute('role', 'alert');
+    banner.innerHTML = '<span id="notification-message">새 알림</span>'
+        + '<button type="button" class="btn-close" aria-label="Close">닫기</button>';
+    banner.querySelector('.btn-close').addEventListener('click', event => {
+        event.stopPropagation();
+        banner.classList.add('d-none');
+    });
+    document.body.appendChild(banner);
+    return banner;
+}
+
+function fnRequestAudioCallNotificationPermission() {
+    if (!('Notification' in window)) {
+        alert('이 브라우저는 시스템 알림을 지원하지 않습니다.');
+        return;
+    }
+    Notification.requestPermission().then(permission => {
+        alert(permission === 'granted'
+            ? '음성 통화 알림이 허용되었습니다.'
+            : '브라우저 설정에서 알림 권한을 허용해주세요.');
+    });
+}
 
 function fnInitNavigationSettings() {
     const settings = document.querySelector('.nav-settings');

@@ -13,6 +13,8 @@ import java.util.List;
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
     List<Collection> findByMember(Member member, Pageable pageable);
 
+    List<Collection> findByMember(Member member);
+
     long countByMember(Member member);
 
     @Transactional

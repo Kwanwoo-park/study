@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
@@ -59,7 +61,8 @@ public class MemberService implements UserDetailsService {
     }
 
     public Member findById(Long id) {
-        return memberRepository.findById(id).orElseThrow();
+        return memberRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
     }
 
     public List<MemberResponseDto> findName(String name) {
@@ -78,7 +81,8 @@ public class MemberService implements UserDetailsService {
     }
 
     public Member findMember(String email) {
-        return memberRepository.findByEmail(email).orElseThrow();
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
     }
 
     public Member findMember(String phone, String birth) {

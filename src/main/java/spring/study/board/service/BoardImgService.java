@@ -19,6 +19,11 @@ public class BoardImgService {
         return boardImgRepository.save(boardImg);
     }
 
+    @Transactional
+    public List<BoardImg> saveAll(List<BoardImg> boardImgs) {
+        return boardImgRepository.saveAll(boardImgs);
+    }
+
     public List<BoardImg> findBoard(Board board) {
         return boardImgRepository.findByBoard(board);
     }

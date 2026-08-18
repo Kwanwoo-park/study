@@ -6,7 +6,6 @@ import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import spring.study.notification.entity.Notification;
 import spring.study.common.repository.EmitterRepository;
 
 import java.io.IOException;
@@ -21,11 +20,10 @@ public class EmitterService {
     private final EmitterRepository emitterRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
-    public void save(String id, Notification notification) {
+    public void save(String id, Object notification) {
         Map<String, SseEmitter> sseEmitters = emitterRepository.findAllEmitterStartWithById(id);
-
+        if (!sseEmitters.isEmpty()) emitterRepository.saveEventCache(id, notification);
         sseEmitters.forEach((key, emitter) -> {
-            emitterRepository.saveEventCache(id, notification);
             sendToClient(emitter, key, notification);
         });
     }
@@ -58,7 +56,6 @@ public class EmitterService {
     public SseEmitter addEmitter(String id) {
         String emitterId = id + "_" + System.currentTimeMillis();
 
-        emitterRepository.deleteAllEventCacheByMemberId(id);
         SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L));
 
         redisTemplate.opsForValue().setIfAbsent("online:user:" + id, "1", Duration.ofHours(1L));

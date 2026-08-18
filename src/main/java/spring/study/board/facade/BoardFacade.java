@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.aws.service.ImageCleanupService;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
@@ -42,16 +44,19 @@ public class BoardFacade {
     private final ImageS3Service imageS3Service;
     private final ModerationService moderationService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
+    private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<?> load(int cursor, int limit, Member member) {
         List<Member> memberList = followService.getMemberList(member);
 
         List<Board> list = boardService.getBoard(cursor, limit, memberList);
-        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
+        long totalCount = boardService.countByMembers(memberList);
+        int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
                 "boards", list.stream().map(BoardResponseDto::new).toList(),
                 "nextCursor", nextCursor,
+                "totalCount", totalCount,
                 "like", checkFavorite(list, member),
                 "like_count", favoriteService.countFavorites(list),
                 "comment_count", commentService.countComments(list),
@@ -71,10 +76,12 @@ public class BoardFacade {
                 .stream()
                 .map(BoardResponseDto::new)
                 .toList();
-        int nextCursor = list.isEmpty() ? 0 : cursor + 2;
+        long totalCount = boardService.countByMember(targetMember, includePrivate);
+        int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
 
         return ResponseEntity.ok(Map.of(
                 "boards", list,
+                "totalCount", totalCount,
                 "nextCursor", nextCursor,
                 "result", 10L
         ));
@@ -169,6 +176,7 @@ public class BoardFacade {
         ));
     }
 
+    @Transactional
     public ResponseEntity<?> deleteBoard(Long boardId, Member member) {
         Board board = boardService.findById(boardId);
 
@@ -181,7 +189,7 @@ public class BoardFacade {
         favoriteService.deleteByBoard(board);
         replyService.deleteReplay(board.getComment());
         commentService.deleteComment(board);
-        imageS3Service.deleteImage(board.getImg());
+        imageCleanupService.enqueueAll(board.getImg().stream().map(img -> img.getImgSrc()).toList());
         boardImgService.deleteBoard(board);
         boardService.deleteById(boardId);
 
@@ -193,40 +201,14 @@ public class BoardFacade {
 
     private HashMap<Long, Boolean> checkFavorite(List<Board> boardList, Member member) {
         HashMap<Long, Boolean> map = new HashMap<>();
-
-        List<Favorite> memberFavorites = favoriteService.findByMember(member);
-
-        for (Board board : boardList) {
-            map.put(board.getId(), false);
-
-            List<Favorite> boardFavorites = favoriteService.findByBoard(board);
-
-            for (Favorite fb : boardFavorites) {
-                for (Favorite fm : memberFavorites) {
-                    if (Objects.equals(fm.getId(), fb.getId())) {
-                        map.put(board.getId(), true);
-                        break;
-                    }
-                }
-            }
-        }
+        boardList.forEach(board -> map.put(board.getId(), false));
+        favoriteService.findLikedBoardIds(member, boardList).forEach(boardId -> map.put(boardId, true));
 
         return map;
     }
 
     public Boolean checkFavorite(Board board, Member member) {
-        List<Favorite> boardFavorites = favoriteService.findByBoard(board);
-        List<Favorite> memberFavorites = favoriteService.findByMember(member);
-
-        for (Favorite fb : boardFavorites) {
-            for (Favorite fm : memberFavorites) {
-                if (Objects.equals(fm.getId(), fb.getId())) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return favoriteService.existFavorite(member, board);
     }
 
     public boolean canView(Board board, Member member) {

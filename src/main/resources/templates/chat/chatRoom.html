@@ -35,6 +35,17 @@
 
     <section id="audio-call-panel" class="audio-call-panel is-hidden" role="dialog" aria-live="polite">
         <p id="audio-call-status" class="audio-call-status">통화 준비 중</p>
+        <div class="audio-call-meta" aria-live="polite">
+            <span id="audio-call-connection" class="audio-call-connection" data-state="idle">대기 중</span>
+            <span id="audio-call-mute-status" class="audio-call-mute-status is-hidden">내 마이크 음소거됨</span>
+            <time id="audio-call-duration" class="audio-call-duration is-hidden">00:00</time>
+        </div>
+        <div id="audio-call-devices" class="audio-call-devices is-hidden">
+            <label for="audio-call-input">마이크</label>
+            <select id="audio-call-input" class="form-select form-select-sm"></select>
+            <label for="audio-call-output">스피커</label>
+            <select id="audio-call-output" class="form-select form-select-sm"></select>
+        </div>
         <div class="audio-call-actions">
             <button type="button" id="audio-call-accept" class="btn btn-success is-hidden">받기</button>
             <button type="button" id="audio-call-reject" class="btn btn-secondary is-hidden">거절</button>

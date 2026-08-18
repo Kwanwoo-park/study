@@ -14,6 +14,7 @@ import spring.study.comment.dto.CommentRequestDto;
 import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
 import spring.study.common.service.ModerationService;
+import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.notification.entity.Group;
@@ -32,6 +33,7 @@ public class CommentFacade {
     private final NotificationService notificationService;
     private final ModerationService moderationService;
     private final ReplyService replyService;
+    private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     public ResponseEntity<?> saveComment(CommentRequestDto dto, Member member, HttpServletResponse response) {
         int risk = moderationService.validate(dto.getComments(), member, response);
@@ -51,6 +53,9 @@ public class CommentFacade {
         }
 
         Board board = boardService.findById(dto.getId());
+        if (!visibilityAccessPolicy.canViewBoard(board, member)) {
+            return forbiddenBoard();
+        }
         Member otherMember = board.getMember();
 
         dto.setBoard(board);
@@ -71,6 +76,14 @@ public class CommentFacade {
     }
 
     public ResponseEntity<?> updateComment(CommentRequestDto dto, Member member, HttpServletResponse response) {
+        Comment target = commentService.findById(dto.getId());
+        if (!isOwnerOrAdmin(target, member)) {
+            return forbiddenComment();
+        }
+        if (!visibilityAccessPolicy.canViewBoard(target.getBoard(), member)) {
+            return forbiddenBoard();
+        }
+
         int risk = moderationService.validate(dto.getComments(), member, response);
 
         if (risk != 0) {
@@ -93,36 +106,33 @@ public class CommentFacade {
     }
 
     public ResponseEntity<?> deleteComment(Long id, CommentRequestDto dto, Member member, HttpServletRequest request) {
-        if (member.getRole() == Role.ADMIN) {
-            Long commentId = dto != null && dto.getId() != null ? dto.getId() : id;
-            Comment comment = commentService.findById(commentId);
+        Long commentId = dto != null && dto.getId() != null ? dto.getId() : id;
+        Comment comment = commentService.findById(commentId);
 
-            replyService.deleteReplay(List.of(comment));
-            commentService.deleteById(commentId);
-
-            return ResponseEntity.ok(Map.of(
-                    "result", commentId
-            ));
+        if (!isOwnerOrAdmin(comment, member)) {
+            return forbiddenComment();
         }
-
-        Board board = boardService.findById(id);
-
-        if (!commentService.existComment(member, board)) {
+        if (member.getRole() != Role.ADMIN
+                && (comment.getBoard() == null || !comment.getBoard().getId().equals(id))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
-                    "message", "이미 삭제된 댓글입니다"
+                    "message", "게시글과 댓글 정보가 일치하지 않습니다"
             ));
         }
 
-        commentService.deleteById(dto.getId());
+        replyService.deleteReplay(List.of(comment));
+        commentService.deleteById(commentId);
 
         return ResponseEntity.ok(Map.of(
-                "result", dto.getId()
+                "result", commentId
         ));
     }
 
     public ResponseEntity<?> getList(Long boardId, Member member, int cursor, int limit) {
         Board board = boardService.findById(boardId);
+        if (!visibilityAccessPolicy.canViewBoard(board, member)) {
+            return forbiddenBoard();
+        }
         long totalCount = commentService.countComments(board);
         List<CommentListResponseDto> list = commentService.getComments(board, cursor, limit).stream()
                 .map(CommentListResponseDto::new)
@@ -135,6 +145,25 @@ public class CommentFacade {
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
                 "list", list
+        ));
+    }
+
+    private boolean isOwnerOrAdmin(Comment comment, Member member) {
+        return member.getRole() == Role.ADMIN
+                || (comment.getMember() != null && comment.getMember().getId().equals(member.getId()));
+    }
+
+    private ResponseEntity<?> forbiddenComment() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "result", -403L,
+                "message", "본인이 작성한 댓글만 수정하거나 삭제할 수 있습니다"
+        ));
+    }
+
+    private ResponseEntity<?> forbiddenBoard() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "result", -403L,
+                "message", "접근할 수 없는 게시글입니다"
         ));
     }
 }

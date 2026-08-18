@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.aws.service.ImageCleanupService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.*;
 class MemberFacadeRegressionTest {
     @Mock private MemberService memberService;
     @Mock private ImageS3Service imageS3Service;
+    @Mock private ImageCleanupService imageCleanupService;
 
     @InjectMocks
     private MemberFacade memberFacade;
@@ -51,10 +53,10 @@ class MemberFacadeRegressionTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        InOrder inOrder = inOrder(imageS3Service, memberService);
+        InOrder inOrder = inOrder(imageS3Service, memberService, imageCleanupService);
         inOrder.verify(imageS3Service).uploadImageToS3(file);
         inOrder.verify(memberService).updateProfile(1L, "https://cdn/new.png");
-        inOrder.verify(imageS3Service).deleteImage("https://cdn/old.png");
+        inOrder.verify(imageCleanupService).enqueue("https://cdn/old.png");
 
         verifyNoInteractions(request);
     }

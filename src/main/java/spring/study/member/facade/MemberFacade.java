@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.account.service.AccountService;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.aws.service.ImageCleanupService;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardImgService;
@@ -61,6 +65,7 @@ public class MemberFacade {
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationService jwtAuthenticationService;
+    private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
         int check = validateLogin(dto);
@@ -169,7 +174,7 @@ public class MemberFacade {
             notificationService.createNotification(memberService.findAdministrator(), dto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
 
             return ResponseEntity.ok(Map.of(
-                    "result", dto.getId()
+                    "result", response.getId()
             ));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
@@ -199,6 +204,7 @@ public class MemberFacade {
         }
     }
 
+    @Transactional
     public ResponseEntity<?> changeProfileImage(MultipartFile file, Member member, HttpServletRequest request) {
         if (imageS3Service.fileFormatCheck(file)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -207,21 +213,32 @@ public class MemberFacade {
             ));
         }
 
+        String imageUrl = null;
         try {
-            String imageUrl = imageS3Service.uploadImageToS3(file);
+            imageUrl = imageS3Service.uploadImageToS3(file);
             String oldProfile = member.getProfile();
 
             member.setProfile(imageUrl);
             memberService.updateProfile(member.getId(), imageUrl);
 
             if (oldProfile != null && !oldProfile.equals(imageUrl)) {
-                imageS3Service.deleteImage(oldProfile);
+                imageCleanupService.enqueue(oldProfile);
             }
 
             return ResponseEntity.ok(Map.of(
                     "result", member.getId()
             ));
         } catch (Exception e) {
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            }
+            if (imageUrl != null) {
+                try {
+                    imageS3Service.deleteImage(imageUrl);
+                } catch (Exception cleanupException) {
+                    log.error("new profile image cleanup failed: {}", imageUrl, cleanupException);
+                }
+            }
             log.error("profile image change failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -10L,
@@ -370,12 +387,14 @@ public class MemberFacade {
         ));
     }
 
+    @Transactional
     public ResponseEntity<?> deleteMember(Member member, HttpServletRequest request) {
         removeMemberData(member);
 
         return ResponseEntity.ok(Map.of("result", member.getId()));
     }
 
+    @Transactional
     public ResponseEntity<?> deleteMember(String email) {
         Member member = memberService.findMember(email);
         removeMemberData(member);
@@ -388,6 +407,7 @@ public class MemberFacade {
         // which needs the member's lazy associations.
         member = memberService.findById(member.getId());
         for (Board board : member.getBoard()) {
+            imageCleanupService.enqueueAll(board.getImg().stream().map(img -> img.getImgSrc()).toList());
             boardImgService.deleteBoard(board);
             favoriteService.deleteByBoard(board);
         }
@@ -407,11 +427,14 @@ public class MemberFacade {
         messageService.deleteByMember(member);
         roomMemberService.delete(member);
 
+        imageCleanupService.enqueueAll(collectionService.findByMember(member).stream()
+                .map(spring.study.collection.entity.Collection::getImgSrc)
+                .toList());
         collectionService.deleteByMember(member);
 
         accountService.deleteByMember(member);
 
-        imageS3Service.deleteImage(member.getProfile());
+        imageCleanupService.enqueue(member.getProfile());
         memberService.deleteById(member.getId());
     }
 

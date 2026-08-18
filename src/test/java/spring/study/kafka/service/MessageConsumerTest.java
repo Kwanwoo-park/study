@@ -6,7 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageBatchService;
-import spring.study.common.service.EmitterService;
+import spring.study.notification.service.NotificationRealtimePublisher;
 
 import java.util.List;
 
@@ -16,11 +16,11 @@ import static org.mockito.Mockito.when;
 
 class MessageConsumerTest {
     private final SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
-    private final EmitterService emitterService = mock(EmitterService.class);
+    private final NotificationRealtimePublisher notificationRealtimePublisher = mock(NotificationRealtimePublisher.class);
     private final ChatMessageBatchService batchService = mock(ChatMessageBatchService.class);
     private final MessageConsumer consumer = new MessageConsumer(
             messagingTemplate,
-            emitterService,
+            notificationRealtimePublisher,
             batchService
     );
 

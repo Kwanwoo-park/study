@@ -9,7 +9,12 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.ChannelTopic;
 import spring.study.board.dto.BoardResponseDto;
+import spring.study.notification.component.NotificationRealtimeSubscriber;
+import spring.study.notification.service.NotificationRealtimePublisher;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Configuration
 public class RedisConfig {
@@ -57,5 +62,17 @@ public class RedisConfig {
         redisTemplate.afterPropertiesSet();
 
         return redisTemplate;
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "notification.redis-pubsub.enabled", havingValue = "true", matchIfMissing = true)
+    public RedisMessageListenerContainer notificationRedisListenerContainer(
+            RedisConnectionFactory connectionFactory,
+            NotificationRealtimeSubscriber subscriber
+    ) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(subscriber, new ChannelTopic(NotificationRealtimePublisher.CHANNEL));
+        return container;
     }
 }

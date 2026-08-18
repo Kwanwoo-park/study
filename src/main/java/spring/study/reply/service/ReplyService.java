@@ -10,6 +10,7 @@ import spring.study.comment.entity.Comment;
 import spring.study.reply.entity.Reply;
 import spring.study.member.entity.Member;
 import spring.study.reply.repository.ReplyRepository;
+import spring.study.common.exception.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class ReplyService {
     }
 
     public Reply findById(Long id) {
-        return replyRepository.findById(id).orElseThrow();
+        return replyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 답글입니다"));
     }
 
     public List<Reply> findReply(Comment comment) {
@@ -62,5 +63,12 @@ public class ReplyService {
 
     public void deleteReply(Long id) {
         replyRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Long update(Long id, String content) {
+        Reply reply = findById(id);
+        reply.changeReply(content);
+        return reply.getId();
     }
 }

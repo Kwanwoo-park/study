@@ -71,7 +71,7 @@ class ReportServiceTest {
         Member reporter = createMember(1L, "reporter@test.com");
         Report report = createReport(10L, reporter, ReportStatus.PENDING);
 
-        when(reportRepository.findById(10L)).thenReturn(Optional.of(report));
+        when(reportRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(report));
 
         ReportResponseDto response = reportService.cancel(10L, reporter);
 
@@ -87,7 +87,7 @@ class ReportServiceTest {
         Member other = createMember(2L, "other@test.com");
         Report report = createReport(10L, owner, ReportStatus.PENDING);
 
-        when(reportRepository.findById(10L)).thenReturn(Optional.of(report));
+        when(reportRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(report));
 
         assertThatThrownBy(() -> reportService.cancel(10L, other))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
@@ -99,7 +99,7 @@ class ReportServiceTest {
         Member reporter = createMember(1L, "reporter@test.com");
         Report report = createReport(10L, reporter, ReportStatus.REVIEWING);
 
-        when(reportRepository.findById(10L)).thenReturn(Optional.of(report));
+        when(reportRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(report));
 
         assertThatThrownBy(() -> reportService.cancel(10L, reporter))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
@@ -192,7 +192,7 @@ class ReportServiceTest {
         report.setTargetId(target.getEmail());
         ReportProcessRequestDto request = processRequest(ReportAction.WARNING, null);
 
-        when(reportRepository.findById(10L)).thenReturn(Optional.of(report));
+        when(reportRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(report));
         when(memberRepository.findByEmail(target.getEmail())).thenReturn(Optional.of(target));
         when(memberSanctionRepository.existsByReportId(10L)).thenReturn(false);
 
@@ -213,7 +213,7 @@ class ReportServiceTest {
         report.setTargetType(ReportTargetType.MEMBER);
         report.setTargetId(target.getEmail());
 
-        when(reportRepository.findById(10L)).thenReturn(Optional.of(report));
+        when(reportRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(report));
         when(memberRepository.findByEmail(target.getEmail())).thenReturn(Optional.of(target));
 
         reportService.process(10L, processRequest(ReportAction.TEMPORARY_SUSPEND, until), admin);
@@ -233,7 +233,7 @@ class ReportServiceTest {
     void processShouldRejectExpiredSuspensionDate() {
         Member reporter = createMember(1L, "reporter@test.com");
         Report report = createReport(10L, reporter, ReportStatus.REVIEWING);
-        when(reportRepository.findById(10L)).thenReturn(Optional.of(report));
+        when(reportRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(report));
 
         assertThatThrownBy(() -> reportService.process(
                 10L,

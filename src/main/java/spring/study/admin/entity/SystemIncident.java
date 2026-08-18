@@ -24,6 +24,9 @@ public class SystemIncident {
     @Column(name = "occurred_at", nullable = false)
     private LocalDateTime occurredAt;
 
+    @Column(name = "occurrence_count", nullable = false)
+    private long occurrenceCount = 1L;
+
     @Column(name = "request_method", nullable = false, length = 10)
     private String requestMethod;
 
@@ -58,10 +61,16 @@ public class SystemIncident {
         this.httpStatus = httpStatus;
         this.exceptionType = exceptionType;
         this.errorMessage = errorMessage;
+        this.occurrenceCount = 1L;
     }
 
     public void acknowledge(LocalDateTime time) {
         acknowledged = true;
         acknowledgedAt = time;
+    }
+
+    public void recordRecurrence(LocalDateTime time) {
+        occurrenceCount++;
+        occurredAt = time;
     }
 }

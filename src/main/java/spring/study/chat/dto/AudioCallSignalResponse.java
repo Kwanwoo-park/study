@@ -20,6 +20,11 @@ public record AudioCallSignalResponse(
     }
 
     public static AudioCallSignalResponse error(AudioCallSignalRequest request, String message) {
+        if (request == null) {
+            return new AudioCallSignalResponse(
+                    null, null, null, null, null,
+                    null, null, null, null, message);
+        }
         return new AudioCallSignalResponse(
                 request.callId(), request.roomId(), request.type(), null, null,
                 null, null, null, null, message);
@@ -30,6 +35,12 @@ public record AudioCallSignalResponse(
         return new AudioCallSignalResponse(
                 callId, roomId, AudioCallSignalType.DISCONNECTED,
                 disconnectedMemberEmail, null, null, null, null, null, null);
+    }
+
+    public static AudioCallSignalResponse accepted(String callId, String roomId) {
+        return new AudioCallSignalResponse(
+                callId, roomId, AudioCallSignalType.ACCEPTED,
+                null, null, null, null, null, null, null);
     }
 
     public static AudioCallSignalResponse adminTerminated(String callId, String roomId) {

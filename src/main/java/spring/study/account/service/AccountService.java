@@ -116,6 +116,12 @@ public class AccountService {
         ));
     }
 
+    public Account findByAccountForUpdate(String accountNum) {
+        return accountRepository.findByAccountForUpdate(accountNum).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 계좌입니다"
+        ));
+    }
+
     public List<Account> findByMember(Member member) {
         return accountRepository.findByMember(member);
     }
@@ -141,9 +147,15 @@ public class AccountService {
 
     @Transactional
     public void changeAccountName(String accountNum, String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("계좌명을 입력해주세요");
+        }
+        if (name.trim().length() > 100) {
+            throw new IllegalArgumentException("계좌명은 100자 이하여야 합니다");
+        }
         Account account = findByAccount(accountNum);
 
-        account.changeName(name);
+        account.changeName(name.trim());
     }
 
     @Transactional
@@ -156,8 +168,14 @@ public class AccountService {
             throw new IllegalArgumentException("같은 계좌로 이체할 수 없습니다");
         }
 
-        Account account = findByAccount(dto.getAccount());
-        Account tranAccount = findByAccount(dto.getTranAccount());
+        String firstAccountNumber = dto.getAccount().compareTo(dto.getTranAccount()) <= 0
+                ? dto.getAccount() : dto.getTranAccount();
+        String secondAccountNumber = firstAccountNumber.equals(dto.getAccount())
+                ? dto.getTranAccount() : dto.getAccount();
+        Account firstLockedAccount = findByAccountForUpdate(firstAccountNumber);
+        Account secondLockedAccount = findByAccountForUpdate(secondAccountNumber);
+        Account account = dto.getAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
+        Account tranAccount = dto.getTranAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
 
         LocalDateTime transactionTime = LocalDateTime.now();
         prepareBalanceChange(account, transactionTime);

@@ -6,7 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.aws.service.ImageCleanupService;
 import spring.study.collection.dto.CollectionRequestDto;
 import spring.study.collection.dto.CollectionResponseDto;
 import spring.study.collection.entity.Collection;
@@ -23,6 +25,7 @@ import java.util.Map;
 public class CollectionFacade {
     private final CollectionService collectionService;
     private final ImageS3Service imageS3Service;
+    private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<?> load(int cursor, int limit, Member member) {
         List<CollectionResponseDto> list = collectionService.getCollections(cursor, limit, member);
@@ -77,6 +80,7 @@ public class CollectionFacade {
         }
     }
 
+    @Transactional
     public ResponseEntity<?> delete(List<Long> idList, Member member) {
         List<String> imgSrcList = new ArrayList<>();
 
@@ -93,8 +97,8 @@ public class CollectionFacade {
             imgSrcList.add(collection.getImgSrc());
         }
 
-        imageS3Service.deleteImgSrc(imgSrcList);
         collectionService.deleteByIds(idList);
+        imageCleanupService.enqueueAll(imgSrcList);
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L

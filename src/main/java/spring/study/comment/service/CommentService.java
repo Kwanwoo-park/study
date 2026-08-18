@@ -13,6 +13,7 @@ import spring.study.board.entity.Board;
 import spring.study.comment.entity.Comment;
 import spring.study.member.entity.Member;
 import spring.study.comment.repository.CommentRepository;
+import spring.study.common.exception.ResourceNotFoundException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,12 +43,12 @@ public class CommentService {
     }
 
     public Comment findById(Long id) {
-        return commentRepository.findById(id).orElseThrow();
+        return commentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다"));
     }
 
     @Transactional
     public Comment findById(Long id, Member member, Board board) {
-        Comment comment = commentRepository.findById(id).orElseThrow();
+        Comment comment = commentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다"));
 
         member.removeComment(comment);
         board.removeComment(comment);
@@ -76,9 +77,10 @@ public class CommentService {
 
     public HashMap<Long, Long> countComments(List<Board> boardList) {
         HashMap<Long, Long> map = new HashMap<>();
-
-        for (Board board : boardList)
-            map.put(board.getId(), commentRepository.countByBoard(board));
+        boardList.forEach(board -> map.put(board.getId(), 0L));
+        if (boardList.isEmpty()) return map;
+        commentRepository.countByBoardIds(boardList.stream().map(Board::getId).toList())
+                .forEach(row -> map.put((Long) row[0], (Long) row[1]));
 
         return map;
     }
@@ -93,7 +95,7 @@ public class CommentService {
 
     @Transactional
     public Long updateComments(Long id, String comments) {
-        Comment comment = commentRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+        Comment comment = commentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(
                 "존재하지 않는 댓글입니다."
         ));
 

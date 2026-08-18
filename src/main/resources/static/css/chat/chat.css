@@ -601,6 +601,66 @@ body.dark-mode .chat-image-modal-nav {
     font-weight: 700;
 }
 
+.audio-call-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.audio-call-connection::before {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 5px;
+    border-radius: 50%;
+    background: #94a3b8;
+    content: '';
+}
+
+.audio-call-connection[data-state="connecting"]::before {
+    background: #f59e0b;
+}
+
+.audio-call-connection[data-state="connected"]::before {
+    background: #22c55e;
+}
+
+.audio-call-connection[data-state="recovering"]::before,
+.audio-call-connection[data-state="error"]::before {
+    background: #ef4444;
+}
+
+.audio-call-mute-status {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.audio-call-duration {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+.audio-call-devices {
+    display: grid;
+    grid-template-columns: auto minmax(150px, 1fr);
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-size: 13px;
+}
+
+.audio-call-devices select {
+    min-width: 0;
+    color: var(--text-primary);
+    background: var(--surface-bg);
+    border-color: var(--border-color);
+}
+
 .audio-call-actions {
     display: flex;
     flex-wrap: wrap;

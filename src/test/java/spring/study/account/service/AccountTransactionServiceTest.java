@@ -43,7 +43,9 @@ class AccountTransactionServiceTest {
                 LocalDateTime.now().minusHours(1)
         );
 
-        when(accountTransactionRepository.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+        when(accountTransactionRepository.findByIdForUpdate(transaction.getId())).thenReturn(Optional.of(transaction));
+        when(accountService.findByAccountForUpdate(withdrawalAccount.getAccount())).thenReturn(withdrawalAccount);
+        when(accountService.findByAccountForUpdate(depositAccount.getAccount())).thenReturn(depositAccount);
         when(accountTransactionRepository.save(any(AccountTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AccountTransaction cancelTransaction = accountTransactionService.cancelTransaction(transaction.getId(), sender);
@@ -70,7 +72,7 @@ class AccountTransactionServiceTest {
                 LocalDateTime.now().minusDays(1).minusMinutes(1)
         );
 
-        when(accountTransactionRepository.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+        when(accountTransactionRepository.findByIdForUpdate(transaction.getId())).thenReturn(Optional.of(transaction));
 
         assertThatThrownBy(() -> accountTransactionService.cancelTransaction(transaction.getId(), member))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -90,11 +92,27 @@ class AccountTransactionServiceTest {
                 LocalDateTime.now().minusHours(1)
         );
 
-        when(accountTransactionRepository.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+        when(accountTransactionRepository.findByIdForUpdate(transaction.getId())).thenReturn(Optional.of(transaction));
+        when(accountService.findByAccountForUpdate(account.getAccount())).thenReturn(account);
 
         assertThatThrownBy(() -> accountTransactionService.cancelTransaction(transaction.getId(), member))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("취소할 계좌의 잔액이 부족합니다");
+    }
+
+    @Test
+    void transferRecipientCannotCancelIncomingTransfer() {
+        Member sender = createMember(1L);
+        Member receiver = createMember(2L);
+        Account withdrawalAccount = createAccount("9191000", 10_000L, sender);
+        Account depositAccount = createAccount("9192000", 10_000L, receiver);
+        AccountTransaction transaction = createTransaction(1L, AccountTransactionType.TRANSFER,
+                AccountTransactionStatus.COMPLETED, withdrawalAccount, depositAccount, LocalDateTime.now());
+        when(accountTransactionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(transaction));
+
+        assertThatThrownBy(() -> accountTransactionService.cancelTransaction(1L, receiver))
+                .isInstanceOf(SecurityException.class)
+                .hasMessage("본인 거래만 취소할 수 있습니다");
     }
 
     private Member createMember(Long id) {

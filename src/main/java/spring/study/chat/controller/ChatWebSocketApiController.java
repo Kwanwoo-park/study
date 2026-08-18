@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import spring.study.chat.dto.ChatMessageRequestDto;
@@ -28,8 +29,12 @@ public class ChatWebSocketApiController {
     }
 
     @MessageMapping("/audio/signal")
-    public void signalAudioCall(@RequestBody AudioCallSignalRequest signal, Principal principal) {
+    public void signalAudioCall(
+            @RequestBody AudioCallSignalRequest signal,
+            Principal principal,
+            SimpMessageHeaderAccessor headers
+    ) {
         if (principal == null) return;
-        audioCallSignalingService.handle(principal.getName(), signal);
+        audioCallSignalingService.handle(principal.getName(), headers.getSessionId(), signal);
     }
 }

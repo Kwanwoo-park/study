@@ -12,6 +12,7 @@ public record SystemIncidentResponseDto(
         int httpStatus,
         String exceptionType,
         String message,
+        long occurrenceCount,
         boolean acknowledged,
         LocalDateTime acknowledgedAt
 ) {
@@ -24,6 +25,7 @@ public record SystemIncidentResponseDto(
                 incident.getHttpStatus(),
                 incident.getExceptionType(),
                 incident.getErrorMessage(),
+                incident.getOccurrenceCount(),
                 incident.isAcknowledged(),
                 incident.getAcknowledgedAt()
         );

@@ -66,8 +66,8 @@ class AccountTransactionNotificationRegressionTest {
         dto.setTranAccount(depositAccount.getAccount());
         dto.setAmount(10_000L);
 
-        when(accountRepository.findById(withdrawalAccount.getAccount())).thenReturn(Optional.of(withdrawalAccount));
-        when(accountRepository.findById(depositAccount.getAccount())).thenReturn(Optional.of(depositAccount));
+        when(accountRepository.findByAccountForUpdate(withdrawalAccount.getAccount())).thenReturn(Optional.of(withdrawalAccount));
+        when(accountRepository.findByAccountForUpdate(depositAccount.getAccount())).thenReturn(Optional.of(depositAccount));
         when(accountTransactionRepository.save(any(AccountTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         accountService.tranAccount(dto);
