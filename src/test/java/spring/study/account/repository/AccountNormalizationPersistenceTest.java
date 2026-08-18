@@ -3,7 +3,9 @@ package spring.study.account.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountStatus;
 import spring.study.account.entity.AccountType;
@@ -15,7 +17,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
+@AutoConfigureTestDatabase(
+        replace = AutoConfigureTestDatabase.Replace.ANY,
+        connection = EmbeddedDatabaseConnection.H2
+)
 class AccountNormalizationPersistenceTest {
     @Autowired
     private AccountRepository accountRepository;

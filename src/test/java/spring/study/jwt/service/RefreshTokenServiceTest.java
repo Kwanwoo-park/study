@@ -2,6 +2,8 @@ package spring.study.jwt.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -19,7 +21,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.verify;
 
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
+@AutoConfigureTestDatabase(
+        replace = AutoConfigureTestDatabase.Replace.ANY,
+        connection = EmbeddedDatabaseConnection.H2
+)
 @Import(RefreshTokenService.class)
 class RefreshTokenServiceTest {
     @Autowired
