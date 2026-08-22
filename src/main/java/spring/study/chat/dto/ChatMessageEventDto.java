@@ -5,16 +5,7 @@ import spring.study.chat.entity.ChatMessageStatus;
 
 import java.time.LocalDateTime;
 
-public record ChatMessageEventDto(
-        String action,
-        String id,
-        String roomId,
-        String message,
-        ChatMessageStatus status,
-        LocalDateTime updateTime,
-        boolean editedByAdmin,
-        boolean deletedByAdmin
-) {
+public record ChatMessageEventDto(String action, String id, String roomId, String message, ChatMessageStatus status, LocalDateTime updateTime, boolean editedByAdmin, boolean deletedByAdmin) {
     public static ChatMessageEventDto updated(ChatMessage message) {
         return new ChatMessageEventDto(
                 "UPDATED",

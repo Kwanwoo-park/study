@@ -23,9 +23,7 @@ public class ReplyApiController {
     private final ReplyFacade replyFacade;
 
     @PostMapping("")
-    public ResponseEntity<?> replyAPI(@RequestBody ReplyRequestDto replyRequestDto,
-                                      HttpServletRequest request,
-                                      HttpServletResponse response) {
+    public ResponseEntity<?> replyAPI(@RequestBody ReplyRequestDto replyRequestDto, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -33,10 +31,7 @@ public class ReplyApiController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<?> getReply(@RequestParam() Long id,
-                                      @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                      @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                      HttpServletRequest request) {
+    public ResponseEntity<?> getReply(@RequestParam() Long id, @RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "10", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -44,10 +39,7 @@ public class ReplyApiController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> updateReply(@PathVariable Long id,
-                                         @RequestBody ReplyRequestDto replyRequestDto,
-                                         HttpServletRequest request,
-                                         HttpServletResponse response) {
+    public ResponseEntity<?> updateReply(@PathVariable Long id, @RequestBody ReplyRequestDto replyRequestDto, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
         return replyFacade.updateReply(id, replyRequestDto, member, response);

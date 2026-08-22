@@ -132,10 +132,7 @@ public class Account implements Serializable {
         return payableInterest;
     }
 
-    public void configureSavingsAutoTransfer(Account sourceAccount,
-                                             long monthlyAmount,
-                                             int paymentDay,
-                                             LocalDate configuredDate) {
+    public void configureSavingsAutoTransfer(Account sourceAccount, long monthlyAmount, int paymentDay, LocalDate configuredDate) {
         savingsAutoTransfer = SavingsAutoTransfer.create(
                 this,
                 sourceAccount,

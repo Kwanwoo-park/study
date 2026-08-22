@@ -17,10 +17,7 @@ public class ReportViewController {
     private final JwtManager jwtManager;
 
     @GetMapping
-    public String getReportPage(Model model,
-                                HttpServletRequest request,
-                                @RequestParam(required = false) String targetType,
-                                @RequestParam(required = false) String targetId) {
+    public String getReportPage(Model model, HttpServletRequest request, @RequestParam(required = false) String targetType, @RequestParam(required = false) String targetId) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/report";
 

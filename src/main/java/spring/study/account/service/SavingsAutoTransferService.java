@@ -39,9 +39,7 @@ public class SavingsAutoTransferService {
     }
 
     @Transactional
-    public void processDuePayment(String savingsAccountNumber,
-                                  LocalDate processingDate,
-                                  LocalDateTime processingTime) {
+    public void processDuePayment(String savingsAccountNumber, LocalDate processingDate, LocalDateTime processingTime) {
         Account savings = accountRepository.findByAccountForUpdate(savingsAccountNumber).orElse(null);
         if (!isDue(savings, processingDate)) {
             return;
@@ -108,10 +106,7 @@ public class SavingsAutoTransferService {
                 && source.getMember().getId().equals(savings.getMember().getId());
     }
 
-    private void transferPayment(Account savings,
-                                 Account source,
-                                 long paymentAmount,
-                                 LocalDateTime processingTime) {
+    private void transferPayment(Account savings, Account source, long paymentAmount, LocalDateTime processingTime) {
         savings.accrueInterestUntil(processingTime);
         source.subAmount(paymentAmount);
         savings.addAmount(paymentAmount);

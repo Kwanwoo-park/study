@@ -22,9 +22,7 @@ public class CookieOAuth2AuthorizationRequestRepository
     }
 
     @Override
-    public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest,
-                                         HttpServletRequest request,
-                                         HttpServletResponse response) {
+    public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
         if (authorizationRequest == null) {
             cookieService.clearOAuth2Request(response);
             return;
@@ -33,8 +31,7 @@ public class CookieOAuth2AuthorizationRequestRepository
     }
 
     @Override
-    public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
-                                                                 HttpServletResponse response) {
+    public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request, HttpServletResponse response) {
         OAuth2AuthorizationRequest authorizationRequest = loadAuthorizationRequest(request);
         cookieService.clearOAuth2Request(response);
         return authorizationRequest;

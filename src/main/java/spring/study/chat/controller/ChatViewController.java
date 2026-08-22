@@ -27,8 +27,7 @@ public class ChatViewController {
     private final ChatViewFacade viewFacade;
 
     @GetMapping("/chatList")
-    public String chatList(Model model,
-                           HttpServletRequest request) {
+    public String chatList(Model model, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/chat/chatList";
 

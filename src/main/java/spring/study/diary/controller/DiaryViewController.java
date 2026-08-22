@@ -21,11 +21,7 @@ public class DiaryViewController {
     private final JwtManager jwtManager;
 
     @GetMapping("/write")
-    public String write(
-            @RequestParam(required = false) Long id,
-            Model model,
-            HttpServletRequest request
-    ) {
+    public String write(@RequestParam(required = false) Long id, Model model, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             return "redirect:/member/login?error=true&exception=Not Found&url=/diary/write";
@@ -40,10 +36,7 @@ public class DiaryViewController {
     }
 
     @GetMapping({"", "/list"})
-    public String list(
-            Model model,
-            HttpServletRequest request
-    ) {
+    public String list(Model model, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             return "redirect:/member/login?error=true&exception=Not Found&url=/diary/list";

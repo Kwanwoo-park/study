@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,9 +14,11 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "kafka_outbox_event")
+@Table(name = "kafka_outbox_event", indexes = @Index(name = "idx_kafka_outbox_dispatch", columnList = "dead_lettered,next_attempt_at,id"))
 @NoArgsConstructor
 public class KafkaOutboxEvent {
+    private static final int MAX_ATTEMPT_COUNT = 10;
+
     public enum PayloadType { CHAT_MESSAGE, NOTIFICATION }
 
     @Id
@@ -43,6 +46,9 @@ public class KafkaOutboxEvent {
     @Column(name = "last_error", length = 1000)
     private String lastError;
 
+    @Column(name = "next_attempt_at")
+    private LocalDateTime nextAttemptAt;
+
     @Column(name = "dead_lettered", nullable = false)
     private boolean deadLettered;
 
@@ -52,15 +58,17 @@ public class KafkaOutboxEvent {
         this.payloadType = payloadType.name();
         this.payload = payload;
         this.createdAt = LocalDateTime.now();
+        this.nextAttemptAt = createdAt;
     }
 
     public PayloadType resolvedPayloadType() {
         return PayloadType.valueOf(payloadType);
     }
 
-    public void recordFailure(String error) {
+    public void recordFailure(String error, LocalDateTime retryAt) {
         attemptCount++;
         lastError = error == null ? "unknown error" : error.substring(0, Math.min(error.length(), 1000));
-        if (attemptCount >= 10) deadLettered = true;
+        deadLettered = attemptCount >= MAX_ATTEMPT_COUNT;
+        nextAttemptAt = deadLettered ? null : retryAt;
     }
 }

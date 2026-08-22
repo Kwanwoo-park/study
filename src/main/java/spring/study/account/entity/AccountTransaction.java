@@ -76,20 +76,7 @@ public class AccountTransaction implements Serializable {
     private LocalDateTime transactionTime;
 
     @Builder
-    public AccountTransaction(
-            Long id,
-            AccountTransactionType transactionType,
-            AccountTransactionStatus transactionStatus,
-            long amount,
-            long fee,
-            Account withdrawalAccount,
-            Account depositAccount,
-            long balanceAfterTransaction,
-            String memo,
-            String counterpartyName,
-            String bankName,
-            LocalDateTime transactionTime
-    ) {
+    public AccountTransaction(Long id, AccountTransactionType transactionType, AccountTransactionStatus transactionStatus, long amount, long fee, Account withdrawalAccount, Account depositAccount, long balanceAfterTransaction, String memo, String counterpartyName, String bankName, LocalDateTime transactionTime) {
         this.id = id;
         this.transactionType = transactionType;
         this.transactionStatus = transactionStatus;

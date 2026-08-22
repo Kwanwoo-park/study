@@ -23,9 +23,7 @@ public class CommentApiController {
     private final CommentFacade commentFacade;
 
     @PostMapping("")
-    public ResponseEntity<?> commentAction(@RequestBody CommentRequestDto commentRequestDto,
-                                           HttpServletRequest request,
-                                           HttpServletResponse response) {
+    public ResponseEntity<?> commentAction(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -33,10 +31,7 @@ public class CommentApiController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<?> getCommentList(@RequestParam Long id,
-                                            @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                            @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                            HttpServletRequest request) {
+    public ResponseEntity<?> getCommentList(@RequestParam Long id, @RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "10", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -44,9 +39,7 @@ public class CommentApiController {
     }
 
     @PatchMapping("/update")
-    public ResponseEntity<?> commentUpdate(@RequestBody CommentRequestDto commentRequestDto,
-                                           HttpServletRequest request,
-                                           HttpServletResponse response) {
+    public ResponseEntity<?> commentUpdate(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -54,9 +47,7 @@ public class CommentApiController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> commentDelete(@RequestParam Long id,
-                                                 @RequestBody(required = false) CommentRequestDto commentRequestDto,
-                                                 HttpServletRequest request) {
+    public ResponseEntity<?> commentDelete(@RequestParam Long id, @RequestBody(required = false) CommentRequestDto commentRequestDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

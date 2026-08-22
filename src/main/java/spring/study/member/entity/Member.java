@@ -135,8 +135,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     private List<Diary> diaries = new ArrayList<>();
 
     @Builder
-    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth,
-                  MemberStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, CommonVisibility visibility) {
+    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth, MemberStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, CommonVisibility visibility) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;

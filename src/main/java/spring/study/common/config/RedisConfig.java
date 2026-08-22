@@ -66,10 +66,7 @@ public class RedisConfig {
 
     @Bean
     @ConditionalOnProperty(name = "notification.redis-pubsub.enabled", havingValue = "true", matchIfMissing = true)
-    public RedisMessageListenerContainer notificationRedisListenerContainer(
-            RedisConnectionFactory connectionFactory,
-            NotificationRealtimeSubscriber subscriber
-    ) {
+    public RedisMessageListenerContainer notificationRedisListenerContainer(RedisConnectionFactory connectionFactory, NotificationRealtimeSubscriber subscriber) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(subscriber, new ChannelTopic(NotificationRealtimePublisher.CHANNEL));

@@ -66,9 +66,7 @@ public class ChatApiController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<?> sendMessage(@RequestBody ChatMessageRequestDto message,
-                                         HttpServletRequest request,
-                                         HttpServletResponse response) {
+    public ResponseEntity<?> sendMessage(@RequestBody ChatMessageRequestDto message, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
         ChatRoom room = chatRoomService.find(message.getRoomId());
@@ -90,10 +88,7 @@ public class ChatApiController {
     }
 
     @GetMapping("/audio/incoming")
-    public ResponseEntity<?> getIncomingAudioCall(
-            @RequestParam String roomId,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> getIncomingAudioCall(@RequestParam String roomId, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -103,10 +98,7 @@ public class ChatApiController {
     }
 
     @GetMapping("/load")
-    public ResponseEntity<?> loadChatting(@RequestParam String roomId,
-                                          @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                          @RequestParam(defaultValue = "100", name = "limit") int limit,
-                                          HttpServletRequest request) {
+    public ResponseEntity<?> loadChatting(@RequestParam String roomId, @RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "100", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -114,10 +106,7 @@ public class ChatApiController {
     }
 
     @GetMapping("/previous/load")
-    public ResponseEntity<?> loadPreviousChatting(@RequestParam String roomId,
-                                                  @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                                  @RequestParam(defaultValue = "100", name = "limit") int limit,
-                                                  HttpServletRequest request) {
+    public ResponseEntity<?> loadPreviousChatting(@RequestParam String roomId, @RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "100", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -141,9 +130,7 @@ public class ChatApiController {
     }
 
     @GetMapping("/message/check")
-    public ResponseEntity<?> messageCheck(@RequestParam String message,
-                                          HttpServletRequest request,
-                                          HttpServletResponse response) {
+    public ResponseEntity<?> messageCheck(@RequestParam String message, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -172,10 +159,7 @@ public class ChatApiController {
     }
 
     @PatchMapping("/message/{id}")
-    public ResponseEntity<?> updateMessage(@PathVariable String id,
-                                           @RequestBody ChatMessageRequestDto message,
-                                           HttpServletRequest request,
-                                           HttpServletResponse response) {
+    public ResponseEntity<?> updateMessage(@PathVariable String id, @RequestBody ChatMessageRequestDto message, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -183,9 +167,7 @@ public class ChatApiController {
     }
 
     @DeleteMapping("/message/{id}")
-    public ResponseEntity<?> deleteMessage(@PathVariable String id,
-                                           @RequestParam(defaultValue = "ME") ChatMessageDeleteScope scope,
-                                           HttpServletRequest request) {
+    public ResponseEntity<?> deleteMessage(@PathVariable String id, @RequestParam(defaultValue = "ME") ChatMessageDeleteScope scope, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

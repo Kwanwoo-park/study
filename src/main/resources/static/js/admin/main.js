@@ -93,6 +93,7 @@ function createIncidentCard(incident) {
     const status = document.createElement('span');
     const time = document.createElement('time');
     const route = document.createElement('strong');
+    const ip = document.createElement('div');
     const type = document.createElement('div');
     const message = document.createElement('p');
     const acknowledge = document.createElement('button');
@@ -104,6 +105,8 @@ function createIncidentCard(incident) {
     time.innerText = formatDateTime(incident.occurredAt);
     route.className = 'admin-incident-route';
     route.innerText = `${incident.requestMethod || 'UNKNOWN'} ${incident.requestPath || 'UNKNOWN'}`;
+    ip.className = 'admin-incident-ip';
+    ip.innerText = `IP ${incident.requestIp || 'UNKNOWN'}`;
     type.className = 'admin-incident-type';
     const occurrenceCount = Number(incident.occurrenceCount || 1);
     type.innerText = `${incident.exceptionType || 'UnknownException'}${occurrenceCount > 1 ? ` · ${occurrenceCount}회 발생` : ''}`;
@@ -118,7 +121,7 @@ function createIncidentCard(incident) {
     }
 
     header.append(status, time);
-    card.append(header, route, type, message, acknowledge);
+    card.append(header, route, ip, type, message, acknowledge);
     return card;
 }
 

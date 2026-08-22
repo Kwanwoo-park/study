@@ -22,10 +22,7 @@ public class FollowApiController {
     private final FollowFacade followFacade;
 
     @GetMapping("/follower")
-    public ResponseEntity<?> getFollowerList(@RequestParam String email,
-                                             @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                             @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                             HttpServletRequest request) {
+    public ResponseEntity<?> getFollowerList(@RequestParam String email, @RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "10", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -33,10 +30,7 @@ public class FollowApiController {
     }
 
     @GetMapping("/following")
-    public ResponseEntity<?> getFollowingList(@RequestParam String email,
-                                              @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                              @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                              HttpServletRequest request) {
+    public ResponseEntity<?> getFollowingList(@RequestParam String email, @RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "10", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

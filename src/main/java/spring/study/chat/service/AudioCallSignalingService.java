@@ -116,12 +116,7 @@ public class AudioCallSignalingService {
                 });
     }
 
-    private void startCall(
-            Member sender,
-            ChatRoom room,
-            String callerSessionId,
-            AudioCallSignalRequest request
-    ) {
+    private void startCall(Member sender, ChatRoom room, String callerSessionId, AudioCallSignalRequest request) {
         List<ChatRoomMember> members = roomMemberService.find(room);
         if (members.size() != 2) {
             throw new BusinessStateException("1:1 채팅방에서만 음성 통화를 시작할 수 있습니다.");
@@ -168,12 +163,7 @@ public class AudioCallSignalingService {
         }
     }
 
-    private void accept(
-            AudioCall call,
-            String senderEmail,
-            String sessionId,
-            AudioCallSignalRequest request
-    ) {
+    private void accept(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
         requireReceiver(call, senderEmail);
         requireState(call, AudioCallState.RINGING);
         if (!callStateStore.transition(
@@ -184,24 +174,14 @@ public class AudioCallSignalingService {
         forward(senderEmail, sessionId, AudioCallSignalResponse.accepted(call.callId(), call.roomId()));
     }
 
-    private void reject(
-            AudioCall call,
-            String senderEmail,
-            String sessionId,
-            AudioCallSignalRequest request
-    ) {
+    private void reject(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
         requireReceiver(call, senderEmail);
         requireState(call, AudioCallState.RINGING);
         if (!callStateStore.remove(call)) throw new BusinessStateException("이미 종료된 통화입니다.");
         forwardToOther(call, senderEmail, request);
     }
 
-    private void offer(
-            AudioCall call,
-            String senderEmail,
-            String sessionId,
-            AudioCallSignalRequest request
-    ) {
+    private void offer(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
         requireCaller(call, senderEmail);
         requireOwnedSession(call, senderEmail, sessionId);
         if (call.state() != AudioCallState.CONNECTING && call.state() != AudioCallState.ACTIVE) {
@@ -210,12 +190,7 @@ public class AudioCallSignalingService {
         forwardToOther(call, senderEmail, request);
     }
 
-    private void answer(
-            AudioCall call,
-            String senderEmail,
-            String sessionId,
-            AudioCallSignalRequest request
-    ) {
+    private void answer(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
         requireReceiver(call, senderEmail);
         requireOwnedSession(call, senderEmail, sessionId);
         if (call.state() == AudioCallState.CONNECTING) {
@@ -229,12 +204,7 @@ public class AudioCallSignalingService {
         forwardToOther(call, senderEmail, request);
     }
 
-    private void iceCandidate(
-            AudioCall call,
-            String senderEmail,
-            String sessionId,
-            AudioCallSignalRequest request
-    ) {
+    private void iceCandidate(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
         requireOwnedSession(call, senderEmail, sessionId);
         if (call.state() != AudioCallState.CONNECTING && call.state() != AudioCallState.ACTIVE) {
             throw new BusinessStateException("아직 연결할 수 없는 통화입니다.");
@@ -242,12 +212,7 @@ public class AudioCallSignalingService {
         forwardToOther(call, senderEmail, request);
     }
 
-    private void hangup(
-            AudioCall call,
-            String senderEmail,
-            String sessionId,
-            AudioCallSignalRequest request
-    ) {
+    private void hangup(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
         boolean receiverIsClosingRingingCall = call.state() == AudioCallState.RINGING
                 && call.isReceiver(senderEmail);
         if (!receiverIsClosingRingingCall) {
@@ -329,11 +294,7 @@ public class AudioCallSignalingService {
         );
     }
 
-    private void forward(
-            String email,
-            String sessionId,
-            AudioCallSignalResponse response
-    ) {
+    private void forward(String email, String sessionId, AudioCallSignalResponse response) {
         if (sessionId == null || sessionId.isBlank()) {
             messagingTemplate.convertAndSendToUser(email, AUDIO_QUEUE, response);
             return;

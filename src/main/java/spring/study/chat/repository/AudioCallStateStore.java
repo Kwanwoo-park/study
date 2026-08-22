@@ -13,13 +13,7 @@ public interface AudioCallStateStore {
 
     Optional<AudioCall> findByMember(String memberEmail);
 
-    boolean transition(
-            AudioCall call,
-            AudioCallState expectedState,
-            AudioCallState nextState,
-            String receiverSessionId,
-            Duration ttl
-    );
+    boolean transition(AudioCall call, AudioCallState expectedState, AudioCallState nextState, String receiverSessionId, Duration ttl);
 
     boolean touch(AudioCall call, AudioCallState expectedState, Duration ttl);
 

@@ -73,9 +73,7 @@ public class MemberApiController {
     }
 
     @PatchMapping("/updatePassword")
-    public ResponseEntity<?> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto,
-                                                  HttpServletRequest request,
-                                                  HttpServletResponse response) {
+    public ResponseEntity<?> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             member = memberService.findMember(memberUpdateDto.getEmail());
@@ -92,8 +90,7 @@ public class MemberApiController {
     }
 
     @PatchMapping("/visibility")
-    public ResponseEntity<?> updateVisibility(@RequestBody MemberRequestDto memberUpdateDto,
-                                              HttpServletRequest request) {
+    public ResponseEntity<?> updateVisibility(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

@@ -47,8 +47,7 @@ public class MemberSanction extends BasetimeEntity {
     private LocalDateTime canceledAt;
 
     @Builder
-    public MemberSanction(Member member, Report report, Member issuedBy, ReportAction type,
-                          String reason, LocalDateTime startedAt, LocalDateTime expiredAt) {
+    public MemberSanction(Member member, Report report, Member issuedBy, ReportAction type, String reason, LocalDateTime startedAt, LocalDateTime expiredAt) {
         this.member = member;
         this.report = report;
         this.issuedBy = issuedBy;

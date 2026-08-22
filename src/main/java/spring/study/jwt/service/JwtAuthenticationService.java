@@ -76,8 +76,7 @@ public class JwtAuthenticationService {
         SecurityContextHolder.clearContext();
     }
 
-    private AuthenticationTokens toAuthenticationTokens(JwtTokenProvider.IssuedToken accessToken,
-                                                         JwtTokenProvider.IssuedToken refreshToken) {
+    private AuthenticationTokens toAuthenticationTokens(JwtTokenProvider.IssuedToken accessToken, JwtTokenProvider.IssuedToken refreshToken) {
         return new AuthenticationTokens(
                 accessToken.value(),
                 refreshToken.value(),
@@ -86,10 +85,5 @@ public class JwtAuthenticationService {
         );
     }
 
-    public record AuthenticationTokens(
-            String accessToken,
-            String refreshToken,
-            Instant accessTokenExpiresAt,
-            Instant refreshTokenExpiresAt
-    ) {}
+    public record AuthenticationTokens(String accessToken, String refreshToken, Instant accessTokenExpiresAt, Instant refreshTokenExpiresAt) {}
 }

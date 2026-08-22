@@ -11,10 +11,5 @@ public interface SystemIncidentRepository extends JpaRepository<SystemIncident, 
 
     long countByAcknowledgedFalse();
 
-    Optional<SystemIncident> findFirstByRequestMethodAndRequestPathAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(
-            String requestMethod,
-            String requestPath,
-            String exceptionType,
-            String errorMessage
-    );
+    Optional<SystemIncident> findFirstByRequestMethodAndRequestPathAndRequestIpAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(String requestMethod, String requestPath, String requestIp, String exceptionType, String errorMessage);
 }

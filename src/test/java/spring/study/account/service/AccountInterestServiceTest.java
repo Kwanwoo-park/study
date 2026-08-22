@@ -94,10 +94,7 @@ class AccountInterestServiceTest {
         verify(transactionRepository, org.mockito.Mockito.times(2)).save(any(AccountTransaction.class));
     }
 
-    private Account interestAccount(String number,
-                                    long amount,
-                                    AccountType accountType,
-                                    LocalDateTime openedAt) {
+    private Account interestAccount(String number, long amount, AccountType accountType, LocalDateTime openedAt) {
         Account account = Account.builder()
                 .account(number)
                 .amount(amount)

@@ -95,13 +95,7 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
     }
 
     @Override
-    public boolean transition(
-            AudioCall call,
-            AudioCallState expectedState,
-            AudioCallState nextState,
-            String receiverSessionId,
-            Duration ttl
-    ) {
+    public boolean transition(AudioCall call, AudioCallState expectedState, AudioCallState nextState, String receiverSessionId, Duration ttl) {
         Long result = redisTemplate.execute(
                 TRANSITION_SCRIPT,
                 keys(call),

@@ -33,6 +33,9 @@ public class SystemIncident {
     @Column(name = "request_path", nullable = false, length = 500)
     private String requestPath;
 
+    @Column(name = "request_ip", length = 45)
+    private String requestIp;
+
     @Column(name = "http_status", nullable = false)
     private int httpStatus;
 
@@ -49,15 +52,11 @@ public class SystemIncident {
     private LocalDateTime acknowledgedAt;
 
     @Builder
-    public SystemIncident(LocalDateTime occurredAt,
-                          String requestMethod,
-                          String requestPath,
-                          int httpStatus,
-                          String exceptionType,
-                          String errorMessage) {
+    public SystemIncident(LocalDateTime occurredAt, String requestMethod, String requestPath, String requestIp, int httpStatus, String exceptionType, String errorMessage) {
         this.occurredAt = occurredAt;
         this.requestMethod = requestMethod;
         this.requestPath = requestPath;
+        this.requestIp = requestIp;
         this.httpStatus = httpStatus;
         this.exceptionType = exceptionType;
         this.errorMessage = errorMessage;

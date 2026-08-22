@@ -18,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SystemIncidentService {
     private static final int MAX_PATH_LENGTH = 500;
+    private static final int MAX_IP_LENGTH = 45;
     private static final int MAX_TYPE_LENGTH = 255;
     private static final int MAX_MESSAGE_LENGTH = 1000;
 
@@ -29,13 +30,12 @@ public class SystemIncidentService {
         LocalDateTime occurredAt = LocalDateTime.now();
         String requestMethod = limit(valueOrDefault(request.getMethod(), "UNKNOWN"), 10);
         String requestPath = limit(valueOrDefault(request.getRequestURI(), "UNKNOWN"), MAX_PATH_LENGTH);
+        String requestIp = resolveRequestIp(request);
         String exceptionType = limit(cause.getClass().getName(), MAX_TYPE_LENGTH);
         String errorMessage = limit(sanitize(valueOrDefault(cause.getMessage(), "메시지 없는 서버 오류")), MAX_MESSAGE_LENGTH);
 
         SystemIncident existing = systemIncidentRepository
-                .findFirstByRequestMethodAndRequestPathAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(
-                        requestMethod, requestPath, exceptionType, errorMessage
-                )
+                .findFirstByRequestMethodAndRequestPathAndRequestIpAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(requestMethod, requestPath, requestIp, exceptionType, errorMessage)
                 .orElse(null);
         if (existing != null) {
             existing.recordRecurrence(occurredAt);
@@ -46,6 +46,7 @@ public class SystemIncidentService {
                 .occurredAt(occurredAt)
                 .requestMethod(requestMethod)
                 .requestPath(requestPath)
+                .requestIp(requestIp)
                 .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .exceptionType(exceptionType)
                 .errorMessage(errorMessage)
@@ -75,6 +76,20 @@ public class SystemIncidentService {
 
     private String sanitize(String value) {
         return value.replaceAll("[\\r\\n\\t]+", " ").trim();
+    }
+
+    private String resolveRequestIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return limit(sanitize(forwardedFor.split(",", 2)[0]), MAX_IP_LENGTH);
+        }
+
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return limit(sanitize(realIp), MAX_IP_LENGTH);
+        }
+
+        return limit(sanitize(valueOrDefault(request.getRemoteAddr(), "UNKNOWN")), MAX_IP_LENGTH);
     }
 
     private String valueOrDefault(String value, String defaultValue) {

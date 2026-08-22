@@ -23,9 +23,7 @@ public class BoardApiController {
     private final CommonFacade commonFacade;
 
     @GetMapping("/load")
-    public ResponseEntity<?> getBoards(@RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                       @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                       HttpServletRequest request) {
+    public ResponseEntity<?> getBoards(@RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "10", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -33,10 +31,7 @@ public class BoardApiController {
     }
 
     @GetMapping("/member/detail")
-    public ResponseEntity<?> loadMemberBoards(@RequestParam String email,
-                                              @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                              @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                              HttpServletRequest request) {
+    public ResponseEntity<?> loadMemberBoards(@RequestParam String email, @RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "10", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -52,9 +47,7 @@ public class BoardApiController {
     }
 
     @PostMapping("/write")
-    public ResponseEntity<?> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto,
-                                              HttpServletRequest request,
-                                              HttpServletResponse response) {
+    public ResponseEntity<?> boardWriteAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -62,9 +55,7 @@ public class BoardApiController {
     }
 
     @PatchMapping("/view")
-    public ResponseEntity<?> boardViewAction(@RequestBody BoardRequestDto boardRequestDto,
-                                             HttpServletRequest request,
-                                             HttpServletResponse response){
+    public ResponseEntity<?> boardViewAction(@RequestBody BoardRequestDto boardRequestDto, HttpServletRequest request, HttpServletResponse response){
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -72,8 +63,7 @@ public class BoardApiController {
     }
 
     @DeleteMapping("/view/delete")
-    public ResponseEntity<?> boardViewDeleteAction(@RequestParam() Long id,
-                                                   HttpServletRequest request){
+    public ResponseEntity<?> boardViewDeleteAction(@RequestParam() Long id, HttpServletRequest request){
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

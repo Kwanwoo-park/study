@@ -1,11 +1,13 @@
 package spring.study.kafka.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.kafka.entity.KafkaOutboxEvent;
+import spring.study.kafka.event.KafkaOutboxDispatchRequestedEvent;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.notification.entity.Notification;
 
@@ -14,6 +16,7 @@ import spring.study.notification.entity.Notification;
 public class MessageProducer {
     private final KafkaOutboxEventRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public void sendMessage(ChatMessageRequestDto message){
         try {
@@ -23,6 +26,7 @@ public class MessageProducer {
                     KafkaOutboxEvent.PayloadType.CHAT_MESSAGE,
                     objectMapper.writeValueAsString(message)
             ));
+            requestDispatch();
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("채팅 메시지를 발행 대기열에 저장할 수 없습니다", exception);
         }
@@ -35,5 +39,10 @@ public class MessageProducer {
                 KafkaOutboxEvent.PayloadType.NOTIFICATION,
                 notification.getId().toString()
         ));
+        requestDispatch();
+    }
+
+    private void requestDispatch() {
+        eventPublisher.publishEvent(new KafkaOutboxDispatchRequestedEvent());
     }
 }

@@ -25,8 +25,7 @@ public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final MobileOAuthCodeService mobileOAuthCodeService;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         String email = authentication.getPrincipal() instanceof OAuth2User oauth2User
                 ? oauth2User.getAttribute("email")
                 : authentication.getName();

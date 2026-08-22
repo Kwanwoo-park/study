@@ -27,11 +27,7 @@ public class AccountApiController {
     private final CommonFacade commonFacade;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createAccount(
-            @RequestParam(required = false) AccountType accountType,
-            @RequestBody(required = false) AccountCreateRequestDto requestDto,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> createAccount(@RequestParam(required = false) AccountType accountType, @RequestBody(required = false) AccountCreateRequestDto requestDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -84,9 +80,7 @@ public class AccountApiController {
     }
 
     @PostMapping("/{account}/terminate")
-    public ResponseEntity<?> terminateAccount(@PathVariable String account,
-                                              @RequestBody AccountTerminationRequestDto dto,
-                                              HttpServletRequest request) {
+    public ResponseEntity<?> terminateAccount(@PathVariable String account, @RequestBody AccountTerminationRequestDto dto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -94,11 +88,7 @@ public class AccountApiController {
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<?> getTransactions(
-            @RequestParam String account,
-            @RequestParam(defaultValue = "0") int page,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> getTransactions(@RequestParam String account, @RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

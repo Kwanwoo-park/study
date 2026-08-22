@@ -137,14 +137,7 @@ class AccountTransactionServiceTest {
                 .build();
     }
 
-    private AccountTransaction createTransaction(
-            Long id,
-            AccountTransactionType type,
-            AccountTransactionStatus status,
-            Account withdrawalAccount,
-            Account depositAccount,
-            LocalDateTime transactionTime
-    ) {
+    private AccountTransaction createTransaction(Long id, AccountTransactionType type, AccountTransactionStatus status, Account withdrawalAccount, Account depositAccount, LocalDateTime transactionTime) {
         return AccountTransaction.builder()
                 .id(id)
                 .transactionType(type)

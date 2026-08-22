@@ -26,10 +26,7 @@ public class BoardViewController {
     private final JwtManager jwtManager;
 
     @GetMapping("/all")
-    public String getBoardListPage(Model model,
-                                   @RequestParam(required = false, defaultValue = "0") Integer page,
-                                   @RequestParam(required = false, defaultValue = "5") Integer size,
-                                   HttpServletRequest request) {
+    public String getBoardListPage(Model model, @RequestParam(required = false, defaultValue = "0") Integer page, @RequestParam(required = false, defaultValue = "5") Integer size, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/all";
 

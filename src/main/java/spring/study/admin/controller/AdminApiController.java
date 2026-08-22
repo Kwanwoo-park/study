@@ -197,9 +197,7 @@ public class AdminApiController {
     }
 
     @PatchMapping("/report/{id}")
-    public ResponseEntity<?> processReport(@PathVariable Long id,
-                                           @Valid @RequestBody ReportProcessRequestDto requestDto,
-                                           HttpServletRequest request) {
+    public ResponseEntity<?> processReport(@PathVariable Long id, @Valid @RequestBody ReportProcessRequestDto requestDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -303,8 +301,7 @@ public class AdminApiController {
     }
 
     @DeleteMapping("/chat/audio-call/{callId}")
-    public ResponseEntity<?> forceTerminateAudioCall(
-            @PathVariable String callId, HttpServletRequest request) {
+    public ResponseEntity<?> forceTerminateAudioCall(@PathVariable String callId, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

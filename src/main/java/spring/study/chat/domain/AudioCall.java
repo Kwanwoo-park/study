@@ -1,16 +1,6 @@
 package spring.study.chat.domain;
 
-public record AudioCall(
-        String callId,
-        String roomId,
-        String callerEmail,
-        String callerName,
-        String callerSessionId,
-        String receiverEmail,
-        String receiverName,
-        String receiverSessionId,
-        AudioCallState state
-) {
+public record AudioCall(String callId, String roomId, String callerEmail, String callerName, String callerSessionId, String receiverEmail, String receiverName, String receiverSessionId, AudioCallState state) {
     public boolean contains(String email) {
         return callerEmail.equals(email) || receiverEmail.equals(email);
     }

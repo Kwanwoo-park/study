@@ -209,10 +209,7 @@ public class ChatFacade {
         }
     }
 
-    public ResponseEntity<?> updateMessage(String messageId,
-                                           ChatMessageRequestDto requestDto,
-                                           Member member,
-                                           HttpServletResponse response) {
+    public ResponseEntity<?> updateMessage(String messageId, ChatMessageRequestDto requestDto, Member member, HttpServletResponse response) {
         ChatMessage originalMessage = messageService.findById(messageId);
         validateParticipant(originalMessage, member);
         messageService.validateEditable(originalMessage, member);
@@ -243,9 +240,7 @@ public class ChatFacade {
         ));
     }
 
-    public ResponseEntity<?> deleteMessage(String messageId,
-                                           ChatMessageDeleteScope scope,
-                                           Member member) {
+    public ResponseEntity<?> deleteMessage(String messageId, ChatMessageDeleteScope scope, Member member) {
         ChatMessage message = messageService.findById(messageId);
         validateParticipant(message, member);
 

@@ -29,11 +29,7 @@ public class ChatWebSocketApiController {
     }
 
     @MessageMapping("/audio/signal")
-    public void signalAudioCall(
-            @RequestBody AudioCallSignalRequest signal,
-            Principal principal,
-            SimpMessageHeaderAccessor headers
-    ) {
+    public void signalAudioCall(@RequestBody AudioCallSignalRequest signal, Principal principal, SimpMessageHeaderAccessor headers) {
         if (principal == null) return;
         audioCallSignalingService.handle(principal.getName(), headers.getSessionId(), signal);
     }

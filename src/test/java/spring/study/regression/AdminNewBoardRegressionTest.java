@@ -103,6 +103,8 @@ class AdminNewBoardRegressionTest {
         assertTrue(adminTemplate.contains("id=\"system-incident-list\""));
         assertTrue(adminJs.contains("/api/admin/system/incidents"));
         assertTrue(adminJs.contains("acknowledgeSystemIncident"));
+        assertTrue(adminJs.contains("incident.requestIp"));
         assertTrue(adminCss.contains(".admin-incident-dashboard"));
+        assertTrue(adminCss.contains("body.dark-mode .admin-incident-count"));
     }
 }

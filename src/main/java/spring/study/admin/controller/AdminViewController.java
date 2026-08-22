@@ -42,9 +42,7 @@ public class AdminViewController {
     }
 
     @GetMapping("/memberCheck")
-    public String member_check(Model model, HttpServletRequest request,
-                               @RequestParam(required = false, defaultValue = "0") Integer page,
-                               @RequestParam(required = false, defaultValue = "5") Integer size){
+    public String member_check(Model model, HttpServletRequest request, @RequestParam(required = false, defaultValue = "0") Integer page, @RequestParam(required = false, defaultValue = "5") Integer size){
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/memberCheck";
 

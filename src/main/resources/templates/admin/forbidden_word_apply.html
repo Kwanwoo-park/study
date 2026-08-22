@@ -10,23 +10,34 @@
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
-<div class="container">
-  <h1>Forbidden word apply list</h1>
-  <button type="button" id="changeExamine">Change to Examine</button>
-  <button type="button" id="changeApproval">Change to Approval</button>
-  <div th:each="list : ${list}">
-    <div class="text admin-forbidden-text">
-      <input type="checkbox" th:id="'check' + ${list.id}" tH:onclick="fnCheck([[${list.id}]])">
-      <label class="form-label">Word: </label>
-      <label class="form-label" th:text="${list.word}"></label>
+<div class="container admin-forbidden-apply-page">
+  <header class="admin-forbidden-apply-header">
+    <div>
+      <span class="admin-section-label">FORBIDDEN WORDS</span>
+      <h1>금칙어 적용 관리</h1>
+      <p>처리할 금칙어를 선택한 뒤 검토 상태로 변경하거나 최종 승인하세요.</p>
     </div>
-    <div class="annotation admin-forbidden-annotation">
-      <label>Status: </label>
-      <label th:text="${list.Status}"></label>
-      <label>Risk: </label>
-      <label th:text="${list.risk}"></label>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.href='/admin/administrator'">관리자 화면으로</button>
+  </header>
+  <div class="admin-forbidden-action-bar">
+    <span id="forbidden-selection-count" class="admin-forbidden-selection-count">선택된 항목 없음</span>
+    <div class="admin-forbidden-actions">
+      <button type="button" id="changeExamine" class="btn btn-outline-warning" disabled>검토 상태로 변경</button>
+      <button type="button" id="changeApproval" class="btn btn-success" disabled>선택 항목 승인</button>
     </div>
-    <hr>
+  </div>
+  <div class="admin-forbidden-apply-list">
+    <div th:if="${#lists.isEmpty(list)}" class="admin-forbidden-empty">처리 대기 중인 금칙어가 없습니다.</div>
+    <label th:each="list : ${list}" class="admin-forbidden-apply-item" th:for="'check' + ${list.id}">
+      <input type="checkbox" class="admin-forbidden-checkbox" th:id="'check' + ${list.id}" th:onclick="fnCheck([[${list.id}]])">
+      <span class="admin-forbidden-item-content">
+        <strong class="admin-forbidden-word" th:text="${list.word}">금칙어</strong>
+        <span class="admin-forbidden-meta">
+          <span>상태 <b th:text="${list.Status}">STATUS</b></span>
+          <span>위험도 <b th:text="${list.risk}">RISK</b></span>
+        </span>
+      </span>
+    </label>
   </div>
 </div>
 <script src="/js/lib/jquery.min.js"></script>

@@ -33,6 +33,7 @@ class SystemIncidentServiceTest {
         RuntimeException exception = new RuntimeException("outer", new IllegalStateException("database\nfailed\tbadly"));
         when(request.getMethod()).thenReturn("GET");
         when(request.getRequestURI()).thenReturn("/api/member/detail");
+        when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.7, 10.0.0.10");
 
         service.record(request, exception);
 
@@ -41,6 +42,7 @@ class SystemIncidentServiceTest {
         SystemIncident incident = captor.getValue();
         assertEquals("GET", incident.getRequestMethod());
         assertEquals("/api/member/detail", incident.getRequestPath());
+        assertEquals("203.0.113.7", incident.getRequestIp());
         assertEquals(500, incident.getHttpStatus());
         assertEquals(IllegalStateException.class.getName(), incident.getExceptionType());
         assertEquals("database failed badly", incident.getErrorMessage());
@@ -54,6 +56,7 @@ class SystemIncidentServiceTest {
                 .occurredAt(LocalDateTime.now())
                 .requestMethod("GET")
                 .requestPath("/test")
+                .requestIp("127.0.0.1")
                 .httpStatus(500)
                 .exceptionType(RuntimeException.class.getName())
                 .errorMessage("failure")

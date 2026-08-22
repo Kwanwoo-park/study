@@ -239,9 +239,7 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountSettlementResult terminateInterestAccount(String accountNumber,
-                                                            String settlementAccountNumber,
-                                                            Member member) {
+    public AccountSettlementResult terminateInterestAccount(String accountNumber, String settlementAccountNumber, Member member) {
         if (settlementAccountNumber == null || settlementAccountNumber.isBlank()) {
             throw new IllegalArgumentException("정산받을 입출금 계좌를 선택해주세요");
         }

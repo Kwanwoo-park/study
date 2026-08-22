@@ -153,9 +153,7 @@ public class AccountFacade {
         ));
     }
 
-    public ResponseEntity<?> terminate(String accountNumber,
-                                       String settlementAccountNumber,
-                                       Member member) {
+    public ResponseEntity<?> terminate(String accountNumber, String settlementAccountNumber, Member member) {
         try {
             AccountSettlementResult settlement = accountService.terminateInterestAccount(
                     accountNumber,

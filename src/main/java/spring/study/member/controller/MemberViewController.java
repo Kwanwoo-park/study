@@ -32,11 +32,7 @@ public class MemberViewController {
     private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     @GetMapping("/login")
-    public String login(Model model,
-                        @RequestParam(value = "error", required = false) String error,
-                        @RequestParam(value = "exception", required = false) String exception,
-                        @RequestParam(value = "url", required = false) String url,
-                        HttpServletRequest request) {
+    public String login(Model model, @RequestParam(value = "error", required = false) String error, @RequestParam(value = "exception", required = false) String exception, @RequestParam(value = "url", required = false) String url, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
 
         if (member != null) {

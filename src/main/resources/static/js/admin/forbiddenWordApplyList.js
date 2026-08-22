@@ -1,5 +1,6 @@
 const examine = document.getElementById("changeExamine");
 const approval = document.getElementById("changeApproval")
+const selectionCount = document.getElementById("forbidden-selection-count")
 
 let idList = []
 
@@ -16,6 +17,17 @@ function fnCheck(id) {
             }
         }
     }
+
+    updateActionState();
+}
+
+function updateActionState() {
+    const selectedCount = idList.length;
+
+    examine.disabled = selectedCount === 0;
+    approval.disabled = selectedCount === 0;
+    selectionCount.innerText = selectedCount === 0 ? '선택된 항목 없음' : `${selectedCount}개 항목 선택됨`;
+    selectionCount.classList.toggle('has-selection', selectedCount > 0);
 }
 
 examine.addEventListener("click", (event) => {

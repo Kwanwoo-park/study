@@ -21,10 +21,7 @@ public class FavoriteApiController {
     private final FavoriteFacade favoriteFacade;
 
     @GetMapping("/list")
-    public ResponseEntity<?> getFavoriteList(@RequestParam Long id,
-                                             @RequestParam(defaultValue = "0", name = "cursor") int cursor,
-                                             @RequestParam(defaultValue = "10", name = "limit") int limit,
-                                             HttpServletRequest request) {
+    public ResponseEntity<?> getFavoriteList(@RequestParam Long id, @RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "10", name = "limit") int limit, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

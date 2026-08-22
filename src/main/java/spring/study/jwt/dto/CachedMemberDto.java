@@ -12,20 +12,7 @@ import java.time.LocalDateTime;
  * by the security principal are cached; credentials and JPA associations are
  * deliberately excluded.
  */
-public record CachedMemberDto(
-        Long id,
-        String email,
-        String name,
-        Role role,
-        MemberStatus accountStatus,
-        LocalDateTime suspendedUntil,
-        int warningCount,
-        String phone,
-        String birth,
-        String profile,
-        CommonVisibility visibility,
-        LocalDateTime lastLoginTime
-) {
+public record CachedMemberDto(Long id, String email, String name, Role role, MemberStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, String phone, String birth, String profile, CommonVisibility visibility, LocalDateTime lastLoginTime) {
     public static CachedMemberDto from(Member member) {
         return new CachedMemberDto(
                 member.getId(),

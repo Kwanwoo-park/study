@@ -59,19 +59,7 @@ public class Report extends BasetimeEntity {
     private String snapshot;
 
     @Builder
-    public Report(
-            Long id,
-            Member reporter,
-            ReportStatus status,
-            ReportTargetType targetType,
-            ReportReason reason,
-            String reasonDetail,
-            String description,
-            String targetId,
-            ReportAction action,
-            String reportMemo,
-            String snapshot
-    ) {
+    public Report(Long id, Member reporter, ReportStatus status, ReportTargetType targetType, ReportReason reason, String reasonDetail, String description, String targetId, ReportAction action, String reportMemo, String snapshot) {
         this.id = id;
         this.reporter = reporter;
         this.status = status == null ? ReportStatus.PENDING : status;

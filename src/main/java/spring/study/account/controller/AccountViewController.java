@@ -25,12 +25,7 @@ public class AccountViewController {
     private final MemberService memberService;
 
     @GetMapping
-    public String account(
-            Model model,
-            HttpServletRequest request,
-            @RequestParam(value = "tranAccount", required = false) String tranAccount,
-            @RequestParam(value = "tranName", required = false) String tranName
-    ) {
+    public String account(Model model, HttpServletRequest request, @RequestParam(value = "tranAccount", required = false) String tranAccount, @RequestParam(value = "tranName", required = false) String tranName) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             return "redirect:/member/login?error=true&exception=Not Found&url=/account";
@@ -45,12 +40,7 @@ public class AccountViewController {
     }
 
     @GetMapping("/transfer")
-    public String transfer(
-            Model model,
-            HttpServletRequest request,
-            @RequestParam String email,
-            RedirectAttributes redirectAttributes
-    ) {
+    public String transfer(Model model, HttpServletRequest request, @RequestParam String email, RedirectAttributes redirectAttributes) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             return "redirect:/member/login?error=true&exception=Not Found&url=/account/transfer";
@@ -76,11 +66,7 @@ public class AccountViewController {
     }
 
     @GetMapping("/transactions")
-    public String transactions(
-            Model model,
-            HttpServletRequest request,
-            @RequestParam String account
-    ) {
+    public String transactions(Model model, HttpServletRequest request, @RequestParam String account) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             return "redirect:/member/login?error=true&exception=Not Found&url=/account/transactions";

@@ -7,14 +7,7 @@ import spring.study.member.entity.Member;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record MobileChatRoomResponse(
-        String roomId,
-        String name,
-        String lastMessage,
-        LocalDateTime lastChatTime,
-        long unreadCount,
-        List<MobileMemberResponse> participants
-) {
+public record MobileChatRoomResponse(String roomId, String name, String lastMessage, LocalDateTime lastChatTime, long unreadCount, List<MobileMemberResponse> participants) {
     public static MobileChatRoomResponse from(ChatRoom room, List<Member> participants, long unreadCount) {
         String displayName = participants.isEmpty()
                 ? room.getName()

@@ -235,13 +235,7 @@ class AudioCallSignalingServiceTest {
         }
 
         @Override
-        public synchronized boolean transition(
-                AudioCall call,
-                AudioCallState expectedState,
-                AudioCallState nextState,
-                String receiverSessionId,
-                Duration ttl
-        ) {
+        public synchronized boolean transition(AudioCall call, AudioCallState expectedState, AudioCallState nextState, String receiverSessionId, Duration ttl) {
             AudioCall current = calls.get(call.callId());
             if (current == null || current.state() != expectedState) return false;
             calls.put(call.callId(), new AudioCall(
