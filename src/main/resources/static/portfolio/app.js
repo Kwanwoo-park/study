@@ -11,10 +11,6 @@ const mobileUaTokens = [
 ];
 
 let currentIndex = 0;
-let wheelDelta = 0;
-let wheelLocked = false;
-const wheelThreshold = 80;
-const wheelLockMs = 520;
 
 function applyMobileViewClass() {
     const userAgent = navigator.userAgent.toLowerCase();
@@ -66,88 +62,16 @@ prevBtn.addEventListener("click", prevSlide);
 nextBtn.addEventListener("click", nextSlide);
 
 document.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+    if (event.key === "ArrowRight") {
         event.preventDefault();
         nextSlide();
     }
 
-    if (event.key === "ArrowLeft" || event.key === "PageUp") {
+    if (event.key === "ArrowLeft") {
         event.preventDefault();
         prevSlide();
-    }
-
-    if (event.key === "Home") {
-        event.preventDefault();
-        goToSlide(0);
-    }
-
-    if (event.key === "End") {
-        event.preventDefault();
-        goToSlide(slides.length - 1);
     }
 });
-
-document.addEventListener("wheel", (event) => {
-    if (wheelLocked || Math.abs(event.deltaY) < Math.abs(event.deltaX)) {
-        return;
-    }
-
-    event.preventDefault();
-    wheelDelta += event.deltaY;
-
-    if (Math.abs(wheelDelta) < wheelThreshold) {
-        return;
-    }
-
-    if (wheelDelta > 0) {
-        nextSlide();
-    } else {
-        prevSlide();
-    }
-
-    wheelDelta = 0;
-    wheelLocked = true;
-    window.setTimeout(() => {
-        wheelLocked = false;
-    }, wheelLockMs);
-}, { passive: false });
-
-let touchStartX = 0;
-let touchStartY = 0;
-
-document.addEventListener("touchstart", (event) => {
-    touchStartX = event.changedTouches[0].screenX;
-    touchStartY = event.changedTouches[0].screenY;
-}, { passive: true });
-
-document.addEventListener("touchend", (event) => {
-    const deltaX = event.changedTouches[0].screenX - touchStartX;
-    const deltaY = event.changedTouches[0].screenY - touchStartY;
-    const isMobile = window.matchMedia("(max-width: 560px)").matches;
-
-    if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 60) {
-        return;
-    }
-
-    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        if (isMobile) {
-            return;
-        }
-
-        if (deltaY < 0) {
-            nextSlide();
-        } else {
-            prevSlide();
-        }
-        return;
-    }
-
-    if (deltaX < 0) {
-        nextSlide();
-    } else {
-        prevSlide();
-    }
-}, { passive: true });
 
 applyMobileViewClass();
 renderToc();

@@ -410,9 +410,15 @@ h3 {
 
 .service-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
     width: 100%;
+}
+
+.service-row .node {
+    min-width: 0;
+    padding: 20px 14px;
+    font-size: 16px;
 }
 
 .flow-notes {

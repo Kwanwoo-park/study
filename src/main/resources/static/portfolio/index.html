@@ -27,27 +27,27 @@
         <article class="slide active" data-title="Overview">
             <div class="slide-grid hero-layout">
                 <div class="hero-copy">
-                    <p class="eyebrow">Spring Boot Social Platform</p>
-                    <h1>커뮤니티, 실시간 채팅, 운영 관리를 통합한 백엔드 프로젝트</h1>
+                    <p class="eyebrow">Spring Boot Realtime Social Platform</p>
+                    <h1>웹·모바일 커뮤니티와 실시간 통화를 연결한 서비스 프로젝트</h1>
                     <p class="lead">
-                        회원 인증부터 게시글 피드, 팔로우, 좋아요, 댓글·대댓글, WebSocket 채팅, SSE 알림, 신고/금칙어 제재, 관리자 지표, 계좌 거래까지 하나의 서비스 흐름으로 구현했습니다.
+                        Cookie/Bearer JWT 인증부터 소셜 피드, Kafka outbox 채팅, SSE 알림, 1:1 WebRTC 음성 통화, 신고·제재·상소, 관리자 장애 추적, 예금·적금 계좌까지 하나의 서비스 흐름으로 구현했습니다.
                     </p>
                     <div class="hero-actions">
                         <a href="https://www.kwanwoo.site" target="_blank" rel="noreferrer">운영 서비스 보기</a>
-                        <span>Java 17 · Spring Boot 3.0.5 · Redis · Kafka · AWS S3</span>
+                        <span>Java 17 · Spring Boot 3.0.5 · MySQL · Redis · Kafka · WebRTC</span>
                     </div>
                     <dl class="hero-stats" aria-label="프로젝트 요약 지표">
                         <div>
                             <dt>Domains</dt>
-                            <dd>12+</dd>
+                            <dd>15+</dd>
                         </div>
                         <div>
                             <dt>Realtime</dt>
-                            <dd>WS/SSE</dd>
+                            <dd>WS/SSE/WebRTC</dd>
                         </div>
                         <div>
-                            <dt>Tests</dt>
-                            <dd>Unit/API/Regression</dd>
+                            <dt>Delivery</dt>
+                            <dd>Outbox/Kafka</dd>
                         </div>
                     </dl>
                 </div>
@@ -61,9 +61,9 @@
                         <div class="text-line wide"></div>
                         <div class="text-line"></div>
                         <div class="metric-row">
-                            <strong>Follow Feed</strong>
-                            <strong>Realtime Event</strong>
-                            <strong>Admin Ops</strong>
+                            <strong>Social Feed</strong>
+                            <strong>Voice Call</strong>
+                            <strong>Safety Ops</strong>
                         </div>
                     </div>
                 </div>
@@ -72,97 +72,98 @@
 
         <article class="slide" data-title="Goal">
             <p class="eyebrow">Project Goal</p>
-            <h2>사용자 활동과 운영 정책이 함께 돌아가는 서비스 설계</h2>
+            <h2>사용자 경험, 이벤트 신뢰성, 운영 안전성을 함께 설계</h2>
             <div class="goal-grid">
                 <div>
                     <span class="number">01</span>
                     <h3>소셜 피드 경험</h3>
-                    <p>팔로우 관계 기반 게시글 목록, 멤버별 프로필 피드, 좋아요, 댓글, 대댓글을 하나의 활동 흐름으로 연결했습니다.</p>
+                    <p>팔로우 피드, 프로필 공개 범위, 좋아요, 댓글·대댓글, 컬렉션과 다이어리를 하나의 사용자 활동 흐름으로 연결했습니다.</p>
                 </div>
                 <div>
                     <span class="number">02</span>
-                    <h3>실시간 이벤트</h3>
-                    <p>STOMP 요청을 Kafka에서 방별 순서로 버퍼링하고 MySQL 배치 저장 후 WebSocket으로 전달해 저장 안정성과 실시간성을 함께 확보했습니다.</p>
+                    <h3>신뢰할 수 있는 실시간성</h3>
+                    <p>채팅·알림 이벤트를 MySQL outbox에 먼저 기록하고 Kafka로 전달하며, WebRTC 음성 통화는 Redis 상태 머신과 STUN/TURN으로 연결합니다.</p>
                 </div>
                 <div>
                     <span class="number">03</span>
-                    <h3>운영 제어</h3>
-                    <p>금칙어 위험도, 자동 제재, 관리자 알림, 온라인 사용자 집계, 신규 활동 지표로 운영자가 개입할 수 있는 구조를 만들었습니다.</p>
+                    <h3>안전한 운영 제어</h3>
+                    <p>신고 제재와 상소, 금칙어 누적 정책, 장애 IP·발생 횟수, outbox 대기·dead letter, 통화 강제 종료를 관리자 화면에서 관리합니다.</p>
                 </div>
             </div>
         </article>
 
         <article class="slide" data-title="Architecture">
             <p class="eyebrow">System Architecture</p>
-            <h2>Kafka 배치 저장을 중심으로 분리한 실시간 채팅 파이프라인</h2>
+            <h2>Outbox 이벤트 전달과 WebRTC 통화를 분리한 실시간 구조</h2>
             <div class="architecture">
-                <div class="node user">Browser User</div>
+                <div class="node user">Web · iOS · Android Client<br><small>Cookie / Bearer JWT</small></div>
                 <div class="line horizontal"></div>
-                <div class="node app">Spring Boot<br>Application</div>
+                <div class="node app">Spring Boot Application<br><small>REST · STOMP · SSE · WebRTC signaling</small></div>
                 <div class="service-row">
-                    <div class="node">MySQL / JPA<br><small>도메인·인증 영속성</small></div>
-                    <div class="node">Redis<br><small>접속 상태·캐시</small></div>
-                    <div class="node">Kafka<br><small>방별 순서·채팅 버퍼</small></div>
-                    <div class="node">AWS S3<br><small>게시글·프로필 이미지</small></div>
+                    <div class="node">MySQL / JPA<br><small>도메인·JWT·outbox</small></div>
+                    <div class="node">Kafka<br><small>방별 순서·배치 소비</small></div>
+                    <div class="node">Redis<br><small>접속·통화 상태·Pub/Sub</small></div>
+                    <div class="node">Coturn<br><small>네트워크 간 음성 중계</small></div>
+                    <div class="node">AWS S3<br><small>서비스 이미지 저장</small></div>
                 </div>
             </div>
             <div class="flow-notes">
-                <span>STOMP → Facade → Kafka(topic, roomId key)로 메시지 발행</span>
-                <span>Consumer가 최대 100건을 MySQL에 batch 저장한 뒤 WebSocket 전송</span>
-                <span>Refresh Token은 MySQL에 영속화하고 Redis는 온라인·채팅방 접속 상태와 캐시를 관리</span>
+                <span>채팅·알림 → MySQL outbox → AFTER_COMMIT 즉시 Kafka 발행</span>
+                <span>실패 시 5초~30분 지수 백오프, 30초~5분 적응형 안전 poll, 10회 실패 시 dead letter</span>
+                <span>Kafka 채팅 batch 저장 후 WebSocket 전달 · 음성은 STOMP 시그널링과 P2P/TURN 미디어 분리</span>
             </div>
         </article>
 
         <article class="slide" data-title="Features">
             <p class="eyebrow">Core Features</p>
-            <h2>커뮤니티 기능부터 부가 서비스까지 하나의 계정으로 연결</h2>
+            <h2>클라이언트 경험부터 운영 워크플로까지 하나의 계정으로 연결</h2>
             <div class="feature-board">
                 <section>
                     <h3>회원·인증</h3>
-                    <p>회원가입, 로그인, OAuth2 로그인, 메일 인증, 비밀번호·전화번호 변경, 탈퇴, 권한 관리</p>
+                    <p>웹 Cookie JWT, 모바일 Bearer JWT, Refresh Token 회전, Google/Naver OAuth2, 비밀번호 변경 메일 인증, 공개 범위와 탈퇴</p>
                 </section>
                 <section>
-                    <h3>피드·관계</h3>
-                    <p>게시글 작성·수정·삭제, 이미지 업로드, 팔로우/언팔로우, 좋아요, 댓글·대댓글, 멤버 프로필 피드</p>
+                    <h3>피드·관계·기록</h3>
+                    <p>게시글과 S3 이미지, 팔로우/언팔로우, 좋아요, 댓글·대댓글 모달, 프로필 피드, 컬렉션, 이미지 다이어리</p>
                 </section>
                 <section>
                     <h3>채팅·알림</h3>
-                    <p>채팅방 생성, Kafka 방별 순서 보장, 배치 저장 후 WebSocket 전송, 채팅 이미지, SSE 알림, 읽음 처리</p>
+                    <p>REST/STOMP 채팅, outbox 기반 Kafka 전달, 방별 배치 저장, 이미지·읽음 상태, SSE 알림, 1:1 WebRTC 음성 통화</p>
                 </section>
                 <section>
-                    <h3>계좌·컬렉션·관리</h3>
-                    <p>계좌 생성·입금·이체, 개인 컬렉션 이미지 저장, 금칙어 신청·승인, 관리자 대시보드</p>
+                    <h3>계좌·안전·관리</h3>
+                    <p>입출금·예금·적금, 이자·자동이체·중도해지, 신고 제재·상소, 금칙어 승인, 장애 추적과 통화 강제 종료</p>
                 </section>
             </div>
         </article>
 
         <article class="slide" data-title="Stack">
             <p class="eyebrow">Tech Stack</p>
-            <h2>동기 요청, 실시간 메시징, 배치 처리를 나눠 구성</h2>
+            <h2>인증, 이벤트 전달, 미디어 연결의 책임을 나눠 구성</h2>
             <div class="stack-table">
                 <div><strong>Application</strong><span>Java 17, Spring Boot 3.0.5, Spring MVC, Validation, AOP, Thymeleaf</span></div>
-                <div><strong>Security</strong><span>Spring Security, OAuth2 Client, BCrypt, MySQL-backed refresh token, role based admin access</span></div>
-                <div><strong>Realtime</strong><span>STOMP WebSocket, SockJS, keyed Kafka Producer, batch Consumer, Server-Sent Events</span></div>
-                <div><strong>Data</strong><span>Spring Data JPA, Hibernate JDBC batch, MySQL, Redis, H2 test database</span></div>
-                <div><strong>Storage & Test</strong><span>AWS S3 image storage, Gradle, JUnit, Spring Security Test, Kafka Test</span></div>
+                <div><strong>Security</strong><span>Spring Security, JWT Cookie/Bearer, MySQL Refresh Token, OAuth2 Client, BCrypt, Mail Verification</span></div>
+                <div><strong>Realtime</strong><span>STOMP WebSocket, SockJS, WebRTC, STUN/TURN, SSE, Redis Pub/Sub</span></div>
+                <div><strong>Messaging</strong><span>MySQL Transactional Outbox, keyed Kafka Producer, batch Consumer, adaptive retry scheduler</span></div>
+                <div><strong>Data & Infra</strong><span>Spring Data JPA, MySQL, Redis, AWS S3, Coturn, Docker Compose, H2 Test</span></div>
             </div>
         </article>
 
         <article class="slide" data-title="Highlights">
             <p class="eyebrow">Implementation Highlights</p>
-            <h2>요청 처리와 부하가 큰 작업을 분리한 구현 포인트</h2>
+            <h2>장애가 발생해도 복구 가능하도록 설계한 구현 포인트</h2>
             <div class="highlight-grid">
                 <div>
-                    <h3>Facade 계층</h3>
-                    <p>Board, Member, Chat, Notification, Account, Collection 등 복합 유스케이스를 Facade로 모아 Controller를 얇게 유지했습니다.</p>
+                    <h3>Outbox 전달 보장</h3>
+                    <p>Kafka보다 MySQL에 이벤트를 먼저 남기고 커밋 후 즉시 발행합니다. 실패 이벤트만 지수 백오프로 재시도하고 적응형 안전 poll로 유실을 복구합니다.</p>
                 </div>
                 <div>
-                    <h3>Kafka → MySQL 배치 영속화</h3>
-                    <p>roomId를 Kafka key로 사용해 방별 순서를 유지하고, 최대 100건을 JPA batch로 저장한 뒤 성공한 메시지만 WebSocket으로 전달합니다.</p>
+                    <h3>음성 통화 수명주기</h3>
+                    <p>Redis Lua로 1인 1통화와 상태 전이를 원자적으로 제어하고, 세션 연결 해제·TTL·관리자 액션으로 남은 통화를 종료합니다.</p>
                 </div>
                 <div>
-                    <h3>운영 자동화</h3>
-                    <p>알림 heartbeat, 오래된 알림 정리, 금칙어 누적 점수 기반 차단, 관리자 알림을 서버 내부 프로세스로 자동화했습니다.</p>
+                    <h3>운영 가시성</h3>
+                    <p>CPU·메모리·디스크·JVM, 접속 상태, outbox·dead letter, 이미지 정리 큐를 표시하고 장애 IP와 반복 횟수를 확인 처리합니다.</p>
                 </div>
             </div>
         </article>
@@ -173,23 +174,23 @@
             <div class="rule-grid">
                 <section>
                     <span>Account</span>
-                    <h3>거래 취소 정책</h3>
-                    <p>본인 거래 여부, 완료 상태, 취소 거래 재취소, 1일 경과 여부를 검증하고 반대 거래를 생성해 잔액을 복구합니다.</p>
+                    <h3>상품·정산 정책</h3>
+                    <p>입출금·예금·적금별 금리와 만기를 관리하고, 적금 자동이체 및 실패 알림, 해지 시 원금·이자 정산과 거래 취소를 검증합니다.</p>
                 </section>
                 <section>
-                    <span>Report</span>
-                    <h3>신고 처리 흐름</h3>
-                    <p>동일 사용자의 중복 신고를 차단하고, 관리자 화면에서 신고 상태와 처리 액션, 메모를 관리할 수 있게 구성했습니다.</p>
+                    <span>Safety</span>
+                    <h3>신고·제재·상소</h3>
+                    <p>중복 신고를 차단하고 경고·일시정지·차단 이력을 남깁니다. 회원은 본인 제재를 선택해 상소하고 관리자는 상태별로 검토합니다.</p>
                 </section>
                 <section>
-                    <span>Moderation</span>
-                    <h3>금칙어 누적 제재</h3>
-                    <p>승인된 금칙어의 위험도 점수를 Redis에 하루 단위로 누적하고 기준을 넘으면 권한 변경과 세션 만료를 처리합니다.</p>
+                    <span>Audio Call</span>
+                    <h3>통화 동시성 제어</h3>
+                    <p>1:1 방 참여자만 통화하고, 통화를 시작하거나 받은 기기의 세션만 SDP·ICE·종료 신호를 보낼 수 있도록 검증합니다.</p>
                 </section>
                 <section>
-                    <span>Notification</span>
-                    <h3>실시간 알림</h3>
-                    <p>Kafka로 알림 이벤트를 분리하고 SSE 스트림, 읽지 않은 알림 수, 그룹별 조회를 제공해 사용자 피드백을 빠르게 전달합니다.</p>
+                    <span>Event Delivery</span>
+                    <h3>저장과 전달의 순서</h3>
+                    <p>알림과 outbox를 같은 트랜잭션에 저장하고, 채팅은 Consumer의 MySQL 커밋을 마친 결과만 WebSocket으로 전달합니다.</p>
                 </section>
             </div>
         </article>
@@ -200,18 +201,18 @@
             <div class="endpoint-layout">
                 <div>
                     <h3>사용자 화면</h3>
-                    <p>회원, 게시글, 채팅, 알림, 좋아요, 컬렉션, 계좌, 포트폴리오 화면을 Thymeleaf와 정적 리소스로 제공합니다.</p>
-                    <code>/member/login · /board/main · /chat/chatList · /account</code>
+                    <p>회원, 피드, 채팅·통화, 다이어리, 알림, 신고·상소, 계좌와 관리자 화면을 Thymeleaf와 정적 리소스로 제공합니다.</p>
+                    <code>/board/main · /chat/chatList · /diary · /appeal · /admin/administrator</code>
                 </div>
                 <div>
                     <h3>REST API</h3>
-                    <p>도메인별 API를 분리해 화면 Ajax 요청과 관리자 기능을 처리합니다.</p>
-                    <code>/api/member/** · /api/board/** · /api/chat/** · /api/admin/**</code>
+                    <p>웹 Ajax와 모바일 앱이 같은 도메인 API를 사용하고, 모바일 인증은 토큰 발급·회전·OAuth 교환 API로 분리했습니다.</p>
+                    <code>/api/mobile/auth/** · /api/chat/rooms · /api/chat/send · /api/admin/**</code>
                 </div>
                 <div>
                     <h3>Realtime</h3>
-                    <p>SockJS STOMP 채팅과 SSE 알림 스트림으로 실시간 사용자 경험을 구성했습니다.</p>
-                    <code>/ws/chat · /api/chat/message/send · /api/notification/stream</code>
+                    <p>SockJS/STOMP 메시지·통화 시그널링, 사용자 전용 통화 큐, SSE 알림, REST ICE 설정을 함께 제공합니다.</p>
+                    <code>/ws/chat · /api/chat/message/send · /api/audio/signal · /api/notification/stream</code>
                 </div>
             </div>
         </article>
@@ -220,9 +221,9 @@
             <p class="eyebrow">Quality & Operations</p>
             <h2>운영 중 확인해야 할 상태와 회귀 위험을 테스트로 관리</h2>
             <div class="deployment">
-                <div class="deploy-step">Entity / Repository / Service 단위 테스트</div>
-                <div class="deploy-step">API Controller 테스트와 Security Test</div>
-                <div class="deploy-step main">Facade 회귀 테스트와 정적 JS 회귀 테스트</div>
+                <div class="deploy-step">도메인·Repository·Service 단위 및 영속성 테스트</div>
+                <div class="deploy-step">API·Security·Kafka outbox·WebRTC signaling 테스트</div>
+                <div class="deploy-step main">Facade·템플릿·정적 JS 전용 회귀 테스트</div>
                 <div class="deploy-resources">
                     <span>Board</span>
                     <span>Member</span>
@@ -230,28 +231,31 @@
                     <span>Notification</span>
                     <span>Account</span>
                     <span>Report</span>
-                    <span>S3 Image</span>
-                    <span>Static JS</span>
+                    <span>WebRTC</span>
+                    <span>Static UI</span>
                 </div>
             </div>
             <div class="ops-list">
-                <span>Docker Compose로 MySQL, Redis, Kafka, Application 실행 환경 구성</span>
+                <span>Docker Compose로 MySQL, Redis, Kafka, Coturn, Application 실행 환경 구성</span>
                 <span>회귀 테스트 전용 Gradle task: <strong>regressionTest</strong></span>
-                <span>운영 민감 설정은 외부 설정으로 분리 필요</span>
+                <span>관리자 화면에서 시스템 자원, outbox·dead letter, 장애 IP와 반복 횟수 확인</span>
+                <span>JWT·OAuth·AWS·TURN 비밀값은 환경 변수로 외부화</span>
             </div>
         </article>
 
         <article class="slide" data-title="Closing">
             <div class="closing">
                 <p class="eyebrow">Portfolio Summary</p>
-                <h2>실제 서비스 흐름을 끝까지 연결한 Spring Boot 프로젝트</h2>
+                <h2>저장, 전달, 복구, 운영까지 연결한 Spring Boot 프로젝트</h2>
                 <p>
-                    이 프로젝트는 인증, 소셜 피드, 실시간 채팅, 비동기 알림, 이미지 저장, 신고/금칙어 운영 정책, 계좌·컬렉션 기능, 관리자 지표까지 직접 구현한 풀스택형 백엔드 포트폴리오입니다.
+                    웹·모바일 인증, 소셜 피드, outbox 기반 채팅·알림, WebRTC 음성 통화, 이미지 저장, 신고·제재·상소, 금융 상품 규칙, 장애 대응 화면까지 실제 서비스의 수명주기를 구현한 풀스택형 백엔드 포트폴리오입니다.
                 </p>
                 <div class="closing-tags">
                     <span>Spring Boot</span>
-                    <span>Kafka</span>
+                    <span>MySQL</span>
                     <span>Redis</span>
+                    <span>Outbox / Kafka</span>
+                    <span>WebRTC / TURN</span>
                     <span>SSE / WebSocket</span>
                     <span>AWS S3</span>
                     <span>Docker Compose</span>
