@@ -5,6 +5,7 @@ import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
 import spring.study.account.entity.AccountTransactionType;
+import spring.study.account.entity.AccountType;
 import spring.study.account.repository.AccountTransactionRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -16,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -112,7 +115,46 @@ class AccountTransactionServiceTest {
 
         assertThatThrownBy(() -> accountTransactionService.cancelTransaction(1L, receiver))
                 .isInstanceOf(SecurityException.class)
-                .hasMessage("본인 거래만 취소할 수 있습니다");
+                .hasMessage("계좌이체는 보낸 사람만 취소할 수 있습니다");
+        verify(accountService, never()).findByAccountForUpdate(any());
+        verify(accountTransactionRepository, never()).save(any(AccountTransaction.class));
+    }
+
+    @Test
+    void cancelShouldNotWithdrawMoneyFromSavingsAccount() {
+        Member sender = createMember(1L);
+        Member receiver = createMember(2L);
+        Account withdrawalAccount = createAccount("9191000", 10_000L, sender);
+        Account savingsAccount = Account.builder()
+                .account("9192000")
+                .amount(10_000L)
+                .name("savings")
+                .accountType(AccountType.INSTALLMENT_SAVINGS)
+                .member(receiver)
+                .build();
+        AccountTransaction transaction = createTransaction(
+                1L,
+                AccountTransactionType.TRANSFER,
+                AccountTransactionStatus.COMPLETED,
+                withdrawalAccount,
+                savingsAccount,
+                LocalDateTime.now().minusHours(1)
+        );
+        when(accountTransactionRepository.findByIdForUpdate(transaction.getId()))
+                .thenReturn(Optional.of(transaction));
+        when(accountService.findByAccountForUpdate(withdrawalAccount.getAccount()))
+                .thenReturn(withdrawalAccount);
+        when(accountService.findByAccountForUpdate(savingsAccount.getAccount()))
+                .thenReturn(savingsAccount);
+        doThrow(new IllegalArgumentException("적금 계좌에서는 출금 또는 이체할 수 없습니다"))
+                .when(accountService).validateOutgoingTransaction(savingsAccount);
+
+        assertThatThrownBy(() -> accountTransactionService.cancelTransaction(transaction.getId(), sender))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("적금 계좌에서는 출금 또는 이체할 수 없습니다");
+        assertThat(savingsAccount.getAmount()).isEqualTo(10_000L);
+        assertThat(withdrawalAccount.getAmount()).isEqualTo(10_000L);
+        verify(accountTransactionRepository, never()).save(any(AccountTransaction.class));
     }
 
     private Member createMember(Long id) {

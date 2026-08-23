@@ -146,6 +146,12 @@
     }
 
     function moveToOriginalPage() {
+        const returnUrl = getSafeReturnUrl();
+        if (returnUrl) {
+            window.location.replace(returnUrl);
+            return;
+        }
+
         if (document.referrer) {
             try {
                 const referrer = new URL(document.referrer);
@@ -164,5 +170,20 @@
         }
 
         window.location.replace('/');
+    }
+
+    function getSafeReturnUrl() {
+        const requestedUrl = new URLSearchParams(window.location.search).get('returnUrl');
+        if (!requestedUrl) return null;
+
+        try {
+            const resolvedUrl = new URL(requestedUrl, window.location.origin);
+            if (resolvedUrl.origin !== window.location.origin || resolvedUrl.pathname === '/report') {
+                return null;
+            }
+            return `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`;
+        } catch (error) {
+            return null;
+        }
     }
 })();

@@ -88,13 +88,22 @@ public class ChatApiController {
     }
 
     @GetMapping("/audio/incoming")
-    public ResponseEntity<?> getIncomingAudioCall(@RequestParam String roomId, HttpServletRequest request) {
+    public ResponseEntity<?> getIncomingAudioCall(@RequestParam(required = false) String roomId, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
         return audioCallSignalingService.findIncomingCall(member.getEmail(), roomId)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @PostMapping("/audio/{callId}/reject")
+    public ResponseEntity<?> rejectIncomingAudioCall(@PathVariable String callId, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        audioCallSignalingService.rejectIncomingCall(callId, member.getEmail());
+        return ResponseEntity.ok(Map.of("result", 1L));
     }
 
     @GetMapping("/load")

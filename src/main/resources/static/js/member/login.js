@@ -1,10 +1,22 @@
 const button = document.getElementById('login');
 const email = document.getElementById('email');
 const password = document.getElementById('password');
+const appealLink = document.getElementById('appealLink');
 
 const url = new URL(window.location.href);
 const urlParams = url.searchParams;
 const redirectUrl = urlParams.get('url');
+
+if (appealLink && email) {
+    const updateAppealLink = () => {
+        const enteredEmail = email.value.trim();
+        appealLink.href = enteredEmail
+            ? `/appeal?email=${encodeURIComponent(enteredEmail)}`
+            : '/appeal';
+    };
+    email.addEventListener('input', updateAppealLink);
+    updateAppealLink();
+}
 
 if (button) {
     button.addEventListener('click', (event) => {

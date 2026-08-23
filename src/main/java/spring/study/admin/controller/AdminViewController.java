@@ -142,4 +142,19 @@ public class AdminViewController {
 
         return "admin/report_history";
     }
+
+    @GetMapping("/appeal")
+    public String appealList(Model model, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/appeal";
+
+        if (member.getRole() != Role.ADMIN) {
+            jwtManager.logout(request);
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
+
+        model.addAttribute("email", member.getEmail());
+        model.addAttribute("profile", member.getProfile());
+        return "admin/appeal_list";
+    }
 }

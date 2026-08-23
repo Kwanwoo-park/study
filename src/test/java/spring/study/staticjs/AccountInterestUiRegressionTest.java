@@ -41,6 +41,10 @@ class AccountInterestUiRegressionTest {
                 "time deposit creation should send a term of at most 24 months");
         assertTrue(accountJs.contains("현재 잔액"),
                 "the selected checking account balance should be shown");
+        assertTrue(accountJs.contains("account.outgoingTransferAllowed === true"),
+                "interest accounts should not be offered as transfer withdrawal accounts");
+        assertTrue(accountJs.contains("const canDeposit = isActive && account.depositAllowed === true"),
+                "time deposit accounts should hide the regular deposit action");
     }
 
     @Test

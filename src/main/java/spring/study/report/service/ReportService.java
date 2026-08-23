@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 import spring.study.member.event.MemberChangedEvent;
 import spring.study.member.repository.MemberRepository;
 import spring.study.member.sanction.entity.MemberSanction;
@@ -62,7 +63,28 @@ public class ReportService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신고한 대상입니다");
         }
 
-        return new ReportResponseDto(reportRepository.save(requestDto.toEntity(reporter)));
+        Report report = reportRepository.save(requestDto.toEntity(reporter));
+        notifyAdministrators(report);
+        return new ReportResponseDto(report);
+    }
+
+    private void notifyAdministrators(Report report) {
+        String targetName = switch (report.getTargetType()) {
+            case MEMBER -> "회원";
+            case BOARD -> "게시글";
+            case COMMENT -> "댓글";
+            case CHAT_MESSAGE -> "채팅 메시지";
+        };
+        String reporterName = report.getReporter().getName() == null
+                || report.getReporter().getName().isBlank()
+                ? report.getReporter().getEmail()
+                : report.getReporter().getName();
+        String message = "새 " + targetName + " 신고가 접수되었습니다. 신고자: " + reporterName;
+        String url = "/admin/report?reportId=" + report.getId();
+
+        memberRepository.findAllByRole(Role.ADMIN).forEach(admin ->
+                notificationService.createNotification(admin, message, Group.ADMIN, url)
+        );
     }
 
     private void validateReasonDetail(ReportRequestDto requestDto) {

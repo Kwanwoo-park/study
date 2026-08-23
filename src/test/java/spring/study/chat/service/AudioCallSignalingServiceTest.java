@@ -80,7 +80,10 @@ class AudioCallSignalingServiceTest {
         assertEquals(caller.getEmail(), response.getValue().senderEmail());
         assertEquals("call-1", response.getValue().callId());
         verify(notificationService).createNotification(
-                receiver, "발신자님이 음성 통화를 요청했습니다.", Group.CHAT, "room-1");
+                receiver,
+                "발신자님이 음성 통화를 요청했습니다.",
+                Group.CALL,
+                "/chat/chatRoom?roomId=room-1&callId=call-1");
         assertEquals("call-1", service.findIncomingCall(receiver.getEmail(), "room-1")
                 .orElseThrow().callId());
     }
@@ -90,6 +93,9 @@ class AudioCallSignalingServiceTest {
         startCall();
         service.handle(receiver.getEmail(), RECEIVER_SESSION,
                 request("call-1", AudioCallSignalType.ACCEPT));
+
+        verify(notificationService).closeRealtimeNotification(
+                receiver, Group.CALL, "/chat/chatRoom?roomId=room-1&callId=call-1");
 
         AudioCallSignalRequest offer = new AudioCallSignalRequest(
                 "call-1", "room-1", AudioCallSignalType.OFFER,
@@ -174,6 +180,23 @@ class AudioCallSignalingServiceTest {
                 eq(receiver.getEmail()), eq("/queue/audio-call"), response.capture());
         assertEquals(AudioCallSignalType.DISCONNECTED, response.getAllValues().get(1).type());
         assertTrue(callStateStore.find("call-1").isEmpty());
+        verify(notificationService).closeRealtimeNotification(
+                receiver, Group.CALL, "/chat/chatRoom?roomId=room-1&callId=call-1");
+    }
+
+    @Test
+    void receiverShouldRejectAnIncomingCallWithoutOpeningTheChatRoom() {
+        startCall();
+
+        service.rejectIncomingCall("call-1", receiver.getEmail());
+
+        assertTrue(callStateStore.find("call-1").isEmpty());
+        verify(notificationService).closeRealtimeNotification(
+                receiver, Group.CALL, "/chat/chatRoom?roomId=room-1&callId=call-1");
+        ArgumentCaptor<AudioCallSignalResponse> responses = ArgumentCaptor.forClass(AudioCallSignalResponse.class);
+        verify(messagingTemplate).convertAndSendToUser(
+                eq(caller.getEmail()), eq("/queue/audio-call"), responses.capture(), any(MessageHeaders.class));
+        assertEquals(AudioCallSignalType.REJECT, responses.getValue().type());
     }
 
     @Test
@@ -192,6 +215,8 @@ class AudioCallSignalingServiceTest {
         verify(messagingTemplate, times(2)).convertAndSendToUser(
                 eq(receiver.getEmail()), eq("/queue/audio-call"), receiverResponses.capture());
         assertEquals(AudioCallSignalType.ADMIN_TERMINATED, receiverResponses.getAllValues().get(1).type());
+        verify(notificationService).closeRealtimeNotification(
+                receiver, Group.CALL, "/chat/chatRoom?roomId=room-1&callId=call-1");
     }
 
     private void startCall() {

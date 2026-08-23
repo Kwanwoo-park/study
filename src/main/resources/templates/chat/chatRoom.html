@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css">
-    <link rel="stylesheet" href="/css/chat/chat.css">
+    <link rel="stylesheet" href="/css/chat/chat.css?v=20260823-2">
     <title>Chatting Room</title>
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
@@ -34,6 +34,14 @@
     </div>
 
     <section id="audio-call-panel" class="audio-call-panel is-hidden" role="dialog" aria-live="polite">
+        <div class="audio-call-visual" aria-hidden="true">
+            <span>VOICE CALL</span>
+            <div class="audio-call-phone-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M6.6 10.8c1.7 3.3 3.3 4.9 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.5.7 3.8.7.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.7 21 3 13.3 3 3.7c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.6.7 3.8.1.4 0 .8-.2 1.1l-2.3 2.2z"/>
+                </svg>
+            </div>
+        </div>
         <p id="audio-call-status" class="audio-call-status">통화 준비 중</p>
         <div class="audio-call-meta" aria-live="polite">
             <span id="audio-call-connection" class="audio-call-connection" data-state="idle">대기 중</span>
@@ -67,8 +75,8 @@
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
-    <script src="/js/chat/chat.js"></script>
-    <script src="/js/chat/audio-call.js"></script>
+    <script src="/js/chat/chat.js?v=20260823"></script>
+    <script src="/js/chat/audio-call.js?v=20260823-2"></script>
 </body>
 <footer>
     <div class="card">

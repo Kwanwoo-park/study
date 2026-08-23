@@ -31,6 +31,8 @@ public class AccountResponseDto {
     private Integer monthlySavingsDay;
     private LocalDate nextSavingsPaymentDate;
     private Integer maturityMonths;
+    private boolean outgoingTransferAllowed;
+    private boolean depositAllowed;
 
     public AccountResponseDto(Account entity) {
         this.account = entity.getAccount();
@@ -54,6 +56,8 @@ public class AccountResponseDto {
         this.monthlySavingsDay = entity.getMonthlySavingsDay();
         this.nextSavingsPaymentDate = entity.getNextSavingsPaymentDate();
         this.maturityMonths = entity.getMaturityMonths();
+        this.outgoingTransferAllowed = entity.getAccountType() == AccountType.DEPOSIT_WITHDRAWAL;
+        this.depositAllowed = entity.getAccountType() != AccountType.TIME_DEPOSIT;
     }
 
     @Override

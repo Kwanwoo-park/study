@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.account.service.AccountService;
+import spring.study.appeal.service.AppealService;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.aws.service.ImageCleanupService;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,6 +63,7 @@ public class MemberFacade {
     private final ForbiddenService forbiddenService;
     private final NotificationService notificationService;
     private final ReportService reportService;
+    private final AppealService appealService;
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationService jwtAuthenticationService;
@@ -412,6 +414,7 @@ public class MemberFacade {
             favoriteService.deleteByBoard(board);
         }
 
+        appealService.deleteByMember(member);
         reportService.deleteByReporter(member);
         notificationService.deleteByMember(member);
         favoriteService.deleteByMember(member);

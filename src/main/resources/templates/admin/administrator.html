@@ -11,6 +11,7 @@
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
   <script src="/js/common/theme.js"></script>
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
   <div class="container">
     <h1>Admin view</h1>
       <div class="float-left">
@@ -78,5 +79,6 @@
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/admin/main.js"></script>
+<script src="/js/common/common.js?v=20260823-2"></script>
 </body>
 </html>

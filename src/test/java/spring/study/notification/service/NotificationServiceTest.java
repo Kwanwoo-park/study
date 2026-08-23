@@ -116,6 +116,29 @@ class NotificationServiceTest {
         );
     }
 
+    @Test
+    void closeRealtimeNotificationShouldMarkCallReadAndPublishClosingEvent() {
+        Member member = createMember(1L, "member@test.com");
+        String callUrl = "/chat/chatRoom?roomId=room-1&callId=call-1";
+        Notification notification = Notification.builder()
+                .id(30L)
+                .member(member)
+                .message("음성 통화가 왔습니다.")
+                .readStatus(Status.UNREAD)
+                .notiGroup(Group.CALL)
+                .url(callUrl)
+                .build();
+        when(notificationRepository.findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(
+                member, Group.CALL, callUrl, Status.UNREAD
+        )).thenReturn(Optional.of(notification));
+
+        int result = notificationService.closeRealtimeNotification(member, Group.CALL, callUrl);
+
+        assertThat(result).isEqualTo(1);
+        assertThat(notification.getReadStatus()).isEqualTo(Status.READ);
+        verify(producer).sendNotification(notification);
+    }
+
     private Member createMember(Long id, String email) {
         return Member.builder()
                 .id(id)

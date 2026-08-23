@@ -241,7 +241,10 @@
         loadedAccounts = data.list || [];
         updateAccountCreateOptions();
         const accounts = (data.list || []).filter((account) =>
-            !isTransferPage || normalizeAccountStatus(account) === 'ACTIVE'
+            !isTransferPage || (
+                normalizeAccountStatus(account) === 'ACTIVE'
+                && account.outgoingTransferAllowed === true
+            )
         );
 
         title.innerText = isTransferPage
@@ -266,6 +269,7 @@
         accounts.forEach((account) => {
             const accountId = escapeAttribute(account.account);
             const canTransfer = normalizeAccountStatus(account) === 'ACTIVE'
+                && account.outgoingTransferAllowed === true
                 && Number(account.amount || 0) >= 10000;
             const item = document.createElement('li');
             item.className = 'account-page-item';
@@ -306,6 +310,7 @@
     function renderOwnAccount(account, accountId, canTransfer, checkingAccounts) {
         const accountStatus = normalizeAccountStatus(account);
         const isActive = accountStatus === 'ACTIVE';
+        const canDeposit = isActive && account.depositAllowed === true;
         const isInterestAccount = account.accountType === 'INSTALLMENT_SAVINGS'
             || account.accountType === 'TIME_DEPOSIT';
         const canTerminate = isInterestAccount && accountStatus !== 'TERMINATED';
@@ -322,12 +327,12 @@
                 <div class="account-page-amount">${formatAmount(account.amount)}원</div>
                 <div class="account-action-group">
                     <button type="button" class="btn btn-outline-secondary" data-action="transactions" data-account="${accountId}">거래 내역</button>
-                    ${isActive ? `<button type="button" class="btn btn-outline-primary" data-action="deposit-toggle" data-account="${accountId}">입금</button>` : ''}
+                    ${canDeposit ? `<button type="button" class="btn btn-outline-primary" data-action="deposit-toggle" data-account="${accountId}">입금</button>` : ''}
                     ${canTransfer ? `<button type="button" class="btn btn-success" data-action="transfer-toggle" data-account="${accountId}">계좌이체</button>` : ''}
                     ${canTerminate ? renderTerminationButton(accountId, checkingAccounts, accountStatus) : ''}
                 </div>
             </div>
-            ${isActive ? `<div class="account-transfer-form hidden" id="depositForm${accountId}">
+            ${canDeposit ? `<div class="account-transfer-form hidden" id="depositForm${accountId}">
                 <input type="number" class="form-control account-transfer-input" id="depositAmount${accountId}" min="10000" step="10000" placeholder="입금 금액">
                 <button type="button" class="btn btn-primary" data-action="deposit-submit" data-account="${accountId}">입금</button>
             </div>` : ''}

@@ -34,7 +34,7 @@ public class AccountTransactionFacade {
                 "result", 10L,
                 "list", transactionPage.getContent()
                         .stream()
-                        .map(AccountTransactionResponseDto::new)
+                        .map(transaction -> new AccountTransactionResponseDto(transaction, member))
                         .toList(),
                 "page", transactionPage.getNumber(),
                 "size", transactionPage.getSize(),

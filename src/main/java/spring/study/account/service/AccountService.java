@@ -99,6 +99,13 @@ public class AccountService {
         }
 
         Account savedAccount = accountRepository.save(account);
+        if (resolvedType == AccountType.INSTALLMENT_SAVINGS) {
+            openSavingsAccount(
+                    savingsSourceAccount,
+                    savedAccount,
+                    requestDto.getMonthlySavingsAmount()
+            );
+        }
         if (resolvedType == AccountType.TIME_DEPOSIT) {
             openTimeDeposit(
                     timeDepositSourceAccount,
@@ -177,6 +184,9 @@ public class AccountService {
         Account account = dto.getAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
         Account tranAccount = dto.getTranAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
 
+        validateOutgoingTransaction(account);
+        validateIncomingTransaction(tranAccount);
+
         LocalDateTime transactionTime = LocalDateTime.now();
         prepareBalanceChange(account, transactionTime);
         prepareBalanceChange(tranAccount, transactionTime);
@@ -211,6 +221,7 @@ public class AccountService {
         }
 
         Account account = findByAccount(accountNum);
+        validateIncomingTransaction(account);
         LocalDateTime transactionTime = LocalDateTime.now();
         prepareBalanceChange(account, transactionTime);
         account.addAmount(amount);
@@ -234,6 +245,7 @@ public class AccountService {
     public void subAmount(String accountNum, Long amount) {
         Account account = findByAccount(accountNum);
 
+        validateOutgoingTransaction(account);
         prepareBalanceChange(account, LocalDateTime.now());
         account.subAmount(amount);
     }
@@ -399,6 +411,21 @@ public class AccountService {
         }
     }
 
+    void validateOutgoingTransaction(Account account) {
+        if (account.getAccountType() == AccountType.INSTALLMENT_SAVINGS) {
+            throw new IllegalArgumentException("적금 계좌에서는 출금 또는 이체할 수 없습니다");
+        }
+        if (account.getAccountType() == AccountType.TIME_DEPOSIT) {
+            throw new IllegalArgumentException("예금 계좌에서는 입금, 출금 또는 이체할 수 없습니다");
+        }
+    }
+
+    private void validateIncomingTransaction(Account account) {
+        if (account.getAccountType() == AccountType.TIME_DEPOSIT) {
+            throw new IllegalArgumentException("예금 계좌에서는 입금, 출금 또는 이체할 수 없습니다");
+        }
+    }
+
     private void prepareBalanceChange(Account account, LocalDateTime calculationTime) {
         account.accrueInterestUntil(calculationTime);
         validateActive(account);
@@ -444,21 +471,36 @@ public class AccountService {
                 AccountType.DEPOSIT_WITHDRAWAL,
                 AccountStatus.ACTIVE
         );
-        if (checkingAccounts.size() == 1
-                && (requestDto.getSavingsSourceAccount() == null
-                || requestDto.getSavingsSourceAccount().isBlank())) {
-            return checkingAccounts.get(0);
+        String requestedSource = requestDto.getSavingsSourceAccount();
+        Account selected;
+        if (checkingAccounts.size() == 1 && (requestedSource == null || requestedSource.isBlank())) {
+            selected = checkingAccounts.get(0);
+        } else {
+            if (requestedSource == null || requestedSource.isBlank()) {
+                throw new IllegalArgumentException("적금 자동이체에 사용할 입출금 계좌를 선택해주세요");
+            }
+            selected = checkingAccounts.stream()
+                    .filter(account -> account.getAccount().equals(requestedSource))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다"
+                    ));
         }
-        if (requestDto.getSavingsSourceAccount() == null || requestDto.getSavingsSourceAccount().isBlank()) {
-            throw new IllegalArgumentException("적금 자동이체에 사용할 입출금 계좌를 선택해주세요");
-        }
+        return lockAndValidateSavingsSource(selected, member, requestDto.getMonthlySavingsAmount());
+    }
 
-        return checkingAccounts.stream()
-                .filter(account -> account.getAccount().equals(requestDto.getSavingsSourceAccount()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다"
-                ));
+    private Account lockAndValidateSavingsSource(Account selected, Member member, long paymentAmount) {
+        Account lockedSource = findForUpdate(selected.getAccount());
+        if (lockedSource.getMember() == null
+                || !lockedSource.getMember().getId().equals(member.getId())
+                || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL
+                || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
+            throw new IllegalArgumentException("본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다");
+        }
+        if (lockedSource.getAmount() < paymentAmount) {
+            throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 적금 납입 금액보다 부족합니다");
+        }
+        return lockedSource;
     }
 
     private Account resolveTimeDepositSourceAccount(Member member, AccountCreateRequestDto requestDto) {
@@ -523,6 +565,27 @@ public class AccountService {
                 .bankName("Kwanwoo site account")
                 .transactionTime(openingTime)
                 .build());
+        notifyTransaction(transaction);
+    }
+
+    private void openSavingsAccount(Account source, Account savings, long amount) {
+        LocalDateTime openingTime = LocalDateTime.now();
+        source.subAmount(amount);
+        savings.addAmount(amount);
+        AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
+                .transactionType(AccountTransactionType.SAVINGS_PAYMENT)
+                .transactionStatus(AccountTransactionStatus.COMPLETED)
+                .amount(amount)
+                .fee(0L)
+                .withdrawalAccount(source)
+                .depositAccount(savings)
+                .balanceAfterTransaction(source.getAmount())
+                .memo("적금 개설 첫 납입")
+                .counterpartyName(savings.getName())
+                .bankName("Kwanwoo site account")
+                .transactionTime(openingTime)
+                .build());
+        savings.completeInitialSavingsPayment(openingTime.toLocalDate());
         notifyTransaction(transaction);
     }
 }

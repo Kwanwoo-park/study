@@ -6,6 +6,7 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 import spring.study.chat.domain.AudioCall;
 import spring.study.chat.domain.AudioCallState;
 import spring.study.chat.dto.AudioCallSignalRequest;
@@ -76,6 +77,8 @@ public class AudioCallSignalingService {
             if (!call.ownsSession(disconnectedMemberEmail, disconnectedSessionId)) return;
             if (!callStateStore.remove(call)) return;
 
+            closeIncomingNotification(call);
+
             forward(
                     call.otherEmail(disconnectedMemberEmail),
                     call.otherSessionId(disconnectedMemberEmail),
@@ -96,6 +99,8 @@ public class AudioCallSignalingService {
             throw new IllegalArgumentException("이미 종료된 통화입니다.");
         }
 
+        closeIncomingNotification(call);
+
         AudioCallSignalResponse signal = AudioCallSignalResponse.adminTerminated(
                 call.callId(), call.roomId());
         forward(call.callerEmail(), call.callerSessionId(), signal);
@@ -105,7 +110,7 @@ public class AudioCallSignalingService {
     public Optional<AudioCallSignalResponse> findIncomingCall(String receiverEmail, String roomId) {
         return callStateStore.findByMember(receiverEmail)
                 .filter(call -> call.isReceiver(receiverEmail))
-                .filter(call -> call.roomId().equals(roomId))
+                .filter(call -> roomId == null || roomId.isBlank() || call.roomId().equals(roomId))
                 .filter(call -> call.state() == AudioCallState.RINGING)
                 .map(call -> {
                     AudioCallSignalRequest request = new AudioCallSignalRequest(
@@ -114,6 +119,23 @@ public class AudioCallSignalingService {
                     return AudioCallSignalResponse.from(
                             request, call.callerEmail(), call.callerName());
                 });
+    }
+
+    public void rejectIncomingCall(String callId, String receiverEmail) {
+        AudioCall call = callStateStore.find(callId)
+                .orElseThrow(() -> new BusinessStateException("이미 종료된 통화입니다."));
+        requireReceiver(call, receiverEmail);
+        requireState(call, AudioCallState.RINGING);
+        if (!callStateStore.remove(call)) {
+            throw new BusinessStateException("이미 종료된 통화입니다.");
+        }
+
+        closeIncomingNotification(call);
+        AudioCallSignalRequest request = new AudioCallSignalRequest(
+                call.callId(), call.roomId(), AudioCallSignalType.REJECT,
+                null, null, null, null);
+        forward(call.callerEmail(), call.callerSessionId(),
+                AudioCallSignalResponse.from(request, receiverEmail, call.receiverName()));
     }
 
     private void startCall(Member sender, ChatRoom room, String callerSessionId, AudioCallSignalRequest request) {
@@ -131,11 +153,14 @@ public class AudioCallSignalingService {
         String callId = request.callId() == null || request.callId().isBlank()
                 ? UUID.randomUUID().toString()
                 : request.callId();
+        String callerName = sender.getName() == null || sender.getName().isBlank()
+                ? sender.getEmail()
+                : sender.getName();
         AudioCall call = new AudioCall(
                 callId,
                 room.getRoomId(),
                 sender.getEmail(),
-                sender.getName(),
+                callerName,
                 callerSessionId,
                 receiver.getEmail(),
                 receiver.getName(),
@@ -154,9 +179,9 @@ public class AudioCallSignalingService {
         try {
             notificationService.createNotification(
                     receiver,
-                    sender.getName() + "님이 음성 통화를 요청했습니다.",
-                    Group.CHAT,
-                    room.getRoomId()
+                    callerName + "님이 음성 통화를 요청했습니다.",
+                    Group.CALL,
+                    callNotificationUrl(call)
             );
         } catch (RuntimeException exception) {
             log.warn("음성 통화 수신 알림 저장 실패: callId={}", callId, exception);
@@ -170,6 +195,7 @@ public class AudioCallSignalingService {
                 call, AudioCallState.RINGING, AudioCallState.CONNECTING, sessionId, ACTIVE_TTL)) {
             throw new BusinessStateException("다른 기기에서 이미 통화를 받았거나 통화가 종료되었습니다.");
         }
+        closeIncomingNotification(call);
         forwardToOther(call, senderEmail, request);
         forward(senderEmail, sessionId, AudioCallSignalResponse.accepted(call.callId(), call.roomId()));
     }
@@ -178,6 +204,7 @@ public class AudioCallSignalingService {
         requireReceiver(call, senderEmail);
         requireState(call, AudioCallState.RINGING);
         if (!callStateStore.remove(call)) throw new BusinessStateException("이미 종료된 통화입니다.");
+        closeIncomingNotification(call);
         forwardToOther(call, senderEmail, request);
     }
 
@@ -219,6 +246,7 @@ public class AudioCallSignalingService {
             requireOwnedSession(call, senderEmail, sessionId);
         }
         if (!callStateStore.remove(call)) throw new BusinessStateException("이미 종료된 통화입니다.");
+        closeIncomingNotification(call);
         forwardToOther(call, senderEmail, request);
     }
 
@@ -268,6 +296,28 @@ public class AudioCallSignalingService {
 
     private void requireState(AudioCall call, AudioCallState state) {
         if (call.state() != state) throw new BusinessStateException("올바르지 않은 통화 상태입니다.");
+    }
+
+    private void closeIncomingNotification(AudioCall call) {
+        try {
+            Member receiver = memberService.findMember(call.receiverEmail());
+            notificationService.closeRealtimeNotification(
+                    receiver,
+                    Group.CALL,
+                    callNotificationUrl(call)
+            );
+        } catch (RuntimeException exception) {
+            log.warn("음성 통화 수신 알림 종료 실패: callId={}", call.callId(), exception);
+        }
+    }
+
+    private String callNotificationUrl(AudioCall call) {
+        return UriComponentsBuilder.fromPath("/chat/chatRoom")
+                .queryParam("roomId", call.roomId())
+                .queryParam("callId", call.callId())
+                .build()
+                .encode()
+                .toUriString();
     }
 
     private void validateRequest(AudioCallSignalRequest request, String sessionId) {

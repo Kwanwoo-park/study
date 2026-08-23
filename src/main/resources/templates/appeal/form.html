@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>상소문 작성</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/appeal/form.css?v=20260823">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<main id="appealPage"
+      class="appeal-page"
+      th:attr="data-authenticated=${authenticated},data-member-name=${name}">
+  <header class="appeal-header">
+    <button type="button" id="appealBack" class="btn btn-outline-secondary">← 뒤로 가기</button>
+    <div>
+      <span class="appeal-eyebrow">ACCOUNT APPEAL</span>
+      <h1>상소문 작성</h1>
+      <p>신고 처리나 제재가 잘못되었다고 판단되면 근거와 함께 검토를 요청해주세요.</p>
+    </div>
+  </header>
+
+  <section class="appeal-card appeal-guide">
+    <h2>작성 안내</h2>
+    <p>상소문은 관리자가 원본 신고와 제재 기록을 함께 확인하여 검토합니다. 사실관계와 재검토가 필요한 이유를 구체적으로 적어주세요.</p>
+    <p th:unless="${authenticated}" class="appeal-auth-notice">비로그인 상태에서는 본인 확인을 위해 이메일과 비밀번호가 필요합니다.</p>
+  </section>
+
+  <section id="sanctionSection" class="appeal-card" th:if="${authenticated}">
+    <h2>내 신고·제재 내역</h2>
+    <div id="sanctionList" class="appeal-history-list">내역을 불러오는 중입니다.</div>
+  </section>
+
+  <section class="appeal-card">
+    <h2>상소 내용</h2>
+    <form id="appealForm" novalidate>
+      <div class="appeal-field">
+        <label for="appealEmail">이메일</label>
+        <input id="appealEmail" class="form-control" type="email" th:value="${email}"
+               th:readonly="${authenticated}" autocomplete="username" required>
+      </div>
+      <div id="appealPasswordGroup" class="appeal-field" th:unless="${authenticated}">
+        <label for="appealPassword">비밀번호</label>
+        <input id="appealPassword" class="form-control" type="password" autocomplete="current-password" required>
+      </div>
+      <div id="appealSanctionGroup" class="appeal-field is-hidden">
+        <label for="appealSanction">관련 신고·제재 내역 (선택)</label>
+        <select id="appealSanction" class="form-control">
+          <option value="">특정 내역을 선택하지 않음</option>
+        </select>
+      </div>
+      <div class="appeal-field">
+        <label for="appealTitle">제목</label>
+        <input id="appealTitle" class="form-control" maxlength="100" required>
+      </div>
+      <div class="appeal-field">
+        <label for="appealContent">상소 내용</label>
+        <textarea id="appealContent" class="form-control" rows="9" maxlength="4000" required></textarea>
+        <span class="appeal-count"><span id="appealContentCount">0</span> / 4000</span>
+      </div>
+      <div id="appealMessage" class="appeal-message" role="status" aria-live="polite"></div>
+      <button type="submit" id="appealSubmit" class="btn btn-danger">상소문 제출</button>
+    </form>
+  </section>
+
+  <section id="appealHistorySection" class="appeal-card" th:if="${authenticated}">
+    <h2>내 상소 내역</h2>
+    <div id="appealHistory" class="appeal-history-list">내역을 불러오는 중입니다.</div>
+  </section>
+</main>
+<script src="/js/appeal/form.js?v=20260823"></script>
+</body>
+</html>

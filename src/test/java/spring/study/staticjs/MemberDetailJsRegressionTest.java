@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MemberDetailJsRegressionTest {
 
@@ -30,6 +31,14 @@ class MemberDetailJsRegressionTest {
     void pageScriptsShouldInitializeSharedBoardModalOnlyOnce() throws IOException {
         assertSingleModalInitializer(DETAIL_JS_PATH);
         assertSingleModalInitializer(MEMBER_DETAIL_JS_PATH);
+    }
+
+    @Test
+    void boardModalReportShouldReturnToItsBasePage() throws IOException {
+        String script = Files.readString(BOARD_MODAL_JS_PATH);
+
+        assertTrue(script.contains("boardModalBaseUrl: basePageUrl"));
+        assertTrue(script.contains("&returnUrl=${encodeURIComponent(basePageUrl)}"));
     }
 
     private int count(String source, String regex) {

@@ -35,6 +35,7 @@
     let ringtoneInterval = null;
     let wakeLock = null;
     let isCaller = false;
+    let autoAcceptCallId = new URLSearchParams(window.location.search).get('acceptAudioCall');
     const tabId = createCallId();
     const callChannel = typeof BroadcastChannel !== 'undefined'
         ? new BroadcastChannel('kwanwoo-audio-call')
@@ -209,6 +210,13 @@
         rejectButton.classList.remove('is-hidden');
         startRingtone();
         startIncomingCallTimeout();
+        if (autoAcceptCallId === signal.callId) {
+            autoAcceptCallId = null;
+            const url = new URL(window.location.href);
+            url.searchParams.delete('acceptAudioCall');
+            window.history.replaceState({}, '', url.pathname + url.search);
+            window.setTimeout(() => acceptCall(), 0);
+        }
     }
 
     async function ensureRtcConfig() {

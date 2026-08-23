@@ -18,6 +18,8 @@ class TemplateStaticResourceRegressionTest {
     private static final Path BOARD_VIEW_CSS = Path.of("src/main/resources/static/css/board/view.css");
     private static final Path MEMBER_DETAIL_CSS = Path.of("src/main/resources/static/css/member/member-detail.css");
     private static final Path MEMBER_DETAIL_TEMPLATE = Path.of("src/main/resources/templates/member/detail.html");
+    private static final Path MEMBER_SEARCH_DETAIL_TEMPLATE = Path.of("src/main/resources/templates/member/member_detail.html");
+    private static final Path MEMBER_SEARCH_DETAIL_JS = Path.of("src/main/resources/static/js/member/memberDetail.js");
     private static final Path COMMON_CSS = Path.of("src/main/resources/static/css/common/common.css");
     private static final Path COMMON_ACTIONS_JS = Path.of("src/main/resources/static/js/board/common-actions.js");
     private static final Path IMAGE_SWIPE_JS = Path.of("src/main/resources/static/js/common/image-swipe.js");
@@ -268,6 +270,8 @@ class TemplateStaticResourceRegressionTest {
                 "chat message action menu should be styled");
         assertTrue(chatCss.contains(".chat-message-main"),
                 "chat message body and action toggle should share one horizontal row");
+        assertTrue(chatCss.contains(".chat-room-header {\n    position: sticky;\n    top: 0;\n    z-index: 10;"),
+                "chat room header should stay above message action toggles while scrolling");
         assertTrue(chatJs.contains("toggle.innerText = '⋮';"),
                 "chat message action toggle should use a vertical ellipsis");
     }
@@ -284,6 +288,26 @@ class TemplateStaticResourceRegressionTest {
                 "notification close button should mark the notification as read");
         assertTrue(commonJs.contains("fnMoveNotificationAfterRead(notificationId, notificationGroup, notificationUrl);"),
                 "notification banner click should mark as read before moving");
+        assertTrue(commonJs.contains("url.startsWith('/admin/report') || url.startsWith('/admin/appeal')"),
+                "administrator notifications should move to the report or appeal inbox");
+    }
+
+    @Test
+    void chatParticipantProfileShouldOpenDetailWithBackOnlyNavigation() throws IOException {
+        String chatJs = Files.readString(CHAT_JS);
+        String memberDetail = Files.readString(MEMBER_SEARCH_DETAIL_TEMPLATE);
+        String memberDetailJs = Files.readString(MEMBER_SEARCH_DETAIL_JS);
+
+        assertTrue(chatJs.contains("!isMyMessage(data) && data.member && data.member.email"),
+                "only another participant's chat profile should be linked");
+        assertTrue(chatJs.contains("/member/search/detail?email=${encodeURIComponent(data.member.email)}&source=chat"),
+                "chat profile links should identify chat as their source");
+        assertTrue(memberDetail.contains("th:unless=\"${chatEntry}\""),
+                "chat-sourced member detail should hide bottom navigation");
+        assertTrue(memberDetail.contains("id=\"chatMemberDetailBack\""),
+                "chat-sourced member detail should render a back button");
+        assertTrue(memberDetailJs.contains("window.history.back();"),
+                "the chat member detail back button should return to the chat room");
     }
 
     @Test
@@ -354,8 +378,18 @@ class TemplateStaticResourceRegressionTest {
                         "fragments/common :: notificationBanner"),
                 "admin report apply should include the notification banner used by common navigation");
         assertTrue(reportApplyTemplate.contains(
-                        "<script src=\"/js/common/common.js\"></script>"),
+                        "<script src=\"/js/common/common.js?v=20260823-2\"></script>"),
                 "admin report apply should load common navigation actions");
+    }
+
+    @Test
+    void administratorDashboardShouldReceiveRealtimeNotifications() throws IOException {
+        String administratorTemplate = Files.readString(ADMIN_TEMPLATE);
+
+        assertTrue(administratorTemplate.contains("fragments/common :: notificationBanner"),
+                "administrator dashboard should render realtime notification banners");
+        assertTrue(administratorTemplate.contains("/js/common/common.js?v=20260823-2"),
+                "administrator dashboard should connect to the shared notification stream");
     }
 
     @Test

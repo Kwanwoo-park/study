@@ -42,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -136,6 +137,71 @@ class ReportServiceTest {
                 "100",
                 ReportStatus.CANCELED
         );
+    }
+
+    @Test
+    void createShouldNotifyEveryAdministrator() {
+        Member reporter = createMember(1L, "reporter@test.com");
+        reporter.setName("신고자");
+        Member firstAdmin = createMember(2L, "admin1@test.com");
+        Member secondAdmin = createMember(3L, "admin2@test.com");
+        firstAdmin.setRole(Role.ADMIN);
+        secondAdmin.setRole(Role.ADMIN);
+        ReportRequestDto requestDto = new ReportRequestDto();
+        requestDto.setTargetType(ReportTargetType.BOARD);
+        requestDto.setTargetId("100");
+        requestDto.setReason(ReportReason.SPAM);
+        requestDto.setDescription("spam");
+
+        when(reportRepository.existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
+                reporter,
+                ReportTargetType.BOARD,
+                "100",
+                ReportStatus.CANCELED
+        )).thenReturn(false);
+        when(reportRepository.save(any(Report.class))).thenAnswer(invocation -> {
+            Report report = invocation.getArgument(0);
+            report.setId(20L);
+            return report;
+        });
+        when(memberRepository.findAllByRole(Role.ADMIN)).thenReturn(List.of(firstAdmin, secondAdmin));
+
+        reportService.create(requestDto, reporter);
+
+        verify(notificationService).createNotification(
+                eq(firstAdmin),
+                eq("새 게시글 신고가 접수되었습니다. 신고자: 신고자"),
+                eq(Group.ADMIN),
+                eq("/admin/report?reportId=20")
+        );
+        verify(notificationService).createNotification(
+                eq(secondAdmin),
+                eq("새 게시글 신고가 접수되었습니다. 신고자: 신고자"),
+                eq(Group.ADMIN),
+                eq("/admin/report?reportId=20")
+        );
+    }
+
+    @Test
+    void duplicateReportShouldNotNotifyAdministrators() {
+        Member reporter = createMember(1L, "reporter@test.com");
+        ReportRequestDto requestDto = new ReportRequestDto();
+        requestDto.setTargetType(ReportTargetType.BOARD);
+        requestDto.setTargetId("100");
+        requestDto.setReason(ReportReason.SPAM);
+        requestDto.setDescription("spam");
+        when(reportRepository.existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
+                reporter,
+                ReportTargetType.BOARD,
+                "100",
+                ReportStatus.CANCELED
+        )).thenReturn(true);
+
+        assertThatThrownBy(() -> reportService.create(requestDto, reporter))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
+                        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+
+        verifyNoInteractions(notificationService);
     }
 
     @Test

@@ -65,6 +65,7 @@ public class AccountTransactionService {
         LocalDateTime cancellationTime = LocalDateTime.now();
 
         if (reversalWithdrawalAccount != null) {
+            accountService.validateOutgoingTransaction(reversalWithdrawalAccount);
             accountService.accrueInterest(reversalWithdrawalAccount, cancellationTime);
             if (reversalWithdrawalAccount.getAmount() < transaction.getAmount()) {
                 throw new IllegalArgumentException("취소할 계좌의 잔액이 부족합니다");
@@ -99,7 +100,10 @@ public class AccountTransactionService {
 
     private void validateCancelable(AccountTransaction transaction, Member member) {
         if (!isTransactionOwner(transaction, member)) {
-            throw new SecurityException("본인 거래만 취소할 수 있습니다");
+            String message = transaction.getTransactionType() == AccountTransactionType.TRANSFER
+                    ? "계좌이체는 보낸 사람만 취소할 수 있습니다"
+                    : "본인 거래만 취소할 수 있습니다";
+            throw new SecurityException(message);
         }
 
         if (transaction.getTransactionType() == AccountTransactionType.CANCEL) {

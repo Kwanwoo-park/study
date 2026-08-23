@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>상소문 접수 내역</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/admin/admin.css">
+  <link rel="stylesheet" href="/css/appeal/form.css?v=20260823">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="container admin-appeal-page">
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+  <header class="admin-appeal-header">
+    <div>
+      <span class="appeal-eyebrow">MEMBER APPEALS</span>
+      <h1>상소문 접수 내역</h1>
+      <p>회원이 제출한 검토 대기 상소문입니다.</p>
+    </div>
+    <div>
+      <button type="button" class="btn btn-outline-primary" onclick="location.href='/admin/report'">신고 접수</button>
+      <button type="button" class="btn btn-secondary" onclick="location.href='/admin/administrator'">관리자 홈</button>
+    </div>
+  </header>
+  <div id="adminAppealList" class="admin-appeal-list">상소문을 불러오는 중입니다.</div>
+  <nav id="adminAppealPagination" class="admin-appeal-pagination" aria-label="상소문 페이지"></nav>
+</main>
+<script src="/js/admin/appeal.js?v=20260823"></script>
+<script src="/js/common/common.js?v=20260823-2"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>

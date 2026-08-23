@@ -11,6 +11,7 @@
             return;
         }
 
+        const basePageUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
         let modalOpen = false;
         let currentBoardData = null;
         let currentPrevBoardId = 0;
@@ -85,13 +86,13 @@
 
                 if (push) {
                     history.pushState(
-                        { boardModal: true, boardId: boardId },
+                        { boardModal: true, boardId: boardId, boardModalBaseUrl: basePageUrl },
                         '',
                         `/board/view?id=${boardId}`
                     );
                 } else {
                     history.replaceState(
-                        { boardModal: true, boardId: boardId },
+                        { boardModal: true, boardId: boardId, boardModalBaseUrl: basePageUrl },
                         '',
                         `/board/view?id=${boardId}`
                     );
@@ -184,7 +185,7 @@
                     <div class="icon-box">
                         <img id="like${board.id}" src="/img/${liked ? 'ic_favorite.png' : 'ic_favorite_border.png'}" class="icon" onclick="fnLike(${board.id})">
                         <img id="comment${board.id}" src="/img/ic_chat_black.png" class="icon" onclick="fnComment(${board.id})">
-                        ${!canEdit ? `<a class="btn btn-outline-danger btn-sm report-button" href="/report?targetType=BOARD&targetId=${encodeURIComponent(board.id)}">신고</a>` : ''}
+                        ${!canEdit ? `<a class="btn btn-outline-danger btn-sm report-button" href="/report?targetType=BOARD&targetId=${encodeURIComponent(board.id)}&returnUrl=${encodeURIComponent(basePageUrl)}">신고</a>` : ''}
                     </div>
 
                     <div class="like" onclick="fnHref(${board.id})">

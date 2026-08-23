@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.admin.facade.AdminFacade;
+import spring.study.appeal.entity.AppealStatus;
+import spring.study.appeal.service.AppealService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.forbidden.dto.ForbiddenChangeRequestDto;
@@ -36,6 +38,7 @@ public class AdminApiController {
     private final MemberFacade memberFacade;
     private final ForbiddenFacade forbiddenFacade;
     private final ReportFacade reportFacade;
+    private final AppealService appealService;
 
     @PatchMapping("/member/permit")
     public ResponseEntity<?> memberPermit(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
@@ -207,6 +210,31 @@ public class AdminApiController {
         }
 
         return reportFacade.process(id, requestDto, member);
+    }
+
+    @GetMapping("/appeal")
+    public ResponseEntity<?> findAppeals(
+            @RequestParam(required = false) AppealStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request
+    ) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            jwtManager.logout(request);
+            return commonFacade.wrongAccess();
+        }
+
+        var appeals = appealService.findAll(status, page, size);
+        return ResponseEntity.ok(Map.of(
+                "result", appeals.getTotalElements(),
+                "list", appeals.getContent(),
+                "page", appeals.getNumber(),
+                "totalPages", appeals.getTotalPages(),
+                "totalElements", appeals.getTotalElements()
+        ));
     }
 
     @GetMapping("/member/online")

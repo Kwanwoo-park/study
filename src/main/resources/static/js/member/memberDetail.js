@@ -4,6 +4,7 @@ const btn = document.querySelector("#follow");
 const chatting = document.querySelector("#chatting");
 const container = document.querySelector('.container');
 const imgGrid = document.querySelector('.imgGrid');
+const chatMemberDetailBack = document.getElementById('chatMemberDetailBack');
 
 const url = new URL(window.location.href);
 const urlParams = url.searchParams;
@@ -11,6 +12,16 @@ const email = urlParams.get('email');
 const memberEmail = container?.dataset.memberEmail ?? email;
 
 const BOARD_LIMIT = 30;
+
+if (chatMemberDetailBack) {
+    chatMemberDetailBack.addEventListener('click', () => {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        window.location.replace('/chat/chatList');
+    });
+}
 
 let method;
 let nextCursor = 1;

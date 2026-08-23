@@ -5,6 +5,12 @@
     }
 })();
 
+let activeIncomingAudioCall = null;
+let incomingAudioCallTimeout = null;
+let incomingAudioRingtoneContext = null;
+let incomingAudioRingtoneInterval = null;
+const incomingAudioSystemNotifications = new Map();
+
 document.addEventListener('DOMContentLoaded', function() {
     fnInitThemeSelector();
     fnInitNavigationSettings();
@@ -19,12 +25,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const notificationMessage = json['message'];
             const notificationGroup = json['notiGroup'];
             const notificationUrl = json['url'];
-            const isAudioCall = notificationMessage && notificationMessage.includes('음성 통화를 요청했습니다.');
+            const notificationReadStatus = json['readStatus'] || 'UNREAD';
+            const isAudioCall = notificationGroup === 'CALL';
 
             if (notificationMessage) {
                 fnUpdateUnreadNotificationDot();
                 if (typeof fnHandleIncomingNotificationCount === 'function') fnHandleIncomingNotificationCount(json);
-                if (isAudioCall) fnAnnounceIncomingAudioCall(notificationMessage, notificationUrl);
+                if (isAudioCall) {
+                    if (notificationReadStatus === 'READ' && typeof fnApplyNotificationReadState === 'function') {
+                        fnApplyNotificationReadState(notificationId);
+                    }
+                    fnHandleAudioCallRealtime(json).catch(error => {
+                        console.error('통화 알림 처리 오류:', error);
+                    });
+                    return;
+                }
+                if (notificationReadStatus !== 'UNREAD') return;
 
                 const notificationBanner = fnEnsureNotificationBanner();
                 const notificationElement = notificationBanner.querySelector('#notification-message');
@@ -40,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 setTimeout(() => {
                     notificationBanner.classList.add('d-none');
-                }, isAudioCall ? 30000 : 5000);
+                }, 5000);
             }
         } catch (error) {
             console.error('SSE 메시지 처리 오류:', error);
@@ -73,24 +89,223 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('beforeunload', function() {
         eventSource.close();
+        fnStopIncomingAudioRingtone();
+        incomingAudioSystemNotifications.forEach(notification => notification.close());
+        incomingAudioSystemNotifications.clear();
     });
+
+    fnRestoreIncomingAudioCall().catch(() => {});
 });
 
-function fnAnnounceIncomingAudioCall(message, roomId) {
-    if (navigator.vibrate) navigator.vibrate([250, 150, 250, 500, 250]);
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+async function fnHandleAudioCallRealtime(notification) {
+    const details = fnParseAudioCallUrl(notification.url);
+    if (!details) return;
 
-    const notification = new Notification('음성 통화 요청', {
-        body: message,
-        tag: `audio-call-${roomId || 'incoming'}`,
-        renotify: true
+    if (notification.readStatus === 'READ') {
+        fnCloseIncomingAudioCall(details.callId);
+        return;
+    }
+
+    const activeSignal = await fnFetchIncomingAudioCall(details.roomId);
+    if (!activeSignal || activeSignal.callId !== details.callId) {
+        fnCloseIncomingAudioCall(details.callId);
+        fnMarkNotificationAsRead(notification.id);
+        return;
+    }
+
+    fnShowIncomingAudioCall({
+        callId: details.callId,
+        roomId: details.roomId,
+        url: details.url,
+        notificationId: notification.id,
+        callerName: activeSignal.senderName || activeSignal.senderEmail || '상대방'
     });
+}
+
+async function fnRestoreIncomingAudioCall() {
+    const signal = await fnFetchIncomingAudioCall(null);
+    if (!signal || !signal.callId || !signal.roomId) return;
+
+    fnShowIncomingAudioCall({
+        callId: signal.callId,
+        roomId: signal.roomId,
+        url: `/chat/chatRoom?roomId=${encodeURIComponent(signal.roomId)}&callId=${encodeURIComponent(signal.callId)}`,
+        notificationId: null,
+        callerName: signal.senderName || signal.senderEmail || '상대방'
+    });
+}
+
+async function fnFetchIncomingAudioCall(roomId) {
+    const query = roomId ? `?roomId=${encodeURIComponent(roomId)}` : '';
+    const response = await fetch(`/api/chat/audio/incoming${query}`, {
+        method: 'GET',
+        credentials: 'include'
+    });
+    if (response.status === 204 || !response.ok) return null;
+    return response.json();
+}
+
+function fnShowIncomingAudioCall(call) {
+    if (!call || !call.callId) return;
+    if (activeIncomingAudioCall && activeIncomingAudioCall.callId !== call.callId) {
+        fnCloseIncomingAudioCall(activeIncomingAudioCall.callId);
+    }
+
+    activeIncomingAudioCall = call;
+    const overlay = fnEnsureIncomingAudioCallOverlay();
+    overlay.querySelector('#incoming-audio-call-name').textContent = call.callerName;
+    overlay.classList.remove('is-hidden');
+    document.body.classList.add('incoming-call-open');
+    fnStartIncomingAudioRingtone();
+    fnShowIncomingAudioSystemNotification(call);
+
+    if (incomingAudioCallTimeout) window.clearTimeout(incomingAudioCallTimeout);
+    incomingAudioCallTimeout = window.setTimeout(() => {
+        if (!activeIncomingAudioCall || activeIncomingAudioCall.callId !== call.callId) return;
+        fnMarkNotificationAsRead(activeIncomingAudioCall.notificationId);
+        fnCloseIncomingAudioCall(call.callId);
+    }, 32000);
+}
+
+function fnCloseIncomingAudioCall(callId) {
+    if (activeIncomingAudioCall && callId && activeIncomingAudioCall.callId !== callId) return;
+    const resolvedCallId = callId || activeIncomingAudioCall?.callId;
+    if (incomingAudioCallTimeout) window.clearTimeout(incomingAudioCallTimeout);
+    incomingAudioCallTimeout = null;
+    fnStopIncomingAudioRingtone();
+
+    const overlay = document.getElementById('incoming-audio-call-overlay');
+    if (overlay) overlay.classList.add('is-hidden');
+    document.body.classList.remove('incoming-call-open');
+    if (resolvedCallId) {
+        incomingAudioSystemNotifications.get(resolvedCallId)?.close();
+        incomingAudioSystemNotifications.delete(resolvedCallId);
+    }
+    activeIncomingAudioCall = null;
+}
+
+function fnEnsureIncomingAudioCallOverlay() {
+    const existing = document.getElementById('incoming-audio-call-overlay');
+    if (existing) return existing;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'incoming-audio-call-overlay';
+    overlay.className = 'incoming-audio-call-overlay is-hidden';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'incoming-audio-call-name');
+    overlay.innerHTML = `
+        <section class="incoming-audio-call-card">
+            <span class="incoming-audio-call-eyebrow">INCOMING AUDIO CALL</span>
+            <div class="incoming-audio-call-pulse" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img">
+                    <path d="M6.6 10.8c1.7 3.3 3.3 4.9 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.5.7 3.8.7.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.7 21 3 13.3 3 3.7c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.6.7 3.8.1.4 0 .8-.2 1.1l-2.3 2.2z"/>
+                </svg>
+            </div>
+            <h2 id="incoming-audio-call-name">상대방</h2>
+            <p>음성 통화가 왔습니다</p>
+            <div class="incoming-audio-call-actions">
+                <button type="button" id="incoming-audio-call-reject" class="incoming-call-action reject" aria-label="통화 거절">
+                    <span class="incoming-call-action-icon">✕</span><span>거절</span>
+                </button>
+                <button type="button" id="incoming-audio-call-accept" class="incoming-call-action accept" aria-label="통화 받기">
+                    <span class="incoming-call-action-icon">✓</span><span>받기</span>
+                </button>
+            </div>
+        </section>`;
+    overlay.querySelector('#incoming-audio-call-reject').addEventListener('click', fnRejectIncomingAudioCall);
+    overlay.querySelector('#incoming-audio-call-accept').addEventListener('click', fnAcceptIncomingAudioCall);
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+async function fnRejectIncomingAudioCall() {
+    const call = activeIncomingAudioCall;
+    if (!call) return;
+    fnCloseIncomingAudioCall(call.callId);
+    fnMarkNotificationAsRead(call.notificationId);
+    try {
+        await fetch(`/api/chat/audio/${encodeURIComponent(call.callId)}/reject`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+    } catch (error) {
+        console.error('통화 거절 오류:', error);
+    }
+}
+
+function fnAcceptIncomingAudioCall() {
+    const call = activeIncomingAudioCall;
+    if (!call) return;
+    fnCloseIncomingAudioCall(call.callId);
+    fnMarkNotificationAsRead(call.notificationId);
+    const target = new URL(call.url, window.location.origin);
+    target.searchParams.set('acceptAudioCall', call.callId);
+    window.location.href = target.pathname + target.search;
+}
+
+function fnParseAudioCallUrl(value) {
+    if (!value) return null;
+    try {
+        const target = new URL(value, window.location.origin);
+        if (target.origin !== window.location.origin || target.pathname !== '/chat/chatRoom') return null;
+        const roomId = target.searchParams.get('roomId');
+        const callId = target.searchParams.get('callId');
+        if (!roomId || !callId) return null;
+        return {roomId, callId, url: target.pathname + target.search};
+    } catch (error) {
+        return null;
+    }
+}
+
+function fnShowIncomingAudioSystemNotification(call) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const notification = new Notification('수신 음성 통화', {
+        body: `${call.callerName}님에게서 음성 통화가 왔습니다.`,
+        tag: `audio-call-${call.callId}`,
+        renotify: true,
+        requireInteraction: true
+    });
+    incomingAudioSystemNotifications.set(call.callId, notification);
     notification.onclick = function() {
         window.focus();
         notification.close();
-        if (roomId) location.href = `/chat/chatRoom?roomId=${encodeURIComponent(roomId)}`;
+        fnAcceptIncomingAudioCall();
     };
-    setTimeout(() => notification.close(), 30000);
+}
+
+function fnStartIncomingAudioRingtone() {
+    fnStopIncomingAudioRingtone();
+    if (navigator.vibrate) navigator.vibrate([400, 200, 400, 800]);
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+        incomingAudioRingtoneContext = new AudioContextClass();
+        const playTone = () => {
+            if (!incomingAudioRingtoneContext) return;
+            const oscillator = incomingAudioRingtoneContext.createOscillator();
+            const gain = incomingAudioRingtoneContext.createGain();
+            oscillator.frequency.value = 520;
+            gain.gain.setValueAtTime(0.0001, incomingAudioRingtoneContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.1, incomingAudioRingtoneContext.currentTime + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.0001, incomingAudioRingtoneContext.currentTime + 0.65);
+            oscillator.connect(gain).connect(incomingAudioRingtoneContext.destination);
+            oscillator.start();
+            oscillator.stop(incomingAudioRingtoneContext.currentTime + 0.7);
+        };
+        incomingAudioRingtoneContext.resume().then(playTone).catch(() => {});
+        incomingAudioRingtoneInterval = window.setInterval(playTone, 1900);
+    } catch (error) {
+        incomingAudioRingtoneContext = null;
+    }
+}
+
+function fnStopIncomingAudioRingtone() {
+    if (incomingAudioRingtoneInterval) window.clearInterval(incomingAudioRingtoneInterval);
+    incomingAudioRingtoneInterval = null;
+    if (incomingAudioRingtoneContext) incomingAudioRingtoneContext.close().catch(() => {});
+    incomingAudioRingtoneContext = null;
+    if (navigator.vibrate) navigator.vibrate(0);
 }
 
 function fnEnsureNotificationBanner() {
@@ -354,10 +569,17 @@ function fnForbidden() {
 function fnNotificationMove(group, url) {
     if (group == "CHAT")
         location.href = `/chat/chatRoom?roomId=` + url;
+    else if (group == "CALL") {
+        const call = fnParseAudioCallUrl(url);
+        if (call) location.href = call.url;
+    }
     else if (group == "COMMENT" || group == "REPLY")
         location.replace(`/comment?id=` + url);
     else if (group == "FAVORITE")
         location.replace(`/board/view?id=` + url);
     else if (group == "TRAN")
         location.replace(`/account/transactions?account=` + encodeURIComponent(url));
+    else if (group == "ADMIN" && typeof url === 'string'
+            && (url.startsWith('/admin/report') || url.startsWith('/admin/appeal')))
+        location.replace(url);
 }

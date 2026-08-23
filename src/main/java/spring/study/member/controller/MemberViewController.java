@@ -91,6 +91,7 @@ public class MemberViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePassword";
 
         model.addAttribute("email", member.getEmail());
+        model.addAttribute("emailVerificationRequired", true);
 
         return "member/updatePassword";
     }
@@ -110,6 +111,7 @@ public class MemberViewController {
     @GetMapping("/updatePassword/{email}")
     public String updatePassword(@PathVariable String email, Model model) throws Exception {
         model.addAttribute("email", email);
+        model.addAttribute("emailVerificationRequired", false);
 
         return "member/updatePassword";
     }
@@ -136,7 +138,10 @@ public class MemberViewController {
     }
 
     @GetMapping("/search/detail")
-    public String memberDetail(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {
+    public String memberDetail(Model model,
+                               MemberRequestDto memberRequestDto,
+                               @RequestParam(value = "source", required = false) String source,
+                               HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/search/detail?email=" + memberRequestDto.getEmail();
 
@@ -158,6 +163,7 @@ public class MemberViewController {
         model.addAttribute("following_count", followService.countFollowing(search_member));
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
+        model.addAttribute("chatEntry", "chat".equalsIgnoreCase(source));
         model.addAttribute("transferAccounts", accountService.findActiveByMember(search_member).stream()
                 .map(AccountResponseDto::new)
                 .toList());

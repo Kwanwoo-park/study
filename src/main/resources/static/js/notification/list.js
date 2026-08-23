@@ -7,6 +7,7 @@ const notificationGroupButtons = {
     CHAT: { id: 'chat', label: '채팅' },
     COMMENT: { id: 'comment', label: '댓글' },
     REPLY: { id: 'reply', label: '답글' },
+    CALL: { id: 'call', label: '통화' },
 };
 const notificationGroupUnreadCounts = {};
 const notificationItemsById = new Map();

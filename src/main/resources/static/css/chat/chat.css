@@ -139,7 +139,7 @@ html {
 .chat-room-header {
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 10;
     width: 100%;
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-color);
@@ -224,6 +224,21 @@ html {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.chat-message-member-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.chat-message-member-link:hover,
+.chat-message-member-link:focus-visible {
+    color: inherit;
+    text-decoration: underline;
 }
 
 .chat-message-row.mine .chat-message-header {
@@ -579,16 +594,19 @@ body.dark-mode .chat-image-modal-nav {
 
 .audio-call-panel {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
-    z-index: 1100;
-    min-width: 280px;
-    padding: 18px;
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    background: var(--surface-bg);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22);
-    color: var(--text-primary);
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    background:
+            radial-gradient(circle at 50% 26%, rgba(59, 130, 246, .28), transparent 35%),
+            linear-gradient(160deg, rgba(8, 15, 30, .97), rgba(17, 24, 39, .99));
+    color: #fff;
+    text-align: center;
+    backdrop-filter: blur(14px);
 }
 
 .audio-call-panel.is-hidden,
@@ -597,8 +615,53 @@ body.dark-mode .chat-image-modal-nav {
 }
 
 .audio-call-status {
-    margin: 0 0 14px;
-    font-weight: 700;
+    max-width: 620px;
+    margin: 0 0 18px;
+    color: #fff;
+    font-size: clamp(24px, 6vw, 38px);
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.audio-call-visual > span {
+    display: block;
+    margin-bottom: 24px;
+    color: #bfdbfe;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .18em;
+}
+
+.audio-call-phone-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 112px;
+    height: 112px;
+    margin: 0 auto 30px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #60a5fa, #2563eb);
+    box-shadow: 0 18px 45px rgba(37, 99, 235, .42);
+}
+
+.audio-call-phone-icon::before,
+.audio-call-phone-icon::after {
+    position: absolute;
+    inset: -17px;
+    border: 2px solid rgba(96, 165, 250, .34);
+    border-radius: 50%;
+    content: '';
+    animation: audio-call-pulse 1.8s ease-out infinite;
+}
+
+.audio-call-phone-icon::after {
+    animation-delay: .6s;
+}
+
+.audio-call-phone-icon svg {
+    width: 46px;
+    height: 46px;
+    fill: #fff;
 }
 
 .audio-call-meta {
@@ -606,9 +669,11 @@ body.dark-mode .chat-image-modal-nav {
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
-    margin-bottom: 12px;
-    color: var(--text-muted);
-    font-size: 13px;
+    justify-content: center;
+    width: min(520px, 100%);
+    margin-bottom: 22px;
+    color: #cbd5e1;
+    font-size: 14px;
 }
 
 .audio-call-connection::before {
@@ -650,21 +715,42 @@ body.dark-mode .chat-image-modal-nav {
     grid-template-columns: auto minmax(150px, 1fr);
     align-items: center;
     gap: 8px;
-    margin-bottom: 14px;
+    width: min(520px, 100%);
+    margin-bottom: 24px;
     font-size: 13px;
 }
 
 .audio-call-devices select {
     min-width: 0;
-    color: var(--text-primary);
-    background: var(--surface-bg);
-    border-color: var(--border-color);
+    color: #f8fafc;
+    background: #1e293b;
+    border-color: #475569;
 }
 
 .audio-call-actions {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
+}
+
+.audio-call-actions .btn {
+    min-width: 104px;
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-weight: 800;
+}
+
+@keyframes audio-call-pulse {
+    from { opacity: .85; transform: scale(.82); }
+    to { opacity: 0; transform: scale(1.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .audio-call-phone-icon::before,
+    .audio-call-phone-icon::after {
+        animation: none;
+    }
 }
 
 @media (max-width: 576px) {
@@ -708,9 +794,10 @@ body.dark-mode .chat-image-modal-nav {
     }
 
     .audio-call-panel {
-        right: 12px;
-        bottom: 12px;
-        left: 12px;
-        min-width: 0;
+        padding: 20px;
+    }
+
+    .audio-call-devices {
+        grid-template-columns: 1fr;
     }
 }

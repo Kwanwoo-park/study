@@ -132,4 +132,14 @@ class SavingsAutoTransferServiceTest {
 
         assertEquals(LocalDate.of(2024, 2, 29), savings.getNextSavingsPaymentDate());
     }
+
+    @Test
+    void initialPaymentShouldScheduleConfiguredDayInTheFollowingMonth() {
+        savings.setMaturityAt(LocalDateTime.of(2027, 8, 23, 0, 0));
+        savings.configureSavingsAutoTransfer(source, 100_000L, 31, LocalDate.of(2026, 8, 23));
+
+        savings.completeInitialSavingsPayment(LocalDate.of(2026, 8, 23));
+
+        assertEquals(LocalDate.of(2026, 9, 30), savings.getNextSavingsPaymentDate());
+    }
 }

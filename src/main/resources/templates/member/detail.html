@@ -34,6 +34,7 @@
               <button type="button" class="btn btn-primary" onclick="fnForbidden()">금칙어 확인</button>
               <button th:unless="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="fnMyReports()">내 신고 내역</button>
               <button th:if="${#strings.equals(member.role, 'ADMIN')}" type="button" class="btn btn-primary" onclick="fnReportApply()">신고 접수 내역</button>
+              <button type="button" class="btn btn-outline-danger" onclick="location.href='/appeal'">상소문 작성</button>
             </div>
           </div>
         </div>
@@ -61,12 +62,12 @@
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/follow/followerModal.js"></script>
 <script src="/js/follow/followingModal.js"></script>
-<script src="/js/comment/modal.js"></script>
+<script src="/js/comment/modal.js?v=20260823"></script>
 <script src="/js/favorite/modal.js"></script>
 <script src="/js/common/image-swipe.js"></script>
-<script src="/js/member/boardModal.js"></script>
+<script src="/js/member/boardModal.js?v=20260823"></script>
 <script src="/js/member/detail.js"></script>
-<script src="/js/common/common.js"></script>
+<script src="/js/common/common.js?v=20260823-2"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

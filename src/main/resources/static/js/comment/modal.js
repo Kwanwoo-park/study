@@ -266,7 +266,7 @@
                             </div>
                         ` : `
                             <div class="comment-modal-actions">
-                                <a class="comment-modal-report-link" href="/report?targetType=COMMENT&targetId=${encodeURIComponent(item.id)}">신고</a>
+                                <a class="comment-modal-report-link" href="${buildCommentReportUrl(item.id)}">신고</a>
                             </div>
                         `}
                     </div>
@@ -280,6 +280,18 @@
                     </div>
                 </div>
             `;
+        }
+
+        function buildCommentReportUrl(commentId) {
+            const stateReturnUrl = window.history.state?.boardModalBaseUrl;
+            const currentPageUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+            const returnUrl = typeof stateReturnUrl === 'string' && stateReturnUrl.startsWith('/')
+                    && !stateReturnUrl.startsWith('//')
+                ? stateReturnUrl
+                : currentPageUrl;
+
+            return `/report?targetType=COMMENT&targetId=${encodeURIComponent(commentId)}`
+                + `&returnUrl=${encodeURIComponent(returnUrl)}`;
         }
 
         async function toggleEdit(commentId) {

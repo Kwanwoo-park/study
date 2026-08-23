@@ -24,6 +24,10 @@ class ReportFormJsRegressionTest {
                 "duplicate and successful report responses should return to the original page");
         assertTrue(script.contains("function moveToOriginalPage()"),
                 "report form should define shared original-page navigation");
+        assertTrue(script.contains("new URLSearchParams(window.location.search).get('returnUrl')"),
+                "report form should prefer the explicitly preserved base page URL");
+        assertTrue(script.contains("resolvedUrl.origin !== window.location.origin"),
+                "report return URLs should be limited to the current origin");
     }
 
     @Test

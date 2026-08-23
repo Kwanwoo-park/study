@@ -354,7 +354,7 @@ function fnDraw(data) {
 
     name.innerText = data.member.name;
 
-    appendMessageHeader(newMsgArea, profile, name);
+    appendMessageHeader(newMsgArea, profile, name, data);
 
     appendChatMessageMain(newMsgArea, data, normalizeChatImageSources(data.list));
     appendEditedIndicator(newMsgArea, data);
@@ -401,7 +401,7 @@ function fnLoadDraw(json) {
 
         name.innerText = data.member.name;
 
-        appendMessageHeader(newMsgArea, profile, name);
+        appendMessageHeader(newMsgArea, profile, name, data);
 
         appendChatMessageMain(newMsgArea, data, normalizeChatImageSources(json.img[data.id]));
         appendEditedIndicator(newMsgArea, data);
@@ -640,12 +640,21 @@ function appendChatImageCount(container, imageSources) {
     container.append(count);
 }
 
-function appendMessageHeader(messageArea, profile, name) {
+function appendMessageHeader(messageArea, profile, name, data) {
     const header = document.createElement('span');
 
     header.className = "chat-message-header";
-    header.append(profile);
-    header.append(name);
+    if (!isMyMessage(data) && data.member && data.member.email) {
+        const memberLink = document.createElement('a');
+
+        memberLink.className = 'chat-message-member-link';
+        memberLink.href = `/member/search/detail?email=${encodeURIComponent(data.member.email)}&source=chat`;
+        memberLink.setAttribute('aria-label', `${data.member.name || '상대방'} 회원 상세 보기`);
+        memberLink.append(profile, name);
+        header.append(memberLink);
+    } else {
+        header.append(profile, name);
+    }
     messageArea.append(header);
 }
 

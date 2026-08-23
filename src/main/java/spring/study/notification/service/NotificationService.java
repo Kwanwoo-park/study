@@ -104,6 +104,22 @@ public class NotificationService {
     }
 
     @Transactional
+    public int closeRealtimeNotification(Member member, Group group, String url) {
+        if (url == null || url.isBlank()) return 0;
+
+        return notificationRepository.findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(
+                member,
+                group,
+                url,
+                Status.UNREAD
+        ).map(notification -> {
+            notification.changeToRead();
+            producer.sendNotification(notification);
+            return 1;
+        }).orElse(0);
+    }
+
+    @Transactional
     public void updateRead(Long id) {
         Notification notification = notificationRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 알림입니다"
