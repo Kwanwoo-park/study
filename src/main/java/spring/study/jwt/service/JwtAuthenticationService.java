@@ -9,6 +9,7 @@ import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.member.entity.Member;
 
 import java.time.Instant;
+import java.util.OptionalLong;
 
 @Service
 @RequiredArgsConstructor
@@ -55,11 +56,19 @@ public class JwtAuthenticationService {
     }
 
     public void revoke(String refreshTokenValue) {
-        if (refreshTokenValue == null || refreshTokenValue.isBlank()) return;
+        revokeAndGetMemberId(refreshTokenValue);
+    }
+
+    public OptionalLong revokeAndGetMemberId(String refreshTokenValue) {
+        if (refreshTokenValue == null || refreshTokenValue.isBlank()) return OptionalLong.empty();
         try {
-            refreshTokenService.revoke(tokenProvider.parse(refreshTokenValue, JwtTokenProvider.REFRESH).jti());
+            JwtTokenProvider.TokenClaims claims = tokenProvider.parse(
+                    refreshTokenValue, JwtTokenProvider.REFRESH);
+            refreshTokenService.revoke(claims.jti());
+            return OptionalLong.of(claims.memberId());
         } catch (JwtTokenProvider.JwtValidationException ignored) {
             // Logout remains idempotent for expired or malformed client tokens.
+            return OptionalLong.empty();
         }
     }
 

@@ -20,9 +20,9 @@ class AudioCallClientRegressionTest {
         assertTrue(audioCallJs.contains("function onStompDisconnected()"));
         assertTrue(audioCallJs.contains("case 'DISCONNECTED':"));
         assertTrue(audioCallJs.contains("case 'ADMIN_TERMINATED':"));
-        assertTrue(audioCallJs.contains("관리자에 의해 통화가 종료되었습니다."));
-        assertTrue(audioCallJs.contains("endCallWithMessage('상대방의 연결이 끊어져 통화가 종료되었습니다.')"));
-        assertTrue(audioCallJs.contains("if (peerConnection) peerConnection.close()"));
+        assertTrue(audioCallJs.contains("관리자에 의해 그룹 통화가 종료되었습니다."));
+        assertTrue(audioCallJs.contains("채팅 서버 연결이 끊어져 그룹 통화가 종료되었습니다."));
+        assertTrue(audioCallJs.contains("metadata.connection.close()"));
         assertTrue(audioCallJs.contains("localStream.getTracks().forEach(track => track.stop())"));
     }
 
@@ -30,10 +30,10 @@ class AudioCallClientRegressionTest {
     void rtcFailureShouldAttemptRecoveryAndEventuallyReleaseCallResources() throws Exception {
         String audioCallJs = Files.readString(AUDIO_CALL_JS);
 
-        assertTrue(audioCallJs.contains("beginConnectionRecovery()"));
-        assertTrue(audioCallJs.contains("createOffer({iceRestart: true})"));
+        assertTrue(audioCallJs.contains("beginConnectionRecovery(peerEmail)"));
+        assertTrue(audioCallJs.contains("{iceRestart: true}"));
         assertTrue(audioCallJs.contains("sendSignal('HANGUP')"));
-        assertTrue(audioCallJs.contains("clearConnectionFailureTimeout()"));
+        assertTrue(audioCallJs.contains("clearPeerConnectionFailureTimeout(peerEmail)"));
         assertTrue(audioCallJs.contains("startKeepAlive()"));
         assertTrue(audioCallJs.contains("sendSignal('KEEP_ALIVE')"));
     }
@@ -48,11 +48,24 @@ class AudioCallClientRegressionTest {
         assertTrue(audioCallJs.contains("startDurationTimer()"));
         assertTrue(audioCallJs.contains("enumerateDevices()"));
         assertTrue(audioCallJs.contains("replaceTrack(newTrack)"));
-        assertTrue(audioCallJs.contains("remoteAudio.setSinkId"));
+        assertTrue(audioCallJs.contains("audio.setSinkId(outputSelect.value)"));
         assertTrue(audioCallJs.contains("navigator.wakeLock.request('screen')"));
         assertTrue(audioCallJs.contains("document.addEventListener('visibilitychange'"));
         assertTrue(audioCallJs.contains("/api/chat/audio/incoming"));
         assertTrue(chatJs.contains("client.heartbeat.outgoing = 10000"));
         assertTrue(chatJs.contains("scheduleChatReconnect()"));
+    }
+
+    @Test
+    void groupCallShouldMaintainOnePeerConnectionAndAudioElementPerParticipant() throws Exception {
+        String audioCallJs = Files.readString(AUDIO_CALL_JS);
+
+        assertTrue(audioCallJs.contains("const peerConnections = new Map()"));
+        assertTrue(audioCallJs.contains("targetEmail: peerEmail"));
+        assertTrue(audioCallJs.contains("case 'PARTICIPANT_LEFT':"));
+        assertTrue(audioCallJs.contains("case 'PARTICIPANT_REJECTED':"));
+        assertTrue(audioCallJs.contains("getOrCreateRemoteAudio(peerEmail)"));
+        assertTrue(audioCallJs.contains("peerConnections.forEach(metadata =>"));
+        assertTrue(audioCallJs.contains("participantStates.forEach"));
     }
 }

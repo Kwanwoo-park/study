@@ -31,7 +31,7 @@ class IncomingAudioCallNotificationRegressionTest {
         assertTrue(commonJs.contains("notification.readStatus === 'READ'"));
         assertTrue(commonJs.contains("fnCloseIncomingAudioCall(details.callId)"));
         assertTrue(commonJs.contains("incomingAudioSystemNotifications.get(resolvedCallId)?.close()"));
-        assertTrue(service.contains("closeIncomingNotification(call);"));
+        assertTrue(service.contains("closeIncomingNotification(call, senderEmail);"));
         assertTrue(service.contains("notificationService.closeRealtimeNotification("));
     }
 
@@ -44,6 +44,20 @@ class IncomingAudioCallNotificationRegressionTest {
         assertTrue(commonJs.contains("target.searchParams.set('acceptAudioCall', call.callId)"));
         assertTrue(audioCallJs.contains("get('acceptAudioCall')"));
         assertTrue(audioCallJs.contains("window.setTimeout(() => acceptCall(), 0)"));
+    }
+
+    @Test
+    void memberCanDisableIncomingCallNotificationsFromSettings() throws IOException {
+        String commonFragment = read("src/main/resources/templates/fragments/common.html");
+        String commonJs = read("src/main/resources/static/js/common/common.js");
+        String audioCallJs = read("src/main/resources/static/js/chat/audio-call.js");
+
+        assertTrue(commonFragment.contains("data-enabled=\"true\""));
+        assertTrue(commonFragment.contains("data-enabled=\"false\""));
+        assertTrue(commonFragment.contains("fnSetAudioCallNotificationPreference(false)"));
+        assertTrue(commonJs.contains("/api/chat/audio/preference"));
+        assertTrue(commonJs.contains("if (!await fnLoadAudioCallNotificationPreference())"));
+        assertTrue(audioCallJs.contains("if (signal.type === 'CALL')"));
     }
 
     private String read(String path) throws IOException {

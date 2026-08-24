@@ -10,6 +10,8 @@ public enum AudioCallSignalType {
     ICE_CANDIDATE,
     KEEP_ALIVE,
     HANGUP,
+    PARTICIPANT_LEFT,
+    PARTICIPANT_REJECTED,
     DISCONNECTED,
     ADMIN_TERMINATED
 }

@@ -17,6 +17,7 @@ import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.aws.repository.ImageCleanupTaskRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
+import spring.study.common.service.OnlineUserService;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
@@ -40,22 +41,12 @@ public class AdminFacade {
     private final AudioCallSignalingService audioCallSignalingService;
     private final KafkaOutboxEventRepository kafkaOutboxEventRepository;
     private final ImageCleanupTaskRepository imageCleanupTaskRepository;
+    private final OnlineUserService onlineUserService;
 
     public ResponseEntity<?> memberOnline() {
-        Set<String> onlineUserKeys = redisTemplate.keys("online:user:*");
-
-        List<Long> userIds = (onlineUserKeys == null ? Set.<String>of() : onlineUserKeys)
-                .stream()
-                .map(k -> k.substring(k.lastIndexOf(":") + 1))
-                .map(Long::parseLong)
-                .toList();
+        List<Long> userIds = onlineUserService.findOnlineMemberIds().stream().toList();
         long count = userIds.size();
-
-        if (count == 0L) {
-            redisTemplate.delete("online:total");
-        } else {
-            redisTemplate.opsForValue().set("online:total", Long.toString(count));
-        }
+        onlineUserService.syncOnlineTotal();
 
         List<Member> list = memberService.findMember(userIds);
 
@@ -152,7 +143,7 @@ public class AdminFacade {
                 "startedAt", LocalDateTime.now().minus(Duration.ofMillis(runtimeMxBean.getUptime())).toString()
         ));
         status.put("traffic", Map.of(
-                "activeSessions", countKeys("online:user:*"),
+                "activeSessions", onlineUserService.countOnlineMembers(),
                 "activeWebSockets", countKeys("chat:room:*:active:*")
         ));
         status.put("queues", Map.of(
@@ -177,6 +168,17 @@ public class AdminFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "message", "장애 기록을 확인 처리했습니다"
+        ));
+    }
+
+    public ResponseEntity<?> acknowledgeAllIncidents() {
+        int acknowledgedCount = systemIncidentService.acknowledgeAll();
+        return ResponseEntity.ok(Map.of(
+                "result", 1L,
+                "acknowledgedCount", acknowledgedCount,
+                "message", acknowledgedCount > 0
+                        ? acknowledgedCount + "건의 장애 기록을 모두 확인 처리했습니다"
+                        : "확인할 장애 기록이 없습니다"
         ));
     }
 

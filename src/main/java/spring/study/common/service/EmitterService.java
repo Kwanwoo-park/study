@@ -3,22 +3,19 @@ package spring.study.common.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.common.repository.EmitterRepository;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Map;
-import java.util.Set;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class EmitterService {
     private final EmitterRepository emitterRepository;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final OnlineUserService onlineUserService;
 
     public void save(String id, Object notification) {
         Map<String, SseEmitter> sseEmitters = emitterRepository.findAllEmitterStartWithById(id);
@@ -58,10 +55,7 @@ public class EmitterService {
 
         SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L));
 
-        redisTemplate.opsForValue().setIfAbsent("online:user:" + id, "1", Duration.ofHours(1L));
-        redisTemplate.expire("online:user:" + id, Duration.ofHours(1L));
-
-        syncOnlineTotal();
+        onlineUserService.connectWeb(id);
 
         emitter.onCompletion(() -> disconnect(id, emitterId));
         emitter.onTimeout(() -> disconnect(id, emitterId));
@@ -88,19 +82,6 @@ public class EmitterService {
         }
 
         emitterRepository.deleteAllEventCacheByMemberId(id);
-        redisTemplate.delete("online:user:" + id);
-        syncOnlineTotal();
-    }
-
-    private void syncOnlineTotal() {
-        Set<String> onlineUserKeys = redisTemplate.keys("online:user:*");
-        long count = onlineUserKeys == null ? 0L : onlineUserKeys.size();
-
-        if (count == 0L) {
-            redisTemplate.delete("online:total");
-            return;
-        }
-
-        redisTemplate.opsForValue().set("online:total", Long.toString(count));
+        onlineUserService.disconnectWeb(id);
     }
 }

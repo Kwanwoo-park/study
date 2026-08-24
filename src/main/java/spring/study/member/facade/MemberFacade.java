@@ -20,6 +20,7 @@ import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
+import spring.study.bookreview.service.BookReviewService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.collection.service.CollectionService;
@@ -64,6 +65,7 @@ public class MemberFacade {
     private final NotificationService notificationService;
     private final ReportService reportService;
     private final AppealService appealService;
+    private final BookReviewService bookReviewService;
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationService jwtAuthenticationService;
@@ -415,6 +417,7 @@ public class MemberFacade {
         }
 
         appealService.deleteByMember(member);
+        bookReviewService.deleteByAuthor(member);
         reportService.deleteByReporter(member);
         notificationService.deleteByMember(member);
         favoriteService.deleteByMember(member);

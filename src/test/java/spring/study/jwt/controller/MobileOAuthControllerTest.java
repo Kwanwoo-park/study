@@ -11,6 +11,7 @@ import spring.study.jwt.service.MobileOAuthCodeService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import spring.study.common.service.OnlineUserService;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -27,8 +28,9 @@ class MobileOAuthControllerTest {
     private final MobileOAuthCodeService codeService = mock(MobileOAuthCodeService.class);
     private final MemberService memberService = mock(MemberService.class);
     private final JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
+    private final OnlineUserService onlineUserService = mock(OnlineUserService.class);
     private final MobileOAuthController controller = new MobileOAuthController(
-            cookieService, codeService, memberService, authenticationService);
+            cookieService, codeService, memberService, authenticationService, onlineUserService);
 
     @Test
     void startsSupportedProviderThroughServerAuthorizationEndpoint() {
@@ -65,6 +67,7 @@ class MobileOAuthControllerTest {
         MobileAuthResponse body = assertInstanceOf(MobileAuthResponse.class, response.getBody());
         assertEquals("access", body.accessToken());
         assertEquals("oauth@test.com", body.member().email());
+        verify(onlineUserService).markMobileActive(7L);
     }
 
     @Test

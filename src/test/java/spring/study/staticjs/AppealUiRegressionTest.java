@@ -32,14 +32,21 @@ class AppealUiRegressionTest {
     }
 
     @Test
-    void anonymousAppealShouldRequireAccountCredentials() throws IOException {
+    void anonymousAppealShouldRequireFiveMinuteEmailVerificationWithoutPassword() throws IOException {
         String template = read("src/main/resources/templates/appeal/form.html");
         String script = read("src/main/resources/static/js/appeal/form.js");
 
-        assertTrue(template.contains("비로그인 상태에서는 본인 확인을 위해 이메일과 비밀번호가 필요합니다."));
-        assertTrue(template.contains("id=\"appealPasswordGroup\""));
-        assertTrue(script.contains("(!authenticated && !payload.password)"));
+        assertTrue(template.contains("인증번호와 인증 완료 상태는 각각 5분 동안 유효합니다."));
+        assertTrue(template.contains("id=\"appealVerificationSend\""));
+        assertTrue(template.contains("id=\"appealVerificationConfirm\""));
+        assertTrue(script.contains("/api/appeal/verification/send"));
+        assertTrue(script.contains("/api/appeal/verification/verify"));
+        assertTrue(script.contains("verificationToken: authenticated ? null : verificationToken"));
+        assertTrue(script.contains("Number(data.expiresInSeconds || 300)"));
         assertTrue(script.contains("credentials: 'include'"));
+        assertFalse(template.contains("appealPassword"));
+        assertFalse(template.contains("type=\"password\""));
+        assertFalse(script.contains("payload.password"));
     }
 
     @Test

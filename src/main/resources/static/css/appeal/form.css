@@ -78,6 +78,33 @@ body {
     border-color: var(--border-color);
 }
 
+.appeal-input-action {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+}
+
+.appeal-input-action .btn {
+    white-space: nowrap;
+}
+
+.appeal-verification-status {
+    display: block;
+    margin-top: 7px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.appeal-verification-status.verified {
+    color: #15803d;
+    font-weight: 700;
+}
+
+.appeal-verification-status.expired {
+    color: #dc2626;
+    font-weight: 700;
+}
+
 .appeal-count {
     display: block;
     margin-top: 5px;
@@ -143,6 +170,10 @@ body.dark-mode .appeal-card {
 
     .appeal-card {
         padding: 18px;
+    }
+
+    .appeal-input-action {
+        grid-template-columns: 1fr;
     }
 }
 

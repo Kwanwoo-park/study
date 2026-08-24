@@ -17,6 +17,7 @@ import spring.study.chat.service.AudioCallSignalingService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import spring.study.common.service.OnlineUserService;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +40,7 @@ class AdminNewBoardRegressionTest {
     @Mock private RedisTemplate<String, String> redisTemplate;
     @Mock private SystemIncidentService systemIncidentService;
     @Mock private AudioCallSignalingService audioCallSignalingService;
+    @Mock private OnlineUserService onlineUserService;
 
     @InjectMocks
     private AdminFacade adminFacade;
@@ -101,8 +103,12 @@ class AdminNewBoardRegressionTest {
         assertTrue(adminCss.contains(".admin-activity-item.is-clickable:focus-visible"));
         assertTrue(adminCss.contains(".admin-activity-item-image"));
         assertTrue(adminTemplate.contains("id=\"system-incident-list\""));
+        assertTrue(adminTemplate.contains("id=\"incident-acknowledge-all\""));
+        assertTrue(adminTemplate.contains("/js/admin/main.js?v=20260824"));
         assertTrue(adminJs.contains("/api/admin/system/incidents"));
         assertTrue(adminJs.contains("acknowledgeSystemIncident"));
+        assertTrue(adminJs.contains("acknowledgeAllSystemIncidents"));
+        assertTrue(adminJs.contains("/api/admin/system/incidents/acknowledge-all"));
         assertTrue(adminJs.contains("incident.requestIp"));
         assertTrue(adminCss.contains(".admin-incident-dashboard"));
         assertTrue(adminCss.contains("body.dark-mode .admin-incident-count"));

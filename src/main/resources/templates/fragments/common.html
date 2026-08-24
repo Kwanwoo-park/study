@@ -29,9 +29,21 @@
         <button type="button"
                 class="nav-settings-item"
                 onclick="location.href='/member/updatePassword'">비밀번호 변경</button>
-        <button type="button"
-                class="nav-settings-item"
-                onclick="fnRequestAudioCallNotificationPermission()">통화 알림 허용</button>
+        <div class="nav-settings-section">
+          <span class="nav-settings-label">통화 알림 설정</span>
+          <div class="nav-settings-choices">
+            <button type="button"
+                    class="audioCallPreferenceChoice"
+                    data-enabled="true"
+                    aria-pressed="false"
+                    onclick="fnSetAudioCallNotificationPreference(true)">허용</button>
+            <button type="button"
+                    class="audioCallPreferenceChoice"
+                    data-enabled="false"
+                    aria-pressed="false"
+                    onclick="fnSetAudioCallNotificationPreference(false)">미허용</button>
+          </div>
+        </div>
         <div class="nav-settings-section">
           <span class="nav-settings-label">프로필 공개 설정</span>
           <div class="nav-settings-choices">

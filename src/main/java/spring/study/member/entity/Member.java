@@ -83,6 +83,13 @@ public class Member extends BasetimeEntity implements UserDetails {
     )
     private CommonVisibility visibility = CommonVisibility.PUBLIC;
 
+    @Column(
+            name = "audio_call_enabled",
+            nullable = false,
+            columnDefinition = "boolean default true"
+    )
+    private boolean audioCallEnabled = true;
+
     @Column(name = "last_login_time")
     private LocalDateTime lastLoginTime;
 
@@ -135,7 +142,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     private List<Diary> diaries = new ArrayList<>();
 
     @Builder
-    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth, MemberStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, CommonVisibility visibility) {
+    public Member(Long id, String email, String pwd, String name, Role role, LocalDateTime lastLoginTime, String profile, String phone, String birth, MemberStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, CommonVisibility visibility, Boolean audioCallEnabled) {
         this.id = id;
         this.email = email;
         this.pwd = pwd;
@@ -149,6 +156,7 @@ public class Member extends BasetimeEntity implements UserDetails {
         this.suspendedUntil = suspendedUntil;
         this.warningCount = warningCount;
         this.visibility = visibility == null ? CommonVisibility.PUBLIC : visibility;
+        this.audioCallEnabled = audioCallEnabled == null || audioCallEnabled;
     }
 
     @Transient
@@ -302,6 +310,10 @@ public class Member extends BasetimeEntity implements UserDetails {
         if (visibility != null) {
             this.visibility = visibility;
         }
+    }
+
+    public void changeAudioCallEnabled(boolean audioCallEnabled) {
+        this.audioCallEnabled = audioCallEnabled;
     }
 
     public boolean checkProfile() {

@@ -182,6 +182,17 @@ public class MemberService implements UserDetailsService {
         return member.getId();
     }
 
+    @Transactional
+    public long updateAudioCallEnabled(Long id, boolean audioCallEnabled) {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+                "존재하지 않는 회원입니다."
+        ));
+
+        member.changeAudioCallEnabled(audioCallEnabled);
+        publishMemberChanged(id);
+        return member.getId();
+    }
+
     private void publishMemberChanged(Long memberId) {
         eventPublisher.publishEvent(new MemberChangedEvent(memberId));
     }

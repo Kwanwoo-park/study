@@ -17,6 +17,7 @@ import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MobileOAuthCodeService;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
+import spring.study.common.service.OnlineUserService;
 
 import java.net.URI;
 import java.util.Map;
@@ -32,6 +33,7 @@ public class MobileOAuthController {
     private final MobileOAuthCodeService codeService;
     private final MemberService memberService;
     private final JwtAuthenticationService authenticationService;
+    private final OnlineUserService onlineUserService;
 
     @GetMapping("/{provider}")
     public ResponseEntity<?> start(@PathVariable String provider, HttpServletResponse response) {
@@ -48,8 +50,12 @@ public class MobileOAuthController {
     public ResponseEntity<?> exchange(@RequestBody MobileOAuthExchangeRequest request) {
         return codeService.consume(request.code())
                 .map(memberService::updateLastLoginTime)
-                .<ResponseEntity<?>>map(member -> ResponseEntity.ok(
-                        new MobileAuthResponse(member, authenticationService.issue(member))))
+                .<ResponseEntity<?>>map(member -> {
+                    JwtAuthenticationService.AuthenticationTokens tokens =
+                            authenticationService.issue(member);
+                    onlineUserService.markMobileActive(member.getId());
+                    return ResponseEntity.ok(new MobileAuthResponse(member, tokens));
+                })
                 .orElseGet(() -> error(HttpStatus.UNAUTHORIZED, "OAuth 로그인이 만료되었거나 유효하지 않습니다"));
     }
 

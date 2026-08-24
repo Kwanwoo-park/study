@@ -14,7 +14,9 @@
   <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
-<th:block th:unless="${chatEntry}" th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<th:block th:unless="${chatEntry}">
+  <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+</th:block>
 <nav class="member-detail-back-bar" th:if="${chatEntry}" aria-label="채팅방으로 돌아가기">
   <button type="button" id="chatMemberDetailBack" class="btn btn-outline-secondary">← 뒤로 가기</button>
 </nav>
@@ -72,7 +74,7 @@
 <script src="/js/common/image-swipe.js"></script>
 <script src="/js/member/boardModal.js?v=20260823"></script>
 <script src="/js/member/memberDetail.js?v=20260823"></script>
-<script src="/js/common/common.js?v=20260823-2"></script>
+<script src="/js/common/common.js?v=20260824-1"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

@@ -302,8 +302,10 @@ class TemplateStaticResourceRegressionTest {
                 "only another participant's chat profile should be linked");
         assertTrue(chatJs.contains("/member/search/detail?email=${encodeURIComponent(data.member.email)}&source=chat"),
                 "chat profile links should identify chat as their source");
-        assertTrue(memberDetail.contains("th:unless=\"${chatEntry}\""),
-                "chat-sourced member detail should hide bottom navigation");
+        assertTrue(memberDetail.contains("<th:block th:unless=\"${chatEntry}\">\n  <th:block th:replace=\"~{fragments/common :: memberNavi(${email}, ${profile})}\"></th:block>"),
+                "chat-sourced member detail should conditionally wrap the bottom navigation fragment");
+        assertFalse(memberDetail.contains("th:unless=\"${chatEntry}\" th:replace="),
+                "the navigation condition must not share a tag with fragment replacement");
         assertTrue(memberDetail.contains("id=\"chatMemberDetailBack\""),
                 "chat-sourced member detail should render a back button");
         assertTrue(memberDetailJs.contains("window.history.back();"),
@@ -378,7 +380,7 @@ class TemplateStaticResourceRegressionTest {
                         "fragments/common :: notificationBanner"),
                 "admin report apply should include the notification banner used by common navigation");
         assertTrue(reportApplyTemplate.contains(
-                        "<script src=\"/js/common/common.js?v=20260823-2\"></script>"),
+                        "<script src=\"/js/common/common.js?v=20260824-1\"></script>"),
                 "admin report apply should load common navigation actions");
     }
 
@@ -388,7 +390,7 @@ class TemplateStaticResourceRegressionTest {
 
         assertTrue(administratorTemplate.contains("fragments/common :: notificationBanner"),
                 "administrator dashboard should render realtime notification banners");
-        assertTrue(administratorTemplate.contains("/js/common/common.js?v=20260823-2"),
+        assertTrue(administratorTemplate.contains("/js/common/common.js?v=20260824-1"),
                 "administrator dashboard should connect to the shared notification stream");
     }
 

@@ -74,6 +74,11 @@ public class SystemIncidentService {
         }
     }
 
+    @Transactional
+    public int acknowledgeAll() {
+        return systemIncidentRepository.acknowledgeAll(LocalDateTime.now());
+    }
+
     private String sanitize(String value) {
         return value.replaceAll("[\\r\\n\\t]+", " ").trim();
     }

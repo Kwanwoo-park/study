@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AppealRequestDto {
     private String email;
-    private String password;
+    private String verificationToken;
     private Long sanctionId;
 
     @NotBlank(message = "상소문 제목을 입력해주세요")

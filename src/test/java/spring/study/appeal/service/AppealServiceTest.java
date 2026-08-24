@@ -7,7 +7,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.appeal.dto.AppealRequestDto;
 import spring.study.appeal.dto.AppealResponseDto;
@@ -44,7 +43,7 @@ class AppealServiceTest {
     @Mock
     private MemberSanctionRepository memberSanctionRepository;
     @Mock
-    private BCryptPasswordEncoder passwordEncoder;
+    private AppealVerificationService appealVerificationService;
     @Mock
     private NotificationService notificationService;
 
@@ -52,7 +51,7 @@ class AppealServiceTest {
     private AppealService appealService;
 
     @Test
-    void authenticatedMemberCanCreateAppealWithoutPasswordAndNotifyEveryAdministrator() {
+    void authenticatedMemberCanCreateAppealWithoutEmailVerificationAndNotifyEveryAdministrator() {
         Member member = member(1L, "member@example.com", Role.USER);
         Member firstAdmin = member(2L, "admin1@example.com", Role.ADMIN);
         Member secondAdmin = member(3L, "admin2@example.com", Role.ADMIN);
@@ -68,6 +67,7 @@ class AppealServiceTest {
         assertThat(response.getTitle()).isEqualTo("처리 재검토 요청");
         assertThat(response.getContent()).isEqualTo("사실관계를 다시 확인해주세요.");
         verify(memberRepository, never()).findByEmail(any());
+        verifyNoInteractions(appealVerificationService);
         verify(notificationService).createNotification(
                 eq(firstAdmin), eq("member님이 상소문을 제출했습니다."), eq(Group.ADMIN),
                 eq("/admin/appeal?appealId=20"));
@@ -77,14 +77,14 @@ class AppealServiceTest {
     }
 
     @Test
-    void anonymousMemberCanCreateAppealAfterPasswordVerification() {
+    void anonymousMemberCanCreateAppealAfterEmailVerification() {
         Member member = member(1L, "member@example.com", Role.USER);
         AppealRequestDto request = request("재검토", "상소 내용");
         request.setEmail(" member@example.com ");
-        request.setPassword("plain-password");
+        request.setVerificationToken("verified-token");
 
-        when(memberRepository.findByEmail("member@example.com")).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches("plain-password", member.getPassword())).thenReturn(true);
+        when(appealVerificationService.consumeVerification(" member@example.com ", "verified-token"))
+                .thenReturn(member);
         when(appealRepository.existsByMemberAndStatus(member, AppealStatus.PENDING)).thenReturn(false);
         when(appealRepository.save(any(Appeal.class))).thenAnswer(invocation -> persisted(invocation.getArgument(0), 21L));
         when(memberRepository.findAllByRole(Role.ADMIN)).thenReturn(List.of());
@@ -93,22 +93,21 @@ class AppealServiceTest {
 
         assertThat(response.getId()).isEqualTo(21L);
         assertThat(response.getMemberEmail()).isEqualTo("member@example.com");
-        verify(passwordEncoder).matches("plain-password", member.getPassword());
+        verify(appealVerificationService).consumeVerification(" member@example.com ", "verified-token");
     }
 
     @Test
-    void anonymousMemberWithWrongPasswordCannotCreateAppeal() {
-        Member member = member(1L, "member@example.com", Role.USER);
+    void anonymousMemberWithoutValidEmailVerificationCannotCreateAppeal() {
         AppealRequestDto request = request("재검토", "상소 내용");
         request.setEmail("member@example.com");
-        request.setPassword("wrong-password");
+        request.setVerificationToken("expired-token");
 
-        when(memberRepository.findByEmail("member@example.com")).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches("wrong-password", member.getPassword())).thenReturn(false);
+        when(appealVerificationService.consumeVerification("member@example.com", "expired-token"))
+                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "이메일 인증이 필요합니다"));
 
         assertThatThrownBy(() -> appealService.create(request, null))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
-                        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+                        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
         verifyNoInteractions(notificationService);
         verify(appealRepository, never()).save(any());
     }

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title th:text="|${review.reviewTitle} · 독후감|">독후감 상세</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/bookreview/book-review.css?v=20260824">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="book-review-page book-review-detail-page">
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+  <header class="book-review-detail-actions">
+    <a class="btn btn-outline-secondary" href="/book-reviews">← 목록</a>
+    <div th:if="${isAdmin}" class="book-review-admin-actions">
+      <a class="btn btn-outline-primary" th:href="@{/book-reviews/{id}/edit(id=${review.id})}">수정</a>
+      <button id="bookReviewDelete"
+              class="btn btn-outline-danger"
+              type="button"
+              th:attr="data-review-id=${review.id}">삭제</button>
+    </div>
+  </header>
+
+  <article class="book-review-detail">
+    <header>
+      <span class="book-review-eyebrow">BOOK REVIEW</span>
+      <h1 th:text="${review.reviewTitle}">독후감 제목</h1>
+      <div class="book-review-rating book-review-detail-rating" th:attr="aria-label=|별점 ${review.rating}점|">
+        <span th:each="star : ${#numbers.sequence(1, 5)}"
+              th:classappend="${star <= review.rating} ? ' filled' : ''">★</span>
+        <strong th:text="|${review.rating}.0|">5.0</strong>
+      </div>
+    </header>
+
+    <section class="book-review-book-info" aria-label="책 정보">
+      <div>
+        <span>책 제목</span>
+        <strong th:text="${review.bookTitle}">책 제목</strong>
+      </div>
+      <div>
+        <span>저자</span>
+        <strong th:text="${review.bookAuthor}">저자</strong>
+      </div>
+      <div th:if="${review.finishedDate != null}">
+        <span>독서 완료일</span>
+        <strong th:text="${#temporals.format(review.finishedDate, 'yyyy.MM.dd')}">완료일</strong>
+      </div>
+    </section>
+
+    <div class="book-review-content" th:text="${review.content}">독후감 본문</div>
+
+    <footer class="book-review-detail-meta">
+      <span>작성자 <strong th:text="${review.writerName}">관리자</strong></span>
+      <span>작성일 <time th:text="${#temporals.format(review.registerTime, 'yyyy.MM.dd HH:mm')}">작성일</time></span>
+      <span th:if="${review.updateTime != null && review.updateTime != review.registerTime}">수정일 <time th:text="${#temporals.format(review.updateTime, 'yyyy.MM.dd HH:mm')}">수정일</time></span>
+    </footer>
+  </article>
+  <div id="bookReviewMessage" class="book-review-message" role="status" aria-live="polite"></div>
+</main>
+<script src="/js/bookreview/detail.js?v=20260824"></script>
+<script src="/js/common/common.js?v=20260824-1"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>

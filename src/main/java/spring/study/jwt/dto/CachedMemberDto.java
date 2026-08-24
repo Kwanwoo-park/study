@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * by the security principal are cached; credentials and JPA associations are
  * deliberately excluded.
  */
-public record CachedMemberDto(Long id, String email, String name, Role role, MemberStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, String phone, String birth, String profile, CommonVisibility visibility, LocalDateTime lastLoginTime) {
+public record CachedMemberDto(Long id, String email, String name, Role role, MemberStatus accountStatus, LocalDateTime suspendedUntil, int warningCount, String phone, String birth, String profile, CommonVisibility visibility, LocalDateTime lastLoginTime, Boolean audioCallEnabled) {
     public static CachedMemberDto from(Member member) {
         return new CachedMemberDto(
                 member.getId(),
@@ -26,7 +26,8 @@ public record CachedMemberDto(Long id, String email, String name, Role role, Mem
                 member.getBirth(),
                 member.getProfile(),
                 member.getVisibility(),
-                member.getLastLoginTime()
+                member.getLastLoginTime(),
+                member.isAudioCallEnabled()
         );
     }
 
@@ -44,6 +45,7 @@ public record CachedMemberDto(Long id, String email, String name, Role role, Mem
                 .profile(profile)
                 .visibility(visibility)
                 .lastLoginTime(lastLoginTime)
+                .audioCallEnabled(audioCallEnabled)
                 .build();
     }
 }

@@ -11,6 +11,11 @@ window.onload = async function() {
 
     const incidentRefresh = document.getElementById('incident-refresh');
     if (incidentRefresh) incidentRefresh.addEventListener('click', loadSystemIncidents);
+
+    const incidentAcknowledgeAll = document.getElementById('incident-acknowledge-all');
+    if (incidentAcknowledgeAll) {
+        incidentAcknowledgeAll.addEventListener('click', acknowledgeAllSystemIncidents);
+    }
 }
 
 async function loadSystemStatus() {
@@ -45,6 +50,7 @@ async function loadSystemStatus() {
 async function loadSystemIncidents() {
     const incidentList = document.getElementById('system-incident-list');
     const incidentCount = document.getElementById('incident-unacknowledged-count');
+    const acknowledgeAllButton = document.getElementById('incident-acknowledge-all');
     if (!incidentList) return;
 
     try {
@@ -60,9 +66,14 @@ async function loadSystemIncidents() {
             throw new Error('장애 기록 조회 실패');
         }
 
+        const unacknowledgedCount = Number(data.unacknowledgedCount || 0);
         if (incidentCount) {
-            incidentCount.innerText = `${Number(data.unacknowledgedCount || 0)}건 미확인`;
-            incidentCount.classList.toggle('has-incidents', Number(data.unacknowledgedCount || 0) > 0);
+            incidentCount.innerText = `${unacknowledgedCount}건 미확인`;
+            incidentCount.classList.toggle('has-incidents', unacknowledgedCount > 0);
+        }
+        if (acknowledgeAllButton) {
+            acknowledgeAllButton.disabled = unacknowledgedCount === 0;
+            acknowledgeAllButton.dataset.unacknowledgedCount = String(unacknowledgedCount);
         }
         renderSystemIncidents(data.list || []);
     } catch (error) {
@@ -140,6 +151,37 @@ async function acknowledgeSystemIncident(incidentId) {
     } catch (error) {
         console.error(error);
         alert('장애 기록을 확인 처리하지 못했습니다.');
+    }
+}
+
+async function acknowledgeAllSystemIncidents() {
+    const button = document.getElementById('incident-acknowledge-all');
+    const unacknowledgedCount = Number(button?.dataset.unacknowledgedCount || 0);
+    if (!button || unacknowledgedCount === 0) return;
+
+    if (!confirm(`미확인 서버 장애 ${unacknowledgedCount}건을 모두 확인 처리할까요?`)) return;
+
+    const originalText = button.innerText;
+    button.disabled = true;
+    button.innerText = '처리 중...';
+
+    try {
+        const response = await fetch('/api/admin/system/incidents/acknowledge-all', {
+            method: 'PATCH',
+            credentials: 'include',
+        });
+        const data = await response.json();
+        if (!response.ok || data.result < 0) {
+            alert(data.message || '장애 기록을 전체 확인 처리하지 못했습니다.');
+            return;
+        }
+        await loadSystemIncidents();
+    } catch (error) {
+        console.error(error);
+        alert('장애 기록을 전체 확인 처리하지 못했습니다.');
+    } finally {
+        button.innerText = originalText;
+        button.disabled = Number(button.dataset.unacknowledgedCount || 0) === 0;
     }
 }
 

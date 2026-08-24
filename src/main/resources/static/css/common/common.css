@@ -163,7 +163,8 @@ body {
     cursor: pointer;
 }
 
-.nav-settings-choices .themeChoice.active {
+.nav-settings-choices .themeChoice.active,
+.nav-settings-choices .audioCallPreferenceChoice.active {
     border-color: #007bff;
     background: #007bff;
     color: #fff;

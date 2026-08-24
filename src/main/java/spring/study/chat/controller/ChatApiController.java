@@ -11,6 +11,7 @@ import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.ChatMessageDeleteScope;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.dto.MobileChatRoomResponse;
+import spring.study.chat.dto.AudioCallPreferenceRequest;
 import spring.study.chat.facade.ChatFacade;
 import spring.study.chat.facade.ChatSendFacade;
 import spring.study.chat.facade.ChatViewFacade;
@@ -85,6 +86,42 @@ public class ChatApiController {
         if (member == null) return commonFacade.unauthorized();
 
         return ResponseEntity.ok(Map.of("iceServers", iceServerService.createIceServers(member)));
+    }
+
+    @GetMapping("/audio/preference")
+    public ResponseEntity<?> getAudioCallPreference(HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return ResponseEntity.ok(Map.of(
+                "result", 1L,
+                "enabled", member.isAudioCallEnabled()
+        ));
+    }
+
+    @PatchMapping("/audio/preference")
+    public ResponseEntity<?> updateAudioCallPreference(
+            @RequestBody AudioCallPreferenceRequest preference,
+            HttpServletRequest request
+    ) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+        if (preference == null || preference.enabled() == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "result", -1L,
+                    "message", "통화 알림 설정을 선택해 주세요"
+            ));
+        }
+
+        boolean enabled = audioCallSignalingService.updateIncomingCallPreference(
+                member.getEmail(), preference.enabled());
+        return ResponseEntity.ok(Map.of(
+                "result", 1L,
+                "enabled", enabled,
+                "message", enabled
+                        ? "통화 알림을 허용했습니다"
+                        : "통화 알림을 미허용으로 설정했습니다"
+        ));
     }
 
     @GetMapping("/audio/incoming")

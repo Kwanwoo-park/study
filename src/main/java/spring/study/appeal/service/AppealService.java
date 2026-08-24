@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.appeal.dto.AppealRequestDto;
@@ -33,7 +32,7 @@ public class AppealService {
     private final AppealRepository appealRepository;
     private final MemberRepository memberRepository;
     private final MemberSanctionRepository memberSanctionRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final AppealVerificationService appealVerificationService;
     private final NotificationService notificationService;
 
     @Transactional
@@ -85,17 +84,11 @@ public class AppealService {
         if (authenticatedMember != null) {
             return authenticatedMember;
         }
-        if (requestDto.getEmail() == null || requestDto.getEmail().isBlank()
-                || requestDto.getPassword() == null || requestDto.getPassword().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비로그인 상소는 이메일과 비밀번호 확인이 필요합니다");
+        if (requestDto.getEmail() == null || requestDto.getEmail().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비로그인 상소는 이메일 인증이 필요합니다");
         }
-
-        Member member = memberRepository.findByEmail(requestDto.getEmail().trim())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "계정 정보를 확인해주세요"));
-        if (!passwordEncoder.matches(requestDto.getPassword(), member.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "계정 정보를 확인해주세요");
-        }
-        return member;
+        return appealVerificationService.consumeVerification(
+                requestDto.getEmail(), requestDto.getVerificationToken());
     }
 
     private MemberSanction resolveSanction(Long sanctionId, Member member) {

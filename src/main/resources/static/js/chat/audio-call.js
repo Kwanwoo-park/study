@@ -6,7 +6,8 @@
     const rejectButton = document.getElementById('audio-call-reject');
     const muteButton = document.getElementById('audio-call-mute');
     const hangupButton = document.getElementById('audio-call-hangup');
-    const remoteAudio = document.getElementById('audio-call-remote');
+    const remoteAudioContainer = document.getElementById('audio-call-remotes');
+    const participantList = document.getElementById('audio-call-participants');
     const connectionText = document.getElementById('audio-call-connection');
     const muteStatus = document.getElementById('audio-call-mute-status');
     const durationText = document.getElementById('audio-call-duration');
@@ -19,14 +20,11 @@
     let rtcConfig = null;
     let stompClient = null;
     let subscription = null;
-    let peerConnection = null;
     let localStream = null;
     let activeCallId = null;
     let incomingCaller = '';
-    let pendingCandidates = [];
     let callTimeout = null;
     let callNoticeTimeout = null;
-    let connectionFailureTimeout = null;
     let keepAliveInterval = null;
     let incomingCallTimeout = null;
     let durationInterval = null;
@@ -34,8 +32,11 @@
     let ringtoneContext = null;
     let ringtoneInterval = null;
     let wakeLock = null;
-    let isCaller = false;
+    let joinedCall = false;
+    let isInitiator = false;
     let autoAcceptCallId = new URLSearchParams(window.location.search).get('acceptAudioCall');
+    const peerConnections = new Map();
+    const participantStates = new Map();
     const tabId = createCallId();
     const callChannel = typeof BroadcastChannel !== 'undefined'
         ? new BroadcastChannel('kwanwoo-audio-call')
@@ -55,7 +56,7 @@
         stompClient = null;
         subscription = null;
         if (activeCallId) {
-            endCallWithMessage('채팅 서버 연결이 끊어져 통화가 종료되었습니다.');
+            endCallWithMessage('채팅 서버 연결이 끊어져 그룹 통화가 종료되었습니다.');
         }
     }
 
@@ -77,8 +78,11 @@
         try {
             await ensureLocalAudio();
             activeCallId = createCallId();
-            isCaller = true;
-            showPanel('상대방의 응답을 기다리는 중입니다.');
+            isInitiator = true;
+            joinedCall = true;
+            participantStates.set(email, {name: '나', state: 'connected'});
+            renderParticipants();
+            showPanel('그룹 음성 통화 응답을 기다리는 중입니다.');
             setConnectionStatus('응답 대기 중', 'connecting');
             setCallControls(false);
             hangupButton.classList.remove('is-hidden');
@@ -87,10 +91,10 @@
                 return;
             }
             callTimeout = window.setTimeout(() => {
-                if (!peerConnection && activeCallId) {
+                if (peerConnections.size === 0 && activeCallId) {
                     sendSignal('HANGUP');
-                    showError('상대방이 응답하지 않았습니다.');
-                    window.setTimeout(cleanupCall, 1500);
+                    showError('통화에 응답한 참여자가 없습니다.');
+                    window.setTimeout(cleanupCall, 1800);
                 }
             }, 30000);
         } catch (error) {
@@ -105,10 +109,13 @@
             acceptButton.classList.add('is-hidden');
             rejectButton.classList.add('is-hidden');
             hangupButton.classList.remove('is-hidden');
-            statusText.innerText = '연결 중입니다.';
+            statusText.innerText = '그룹 통화에 연결하는 중입니다.';
             stopRingtone();
             clearIncomingCallTimeout();
             setConnectionStatus('연결 중', 'connecting');
+            joinedCall = true;
+            participantStates.set(email, {name: '나', state: 'connected'});
+            renderParticipants();
             sendSignal('ACCEPT');
         } catch (error) {
             sendSignal('REJECT');
@@ -127,6 +134,13 @@
         const signal = JSON.parse(frame.body);
         if (signal.roomId !== roomId) return;
         if (signal.error) {
+            if (signal.targetEmail) {
+                if (peerConnections.has(signal.targetEmail)) {
+                    removePeer(signal.targetEmail, 'failed');
+                }
+                statusText.innerText = signal.error;
+                return;
+            }
             showError(signal.error);
             window.setTimeout(cleanupCall, 1800);
             return;
@@ -141,34 +155,56 @@
         switch (signal.type) {
             case 'ACCEPT':
                 clearCallTimeout();
-                statusText.innerText = '연결 중입니다.';
+                statusText.innerText = `${signal.senderName || signal.senderEmail}님을 연결하는 중입니다.`;
                 setConnectionStatus('연결 중', 'connecting');
-                await createAndSendOffer();
+                participantStates.set(signal.senderEmail, {
+                    name: signal.senderName || signal.senderEmail,
+                    state: 'connecting'
+                });
+                renderParticipants();
+                await createAndSendOffer(signal.senderEmail, signal.senderName);
                 break;
             case 'ACCEPTED':
+                joinedCall = true;
                 notifyCallAcceptedInThisTab();
+                startKeepAlive();
+                startDurationTimer();
+                requestWakeLock();
                 break;
             case 'REJECT':
-                showError('상대방이 통화를 거절했습니다.');
-                window.setTimeout(cleanupCall, 1500);
+                showError('통화에 참여할 수 있는 상대가 없습니다.');
+                window.setTimeout(cleanupCall, 1800);
+                break;
+            case 'PARTICIPANT_REJECTED':
+                participantStates.set(signal.senderEmail, {
+                    name: signal.senderName || signal.senderEmail,
+                    state: 'rejected'
+                });
+                renderParticipants();
+                statusText.innerText = `${signal.senderName || signal.senderEmail}님이 통화에 참여하지 않았습니다.`;
                 break;
             case 'OFFER':
-                await receiveOffer(signal.sdp);
+                await receiveOffer(signal.senderEmail, signal.senderName, signal.sdp);
                 break;
             case 'ANSWER':
-                await receiveAnswer(signal.sdp);
+                await receiveAnswer(signal.senderEmail, signal.sdp);
                 break;
             case 'ICE_CANDIDATE':
-                await receiveCandidate(signal);
+                await receiveCandidate(signal.senderEmail, signal.senderName, signal);
+                break;
+            case 'PARTICIPANT_LEFT':
+                removePeer(signal.senderEmail, 'left');
+                statusText.innerText = `${signal.senderName || signal.senderEmail}님이 그룹 통화에서 나갔습니다.`;
+                updateGroupCallStatus();
                 break;
             case 'HANGUP':
-                endCallWithMessage('상대방이 통화를 종료했습니다.');
+                endCallWithMessage('통화를 유지할 참여자가 없어 그룹 통화가 종료되었습니다.');
                 break;
             case 'DISCONNECTED':
-                endCallWithMessage('상대방의 연결이 끊어져 통화가 종료되었습니다.');
+                endCallWithMessage('참여자의 연결 종료로 그룹 통화가 종료되었습니다.');
                 break;
             case 'ADMIN_TERMINATED':
-                endCallWithMessage('관리자에 의해 통화가 종료되었습니다.');
+                endCallWithMessage('관리자에 의해 그룹 통화가 종료되었습니다.');
                 break;
         }
     }
@@ -202,9 +238,12 @@
     function displayIncomingCall(signal) {
         if (activeCallId || !signal || !signal.callId) return;
         activeCallId = signal.callId;
-        isCaller = false;
+        isInitiator = false;
+        joinedCall = false;
         incomingCaller = signal.senderName || signal.senderEmail || '상대방';
-        showPanel(`${incomingCaller}님의 음성 통화입니다.`);
+        participantStates.set(signal.senderEmail, {name: incomingCaller, state: 'waiting'});
+        renderParticipants();
+        showPanel(`${incomingCaller}님의 그룹 음성 통화입니다.`);
         setConnectionStatus('수신 중', 'connecting');
         acceptButton.classList.remove('is-hidden');
         rejectButton.classList.remove('is-hidden');
@@ -234,89 +273,117 @@
         return rtcConfig;
     }
 
-    function createPeerConnection() {
-        if (peerConnection) return peerConnection;
-        peerConnection = new RTCPeerConnection(rtcConfig);
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-        peerConnection.ontrack = event => {
-            remoteAudio.srcObject = event.streams[0];
-            remoteAudio.play().catch(() => {});
+    function createPeerConnection(peerEmail, peerName, offerer) {
+        const existing = peerConnections.get(peerEmail);
+        if (existing) {
+            if (peerName) existing.name = peerName;
+            if (offerer) existing.offerer = true;
+            return existing;
+        }
+
+        const connection = new RTCPeerConnection(rtcConfig);
+        const metadata = {
+            connection: connection,
+            name: peerName || peerEmail,
+            offerer: Boolean(offerer),
+            pendingCandidates: [],
+            failureTimeout: null
         };
-        peerConnection.onicecandidate = event => {
+        peerConnections.set(peerEmail, metadata);
+        participantStates.set(peerEmail, {name: metadata.name, state: 'connecting'});
+        renderParticipants();
+
+        localStream.getTracks().forEach(track => connection.addTrack(track, localStream));
+        connection.ontrack = event => {
+            const audio = getOrCreateRemoteAudio(peerEmail);
+            audio.srcObject = event.streams[0];
+            applyOutputDevice(audio).catch(() => {});
+            audio.play().catch(() => {});
+        };
+        connection.onicecandidate = event => {
             if (!event.candidate) return;
             sendSignal('ICE_CANDIDATE', {
+                targetEmail: peerEmail,
                 candidate: event.candidate.candidate,
                 sdpMid: event.candidate.sdpMid,
                 sdpMLineIndex: event.candidate.sdpMLineIndex
             });
         };
-        peerConnection.onconnectionstatechange = () => {
-            if (!peerConnection) return;
-            if (peerConnection.connectionState === 'connected') {
-                clearConnectionFailureTimeout();
-                statusText.innerText = `${incomingCaller || '상대방'}님과 통화 중`;
-                setConnectionStatus('연결됨', 'connected');
+        connection.onconnectionstatechange = () => {
+            if (!peerConnections.has(peerEmail)) return;
+            if (connection.connectionState === 'connected') {
+                clearPeerConnectionFailureTimeout(peerEmail);
+                participantStates.set(peerEmail, {name: metadata.name, state: 'connected'});
+                renderParticipants();
+                updateGroupCallStatus();
                 setCallControls(true);
                 startKeepAlive();
                 startDurationTimer();
                 requestWakeLock();
-            } else if (['failed', 'disconnected'].includes(peerConnection.connectionState)) {
-                beginConnectionRecovery();
+            } else if (['failed', 'disconnected'].includes(connection.connectionState)) {
+                beginConnectionRecovery(peerEmail);
             }
         };
-        return peerConnection;
+        return metadata;
     }
 
-    async function createAndSendOffer() {
-        const connection = createPeerConnection();
-        const offer = await connection.createOffer();
-        await connection.setLocalDescription(offer);
-        sendSignal('OFFER', {sdp: offer.sdp});
+    function getOrCreateRemoteAudio(peerEmail) {
+        let audio = Array.from(remoteAudioContainer.querySelectorAll('audio'))
+            .find(item => item.dataset.peerEmail === peerEmail);
+        if (audio) return audio;
+        audio = document.createElement('audio');
+        audio.autoplay = true;
+        audio.dataset.peerEmail = peerEmail;
+        remoteAudioContainer.appendChild(audio);
+        return audio;
     }
 
-    async function createAndSendRestartOffer() {
-        if (!peerConnection || !isCaller) return;
-        const offer = await peerConnection.createOffer({iceRestart: true});
-        await peerConnection.setLocalDescription(offer);
-        sendSignal('OFFER', {sdp: offer.sdp});
+    async function createAndSendOffer(peerEmail, peerName, iceRestart) {
+        const metadata = createPeerConnection(peerEmail, peerName, true);
+        const offer = await metadata.connection.createOffer(iceRestart ? {iceRestart: true} : undefined);
+        await metadata.connection.setLocalDescription(offer);
+        sendSignal('OFFER', {targetEmail: peerEmail, sdp: offer.sdp});
     }
 
-    async function receiveOffer(sdp) {
-        const connection = createPeerConnection();
-        await connection.setRemoteDescription({type: 'offer', sdp: sdp});
-        await flushPendingCandidates();
-        const answer = await connection.createAnswer();
-        await connection.setLocalDescription(answer);
-        sendSignal('ANSWER', {sdp: answer.sdp});
+    async function receiveOffer(peerEmail, peerName, sdp) {
+        const metadata = createPeerConnection(peerEmail, peerName, false);
+        await metadata.connection.setRemoteDescription({type: 'offer', sdp: sdp});
+        await flushPendingCandidates(metadata);
+        const answer = await metadata.connection.createAnswer();
+        await metadata.connection.setLocalDescription(answer);
+        sendSignal('ANSWER', {targetEmail: peerEmail, sdp: answer.sdp});
     }
 
-    async function receiveAnswer(sdp) {
-        const connection = createPeerConnection();
-        await connection.setRemoteDescription({type: 'answer', sdp: sdp});
-        await flushPendingCandidates();
+    async function receiveAnswer(peerEmail, sdp) {
+        const metadata = peerConnections.get(peerEmail);
+        if (!metadata) throw new Error('연결할 통화 참여자를 찾을 수 없습니다.');
+        await metadata.connection.setRemoteDescription({type: 'answer', sdp: sdp});
+        await flushPendingCandidates(metadata);
     }
 
-    async function receiveCandidate(signal) {
+    async function receiveCandidate(peerEmail, peerName, signal) {
         const candidate = {
             candidate: signal.candidate,
             sdpMid: signal.sdpMid,
             sdpMLineIndex: signal.sdpMLineIndex
         };
-        if (!peerConnection || !peerConnection.remoteDescription) {
-            pendingCandidates.push(candidate);
+        const metadata = peerConnections.get(peerEmail);
+        if (!metadata || !metadata.connection.remoteDescription) {
+            const pending = metadata || createPeerConnection(peerEmail, peerName, false);
+            pending.pendingCandidates.push(candidate);
             return;
         }
-        await peerConnection.addIceCandidate(candidate);
+        await metadata.connection.addIceCandidate(candidate);
     }
 
-    async function flushPendingCandidates() {
-        while (pendingCandidates.length > 0) {
-            await peerConnection.addIceCandidate(pendingCandidates.shift());
+    async function flushPendingCandidates(metadata) {
+        while (metadata.pendingCandidates.length > 0) {
+            await metadata.connection.addIceCandidate(metadata.pendingCandidates.shift());
         }
     }
 
     function hangup() {
-        if (activeCallId) sendSignal('HANGUP');
+        if (activeCallId) sendSignal(joinedCall ? 'HANGUP' : 'REJECT');
         cleanupCall();
     }
 
@@ -332,22 +399,26 @@
     function cleanupCall() {
         clearCallTimeout();
         clearIncomingCallTimeout();
-        clearConnectionFailureTimeout();
         stopKeepAlive();
         stopDurationTimer();
         stopRingtone();
         releaseWakeLock();
         if (callNoticeTimeout) window.clearTimeout(callNoticeTimeout);
         callNoticeTimeout = null;
-        if (peerConnection) peerConnection.close();
+        peerConnections.forEach(metadata => {
+            if (metadata.failureTimeout) window.clearTimeout(metadata.failureTimeout);
+            metadata.connection.close();
+        });
+        peerConnections.clear();
         if (localStream) localStream.getTracks().forEach(track => track.stop());
-        remoteAudio.srcObject = null;
-        peerConnection = null;
+        remoteAudioContainer.replaceChildren();
         localStream = null;
         activeCallId = null;
         incomingCaller = '';
-        isCaller = false;
-        pendingCandidates = [];
+        joinedCall = false;
+        isInitiator = false;
+        participantStates.clear();
+        renderParticipants();
         muteButton.innerText = '음소거';
         muteStatus.classList.add('is-hidden');
         durationText.classList.add('is-hidden');
@@ -355,14 +426,30 @@
         deviceControls.classList.add('is-hidden');
         setConnectionStatus('대기 중', 'idle');
         panel.classList.add('is-hidden');
-        [acceptButton, rejectButton, muteButton, hangupButton].forEach(button => button.classList.add('is-hidden'));
+        [acceptButton, rejectButton, muteButton, hangupButton]
+            .forEach(button => button.classList.add('is-hidden'));
         if (startButton) startButton.disabled = false;
+    }
+
+    function removePeer(peerEmail, state) {
+        const metadata = peerConnections.get(peerEmail);
+        if (metadata) {
+            if (metadata.failureTimeout) window.clearTimeout(metadata.failureTimeout);
+            metadata.connection.close();
+            peerConnections.delete(peerEmail);
+        }
+        Array.from(remoteAudioContainer.querySelectorAll('audio'))
+            .filter(audio => audio.dataset.peerEmail === peerEmail)
+            .forEach(audio => audio.remove());
+        const current = participantStates.get(peerEmail);
+        if (current) participantStates.set(peerEmail, {name: current.name, state: state || 'left'});
+        renderParticipants();
     }
 
     function endCallWithMessage(message) {
         cleanupCall();
         showError(message);
-        callNoticeTimeout = window.setTimeout(cleanupCall, 1500);
+        callNoticeTimeout = window.setTimeout(cleanupCall, 1800);
     }
 
     function showPanel(message) {
@@ -390,34 +477,36 @@
         callTimeout = null;
     }
 
-    function beginConnectionRecovery() {
-        if (connectionFailureTimeout || !activeCallId) return;
-        statusText.innerText = '음성 연결을 복구하는 중입니다.';
-        setConnectionStatus('재연결 중', 'recovering');
-        setCallControls(false);
+    function beginConnectionRecovery(peerEmail) {
+        const metadata = peerConnections.get(peerEmail);
+        if (!metadata || metadata.failureTimeout || !activeCallId) return;
+        participantStates.set(peerEmail, {name: metadata.name, state: 'recovering'});
+        renderParticipants();
+        setConnectionStatus('일부 연결 복구 중', 'recovering');
 
-        if (isCaller) {
-            createAndSendRestartOffer().catch(handleRtcError);
+        if (metadata.offerer) {
+            createAndSendOffer(peerEmail, metadata.name, true).catch(() => {});
         }
 
-        connectionFailureTimeout = window.setTimeout(() => {
-            if (!peerConnection || peerConnection.connectionState === 'connected') return;
-            sendSignal('HANGUP');
-            endCallWithMessage('음성 연결을 복구하지 못해 통화가 종료되었습니다.');
+        metadata.failureTimeout = window.setTimeout(() => {
+            const current = peerConnections.get(peerEmail);
+            if (!current || current.connection.connectionState === 'connected') return;
+            removePeer(peerEmail, 'failed');
+            updateGroupCallStatus();
         }, 10000);
     }
 
-    function clearConnectionFailureTimeout() {
-        if (connectionFailureTimeout) window.clearTimeout(connectionFailureTimeout);
-        connectionFailureTimeout = null;
+    function clearPeerConnectionFailureTimeout(peerEmail) {
+        const metadata = peerConnections.get(peerEmail);
+        if (!metadata || !metadata.failureTimeout) return;
+        window.clearTimeout(metadata.failureTimeout);
+        metadata.failureTimeout = null;
     }
 
     function startKeepAlive() {
         if (keepAliveInterval) return;
         keepAliveInterval = window.setInterval(() => {
-            if (activeCallId && peerConnection && peerConnection.connectionState === 'connected') {
-                sendSignal('KEEP_ALIVE');
-            }
+            if (activeCallId && joinedCall) sendSignal('KEEP_ALIVE');
         }, 30000);
     }
 
@@ -426,9 +515,10 @@
         keepAliveInterval = null;
     }
 
-    function handleRtcError() {
-        if (activeCallId) sendSignal('HANGUP');
-        endCallWithMessage('음성 연결을 처리하는 중 오류가 발생해 통화가 종료되었습니다.');
+    function handleRtcError(error) {
+        console.error('그룹 음성 통화 처리 오류:', error);
+        if (activeCallId) sendSignal(joinedCall ? 'HANGUP' : 'REJECT');
+        endCallWithMessage('음성 연결을 처리하는 중 오류가 발생해 그룹 통화가 종료되었습니다.');
     }
 
     function notifyCallAcceptedInThisTab() {
@@ -439,9 +529,10 @@
     function startIncomingCallTimeout() {
         clearIncomingCallTimeout();
         incomingCallTimeout = window.setTimeout(() => {
-            if (!activeCallId || peerConnection) return;
+            if (!activeCallId || joinedCall) return;
+            sendSignal('REJECT');
             stopRingtone();
-            showError(`${incomingCaller || '상대방'}님의 부재중 통화가 있습니다.`);
+            showError(`${incomingCaller || '상대방'}님의 부재중 그룹 통화가 있습니다.`);
             callNoticeTimeout = window.setTimeout(cleanupCall, 3000);
         }, 30000);
     }
@@ -519,11 +610,38 @@
         connectionText.dataset.state = state;
     }
 
+    function updateGroupCallStatus() {
+        const connectedPeers = Array.from(peerConnections.values())
+            .filter(metadata => metadata.connection.connectionState === 'connected').length;
+        if (connectedPeers > 0) {
+            statusText.innerText = `${connectedPeers + 1}명이 그룹 통화 중`;
+            setConnectionStatus('연결됨', 'connected');
+            return;
+        }
+        statusText.innerText = '다른 참여자의 연결을 기다리는 중입니다.';
+        setConnectionStatus('연결 대기 중', 'connecting');
+    }
+
+    function renderParticipants() {
+        if (!participantList) return;
+        participantList.replaceChildren();
+        participantStates.forEach((participant, participantEmail) => {
+            const item = document.createElement('span');
+            item.className = 'audio-call-participant';
+            item.dataset.state = participant.state;
+            item.textContent = participantEmail === email ? '나' : participant.name;
+            participantList.appendChild(item);
+        });
+        participantList.classList.toggle('is-hidden', participantStates.size === 0);
+    }
+
     async function populateAudioDevices() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
         const devices = await navigator.mediaDevices.enumerateDevices();
         fillDeviceSelect(inputSelect, devices.filter(device => device.kind === 'audioinput'), '마이크');
-        if (typeof remoteAudio.setSinkId === 'function') {
+        const supportsSink = typeof HTMLMediaElement !== 'undefined'
+            && typeof HTMLMediaElement.prototype.setSinkId === 'function';
+        if (supportsSink) {
             fillDeviceSelect(outputSelect, devices.filter(device => device.kind === 'audiooutput'), '스피커');
         } else {
             outputSelect.disabled = true;
@@ -553,17 +671,23 @@
         const newTrack = stream.getAudioTracks()[0];
         const oldTrack = localStream ? localStream.getAudioTracks()[0] : null;
         if (oldTrack) newTrack.enabled = oldTrack.enabled;
-        if (peerConnection) {
-            const sender = peerConnection.getSenders().find(item => item.track && item.track.kind === 'audio');
+        for (const metadata of peerConnections.values()) {
+            const sender = metadata.connection.getSenders()
+                .find(item => item.track && item.track.kind === 'audio');
             if (sender) await sender.replaceTrack(newTrack);
         }
         if (localStream) localStream.getTracks().forEach(track => track.stop());
         localStream = new MediaStream([newTrack]);
     }
 
+    async function applyOutputDevice(audio) {
+        if (typeof audio.setSinkId !== 'function' || !outputSelect.value) return;
+        await audio.setSinkId(outputSelect.value);
+    }
+
     async function changeOutputDevice() {
-        if (typeof remoteAudio.setSinkId !== 'function') return;
-        await remoteAudio.setSinkId(outputSelect.value);
+        const audios = remoteAudioContainer.querySelectorAll('audio');
+        await Promise.all(Array.from(audios).map(applyOutputDevice));
     }
 
     async function requestWakeLock() {
@@ -613,18 +737,21 @@
     }
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'visible' || !activeCallId) return;
-        remoteAudio.play().catch(() => {});
-        if (peerConnection && ['failed', 'disconnected'].includes(peerConnection.connectionState)) {
-            beginConnectionRecovery();
-        }
-        if (peerConnection && peerConnection.connectionState === 'connected') requestWakeLock();
+        remoteAudioContainer.querySelectorAll('audio').forEach(audio => audio.play().catch(() => {}));
+        peerConnections.forEach((metadata, peerEmail) => {
+            if (['failed', 'disconnected'].includes(metadata.connection.connectionState)) {
+                beginConnectionRecovery(peerEmail);
+            }
+        });
+        if (Array.from(peerConnections.values())
+                .some(metadata => metadata.connection.connectionState === 'connected')) requestWakeLock();
     });
     window.addEventListener('pagehide', event => {
         if (event.persisted) {
             releaseWakeLock();
             return;
         }
-        if (activeCallId) sendSignal('HANGUP');
+        if (activeCallId) sendSignal(joinedCall ? 'HANGUP' : 'REJECT');
         cleanupCall();
         if (callChannel) callChannel.close();
     });

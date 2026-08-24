@@ -131,6 +131,8 @@
 .admin-incident-summary {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 10px;
 }
 
@@ -1027,6 +1029,10 @@ body.dark-mode .admin-report-state-rejected {
     .admin-incident-header {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .admin-incident-summary {
+        justify-content: flex-start;
     }
 
     .admin-incident-card {

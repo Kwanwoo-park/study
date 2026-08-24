@@ -9,11 +9,14 @@ let activeIncomingAudioCall = null;
 let incomingAudioCallTimeout = null;
 let incomingAudioRingtoneContext = null;
 let incomingAudioRingtoneInterval = null;
+let audioCallNotificationPreference = null;
+let audioCallNotificationPreferenceRequest = null;
 const incomingAudioSystemNotifications = new Map();
 
 document.addEventListener('DOMContentLoaded', function() {
     fnInitThemeSelector();
     fnInitNavigationSettings();
+    fnLoadAudioCallNotificationPreference().catch(() => {});
     fnUpdateUnreadNotificationDot();
 
     const eventSource = new EventSource('/api/notification/stream');
@@ -106,6 +109,12 @@ async function fnHandleAudioCallRealtime(notification) {
         return;
     }
 
+    if (!await fnLoadAudioCallNotificationPreference()) {
+        fnCloseIncomingAudioCall(details.callId);
+        fnMarkNotificationAsRead(notification.id);
+        return;
+    }
+
     const activeSignal = await fnFetchIncomingAudioCall(details.roomId);
     if (!activeSignal || activeSignal.callId !== details.callId) {
         fnCloseIncomingAudioCall(details.callId);
@@ -123,6 +132,8 @@ async function fnHandleAudioCallRealtime(notification) {
 }
 
 async function fnRestoreIncomingAudioCall() {
+    if (!await fnLoadAudioCallNotificationPreference()) return;
+
     const signal = await fnFetchIncomingAudioCall(null);
     if (!signal || !signal.callId || !signal.roomId) return;
 
@@ -162,8 +173,7 @@ function fnShowIncomingAudioCall(call) {
     if (incomingAudioCallTimeout) window.clearTimeout(incomingAudioCallTimeout);
     incomingAudioCallTimeout = window.setTimeout(() => {
         if (!activeIncomingAudioCall || activeIncomingAudioCall.callId !== call.callId) return;
-        fnMarkNotificationAsRead(activeIncomingAudioCall.notificationId);
-        fnCloseIncomingAudioCall(call.callId);
+        fnRejectIncomingAudioCall();
     }, 32000);
 }
 
@@ -203,7 +213,7 @@ function fnEnsureIncomingAudioCallOverlay() {
                 </svg>
             </div>
             <h2 id="incoming-audio-call-name">상대방</h2>
-            <p>음성 통화가 왔습니다</p>
+            <p>그룹 음성 통화가 왔습니다</p>
             <div class="incoming-audio-call-actions">
                 <button type="button" id="incoming-audio-call-reject" class="incoming-call-action reject" aria-label="통화 거절">
                     <span class="incoming-call-action-icon">✕</span><span>거절</span>
@@ -260,8 +270,8 @@ function fnParseAudioCallUrl(value) {
 
 function fnShowIncomingAudioSystemNotification(call) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    const notification = new Notification('수신 음성 통화', {
-        body: `${call.callerName}님에게서 음성 통화가 왔습니다.`,
+    const notification = new Notification('수신 그룹 음성 통화', {
+        body: `${call.callerName}님에게서 그룹 음성 통화가 왔습니다.`,
         tag: `audio-call-${call.callId}`,
         renotify: true,
         requireInteraction: true
@@ -326,16 +336,92 @@ function fnEnsureNotificationBanner() {
     return banner;
 }
 
-function fnRequestAudioCallNotificationPermission() {
+async function fnLoadAudioCallNotificationPreference(forceRefresh = false) {
+    if (!forceRefresh && audioCallNotificationPreference !== null) {
+        fnRenderAudioCallNotificationPreference(audioCallNotificationPreference);
+        return audioCallNotificationPreference;
+    }
+    if (!forceRefresh && audioCallNotificationPreferenceRequest) {
+        return audioCallNotificationPreferenceRequest;
+    }
+
+    audioCallNotificationPreferenceRequest = fetch('/api/chat/audio/preference', {
+        method: 'GET',
+        credentials: 'include',
+    }).then(async response => {
+        const data = await response.json();
+        if (!response.ok || data.result < 0) throw new Error(data.message || '통화 알림 설정 조회 실패');
+        audioCallNotificationPreference = data.enabled !== false;
+        fnRenderAudioCallNotificationPreference(audioCallNotificationPreference);
+        return audioCallNotificationPreference;
+    }).catch(error => {
+        console.error('통화 알림 설정 조회 오류:', error);
+        return true;
+    }).finally(() => {
+        audioCallNotificationPreferenceRequest = null;
+    });
+
+    return audioCallNotificationPreferenceRequest;
+}
+
+async function fnSetAudioCallNotificationPreference(enabled) {
+    const choices = document.querySelectorAll('.audioCallPreferenceChoice[data-enabled]');
+    choices.forEach(choice => choice.disabled = true);
+
+    try {
+        const response = await fetch('/api/chat/audio/preference', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+            },
+            credentials: 'include',
+            body: JSON.stringify({enabled: Boolean(enabled)}),
+        });
+        const data = await response.json();
+        if (!response.ok || data.result < 0) {
+            throw new Error(data.message || '통화 알림 설정 변경 실패');
+        }
+
+        audioCallNotificationPreference = data.enabled !== false;
+        fnRenderAudioCallNotificationPreference(audioCallNotificationPreference);
+
+        if (!audioCallNotificationPreference) {
+            fnCloseIncomingAudioCall();
+            incomingAudioSystemNotifications.forEach(notification => notification.close());
+            incomingAudioSystemNotifications.clear();
+            alert('통화 알림을 미허용으로 설정했습니다. 이제 통화 요청이 오지 않습니다.');
+            return;
+        }
+
+        await fnRequestAudioCallNotificationPermission();
+    } catch (error) {
+        console.error('통화 알림 설정 변경 오류:', error);
+        alert(error.message || '통화 알림 설정을 변경하지 못했습니다.');
+    } finally {
+        choices.forEach(choice => choice.disabled = false);
+    }
+}
+
+function fnRenderAudioCallNotificationPreference(enabled) {
+    document.querySelectorAll('.audioCallPreferenceChoice[data-enabled]').forEach(choice => {
+        const selected = choice.dataset.enabled === String(Boolean(enabled));
+        choice.classList.toggle('active', selected);
+        choice.setAttribute('aria-pressed', String(selected));
+    });
+}
+
+async function fnRequestAudioCallNotificationPermission() {
     if (!('Notification' in window)) {
-        alert('이 브라우저는 시스템 알림을 지원하지 않습니다.');
+        alert('통화 알림을 허용했습니다. 이 브라우저에서는 사이트를 열어둔 경우에만 알림을 받을 수 있습니다.');
         return;
     }
-    Notification.requestPermission().then(permission => {
-        alert(permission === 'granted'
-            ? '음성 통화 알림이 허용되었습니다.'
-            : '브라우저 설정에서 알림 권한을 허용해주세요.');
-    });
+
+    const permission = Notification.permission === 'granted'
+        ? 'granted'
+        : await Notification.requestPermission();
+    alert(permission === 'granted'
+        ? '통화 알림을 허용했습니다.'
+        : '통화 알림을 허용했습니다. 화면 밖 시스템 알림은 브라우저 설정에서도 허용해주세요.');
 }
 
 function fnInitNavigationSettings() {

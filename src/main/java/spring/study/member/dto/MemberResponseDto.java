@@ -27,6 +27,7 @@ public class MemberResponseDto implements Serializable {
     private String phone;
     private String birth;
     private CommonVisibility visibility;
+    private boolean audioCallEnabled;
 
     public MemberResponseDto(Member entity) {
         this.id = entity.getId();
@@ -40,5 +41,6 @@ public class MemberResponseDto implements Serializable {
         this.phone = entity.getPhone();
         this.birth = entity.getBirth();
         this.visibility = entity.getVisibility();
+        this.audioCallEnabled = entity.isAudioCallEnabled();
     }
 }

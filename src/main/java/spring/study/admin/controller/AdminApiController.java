@@ -328,6 +328,19 @@ public class AdminApiController {
         return adminFacade.acknowledgeIncident(id);
     }
 
+    @PatchMapping("/system/incidents/acknowledge-all")
+    public ResponseEntity<?> acknowledgeAllSystemIncidents(HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            jwtManager.logout(request);
+            return commonFacade.wrongAccess();
+        }
+
+        return adminFacade.acknowledgeAllIncidents();
+    }
+
     @DeleteMapping("/chat/audio-call/{callId}")
     public ResponseEntity<?> forceTerminateAudioCall(@PathVariable String callId, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);

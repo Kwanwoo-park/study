@@ -12,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
+import spring.study.common.service.OnlineUserService;
 import spring.study.member.entity.Member;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtCookieService cookieService;
     private final RefreshTokenService refreshTokenService;
     private final MemberTokenCacheService memberTokenCacheService;
+    private final OnlineUserService onlineUserService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -30,7 +32,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             Member member = authenticateAccessToken(request);
             if (member == null) member = refreshAuthentication(request, response);
-            if (member != null) setAuthentication(member);
+            if (member != null) {
+                setAuthentication(member);
+                if (readBearerToken(request) != null) {
+                    onlineUserService.markMobileActive(member.getId());
+                }
+            }
         }
         filterChain.doFilter(request, response);
     }

@@ -16,6 +16,7 @@ import spring.study.jwt.dto.MobileAuthResponse;
 import spring.study.jwt.dto.MobileMemberResponse;
 import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.common.service.JwtManager;
+import spring.study.common.service.OnlineUserService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
@@ -31,6 +32,7 @@ public class MobileAuthController {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtAuthenticationService authenticationService;
     private final JwtManager jwtManager;
+    private final OnlineUserService onlineUserService;
 
     @GetMapping("/me")
     public ResponseEntity<?> me(HttpServletRequest request) {
@@ -56,7 +58,9 @@ public class MobileAuthController {
             }
 
             member = memberService.updateLastLoginTime(member.getId());
-            return ResponseEntity.ok(new MobileAuthResponse(member, authenticationService.issue(member)));
+            JwtAuthenticationService.AuthenticationTokens tokens = authenticationService.issue(member);
+            onlineUserService.markMobileActive(member.getId());
+            return ResponseEntity.ok(new MobileAuthResponse(member, tokens));
         } catch (BadCredentialsException exception) {
             return error(HttpStatus.UNAUTHORIZED, "이메일이나 비밀번호를 확인해주세요");
         }
@@ -83,7 +87,8 @@ public class MobileAuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody MobileAuthRequest request) {
-        authenticationService.revoke(request.refreshToken());
+        authenticationService.revokeAndGetMemberId(request.refreshToken())
+                .ifPresent(onlineUserService::markMobileInactive);
         return ResponseEntity.ok(Map.of("result", 1));
     }
 

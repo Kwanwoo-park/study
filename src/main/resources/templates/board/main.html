@@ -14,7 +14,10 @@
     <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
     <div class="container">
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
-        <h1 class="simple-page-title">게시글</h1>
+        <header class="board-page-header">
+            <h1 class="simple-page-title">게시글</h1>
+            <a class="btn btn-outline-primary btn-sm" href="/book-reviews">독후감</a>
+        </header>
     </div>
     <th:block th:replace="~{fragments/comment-modal :: commentModal}"></th:block>
     <th:block th:replace="~{fragments/favorite-modal :: favoriteModal}"></th:block>
@@ -26,7 +29,7 @@
 	    <script src="/js/comment/modal.js?v=20260823"></script>
         <script src="/js/favorite/modal.js"></script>
 	    <script src="/js/board/main.js"></script>
-	    <script src="/js/common/common.js?v=20260823-2"></script>
+	    <script src="/js/common/common.js?v=20260824-1"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

@@ -8,6 +8,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 import spring.study.chat.domain.AudioCall;
+import spring.study.chat.domain.AudioCallMutation;
+import spring.study.chat.domain.AudioCallParticipant;
+import spring.study.chat.domain.AudioCallParticipantStatus;
 import spring.study.chat.domain.AudioCallState;
 import spring.study.chat.dto.AudioCallSignalRequest;
 import spring.study.chat.dto.AudioCallSignalResponse;
@@ -22,6 +25,7 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,14 +55,13 @@ public class AudioCallSignalingService {
                 return;
             }
 
-            AudioCall call = requireActiveCall(request, senderEmail);
+            AudioCall call = requireCall(request, senderEmail);
             switch (request.type()) {
                 case ACCEPT -> accept(call, senderEmail, sessionId, request);
-                case REJECT -> reject(call, senderEmail, sessionId, request);
-                case OFFER -> offer(call, senderEmail, sessionId, request);
-                case ANSWER -> answer(call, senderEmail, sessionId, request);
-                case ICE_CANDIDATE -> iceCandidate(call, senderEmail, sessionId, request);
-                case HANGUP -> hangup(call, senderEmail, sessionId, request);
+                case REJECT -> reject(call, senderEmail);
+                case OFFER, ANSWER, ICE_CANDIDATE -> forwardPeerSignal(
+                        call, senderEmail, sessionId, request);
+                case HANGUP -> hangup(call, senderEmail, sessionId);
                 case KEEP_ALIVE -> keepAlive(call, senderEmail, sessionId);
                 default -> throw new IllegalArgumentException("잘못된 통화 요청입니다.");
             }
@@ -75,16 +78,23 @@ public class AudioCallSignalingService {
 
         callStateStore.findByMember(disconnectedMemberEmail).ifPresent(call -> {
             if (!call.ownsSession(disconnectedMemberEmail, disconnectedSessionId)) return;
-            if (!callStateStore.remove(call)) return;
+            Optional<AudioCallMutation> result = callStateStore.leave(
+                    call, disconnectedMemberEmail, disconnectedSessionId, ACTIVE_TTL);
+            if (result.isEmpty()) return;
 
-            closeIncomingNotification(call);
-
-            forward(
-                    call.otherEmail(disconnectedMemberEmail),
-                    call.otherSessionId(disconnectedMemberEmail),
-                    AudioCallSignalResponse.disconnected(
+            AudioCall updated = result.get().call();
+            AudioCallSignalResponse response = result.get().callEnded()
+                    ? AudioCallSignalResponse.disconnected(
                             call.callId(), call.roomId(), disconnectedMemberEmail)
-            );
+                    : AudioCallSignalResponse.participantEvent(
+                            call.callId(), call.roomId(), AudioCallSignalType.PARTICIPANT_LEFT,
+                            disconnectedMemberEmail, call.nameOf(disconnectedMemberEmail));
+            if (result.get().callEnded()) {
+                closeIncomingNotifications(call);
+                forwardToAvailableParticipants(updated, disconnectedMemberEmail, response);
+            } else {
+                forwardToJoinedParticipants(updated, disconnectedMemberEmail, response);
+            }
         });
     }
 
@@ -99,161 +109,189 @@ public class AudioCallSignalingService {
             throw new IllegalArgumentException("이미 종료된 통화입니다.");
         }
 
-        closeIncomingNotification(call);
-
-        AudioCallSignalResponse signal = AudioCallSignalResponse.adminTerminated(
-                call.callId(), call.roomId());
-        forward(call.callerEmail(), call.callerSessionId(), signal);
-        forward(call.receiverEmail(), call.receiverSessionId(), signal);
+        closeIncomingNotifications(call);
+        forwardToAvailableParticipants(
+                call,
+                null,
+                AudioCallSignalResponse.adminTerminated(call.callId(), call.roomId())
+        );
     }
 
     public Optional<AudioCallSignalResponse> findIncomingCall(String receiverEmail, String roomId) {
+        if (!isIncomingCallEnabled(receiverEmail)) return Optional.empty();
+
         return callStateStore.findByMember(receiverEmail)
-                .filter(call -> call.isReceiver(receiverEmail))
                 .filter(call -> roomId == null || roomId.isBlank() || call.roomId().equals(roomId))
-                .filter(call -> call.state() == AudioCallState.RINGING)
-                .map(call -> {
-                    AudioCallSignalRequest request = new AudioCallSignalRequest(
-                            call.callId(), call.roomId(), AudioCallSignalType.CALL,
-                            null, null, null, null);
-                    return AudioCallSignalResponse.from(
-                            request, call.callerEmail(), call.callerName());
-                });
+                .filter(call -> call.participant(receiverEmail)
+                        .filter(participant -> participant.status() == AudioCallParticipantStatus.INVITED)
+                        .isPresent())
+                .map(call -> AudioCallSignalResponse.from(
+                        new AudioCallSignalRequest(
+                                call.callId(), call.roomId(), AudioCallSignalType.CALL,
+                                null, null, null, null),
+                        call.initiatorEmail(), call.initiatorName()));
     }
 
     public void rejectIncomingCall(String callId, String receiverEmail) {
         AudioCall call = callStateStore.find(callId)
                 .orElseThrow(() -> new BusinessStateException("이미 종료된 통화입니다."));
-        requireReceiver(call, receiverEmail);
-        requireState(call, AudioCallState.RINGING);
-        if (!callStateStore.remove(call)) {
-            throw new BusinessStateException("이미 종료된 통화입니다.");
-        }
-
-        closeIncomingNotification(call);
-        AudioCallSignalRequest request = new AudioCallSignalRequest(
-                call.callId(), call.roomId(), AudioCallSignalType.REJECT,
-                null, null, null, null);
-        forward(call.callerEmail(), call.callerSessionId(),
-                AudioCallSignalResponse.from(request, receiverEmail, call.receiverName()));
+        requireInvited(call, receiverEmail);
+        reject(call, receiverEmail);
     }
 
-    private void startCall(Member sender, ChatRoom room, String callerSessionId, AudioCallSignalRequest request) {
-        List<ChatRoomMember> members = roomMemberService.find(room);
-        if (members.size() != 2) {
-            throw new BusinessStateException("1:1 채팅방에서만 음성 통화를 시작할 수 있습니다.");
+    public boolean updateIncomingCallPreference(String memberEmail, boolean enabled) {
+        Member member = memberService.findMember(memberEmail);
+        memberService.updateAudioCallEnabled(member.getId(), enabled);
+        if (!enabled) {
+            callStateStore.findByMember(memberEmail)
+                    .filter(call -> call.participant(memberEmail)
+                            .filter(participant -> participant.status() == AudioCallParticipantStatus.INVITED)
+                            .isPresent())
+                    .ifPresent(call -> reject(call, memberEmail));
+        }
+        return enabled;
+    }
+
+    private boolean isIncomingCallEnabled(String memberEmail) {
+        return memberService.findMember(memberEmail).isAudioCallEnabled();
+    }
+
+    private void startCall(Member sender, ChatRoom room, String callerSessionId,
+                           AudioCallSignalRequest request) {
+        List<ChatRoomMember> roomMembers = roomMemberService.find(room);
+        if (roomMembers.size() < 2) {
+            throw new BusinessStateException("통화할 채팅방 참여자가 없습니다.");
         }
 
-        Member receiver = members.stream()
-                .map(ChatRoomMember::getMember)
-                .filter(member -> !member.getEmail().equals(sender.getEmail()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("통화 상대를 찾을 수 없습니다."));
+        if (callStateStore.findByMember(sender.getEmail()).isPresent()) {
+            throw new BusinessStateException("현재 다른 통화가 진행 중입니다.");
+        }
+
+        String callerName = displayName(sender);
+        List<AudioCallParticipant> participants = new ArrayList<>();
+        participants.add(new AudioCallParticipant(
+                sender.getEmail(), callerName, callerSessionId,
+                AudioCallParticipantStatus.JOINED));
+
+        for (ChatRoomMember roomMember : roomMembers) {
+            if (roomMember.getMember().getEmail().equals(sender.getEmail())) continue;
+            Member candidate = memberService.findMember(roomMember.getMember().getEmail());
+            if (!candidate.isAudioCallEnabled()) continue;
+            if (callStateStore.findByMember(candidate.getEmail()).isPresent()) continue;
+            participants.add(new AudioCallParticipant(
+                    candidate.getEmail(), displayName(candidate), null,
+                    AudioCallParticipantStatus.INVITED));
+        }
+
+        if (participants.size() == 1) {
+            throw new BusinessStateException(roomMembers.size() == 2
+                    ? "상대방이 통화 알림을 허용하지 않았거나 다른 통화 중입니다."
+                    : "통화에 참여할 수 있는 회원이 없습니다.");
+        }
 
         String callId = request.callId() == null || request.callId().isBlank()
                 ? UUID.randomUUID().toString()
                 : request.callId();
-        String callerName = sender.getName() == null || sender.getName().isBlank()
-                ? sender.getEmail()
-                : sender.getName();
         AudioCall call = new AudioCall(
                 callId,
                 room.getRoomId(),
                 sender.getEmail(),
                 callerName,
-                callerSessionId,
-                receiver.getEmail(),
-                receiver.getName(),
-                null,
+                participants,
                 AudioCallState.RINGING
         );
-
         if (!callStateStore.create(call, RINGING_TTL)) {
-            throw new BusinessStateException("현재 다른 통화가 진행 중입니다.");
+            throw new BusinessStateException("참여자 중 현재 다른 통화가 진행 중인 회원이 있습니다.");
         }
 
-        AudioCallSignalRequest normalized = new AudioCallSignalRequest(
-                callId, room.getRoomId(), AudioCallSignalType.CALL, null, null, null, null);
-        forward(receiver.getEmail(), null,
-                AudioCallSignalResponse.from(normalized, sender.getEmail(), sender.getName()));
-        try {
-            notificationService.createNotification(
-                    receiver,
-                    callerName + "님이 음성 통화를 요청했습니다.",
-                    Group.CALL,
-                    callNotificationUrl(call)
-            );
-        } catch (RuntimeException exception) {
-            log.warn("음성 통화 수신 알림 저장 실패: callId={}", callId, exception);
+        AudioCallSignalResponse signal = AudioCallSignalResponse.from(
+                new AudioCallSignalRequest(
+                        callId, room.getRoomId(), AudioCallSignalType.CALL,
+                        null, null, null, null),
+                sender.getEmail(), callerName);
+        for (AudioCallParticipant participant : call.invitedParticipants()) {
+            forward(participant.email(), null, signal);
+            createIncomingNotification(call, participant, callerName);
         }
     }
 
-    private void accept(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
-        requireReceiver(call, senderEmail);
-        requireState(call, AudioCallState.RINGING);
-        if (!callStateStore.transition(
-                call, AudioCallState.RINGING, AudioCallState.CONNECTING, sessionId, ACTIVE_TTL)) {
-            throw new BusinessStateException("다른 기기에서 이미 통화를 받았거나 통화가 종료되었습니다.");
-        }
-        closeIncomingNotification(call);
-        forwardToOther(call, senderEmail, request);
-        forward(senderEmail, sessionId, AudioCallSignalResponse.accepted(call.callId(), call.roomId()));
+    private void accept(AudioCall call, String senderEmail, String sessionId,
+                        AudioCallSignalRequest request) {
+        requireInvited(call, senderEmail);
+        AudioCall updated = callStateStore.join(call, senderEmail, sessionId, ACTIVE_TTL)
+                .orElseThrow(() -> new BusinessStateException(
+                        "다른 기기에서 이미 통화를 받았거나 통화가 종료되었습니다."));
+        closeIncomingNotification(call, senderEmail);
+
+        AudioCallSignalResponse accepted = AudioCallSignalResponse.from(
+                request, senderEmail, updated.nameOf(senderEmail));
+        forwardToJoinedParticipants(updated, senderEmail, accepted);
+        forward(senderEmail, sessionId,
+                AudioCallSignalResponse.accepted(call.callId(), call.roomId()));
     }
 
-    private void reject(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
-        requireReceiver(call, senderEmail);
-        requireState(call, AudioCallState.RINGING);
-        if (!callStateStore.remove(call)) throw new BusinessStateException("이미 종료된 통화입니다.");
-        closeIncomingNotification(call);
-        forwardToOther(call, senderEmail, request);
+    private void reject(AudioCall call, String senderEmail) {
+        requireInvited(call, senderEmail);
+        AudioCallMutation result = callStateStore.reject(call, senderEmail, ACTIVE_TTL)
+                .orElseThrow(() -> new BusinessStateException("이미 응답했거나 통화가 종료되었습니다."));
+        closeIncomingNotification(call, senderEmail);
+
+        AudioCallSignalType type = result.callEnded()
+                ? AudioCallSignalType.REJECT
+                : AudioCallSignalType.PARTICIPANT_REJECTED;
+        AudioCallSignalResponse response = AudioCallSignalResponse.participantEvent(
+                call.callId(), call.roomId(), type, senderEmail, call.nameOf(senderEmail));
+        forwardToJoinedParticipants(result.call(), senderEmail, response);
     }
 
-    private void offer(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
-        requireCaller(call, senderEmail);
+    private void forwardPeerSignal(AudioCall call, String senderEmail, String sessionId,
+                                   AudioCallSignalRequest request) {
         requireOwnedSession(call, senderEmail, sessionId);
-        if (call.state() != AudioCallState.CONNECTING && call.state() != AudioCallState.ACTIVE) {
-            throw new BusinessStateException("현재 통화 연결을 갱신할 수 없습니다.");
-        }
-        forwardToOther(call, senderEmail, request);
-    }
-
-    private void answer(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
-        requireReceiver(call, senderEmail);
-        requireOwnedSession(call, senderEmail, sessionId);
-        if (call.state() == AudioCallState.CONNECTING) {
-            if (!callStateStore.transition(
-                    call, AudioCallState.CONNECTING, AudioCallState.ACTIVE, null, ACTIVE_TTL)) {
-                throw new BusinessStateException("통화 연결 상태가 변경되었습니다.");
-            }
-        } else if (call.state() != AudioCallState.ACTIVE) {
-            throw new BusinessStateException("현재 통화 연결에 응답할 수 없습니다.");
-        }
-        forwardToOther(call, senderEmail, request);
-    }
-
-    private void iceCandidate(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
-        requireOwnedSession(call, senderEmail, sessionId);
-        if (call.state() != AudioCallState.CONNECTING && call.state() != AudioCallState.ACTIVE) {
+        if (call.state() != AudioCallState.ACTIVE) {
             throw new BusinessStateException("아직 연결할 수 없는 통화입니다.");
         }
-        forwardToOther(call, senderEmail, request);
+        if (request.targetEmail() == null || request.targetEmail().isBlank()
+                || request.targetEmail().equals(senderEmail)) {
+            throw new IllegalArgumentException("통화 신호를 받을 참여자가 필요합니다.");
+        }
+        AudioCallParticipant target = call.participant(request.targetEmail())
+                .filter(participant -> participant.status() == AudioCallParticipantStatus.JOINED)
+                .orElseThrow(() -> new BusinessStateException("통화에 참여 중인 회원이 아닙니다."));
+        forward(
+                target.email(),
+                target.sessionId(),
+                AudioCallSignalResponse.from(request, senderEmail, call.nameOf(senderEmail))
+        );
     }
 
-    private void hangup(AudioCall call, String senderEmail, String sessionId, AudioCallSignalRequest request) {
-        boolean receiverIsClosingRingingCall = call.state() == AudioCallState.RINGING
-                && call.isReceiver(senderEmail);
-        if (!receiverIsClosingRingingCall) {
-            requireOwnedSession(call, senderEmail, sessionId);
+    private void hangup(AudioCall call, String senderEmail, String sessionId) {
+        AudioCallParticipant participant = call.participant(senderEmail)
+                .orElseThrow(() -> new BusinessStateException("통화 참여자가 아닙니다."));
+        if (participant.status() == AudioCallParticipantStatus.INVITED) {
+            reject(call, senderEmail);
+            return;
         }
-        if (!callStateStore.remove(call)) throw new BusinessStateException("이미 종료된 통화입니다.");
-        closeIncomingNotification(call);
-        forwardToOther(call, senderEmail, request);
+
+        requireOwnedSession(call, senderEmail, sessionId);
+        AudioCallMutation result = callStateStore.leave(
+                        call, senderEmail, sessionId, ACTIVE_TTL)
+                .orElseThrow(() -> new BusinessStateException("이미 종료된 통화입니다."));
+        AudioCallSignalType type = result.callEnded()
+                ? AudioCallSignalType.HANGUP
+                : AudioCallSignalType.PARTICIPANT_LEFT;
+        AudioCallSignalResponse response = AudioCallSignalResponse.participantEvent(
+                call.callId(), call.roomId(), type, senderEmail, call.nameOf(senderEmail));
+        if (result.callEnded()) {
+            closeIncomingNotifications(call);
+            forwardToAvailableParticipants(result.call(), senderEmail, response);
+        } else {
+            forwardToJoinedParticipants(result.call(), senderEmail, response);
+        }
     }
 
     private void keepAlive(AudioCall call, String senderEmail, String sessionId) {
         requireOwnedSession(call, senderEmail, sessionId);
-        requireState(call, AudioCallState.ACTIVE);
-        if (!callStateStore.touch(call, AudioCallState.ACTIVE, ACTIVE_TTL)) {
+        if (!callStateStore.touch(call, senderEmail, sessionId, ACTIVE_TTL)) {
             throw new BusinessStateException("통화 상태를 갱신할 수 없습니다.");
         }
     }
@@ -267,7 +305,7 @@ public class AudioCallSignalingService {
         return room;
     }
 
-    private AudioCall requireActiveCall(AudioCallSignalRequest request, String senderEmail) {
+    private AudioCall requireCall(AudioCallSignalRequest request, String senderEmail) {
         AudioCall call = callStateStore.find(request.callId())
                 .orElseThrow(() -> new IllegalStateException("유효한 통화가 아닙니다."));
         if (!call.roomId().equals(request.roomId()) || !call.contains(senderEmail)) {
@@ -276,39 +314,54 @@ public class AudioCallSignalingService {
         return call;
     }
 
-    private void requireCaller(AudioCall call, String senderEmail) {
-        if (!call.isCaller(senderEmail)) {
-            throw new BusinessStateException("발신자만 통화 연결을 시작할 수 있습니다.");
-        }
-    }
-
-    private void requireReceiver(AudioCall call, String senderEmail) {
-        if (!call.isReceiver(senderEmail)) {
-            throw new BusinessStateException("수신자만 통화에 응답할 수 있습니다.");
+    private void requireInvited(AudioCall call, String memberEmail) {
+        if (call.participant(memberEmail)
+                .filter(participant -> participant.status() == AudioCallParticipantStatus.INVITED)
+                .isEmpty()) {
+            throw new BusinessStateException("통화 요청에 응답할 수 없습니다.");
         }
     }
 
     private void requireOwnedSession(AudioCall call, String senderEmail, String sessionId) {
-        if (!call.ownsSession(senderEmail, sessionId)) {
+        if (!call.ownsSession(senderEmail, sessionId)
+                || call.participant(senderEmail)
+                        .filter(participant -> participant.status() == AudioCallParticipantStatus.JOINED)
+                        .isEmpty()) {
             throw new BusinessStateException("통화를 시작한 기기에서만 처리할 수 있습니다.");
         }
     }
 
-    private void requireState(AudioCall call, AudioCallState state) {
-        if (call.state() != state) throw new BusinessStateException("올바르지 않은 통화 상태입니다.");
-    }
-
-    private void closeIncomingNotification(AudioCall call) {
+    private void createIncomingNotification(
+            AudioCall call, AudioCallParticipant receiver, String callerName) {
         try {
-            Member receiver = memberService.findMember(call.receiverEmail());
-            notificationService.closeRealtimeNotification(
-                    receiver,
+            notificationService.createNotification(
+                    memberService.findMember(receiver.email()),
+                    callerName + "님이 그룹 음성 통화를 요청했습니다.",
                     Group.CALL,
                     callNotificationUrl(call)
             );
         } catch (RuntimeException exception) {
-            log.warn("음성 통화 수신 알림 종료 실패: callId={}", call.callId(), exception);
+            log.warn("음성 통화 수신 알림 저장 실패: callId={}, receiver={}",
+                    call.callId(), receiver.email(), exception);
         }
+    }
+
+    private void closeIncomingNotification(AudioCall call, String receiverEmail) {
+        try {
+            notificationService.closeRealtimeNotification(
+                    memberService.findMember(receiverEmail),
+                    Group.CALL,
+                    callNotificationUrl(call)
+            );
+        } catch (RuntimeException exception) {
+            log.warn("음성 통화 수신 알림 종료 실패: callId={}, receiver={}",
+                    call.callId(), receiverEmail, exception);
+        }
+    }
+
+    private void closeIncomingNotifications(AudioCall call) {
+        call.invitedParticipants().forEach(participant ->
+                closeIncomingNotification(call, participant.email()));
     }
 
     private String callNotificationUrl(AudioCall call) {
@@ -321,13 +374,15 @@ public class AudioCallSignalingService {
     }
 
     private void validateRequest(AudioCallSignalRequest request, String sessionId) {
-        if (request == null || request.type() == null || request.roomId() == null || request.roomId().isBlank()
-                || sessionId == null || sessionId.isBlank()) {
+        if (request == null || request.type() == null || request.roomId() == null
+                || request.roomId().isBlank() || sessionId == null || sessionId.isBlank()) {
             throw new IllegalArgumentException("잘못된 통화 요청입니다.");
         }
         if (request.type() == AudioCallSignalType.DISCONNECTED
                 || request.type() == AudioCallSignalType.ADMIN_TERMINATED
-                || request.type() == AudioCallSignalType.ACCEPTED) {
+                || request.type() == AudioCallSignalType.ACCEPTED
+                || request.type() == AudioCallSignalType.PARTICIPANT_LEFT
+                || request.type() == AudioCallSignalType.PARTICIPANT_REJECTED) {
             throw new IllegalArgumentException("잘못된 통화 요청입니다.");
         }
         if (request.type() != AudioCallSignalType.CALL
@@ -336,12 +391,25 @@ public class AudioCallSignalingService {
         }
     }
 
-    private void forwardToOther(AudioCall call, String senderEmail, AudioCallSignalRequest request) {
-        forward(
-                call.otherEmail(senderEmail),
-                call.otherSessionId(senderEmail),
-                AudioCallSignalResponse.from(request, senderEmail, call.nameOf(senderEmail))
-        );
+    private void forwardToJoinedParticipants(
+            AudioCall call, String excludedEmail, AudioCallSignalResponse response) {
+        call.joinedParticipants().stream()
+                .filter(participant -> excludedEmail == null || !excludedEmail.equals(participant.email()))
+                .forEach(participant -> forward(participant.email(), participant.sessionId(), response));
+    }
+
+    private void forwardToAvailableParticipants(
+            AudioCall call, String excludedEmail, AudioCallSignalResponse response) {
+        call.participants().stream()
+                .filter(AudioCallParticipant::isAvailable)
+                .filter(participant -> excludedEmail == null || !excludedEmail.equals(participant.email()))
+                .forEach(participant -> forward(participant.email(), participant.sessionId(), response));
+    }
+
+    private String displayName(Member member) {
+        return member.getName() == null || member.getName().isBlank()
+                ? member.getEmail()
+                : member.getName();
     }
 
     private void forward(String email, String sessionId, AudioCallSignalResponse response) {
@@ -353,6 +421,7 @@ public class AudioCallSignalingService {
         SimpMessageHeaderAccessor headers = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
         headers.setSessionId(sessionId);
         headers.setLeaveMutable(true);
-        messagingTemplate.convertAndSendToUser(email, AUDIO_QUEUE, response, headers.getMessageHeaders());
+        messagingTemplate.convertAndSendToUser(
+                email, AUDIO_QUEUE, response, headers.getMessageHeaders());
     }
 }

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import spring.study.common.service.JwtManager;
+import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.dto.MobileAuthResponse;
 import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.member.dto.MemberRequestDto;
@@ -12,6 +13,7 @@ import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 
 import java.time.Instant;
+import java.util.OptionalLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -23,8 +25,10 @@ class MobileAuthControllerTest {
         MemberService memberService = mock(MemberService.class);
         BCryptPasswordEncoder passwordEncoder = mock(BCryptPasswordEncoder.class);
         JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
+        OnlineUserService onlineUserService = mock(OnlineUserService.class);
         MobileAuthController controller = new MobileAuthController(
-                memberService, passwordEncoder, authenticationService, mock(JwtManager.class));
+                memberService, passwordEncoder, authenticationService,
+                mock(JwtManager.class), onlineUserService);
         Member member = Member.builder()
                 .id(3L).email("app@test.com").pwd("encoded-secret").name("app user")
                 .role(Role.USER).phone("01000000000").birth("20000101").profile("profile.png")
@@ -46,5 +50,23 @@ class MobileAuthControllerTest {
         assertEquals("access", body.accessToken());
         assertEquals("refresh", body.refreshToken());
         assertEquals("app@test.com", body.member().email());
+        verify(onlineUserService).markMobileActive(3L);
+    }
+
+    @Test
+    void logoutShouldRemoveMobileOnlineState() {
+        JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
+        OnlineUserService onlineUserService = mock(OnlineUserService.class);
+        MobileAuthController controller = new MobileAuthController(
+                mock(MemberService.class), mock(BCryptPasswordEncoder.class), authenticationService,
+                mock(JwtManager.class), onlineUserService);
+        when(authenticationService.revokeAndGetMemberId("refresh"))
+                .thenReturn(OptionalLong.of(3L));
+
+        ResponseEntity<?> response = controller.logout(
+                new spring.study.jwt.dto.MobileAuthRequest("refresh"));
+
+        assertEquals(200, response.getStatusCode().value());
+        verify(onlineUserService).markMobileInactive(3L);
     }
 }

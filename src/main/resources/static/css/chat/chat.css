@@ -623,6 +623,63 @@ body.dark-mode .chat-image-modal-nav {
     overflow-wrap: anywhere;
 }
 
+.audio-call-participants {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: min(620px, 100%);
+    margin: -4px 0 18px;
+}
+
+.audio-call-participant {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 6px 12px;
+    border: 1px solid rgba(148, 163, 184, .34);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .52);
+    color: #e2e8f0;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.audio-call-participant::before {
+    width: 8px;
+    height: 8px;
+    margin-right: 7px;
+    border-radius: 50%;
+    background: #f59e0b;
+    content: '';
+}
+
+.audio-call-participant[data-state="connected"]::before {
+    background: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, .15);
+}
+
+.audio-call-participant[data-state="recovering"]::before {
+    background: #f59e0b;
+}
+
+.audio-call-participant[data-state="rejected"],
+.audio-call-participant[data-state="left"],
+.audio-call-participant[data-state="failed"] {
+    color: #94a3b8;
+    opacity: .72;
+}
+
+.audio-call-participant[data-state="rejected"]::before,
+.audio-call-participant[data-state="left"]::before,
+.audio-call-participant[data-state="failed"]::before {
+    background: #64748b;
+}
+
+.audio-call-remotes {
+    display: none;
+}
+
 .audio-call-visual > span {
     display: block;
     margin-bottom: 24px;

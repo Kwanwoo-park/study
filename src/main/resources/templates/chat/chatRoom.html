@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css">
-    <link rel="stylesheet" href="/css/chat/chat.css?v=20260823-2">
+    <link rel="stylesheet" href="/css/chat/chat.css?v=20260824-2">
     <title>Chatting Room</title>
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
@@ -20,7 +20,7 @@
                       th:text="${name + (stat.last ? '' : ', ')}">참여자</span>
         </div>
         <button th:if="${audioCallAvailable}" type="button" id="audio-call-start"
-                class="btn btn-success btn-sm">음성 통화</button>
+                class="btn btn-success btn-sm">그룹 음성 통화</button>
     </header>
     <div class="container chat-room-container">
         <form method="dialog" enctype="multipart/form-data">
@@ -43,6 +43,8 @@
             </div>
         </div>
         <p id="audio-call-status" class="audio-call-status">통화 준비 중</p>
+        <div id="audio-call-participants" class="audio-call-participants is-hidden"
+             aria-label="그룹 통화 참여자"></div>
         <div class="audio-call-meta" aria-live="polite">
             <span id="audio-call-connection" class="audio-call-connection" data-state="idle">대기 중</span>
             <span id="audio-call-mute-status" class="audio-call-mute-status is-hidden">내 마이크 음소거됨</span>
@@ -60,7 +62,7 @@
             <button type="button" id="audio-call-mute" class="btn btn-outline-secondary is-hidden">음소거</button>
             <button type="button" id="audio-call-hangup" class="btn btn-danger is-hidden">통화 종료</button>
         </div>
-        <audio id="audio-call-remote" autoplay></audio>
+        <div id="audio-call-remotes" class="audio-call-remotes" aria-hidden="true"></div>
     </section>
     <div class="chat-room-controls">
         <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>
@@ -76,7 +78,7 @@
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
     <script src="/js/chat/chat.js?v=20260823"></script>
-    <script src="/js/chat/audio-call.js?v=20260823-2"></script>
+    <script src="/js/chat/audio-call.js?v=20260824-2"></script>
 </body>
 <footer>
     <div class="card">

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
-  <link rel="stylesheet" href="/css/appeal/form.css?v=20260823">
+  <link rel="stylesheet" href="/css/appeal/form.css?v=20260824-1">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
@@ -25,7 +25,7 @@
   <section class="appeal-card appeal-guide">
     <h2>작성 안내</h2>
     <p>상소문은 관리자가 원본 신고와 제재 기록을 함께 확인하여 검토합니다. 사실관계와 재검토가 필요한 이유를 구체적으로 적어주세요.</p>
-    <p th:unless="${authenticated}" class="appeal-auth-notice">비로그인 상태에서는 본인 확인을 위해 이메일과 비밀번호가 필요합니다.</p>
+    <p th:unless="${authenticated}" class="appeal-auth-notice">비로그인 상태에서는 이메일 인증이 필요합니다. 인증번호와 인증 완료 상태는 각각 5분 동안 유효합니다.</p>
   </section>
 
   <section id="sanctionSection" class="appeal-card" th:if="${authenticated}">
@@ -38,12 +38,29 @@
     <form id="appealForm" novalidate>
       <div class="appeal-field">
         <label for="appealEmail">이메일</label>
-        <input id="appealEmail" class="form-control" type="email" th:value="${email}"
-               th:readonly="${authenticated}" autocomplete="username" required>
+        <div class="appeal-input-action">
+          <input id="appealEmail" class="form-control" type="email" th:value="${email}"
+                 th:readonly="${authenticated}" autocomplete="email" required>
+          <button type="button"
+                  id="appealVerificationSend"
+                  class="btn btn-outline-primary"
+                  th:unless="${authenticated}">인증번호 발송</button>
+        </div>
       </div>
-      <div id="appealPasswordGroup" class="appeal-field" th:unless="${authenticated}">
-        <label for="appealPassword">비밀번호</label>
-        <input id="appealPassword" class="form-control" type="password" autocomplete="current-password" required>
+      <div id="appealVerificationGroup" class="appeal-field" th:unless="${authenticated}">
+        <label for="appealVerificationCode">이메일 인증번호</label>
+        <div class="appeal-input-action">
+          <input id="appealVerificationCode"
+                 class="form-control"
+                 type="text"
+                 inputmode="numeric"
+                 autocomplete="one-time-code"
+                 maxlength="6"
+                 pattern="[0-9]{6}"
+                 placeholder="6자리 인증번호">
+          <button type="button" id="appealVerificationConfirm" class="btn btn-outline-success">인증 확인</button>
+        </div>
+        <span id="appealVerificationStatus" class="appeal-verification-status" aria-live="polite">인증번호를 발송해주세요.</span>
       </div>
       <div id="appealSanctionGroup" class="appeal-field is-hidden">
         <label for="appealSanction">관련 신고·제재 내역 (선택)</label>
@@ -70,6 +87,6 @@
     <div id="appealHistory" class="appeal-history-list">내역을 불러오는 중입니다.</div>
   </section>
 </main>
-<script src="/js/appeal/form.js?v=20260823"></script>
+<script src="/js/appeal/form.js?v=20260824-1"></script>
 </body>
 </html>

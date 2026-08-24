@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title th:text="${review == null ? '독후감 작성' : '독후감 수정'}">독후감 작성</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/bookreview/book-review.css?v=20260824">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="book-review-page book-review-form-page">
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+  <header class="book-review-form-header">
+    <div>
+      <span class="book-review-eyebrow">EDITOR</span>
+      <h1 th:text="${review == null ? '독후감 작성' : '독후감 수정'}">독후감 작성</h1>
+      <p>책에서 얻은 생각을 차분하게 기록해보세요.</p>
+    </div>
+    <a class="btn btn-outline-secondary"
+       th:href="${review == null ? '/book-reviews' : '/book-reviews/' + review.id}">취소</a>
+  </header>
+
+  <form id="bookReviewForm"
+        class="book-review-form"
+        th:attr="data-review-id=${review == null ? '' : review.id}">
+    <div class="book-review-form-grid">
+      <div class="book-review-field book-review-field-wide">
+        <label for="reviewTitle">독후감 제목</label>
+        <input id="reviewTitle" class="form-control" type="text" maxlength="200" required
+               th:value="${review == null ? '' : review.reviewTitle}"
+               placeholder="독후감의 제목을 입력하세요">
+      </div>
+      <div class="book-review-field">
+        <label for="bookTitle">책 제목</label>
+        <input id="bookTitle" class="form-control" type="text" maxlength="200" required
+               th:value="${review == null ? '' : review.bookTitle}"
+               placeholder="읽은 책의 제목">
+      </div>
+      <div class="book-review-field">
+        <label for="bookAuthor">책 저자</label>
+        <input id="bookAuthor" class="form-control" type="text" maxlength="100" required
+               th:value="${review == null ? '' : review.bookAuthor}"
+               placeholder="책의 저자">
+      </div>
+      <div class="book-review-field">
+        <label for="rating">별점</label>
+        <select id="rating" class="form-control" required>
+          <option value="5" th:selected="${review == null || review.rating == 5}">★★★★★ · 5점</option>
+          <option value="4" th:selected="${review != null && review.rating == 4}">★★★★☆ · 4점</option>
+          <option value="3" th:selected="${review != null && review.rating == 3}">★★★☆☆ · 3점</option>
+          <option value="2" th:selected="${review != null && review.rating == 2}">★★☆☆☆ · 2점</option>
+          <option value="1" th:selected="${review != null && review.rating == 1}">★☆☆☆☆ · 1점</option>
+        </select>
+      </div>
+      <div class="book-review-field">
+        <label for="finishedDate">독서 완료일 <span>(선택)</span></label>
+        <input id="finishedDate" class="form-control" type="date"
+               th:value="${review == null || review.finishedDate == null ? '' : #temporals.format(review.finishedDate, 'yyyy-MM-dd')}">
+      </div>
+      <div class="book-review-field book-review-field-wide">
+        <label for="content">독후감 내용</label>
+        <textarea id="content"
+                  class="form-control"
+                  rows="18"
+                  maxlength="20000"
+                  required
+                  th:text="${review == null ? '' : review.content}"
+                  placeholder="인상 깊었던 부분과 책을 읽고 든 생각을 작성하세요"></textarea>
+        <span class="book-review-character-count"><span id="bookReviewContentCount">0</span> / 20,000</span>
+      </div>
+    </div>
+    <div id="bookReviewMessage" class="book-review-message" role="status" aria-live="polite"></div>
+    <button id="bookReviewSubmit" class="btn btn-primary book-review-submit" type="submit"
+            th:text="${review == null ? '독후감 등록' : '변경사항 저장'}">독후감 등록</button>
+  </form>
+</main>
+<script src="/js/bookreview/form.js?v=20260824"></script>
+<script src="/js/common/common.js?v=20260824-1"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>

@@ -14,6 +14,7 @@ import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.common.service.OnlineUserService;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -28,6 +29,7 @@ class JwtAuthenticationFilterBearerTest {
     private JwtCookieService cookieService;
     private MemberTokenCacheService memberTokenCacheService;
     private JwtAuthenticationFilter filter;
+    private OnlineUserService onlineUserService;
 
     @BeforeEach
     void setUp() {
@@ -45,11 +47,13 @@ class JwtAuthenticationFilterBearerTest {
                 .build();
         cookieService = mock(JwtCookieService.class);
         memberTokenCacheService = mock(MemberTokenCacheService.class);
+        onlineUserService = mock(OnlineUserService.class);
         filter = new JwtAuthenticationFilter(
                 tokenProvider,
                 cookieService,
                 mock(RefreshTokenService.class),
-                memberTokenCacheService
+                memberTokenCacheService,
+                onlineUserService
         );
     }
 
@@ -72,6 +76,20 @@ class JwtAuthenticationFilterBearerTest {
         assertNotNull(SecurityContextHolder.getContext().getAuthentication());
         assertEquals("mobile@test.com", SecurityContextHolder.getContext().getAuthentication().getName());
         verifyNoInteractions(cookieService);
+        verify(onlineUserService).markMobileActive(9L);
         verify(chain).doFilter(any(), any());
+    }
+
+    @Test
+    void cookieAccessTokenShouldNotBeRecordedAsMobileActivity() throws Exception {
+        String accessToken = tokenProvider.createAccessToken(member).value();
+        when(cookieService.read(any(), eq(JwtCookieService.ACCESS_COOKIE))).thenReturn(accessToken);
+        when(memberTokenCacheService.findOrLoad(eq(9L), any(Duration.class)))
+                .thenReturn(Optional.of(member));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        filter.doFilter(request, new MockHttpServletResponse(), mock(FilterChain.class));
+
+        verifyNoInteractions(onlineUserService);
     }
 }

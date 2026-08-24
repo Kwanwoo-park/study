@@ -53,7 +53,29 @@ class MemberTokenCacheServiceTest {
         assertThat(restored.getEmail()).isEqualTo(member.getEmail());
         assertThat(restored.getRole()).isEqualTo(member.getRole());
         assertThat(restored.getAccountStatus()).isEqualTo(member.getAccountStatus());
+        assertThat(restored.isAudioCallEnabled()).isTrue();
         assertThat(restored.getPassword()).isNull();
+    }
+
+    @Test
+    void oldCacheEntryWithoutAudioCallPreferenceShouldDefaultToEnabled() {
+        when(valueOperations.get("auth:member:1")).thenReturn("{}");
+
+        Member restored = memberTokenCacheService.find(1L).orElseThrow();
+
+        assertThat(restored.isAudioCallEnabled()).isTrue();
+    }
+
+    @Test
+    void disabledAudioCallPreferenceShouldSurviveCacheRoundTrip() throws Exception {
+        Member member = member();
+        member.changeAudioCallEnabled(false);
+        String json = objectMapper.writeValueAsString(CachedMemberDto.from(member));
+        when(valueOperations.get("auth:member:1")).thenReturn(json);
+
+        Member restored = memberTokenCacheService.find(1L).orElseThrow();
+
+        assertThat(restored.isAudioCallEnabled()).isFalse();
     }
 
     @Test

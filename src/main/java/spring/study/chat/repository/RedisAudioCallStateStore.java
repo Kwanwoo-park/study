@@ -7,13 +7,15 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
 import spring.study.chat.domain.AudioCall;
-import spring.study.chat.domain.AudioCallState;
+import spring.study.chat.domain.AudioCallMutation;
+import spring.study.chat.domain.AudioCallParticipant;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HexFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,35 +26,176 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
     private static final String MEMBER_KEY_PREFIX = "audio-call:member:";
 
     private static final DefaultRedisScript<Long> CREATE_SCRIPT = new DefaultRedisScript<>("""
-            if redis.call('exists', KEYS[1]) == 1
-                    or redis.call('exists', KEYS[2]) == 1
-                    or redis.call('exists', KEYS[3]) == 1 then
-                return 0
+            if redis.call('exists', KEYS[1]) == 1 then return 0 end
+            for index = 2, #KEYS do
+                if redis.call('exists', KEYS[index]) == 1 then return 0 end
             end
             redis.call('set', KEYS[1], ARGV[1], 'PX', ARGV[3])
-            redis.call('set', KEYS[2], ARGV[2], 'PX', ARGV[3])
-            redis.call('set', KEYS[3], ARGV[2], 'PX', ARGV[3])
+            for index = 2, #KEYS do
+                redis.call('set', KEYS[index], ARGV[2], 'PX', ARGV[3])
+            end
             return 1
             """, Long.class);
 
-    private static final DefaultRedisScript<Long> TRANSITION_SCRIPT = new DefaultRedisScript<>("""
+    private static final DefaultRedisScript<String> JOIN_SCRIPT = new DefaultRedisScript<>("""
+            local raw = redis.call('get', KEYS[1])
+            if not raw then return '' end
+            local call = cjson.decode(raw)
+            local found = false
+            local foundIndex = 0
+            for index, participant in ipairs(call.participants) do
+                if participant.email == ARGV[1]
+                        and participant.status == 'INVITED'
+                        and redis.call('get', KEYS[index + 1]) == ARGV[4] then
+                    participant.status = 'JOINED'
+                    participant.sessionId = ARGV[2]
+                    found = true
+                    foundIndex = index
+                    break
+                end
+            end
+            if not found then return '' end
+            call.state = 'ACTIVE'
+            local updated = cjson.encode(call)
+            redis.call('set', KEYS[1], updated, 'PX', ARGV[3])
+            redis.call('set', KEYS[foundIndex + 1], ARGV[4], 'PX', ARGV[3])
+            for index, participant in ipairs(call.participants) do
+                if participant.status == 'JOINED'
+                        and redis.call('get', KEYS[index + 1]) == ARGV[4] then
+                    redis.call('pexpire', KEYS[index + 1], ARGV[3])
+                end
+            end
+            return updated
+            """, String.class);
+
+    private static final DefaultRedisScript<String> REJECT_SCRIPT = new DefaultRedisScript<>("""
+            local raw = redis.call('get', KEYS[1])
+            if not raw then return '' end
+            local call = cjson.decode(raw)
+            local found = false
+            for index, participant in ipairs(call.participants) do
+                if participant.email == ARGV[1]
+                        and participant.status == 'INVITED'
+                        and redis.call('get', KEYS[index + 1]) == ARGV[3] then
+                    participant.status = 'REJECTED'
+                    participant.sessionId = nil
+                    redis.call('del', KEYS[index + 1])
+                    found = true
+                    break
+                end
+            end
+            if not found then return '' end
+
+            local available = 0
+            for index, participant in ipairs(call.participants) do
+                if participant.status == 'JOINED'
+                        or (participant.status == 'INVITED'
+                        and redis.call('get', KEYS[index + 1]) == ARGV[3]) then
+                    available = available + 1
+                end
+            end
+            local updated = cjson.encode(call)
+            if available <= 1 then
+                redis.call('del', KEYS[1])
+                for index = 2, #KEYS do
+                    if redis.call('get', KEYS[index]) == ARGV[3] then redis.call('del', KEYS[index]) end
+                end
+                return 'ENDED:' .. updated
+            end
+
+            redis.call('set', KEYS[1], updated, 'PX', ARGV[2])
+            for index, participant in ipairs(call.participants) do
+                if participant.status == 'JOINED'
+                        and redis.call('get', KEYS[index + 1]) == ARGV[3] then
+                    redis.call('pexpire', KEYS[index + 1], ARGV[2])
+                end
+            end
+            return 'UPDATED:' .. updated
+            """, String.class);
+
+    private static final DefaultRedisScript<String> LEAVE_SCRIPT = new DefaultRedisScript<>("""
+            local raw = redis.call('get', KEYS[1])
+            if not raw then return '' end
+            local call = cjson.decode(raw)
+            local found = false
+            for index, participant in ipairs(call.participants) do
+                if participant.email == ARGV[1]
+                        and participant.status == 'JOINED'
+                        and participant.sessionId == ARGV[2]
+                        and redis.call('get', KEYS[index + 1]) == ARGV[4] then
+                    participant.status = 'LEFT'
+                    participant.sessionId = nil
+                    redis.call('del', KEYS[index + 1])
+                    found = true
+                    break
+                end
+            end
+            if not found then return '' end
+
+            local joined = 0
+            local invited = 0
+            for index, participant in ipairs(call.participants) do
+                if participant.status == 'JOINED' then joined = joined + 1 end
+                if participant.status == 'INVITED'
+                        and redis.call('get', KEYS[index + 1]) == ARGV[4] then
+                    invited = invited + 1
+                end
+            end
+            local updated = cjson.encode(call)
+            if joined == 0 or (joined == 1 and invited == 0) then
+                redis.call('del', KEYS[1])
+                for index = 2, #KEYS do
+                    if redis.call('get', KEYS[index]) == ARGV[4] then redis.call('del', KEYS[index]) end
+                end
+                return 'ENDED:' .. updated
+            end
+
+            redis.call('set', KEYS[1], updated, 'PX', ARGV[3])
+            for index, participant in ipairs(call.participants) do
+                if participant.status == 'JOINED'
+                        and redis.call('get', KEYS[index + 1]) == ARGV[4] then
+                    redis.call('pexpire', KEYS[index + 1], ARGV[3])
+                end
+            end
+            return 'UPDATED:' .. updated
+            """, String.class);
+
+    private static final DefaultRedisScript<Long> TOUCH_SCRIPT = new DefaultRedisScript<>("""
             local raw = redis.call('get', KEYS[1])
             if not raw then return 0 end
             local call = cjson.decode(raw)
-            if call.state ~= ARGV[1] then return 0 end
-            call.state = ARGV[2]
-            if ARGV[3] ~= '' then call.receiverSessionId = ARGV[3] end
-            redis.call('set', KEYS[1], cjson.encode(call), 'PX', ARGV[4])
-            if redis.call('get', KEYS[2]) == ARGV[5] then redis.call('pexpire', KEYS[2], ARGV[4]) end
-            if redis.call('get', KEYS[3]) == ARGV[5] then redis.call('pexpire', KEYS[3], ARGV[4]) end
+            if call.state ~= 'ACTIVE' then return 0 end
+            local found = false
+            local foundIndex = 0
+            for index, participant in ipairs(call.participants) do
+                if participant.email == ARGV[1]
+                        and participant.status == 'JOINED'
+                        and participant.sessionId == ARGV[2] then
+                    found = true
+                    foundIndex = index
+                    break
+                end
+            end
+            if not found then return 0 end
+            local memberCallId = redis.call('get', KEYS[foundIndex + 1])
+            if memberCallId and memberCallId ~= ARGV[4] then return 0 end
+            redis.call('pexpire', KEYS[1], ARGV[3])
+            redis.call('set', KEYS[foundIndex + 1], ARGV[4], 'PX', ARGV[3])
+            for index, participant in ipairs(call.participants) do
+                if participant.status == 'JOINED'
+                        and redis.call('get', KEYS[index + 1]) == ARGV[4] then
+                    redis.call('pexpire', KEYS[index + 1], ARGV[3])
+                end
+            end
             return 1
             """, Long.class);
 
     private static final DefaultRedisScript<Long> REMOVE_SCRIPT = new DefaultRedisScript<>("""
             if redis.call('exists', KEYS[1]) == 0 then return 0 end
             redis.call('del', KEYS[1])
-            if redis.call('get', KEYS[2]) == ARGV[1] then redis.call('del', KEYS[2]) end
-            if redis.call('get', KEYS[3]) == ARGV[1] then redis.call('del', KEYS[3]) end
+            for index = 2, #KEYS do
+                if redis.call('get', KEYS[index]) == ARGV[1] then redis.call('del', KEYS[index]) end
+            end
             return 1
             """, Long.class);
 
@@ -77,8 +220,8 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
         String value = redisTemplate.opsForValue().get(callKey(callId));
         if (value == null) return Optional.empty();
         try {
-            return Optional.of(objectMapper.readValue(value, AudioCall.class));
-        } catch (JsonProcessingException exception) {
+            return Optional.of(deserialize(value));
+        } catch (IllegalStateException exception) {
             redisTemplate.delete(callKey(callId));
             return Optional.empty();
         }
@@ -90,27 +233,63 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
         String callId = redisTemplate.opsForValue().get(memberKey(memberEmail));
         if (callId == null) return Optional.empty();
         Optional<AudioCall> call = find(callId);
-        if (call.isEmpty()) redisTemplate.delete(memberKey(memberEmail));
+        if (call.isEmpty() || !call.get().contains(memberEmail)) {
+            redisTemplate.delete(memberKey(memberEmail));
+            return Optional.empty();
+        }
         return call;
     }
 
     @Override
-    public boolean transition(AudioCall call, AudioCallState expectedState, AudioCallState nextState, String receiverSessionId, Duration ttl) {
-        Long result = redisTemplate.execute(
-                TRANSITION_SCRIPT,
+    public Optional<AudioCall> join(AudioCall call, String memberEmail, String sessionId, Duration ttl) {
+        String result = redisTemplate.execute(
+                JOIN_SCRIPT,
                 keys(call),
-                expectedState.name(),
-                nextState.name(),
-                receiverSessionId == null ? "" : receiverSessionId,
+                memberEmail,
+                sessionId,
+                Long.toString(ttl.toMillis()),
+                call.callId()
+        );
+        return result == null || result.isBlank() ? Optional.empty() : Optional.of(deserialize(result));
+    }
+
+    @Override
+    public Optional<AudioCallMutation> reject(AudioCall call, String memberEmail, Duration ttl) {
+        String result = redisTemplate.execute(
+                REJECT_SCRIPT,
+                keys(call),
+                memberEmail,
+                Long.toString(ttl.toMillis()),
+                call.callId()
+        );
+        return parseMutation(result);
+    }
+
+    @Override
+    public Optional<AudioCallMutation> leave(
+            AudioCall call, String memberEmail, String sessionId, Duration ttl) {
+        String result = redisTemplate.execute(
+                LEAVE_SCRIPT,
+                keys(call),
+                memberEmail,
+                sessionId,
+                Long.toString(ttl.toMillis()),
+                call.callId()
+        );
+        return parseMutation(result);
+    }
+
+    @Override
+    public boolean touch(AudioCall call, String memberEmail, String sessionId, Duration ttl) {
+        Long result = redisTemplate.execute(
+                TOUCH_SCRIPT,
+                keys(call),
+                memberEmail,
+                sessionId,
                 Long.toString(ttl.toMillis()),
                 call.callId()
         );
         return Long.valueOf(1L).equals(result);
-    }
-
-    @Override
-    public boolean touch(AudioCall call, AudioCallState expectedState, Duration ttl) {
-        return transition(call, expectedState, expectedState, null, ttl);
     }
 
     @Override
@@ -120,11 +299,13 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
     }
 
     private List<String> keys(AudioCall call) {
-        return List.of(
-                callKey(call.callId()),
-                memberKey(call.callerEmail()),
-                memberKey(call.receiverEmail())
-        );
+        List<String> keys = new ArrayList<>(call.participants().size() + 1);
+        keys.add(callKey(call.callId()));
+        call.participants().stream()
+                .map(AudioCallParticipant::email)
+                .map(this::memberKey)
+                .forEach(keys::add);
+        return keys;
     }
 
     private String serialize(AudioCall call) {
@@ -133,6 +314,24 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("통화 상태를 저장할 수 없습니다.", exception);
         }
+    }
+
+    private AudioCall deserialize(String value) {
+        try {
+            return objectMapper.readValue(value, AudioCall.class);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("통화 상태를 읽을 수 없습니다.", exception);
+        }
+    }
+
+    private Optional<AudioCallMutation> parseMutation(String value) {
+        if (value == null || value.isBlank()) return Optional.empty();
+        boolean ended = value.startsWith("ENDED:");
+        String prefix = ended ? "ENDED:" : "UPDATED:";
+        if (!value.startsWith(prefix)) {
+            throw new IllegalStateException("통화 상태 변경 결과를 읽을 수 없습니다.");
+        }
+        return Optional.of(new AudioCallMutation(deserialize(value.substring(prefix.length())), ended));
     }
 
     private String callKey(String callId) {

@@ -65,7 +65,7 @@ public class ChatViewController {
         model.addAttribute("flag", !roomMemberService.exist(member, room));
         model.addAttribute("participantNames", getParticipantNames(room, member));
         model.addAttribute("audioCallAvailable",
-                roomMemberService.exist(member, room) && roomMemberService.find(room).size() == 2);
+                roomMemberService.exist(member, room) && roomMemberService.find(room).size() >= 2);
 
         return "chat/chatRoom";
     }

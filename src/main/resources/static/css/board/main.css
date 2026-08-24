@@ -14,6 +14,18 @@ html {
     margin-bottom: 10px;
 }
 
+.board-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 250px;
+    gap: 12px;
+}
+
+.board-page-header .simple-page-title {
+    margin-right: auto;
+}
+
 .main {
     width: 250px;
     border-bottom: 1px solid;

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>독후감</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/bookreview/book-review.css?v=20260824">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="book-review-page">
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+
+  <header class="book-review-hero">
+    <div>
+      <span class="book-review-eyebrow">READING NOTES</span>
+      <h1>독후감</h1>
+      <p>읽은 책에서 오래 남은 문장과 생각을 기록합니다.</p>
+    </div>
+    <a th:if="${isAdmin}" class="btn btn-primary" href="/book-reviews/write">독후감 작성</a>
+  </header>
+
+  <form class="book-review-search" method="get" action="/book-reviews" role="search">
+    <label class="sr-only" for="bookReviewKeyword">독후감 검색</label>
+    <input id="bookReviewKeyword"
+           class="form-control"
+           type="search"
+           name="keyword"
+           maxlength="200"
+           th:value="${keyword}"
+           placeholder="책 제목, 저자, 독후감 제목 검색">
+    <button class="btn btn-outline-primary" type="submit">검색</button>
+    <a th:if="${!#strings.isEmpty(keyword)}" class="btn btn-outline-secondary" href="/book-reviews">초기화</a>
+  </form>
+
+  <section class="book-review-grid" aria-label="독후감 목록">
+    <a class="book-review-card"
+       th:each="review : ${reviews.content}"
+       th:href="@{/book-reviews/{id}(id=${review.id})}">
+      <div class="book-review-book-mark" aria-hidden="true">BOOK</div>
+      <div class="book-review-card-body">
+        <div class="book-review-rating" th:attr="aria-label=|별점 ${review.rating}점|">
+          <span th:each="star : ${#numbers.sequence(1, 5)}"
+                th:classappend="${star <= review.rating} ? ' filled' : ''">★</span>
+        </div>
+        <h2 th:text="${review.reviewTitle}">독후감 제목</h2>
+        <p class="book-review-book-title" th:text="${review.bookTitle}">책 제목</p>
+        <p class="book-review-author" th:text="|${review.bookAuthor} 저|">저자</p>
+        <p class="book-review-excerpt" th:text="${review.excerpt}">독후감 미리보기</p>
+        <div class="book-review-card-meta">
+          <span th:text="${review.writerName}">작성자</span>
+          <time th:text="${#temporals.format(review.registerTime, 'yyyy.MM.dd')}">작성일</time>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <section class="book-review-empty" th:if="${reviews.empty}">
+    <strong th:text="${#strings.isEmpty(keyword) ? '아직 등록된 독후감이 없습니다.' : '검색 결과가 없습니다.'}">독후감이 없습니다.</strong>
+    <p th:text="${#strings.isEmpty(keyword) ? '첫 번째 독후감이 등록되면 이곳에서 확인할 수 있습니다.' : '다른 검색어로 다시 찾아보세요.'}">안내</p>
+  </section>
+
+  <nav class="book-review-pagination" th:if="${reviews.totalPages > 1}" aria-label="독후감 페이지 이동">
+    <a class="btn btn-outline-secondary"
+       th:classappend="${!reviews.hasPrevious()} ? ' disabled' : ''"
+       th:href="${reviews.hasPrevious()} ? @{/book-reviews(page=${reviews.number - 1},keyword=${keyword})} : '#'"><span aria-hidden="true">←</span> 이전</a>
+    <span><strong th:text="${reviews.number + 1}">1</strong> / <span th:text="${reviews.totalPages}">1</span></span>
+    <a class="btn btn-outline-secondary"
+       th:classappend="${!reviews.hasNext()} ? ' disabled' : ''"
+       th:href="${reviews.hasNext()} ? @{/book-reviews(page=${reviews.number + 1},keyword=${keyword})} : '#'">다음 <span aria-hidden="true">→</span></a>
+  </nav>
+</main>
+<script src="/js/common/common.js?v=20260824-1"></script>
+</body>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</html>

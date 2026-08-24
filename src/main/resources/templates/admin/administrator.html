@@ -7,7 +7,7 @@
   <!--부트스트랩 css 추가-->
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
-  <link rel="stylesheet" href="/css/admin/admin.css">
+  <link rel="stylesheet" href="/css/admin/admin.css?v=20260824">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
   <script src="/js/common/theme.js"></script>
@@ -37,6 +37,7 @@
           </div>
           <div class="admin-incident-summary">
             <span id="incident-unacknowledged-count" class="admin-incident-count">0건 미확인</span>
+            <button type="button" id="incident-acknowledge-all" class="btn btn-outline-danger btn-sm" disabled>전체 확인</button>
             <button type="button" id="incident-refresh" class="btn btn-outline-secondary btn-sm">새로고침</button>
           </div>
         </div>
@@ -78,7 +79,7 @@
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/admin/main.js"></script>
-<script src="/js/common/common.js?v=20260823-2"></script>
+<script src="/js/admin/main.js?v=20260824"></script>
+<script src="/js/common/common.js?v=20260824-1"></script>
 </body>
 </html>
