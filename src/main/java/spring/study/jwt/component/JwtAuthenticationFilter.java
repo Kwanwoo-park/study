@@ -13,6 +13,7 @@ import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
 import spring.study.common.service.OnlineUserService;
+import spring.study.common.service.ClientIpResolver;
 import spring.study.member.entity.Member;
 
 import java.io.IOException;
@@ -70,7 +71,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
             JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
             if (!refreshTokenService.rotate(
-                    claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration())) {
+                    claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(),
+                    ClientIpResolver.resolve(request))) {
                 cookieService.clearAuthenticationCookies(response);
                 return null;
             }

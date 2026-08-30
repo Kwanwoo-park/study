@@ -5,6 +5,7 @@
 
     const selectedId = new URLSearchParams(window.location.search).get('appealId');
     let currentPage = 0;
+    list.addEventListener('click', handleAppealAction);
     loadAppeals(0);
 
     async function loadAppeals(page) {
@@ -37,7 +38,8 @@
                 <div class="admin-appeal-card-header">
                     <div>
                         <strong>${escapeHtml(item.title)}</strong>
-                        <span>${escapeHtml(item.memberName)} (${escapeHtml(item.memberEmail)})</span>
+                        <span>회원: ${escapeHtml(item.memberName || '-')}</span>
+                        <span class="admin-appeal-email">이메일: ${escapeHtml(item.memberEmail)}</span>
                     </div>
                     <span class="admin-appeal-status">검토 대기</span>
                 </div>
@@ -47,9 +49,45 @@
                     <span>관련 신고 ${escapeHtml(item.reportId || '-')}</span>
                     <span>${escapeHtml(formatDate(item.registerTime))}</span>
                 </div>
+                <div class="admin-appeal-actions">
+                    <button type="button"
+                            class="btn btn-danger btn-sm"
+                            data-appeal-unblock="${escapeHtml(item.id)}"
+                            ${item.memberBlocked ? '' : 'disabled'}>
+                        ${item.memberBlocked ? '차단 해제' : '차단 상태 아님'}
+                    </button>
+                </div>
             </article>`).join('');
 
         if (selectedId) document.getElementById(`appeal-${selectedId}`)?.scrollIntoView({ block: 'center' });
+    }
+
+    async function handleAppealAction(event) {
+        const target = event.target.closest('[data-appeal-unblock]');
+        if (!target || target.disabled) return;
+
+        const appealId = target.dataset.appealUnblock;
+        if (!window.confirm('이 회원의 차단을 해제하고 상소를 승인할까요?')) return;
+
+        target.disabled = true;
+        const previousText = target.textContent;
+        target.textContent = '처리 중...';
+        try {
+            const response = await fetch(`/api/admin/appeal/${encodeURIComponent(appealId)}/unblock`, {
+                method: 'PATCH',
+                credentials: 'include'
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || Number(data.result) < 0) {
+                throw new Error(data.message || '차단을 해제하지 못했습니다.');
+            }
+            window.alert(data.message || '회원 차단을 해제했습니다.');
+            await loadAppeals(currentPage);
+        } catch (error) {
+            window.alert(error.message || '차단을 해제하지 못했습니다.');
+            target.disabled = false;
+            target.textContent = previousText;
+        }
     }
 
     function renderPagination(data) {

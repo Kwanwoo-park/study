@@ -1,6 +1,7 @@
 package spring.study.jwt.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import spring.study.jwt.service.MobileOAuthCodeService;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 import spring.study.common.service.OnlineUserService;
+import spring.study.common.service.ClientIpResolver;
 
 import java.net.URI;
 import java.util.Map;
@@ -47,12 +49,12 @@ public class MobileOAuthController {
     }
 
     @PostMapping("/exchange")
-    public ResponseEntity<?> exchange(@RequestBody MobileOAuthExchangeRequest request) {
+    public ResponseEntity<?> exchange(@RequestBody MobileOAuthExchangeRequest request, HttpServletRequest servletRequest) {
         return codeService.consume(request.code())
                 .map(memberService::updateLastLoginTime)
                 .<ResponseEntity<?>>map(member -> {
                     JwtAuthenticationService.AuthenticationTokens tokens =
-                            authenticationService.issue(member);
+                            authenticationService.issue(member, ClientIpResolver.resolve(servletRequest));
                     onlineUserService.markMobileActive(member.getId());
                     return ResponseEntity.ok(new MobileAuthResponse(member, tokens));
                 })

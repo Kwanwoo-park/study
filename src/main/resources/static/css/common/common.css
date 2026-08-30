@@ -18,6 +18,17 @@ body {
     transition: background-color .2s ease, color .2s ease;
 }
 
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: auto;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    background: var(--surface-bg);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
 .simple-page-title {
     align-self: flex-start;
     margin: 16px 0 20px;

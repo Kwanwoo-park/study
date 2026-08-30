@@ -11,6 +11,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.time.Instant;
 import java.util.OptionalLong;
@@ -41,9 +42,11 @@ class MobileAuthControllerTest {
         when(memberService.loadUserByUsername("app@test.com")).thenReturn(member);
         when(passwordEncoder.matches("plain-secret", "encoded-secret")).thenReturn(true);
         when(memberService.updateLastLoginTime(3L)).thenReturn(member);
-        when(authenticationService.issue(member)).thenReturn(tokens);
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        servletRequest.setRemoteAddr("203.0.113.10");
+        when(authenticationService.issue(member, "203.0.113.10")).thenReturn(tokens);
 
-        ResponseEntity<?> response = controller.login(request);
+        ResponseEntity<?> response = controller.login(request, servletRequest);
 
         assertEquals(200, response.getStatusCode().value());
         MobileAuthResponse body = assertInstanceOf(MobileAuthResponse.class, response.getBody());

@@ -104,13 +104,18 @@ class AdminNewBoardRegressionTest {
         assertTrue(adminCss.contains(".admin-activity-item-image"));
         assertTrue(adminTemplate.contains("id=\"system-incident-list\""));
         assertTrue(adminTemplate.contains("id=\"incident-acknowledge-all\""));
-        assertTrue(adminTemplate.contains("/js/admin/main.js?v=20260824"));
+        assertTrue(adminTemplate.contains("/js/admin/main.js?v=20260830"));
         assertTrue(adminJs.contains("/api/admin/system/incidents"));
         assertTrue(adminJs.contains("acknowledgeSystemIncident"));
         assertTrue(adminJs.contains("acknowledgeAllSystemIncidents"));
         assertTrue(adminJs.contains("/api/admin/system/incidents/acknowledge-all"));
         assertTrue(adminJs.contains("incident.requestIp"));
+        assertTrue(adminJs.contains("incident.requestLocation?.displayName"));
+        assertTrue(adminTemplate.contains("id=\"token-session-list\""));
+        assertTrue(adminJs.contains("/api/admin/token/sessions"));
+        assertTrue(adminJs.contains("session.ipLocation?.displayName"));
         assertTrue(adminCss.contains(".admin-incident-dashboard"));
+        assertTrue(adminCss.contains(".admin-token-dashboard"));
         assertTrue(adminCss.contains("body.dark-mode .admin-incident-count"));
     }
 }

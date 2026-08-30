@@ -2,11 +2,6 @@
     width: min(880px, calc(100vw - 32px));
 }
 
-.report-history-page {
-    height: 700px;
-    overflow: auto;
-}
-
 .report-header {
     display: flex;
     align-items: flex-end;

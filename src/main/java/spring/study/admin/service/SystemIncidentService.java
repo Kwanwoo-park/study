@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.admin.dto.SystemIncidentResponseDto;
 import spring.study.admin.entity.SystemIncident;
 import spring.study.admin.repository.SystemIncidentRepository;
+import spring.study.common.service.ClientIpResolver;
+import spring.study.common.service.IpLocationService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,11 +20,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SystemIncidentService {
     private static final int MAX_PATH_LENGTH = 500;
-    private static final int MAX_IP_LENGTH = 45;
     private static final int MAX_TYPE_LENGTH = 255;
     private static final int MAX_MESSAGE_LENGTH = 1000;
 
     private final SystemIncidentRepository systemIncidentRepository;
+    private final IpLocationService ipLocationService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(HttpServletRequest request, Exception exception) {
@@ -30,7 +32,7 @@ public class SystemIncidentService {
         LocalDateTime occurredAt = LocalDateTime.now();
         String requestMethod = limit(valueOrDefault(request.getMethod(), "UNKNOWN"), 10);
         String requestPath = limit(valueOrDefault(request.getRequestURI(), "UNKNOWN"), MAX_PATH_LENGTH);
-        String requestIp = resolveRequestIp(request);
+        String requestIp = ClientIpResolver.resolve(request);
         String exceptionType = limit(cause.getClass().getName(), MAX_TYPE_LENGTH);
         String errorMessage = limit(sanitize(valueOrDefault(cause.getMessage(), "메시지 없는 서버 오류")), MAX_MESSAGE_LENGTH);
 
@@ -56,7 +58,10 @@ public class SystemIncidentService {
     @Transactional(readOnly = true)
     public List<SystemIncidentResponseDto> findRecent() {
         return systemIncidentRepository.findTop50ByOrderByOccurredAtDesc().stream()
-                .map(SystemIncidentResponseDto::new)
+                .map(incident -> new SystemIncidentResponseDto(
+                        incident,
+                        ipLocationService.find(incident.getRequestIp())
+                ))
                 .toList();
     }
 
@@ -81,20 +86,6 @@ public class SystemIncidentService {
 
     private String sanitize(String value) {
         return value.replaceAll("[\\r\\n\\t]+", " ").trim();
-    }
-
-    private String resolveRequestIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return limit(sanitize(forwardedFor.split(",", 2)[0]), MAX_IP_LENGTH);
-        }
-
-        String realIp = request.getHeader("X-Real-IP");
-        if (realIp != null && !realIp.isBlank()) {
-            return limit(sanitize(realIp), MAX_IP_LENGTH);
-        }
-
-        return limit(sanitize(valueOrDefault(request.getRemoteAddr(), "UNKNOWN")), MAX_IP_LENGTH);
     }
 
     private String valueOrDefault(String value, String defaultValue) {

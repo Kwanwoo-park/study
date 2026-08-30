@@ -7,12 +7,6 @@ label {
 }
 
 .container.forbidden-page {
-    display: flex;
-    flex-direction: column;
-    min-height: 700px;
-    max-height: 700px;
-    overflow: auto;
-    background: white;
     border: 1px solid #e8edf5;
     border-radius: 8px;
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
@@ -121,12 +115,6 @@ label {
     border-radius: 4px;
     background: #fff;
     padding: 6px 10px;
-}
-
-body.dark-mode .container.forbidden-page {
-    background: var(--surface-bg) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-primary) !important;
 }
 
 body.dark-mode .page-description,

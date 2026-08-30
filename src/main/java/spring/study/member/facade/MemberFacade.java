@@ -72,6 +72,10 @@ public class MemberFacade {
     private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
+        return login(dto, response, null);
+    }
+
+    public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response, String ipAddress) {
         int check = validateLogin(dto);
 
         if (check == -1) {
@@ -111,7 +115,7 @@ public class MemberFacade {
 
         member = memberService.updateLastLoginTime(member.getId());
 
-        jwtAuthenticationService.login(member, response);
+        jwtAuthenticationService.login(member, response, ipAddress);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId(),

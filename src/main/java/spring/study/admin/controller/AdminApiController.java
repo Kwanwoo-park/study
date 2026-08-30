@@ -237,6 +237,27 @@ public class AdminApiController {
         ));
     }
 
+    @PatchMapping("/appeal/{appealId}/unblock")
+    public ResponseEntity<?> acceptAppealAndUnblock(
+            @PathVariable Long appealId,
+            HttpServletRequest request
+    ) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            jwtManager.logout(request);
+            return commonFacade.wrongAccess();
+        }
+
+        var appeal = appealService.acceptAndUnblock(appealId);
+        return ResponseEntity.ok(Map.of(
+                "result", appeal.getId(),
+                "appeal", appeal,
+                "message", "회원 차단을 해제하고 상소를 승인했습니다"
+        ));
+    }
+
     @GetMapping("/member/online")
     public ResponseEntity<?> memberOnline(HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
@@ -313,6 +334,19 @@ public class AdminApiController {
         }
 
         return adminFacade.systemIncidents();
+    }
+
+    @GetMapping("/token/sessions")
+    public ResponseEntity<?> tokenSessions(HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        if (member.getRole() != Role.ADMIN) {
+            jwtManager.logout(request);
+            return commonFacade.wrongAccess();
+        }
+
+        return adminFacade.tokenSessions();
     }
 
     @PatchMapping("/system/incidents/{id}/acknowledge")

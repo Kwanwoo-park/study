@@ -51,13 +51,18 @@ class AppealUiRegressionTest {
 
     @Test
     void administratorShouldHaveAppealInboxLinkedFromReportPage() throws IOException {
+        String administrator = read("src/main/resources/templates/admin/administrator.html");
         String reportApply = read("src/main/resources/templates/admin/report_apply.html");
         String adminAppeal = read("src/main/resources/templates/admin/appeal_list.html");
         String adminScript = read("src/main/resources/static/js/admin/appeal.js");
 
+        assertTrue(administrator.contains("onclick=\"location.href='/admin/appeal'\">상소문 확인</button>"));
         assertTrue(reportApply.contains("onclick=\"location.href='/admin/appeal'\">상소문</button>"));
         assertTrue(adminAppeal.contains("id=\"adminAppealList\""));
         assertTrue(adminScript.contains("/api/admin/appeal?status=PENDING"));
+        assertTrue(adminScript.contains("이메일: ${escapeHtml(item.memberEmail)}"));
+        assertTrue(adminScript.contains("data-appeal-unblock"));
+        assertTrue(adminScript.contains("/api/admin/appeal/${encodeURIComponent(appealId)}/unblock"));
     }
 
     private String read(String path) throws IOException {

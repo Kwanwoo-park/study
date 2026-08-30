@@ -3,15 +3,21 @@ package spring.study.jwt.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import spring.study.member.entity.Member;
 import spring.study.member.repository.MemberRepository;
 import spring.study.jwt.entity.RefreshToken;
+import spring.study.jwt.dto.AdminTokenSessionResponse;
 import spring.study.jwt.repository.RefreshTokenRepository;
+import spring.study.common.service.IpLocationService;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,14 +28,23 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberTokenCacheService memberTokenCacheService;
     private final MemberRepository memberRepository;
+    private final IpLocationService ipLocationService;
 
     public void save(String jti, Member member, Duration ttl) {
+        save(jti, member, ttl, null);
+    }
+
+    public void save(String jti, Member member, Duration ttl, String ipAddress) {
         recordAccess(member);
-        refreshTokenRepository.save(new RefreshToken(jti, member.getId(), ttl));
+        refreshTokenRepository.save(new RefreshToken(jti, member.getId(), ttl, ipAddress));
         memberTokenCacheService.save(member, ttl);
     }
 
     public boolean rotate(String oldJti, String newJti, Member member, Duration ttl) {
+        return rotate(oldJti, newJti, member, ttl, null);
+    }
+
+    public boolean rotate(String oldJti, String newJti, Member member, Duration ttl, String ipAddress) {
         RefreshToken oldToken = refreshTokenRepository.findById(oldJti).orElse(null);
         Instant now = Instant.now();
         if (oldToken == null
@@ -40,7 +55,7 @@ public class RefreshTokenService {
 
         refreshTokenRepository.delete(oldToken);
         recordAccess(member);
-        refreshTokenRepository.save(new RefreshToken(newJti, member.getId(), ttl));
+        refreshTokenRepository.save(new RefreshToken(newJti, member.getId(), ttl, ipAddress));
         memberTokenCacheService.save(member, ttl);
         return true;
     }
@@ -83,6 +98,28 @@ public class RefreshTokenService {
         inactiveMemberIds.forEach(refreshTokenRepository::deleteByMemberId);
         refreshTokenRepository.flush();
         inactiveMemberIds.forEach(memberTokenCacheService::delete);
+    }
+
+    @Transactional(readOnly = true, propagation = Propagation.NOT_SUPPORTED)
+    public List<AdminTokenSessionResponse> findActiveSessions() {
+        List<RefreshToken> tokens = refreshTokenRepository
+                .findTop50ByExpiresAtAfterOrderByExpiresAtDesc(Instant.now());
+        Map<Long, Member> members = memberRepository.findAllById(
+                        tokens.stream().map(RefreshToken::getMemberId).distinct().toList())
+                .stream()
+                .collect(Collectors.toMap(Member::getId, Function.identity()));
+
+        return tokens.stream()
+                .map(token -> {
+                    Member member = members.get(token.getMemberId());
+                    String email = member == null ? "탈퇴한 회원" : member.getEmail();
+                    return new AdminTokenSessionResponse(
+                            token,
+                            email,
+                            ipLocationService.find(token.getIpAddress())
+                    );
+                })
+                .toList();
     }
 
     private void recordAccess(Member member) {

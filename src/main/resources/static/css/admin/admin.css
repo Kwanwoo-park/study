@@ -246,6 +246,82 @@
     color: #b91c1c;
 }
 
+.admin-token-dashboard {
+    width: 100%;
+    margin: 16px 0;
+    padding: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--surface-bg);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.admin-token-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 14px;
+}
+
+.admin-token-header h2,
+.admin-token-header p {
+    margin: 0;
+}
+
+.admin-token-header p {
+    margin-top: 4px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.admin-token-list {
+    display: grid;
+    gap: 8px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.admin-token-item {
+    display: grid;
+    grid-template-columns: minmax(180px, .8fr) minmax(260px, 1.4fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-muted);
+}
+
+.admin-token-item strong {
+    overflow-wrap: anywhere;
+}
+
+.admin-token-item span {
+    color: var(--text-secondary);
+    font-family: monospace;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.admin-token-item time {
+    color: var(--text-secondary);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.admin-token-empty {
+    padding: 24px 12px;
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.admin-token-empty.error {
+    color: #b91c1c;
+}
+
 .admin-activity-panel {
     width: 100%;
     margin: 16px 0 40px;
@@ -635,6 +711,13 @@ body.dark-mode .admin-incident-card-header,
 body.dark-mode .admin-incident-header p,
 body.dark-mode .admin-incident-empty {
     color: var(--text-secondary);
+}
+
+body.dark-mode .admin-token-dashboard {
+    background: var(--surface-muted);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
 }
 
 body.dark-mode .admin-report-dashboard {
@@ -1043,6 +1126,16 @@ body.dark-mode .admin-report-state-rejected {
         grid-column: 1;
         grid-row: auto;
         justify-self: flex-start;
+    }
+
+    .admin-token-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-token-item {
+        grid-template-columns: 1fr;
+        gap: 4px;
     }
 
     .admin-activity-panel-header {

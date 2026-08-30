@@ -47,4 +47,8 @@ public class Appeal extends BasetimeEntity {
         this.content = content;
         this.status = status == null ? AppealStatus.PENDING : status;
     }
+
+    public void accept() {
+        status = AppealStatus.ACCEPTED;
+    }
 }

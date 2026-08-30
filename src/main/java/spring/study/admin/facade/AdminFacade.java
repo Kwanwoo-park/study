@@ -18,6 +18,7 @@ import spring.study.aws.repository.ImageCleanupTaskRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 import spring.study.common.service.OnlineUserService;
+import spring.study.jwt.service.RefreshTokenService;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
@@ -42,6 +43,7 @@ public class AdminFacade {
     private final KafkaOutboxEventRepository kafkaOutboxEventRepository;
     private final ImageCleanupTaskRepository imageCleanupTaskRepository;
     private final OnlineUserService onlineUserService;
+    private final RefreshTokenService refreshTokenService;
 
     public ResponseEntity<?> memberOnline() {
         List<Long> userIds = onlineUserService.findOnlineMemberIds().stream().toList();
@@ -160,6 +162,15 @@ public class AdminFacade {
                 "result", 1L,
                 "unacknowledgedCount", systemIncidentService.countUnacknowledged(),
                 "list", systemIncidentService.findRecent()
+        ));
+    }
+
+    public ResponseEntity<?> tokenSessions() {
+        var sessions = refreshTokenService.findActiveSessions();
+        return ResponseEntity.ok(Map.of(
+                "result", 1L,
+                "count", sessions.size(),
+                "list", sessions
         ));
     }
 

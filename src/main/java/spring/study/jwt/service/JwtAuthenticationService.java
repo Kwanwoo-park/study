@@ -20,19 +20,31 @@ public class JwtAuthenticationService {
     private final MemberTokenCacheService memberTokenCacheService;
 
     public void login(Member member, HttpServletResponse response) {
-        AuthenticationTokens tokens = issue(member);
+        login(member, response, null);
+    }
+
+    public void login(Member member, HttpServletResponse response, String ipAddress) {
+        AuthenticationTokens tokens = issue(member, ipAddress);
         cookieService.writeAccessToken(response, tokens.accessToken(), tokenProvider.accessTokenDuration());
         cookieService.writeRefreshToken(response, tokens.refreshToken(), tokenProvider.refreshTokenDuration());
     }
 
     public AuthenticationTokens issue(Member member) {
+        return issue(member, null);
+    }
+
+    public AuthenticationTokens issue(Member member, String ipAddress) {
         JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
         JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
-        refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration());
+        refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress);
         return toAuthenticationTokens(accessToken, refreshToken);
     }
 
     public AuthenticationTokens refresh(String refreshTokenValue) {
+        return refresh(refreshTokenValue, null);
+    }
+
+    public AuthenticationTokens refresh(String refreshTokenValue, String ipAddress) {
         JwtTokenProvider.TokenClaims claims = tokenProvider.parse(refreshTokenValue, JwtTokenProvider.REFRESH);
         if (!refreshTokenService.isValid(claims.jti(), claims.memberId())) {
             throw new JwtTokenProvider.JwtValidationException("Revoked refresh token");
@@ -49,7 +61,7 @@ public class JwtAuthenticationService {
         JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
         JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
         if (!refreshTokenService.rotate(
-                claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration())) {
+                claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress)) {
             throw new JwtTokenProvider.JwtValidationException("Could not rotate refresh token");
         }
         return toAuthenticationTokens(accessToken, refreshToken);

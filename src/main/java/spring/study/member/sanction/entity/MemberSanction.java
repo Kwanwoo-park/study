@@ -56,4 +56,8 @@ public class MemberSanction extends BasetimeEntity {
         this.startedAt = startedAt;
         this.expiredAt = expiredAt;
     }
+
+    public void cancel(LocalDateTime canceledAt) {
+        this.canceledAt = canceledAt;
+    }
 }

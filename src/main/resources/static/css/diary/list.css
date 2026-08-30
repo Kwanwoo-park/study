@@ -1,14 +1,8 @@
 .container.diary-list-page {
-    display: flex;
-    flex-direction: column;
-    min-height: 700px;
-    max-height: 700px;
-    overflow: auto;
     margin: 32px auto 88px;
     padding: 28px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--surface-bg);
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 

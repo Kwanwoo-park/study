@@ -1,6 +1,7 @@
 window.onload = async function() {
     await loadSystemStatus();
     await loadSystemIncidents();
+    await loadTokenSessions();
     await loadUserStatus();
     await loadNewUser();
     await loadNewBoard();
@@ -16,6 +17,10 @@ window.onload = async function() {
     if (incidentAcknowledgeAll) {
         incidentAcknowledgeAll.addEventListener('click', acknowledgeAllSystemIncidents);
     }
+
+
+    const tokenSessionRefresh = document.getElementById('token-session-refresh');
+    if (tokenSessionRefresh) tokenSessionRefresh.addEventListener('click', loadTokenSessions);
 }
 
 async function loadSystemStatus() {
@@ -117,7 +122,8 @@ function createIncidentCard(incident) {
     route.className = 'admin-incident-route';
     route.innerText = `${incident.requestMethod || 'UNKNOWN'} ${incident.requestPath || 'UNKNOWN'}`;
     ip.className = 'admin-incident-ip';
-    ip.innerText = `IP ${incident.requestIp || 'UNKNOWN'}`;
+    const location = incident.requestLocation?.displayName || '지역 확인 불가';
+    ip.innerText = `IP ${incident.requestIp || 'UNKNOWN'} · ${location}`;
     type.className = 'admin-incident-type';
     const occurrenceCount = Number(incident.occurrenceCount || 1);
     type.innerText = `${incident.exceptionType || 'UnknownException'}${occurrenceCount > 1 ? ` · ${occurrenceCount}회 발생` : ''}`;
@@ -183,6 +189,53 @@ async function acknowledgeAllSystemIncidents() {
         button.innerText = originalText;
         button.disabled = Number(button.dataset.unacknowledgedCount || 0) === 0;
     }
+}
+
+async function loadTokenSessions() {
+    const tokenList = document.getElementById('token-session-list');
+    if (!tokenList) return;
+
+    try {
+        const response = await fetch('/api/admin/token/sessions', {
+            method: 'GET',
+            credentials: 'include',
+        });
+        const data = await response.json();
+        if (!response.ok || data.result < 0) throw new Error('토큰 접속 정보 조회 실패');
+        renderTokenSessions(data.list || []);
+    } catch (error) {
+        console.error(error);
+        tokenList.innerHTML = '<div class="admin-token-empty error">로그인 접속 정보를 불러오지 못했습니다.</div>';
+    }
+}
+
+function renderTokenSessions(sessions) {
+    const tokenList = document.getElementById('token-session-list');
+    if (!tokenList) return;
+    tokenList.replaceChildren();
+
+    if (sessions.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'admin-token-empty';
+        empty.innerText = '현재 유효한 로그인 토큰이 없습니다.';
+        tokenList.append(empty);
+        return;
+    }
+
+    sessions.forEach(session => {
+        const item = document.createElement('article');
+        const member = document.createElement('strong');
+        const ip = document.createElement('span');
+        const expiry = document.createElement('time');
+        const location = session.ipLocation?.displayName || '지역 확인 불가';
+
+        item.className = 'admin-token-item';
+        member.innerText = session.memberEmail || `회원 ${session.memberId || '-'}`;
+        ip.innerText = `IP ${session.ipAddress || 'UNKNOWN'} · ${location}`;
+        expiry.innerText = `만료 ${formatDateTime(session.expiresAt)}`;
+        item.append(member, ip, expiry);
+        tokenList.append(item);
+    });
 }
 
 async function loadUserStatus() {

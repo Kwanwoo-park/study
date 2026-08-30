@@ -33,9 +33,17 @@ public class RefreshToken {
     @Column(name = "expires_at", nullable = false, updatable = false)
     private Instant expiresAt;
 
+    @Column(name = "ip_address", length = 45)
+    private String ipAddress;
+
     public RefreshToken(String jti, Long memberId, Duration ttl) {
+        this(jti, memberId, ttl, null);
+    }
+
+    public RefreshToken(String jti, Long memberId, Duration ttl, String ipAddress) {
         this.jti = jti;
         this.memberId = memberId;
         this.expiresAt = Instant.now().plus(ttl);
+        this.ipAddress = ipAddress;
     }
 }

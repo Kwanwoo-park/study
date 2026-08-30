@@ -1,6 +1,7 @@
 package spring.study.jwt.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import spring.study.jwt.dto.MobileAuthResponse;
@@ -59,9 +60,12 @@ class MobileOAuthControllerTest {
                         "access", "refresh", Instant.now().plusSeconds(600), Instant.now().plusSeconds(1200));
         when(codeService.consume("once")).thenReturn(Optional.of(7L));
         when(memberService.updateLastLoginTime(7L)).thenReturn(member);
-        when(authenticationService.issue(member)).thenReturn(tokens);
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        servletRequest.setRemoteAddr("203.0.113.11");
+        when(authenticationService.issue(member, "203.0.113.11")).thenReturn(tokens);
 
-        ResponseEntity<?> response = controller.exchange(new MobileOAuthExchangeRequest("once"));
+        ResponseEntity<?> response = controller.exchange(
+                new MobileOAuthExchangeRequest("once"), servletRequest);
 
         assertEquals(200, response.getStatusCode().value());
         MobileAuthResponse body = assertInstanceOf(MobileAuthResponse.class, response.getBody());
@@ -74,7 +78,8 @@ class MobileOAuthControllerTest {
     void rejectsConsumedOrExpiredCode() {
         when(codeService.consume("expired")).thenReturn(Optional.empty());
 
-        assertEquals(401, controller.exchange(new MobileOAuthExchangeRequest("expired"))
+        assertEquals(401, controller.exchange(
+                        new MobileOAuthExchangeRequest("expired"), new MockHttpServletRequest())
                 .getStatusCode().value());
     }
 }

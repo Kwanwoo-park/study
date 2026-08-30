@@ -9,8 +9,10 @@ import java.time.LocalDateTime;
 @Getter
 public class AppealResponseDto {
     private final Long id;
+    private final Long memberId;
     private final String memberEmail;
     private final String memberName;
+    private final boolean memberBlocked;
     private final Long sanctionId;
     private final Long reportId;
     private final String title;
@@ -20,8 +22,10 @@ public class AppealResponseDto {
 
     public AppealResponseDto(Appeal appeal) {
         this.id = appeal.getId();
+        this.memberId = appeal.getMember().getId();
         this.memberEmail = appeal.getMember().getEmail();
         this.memberName = appeal.getMember().getName();
+        this.memberBlocked = appeal.getMember().isAccessBlocked();
         this.sanctionId = appeal.getRelatedSanction() == null ? null : appeal.getRelatedSanction().getId();
         this.reportId = appeal.getRelatedSanction() == null
                 ? null

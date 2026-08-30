@@ -17,6 +17,7 @@ import spring.study.jwt.dto.MobileMemberResponse;
 import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.common.service.JwtManager;
 import spring.study.common.service.OnlineUserService;
+import spring.study.common.service.ClientIpResolver;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
@@ -42,7 +43,7 @@ public class MobileAuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody MemberRequestDto request) {
+    public ResponseEntity<?> login(@RequestBody MemberRequestDto request, HttpServletRequest servletRequest) {
         if (request.getEmail() == null || request.getEmail().isBlank()
                 || request.getPassword() == null || request.getPassword().isBlank()) {
             return error(HttpStatus.BAD_REQUEST, "이메일과 비밀번호를 입력해주세요");
@@ -58,7 +59,8 @@ public class MobileAuthController {
             }
 
             member = memberService.updateLastLoginTime(member.getId());
-            JwtAuthenticationService.AuthenticationTokens tokens = authenticationService.issue(member);
+            JwtAuthenticationService.AuthenticationTokens tokens = authenticationService.issue(
+                    member, ClientIpResolver.resolve(servletRequest));
             onlineUserService.markMobileActive(member.getId());
             return ResponseEntity.ok(new MobileAuthResponse(member, tokens));
         } catch (BadCredentialsException exception) {
@@ -67,12 +69,13 @@ public class MobileAuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@RequestBody MobileAuthRequest request) {
+    public ResponseEntity<?> refresh(@RequestBody MobileAuthRequest request, HttpServletRequest servletRequest) {
         if (request.refreshToken() == null || request.refreshToken().isBlank()) {
             return error(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 없습니다");
         }
         try {
-            JwtAuthenticationService.AuthenticationTokens tokens = authenticationService.refresh(request.refreshToken());
+            JwtAuthenticationService.AuthenticationTokens tokens = authenticationService.refresh(
+                    request.refreshToken(), ClientIpResolver.resolve(servletRequest));
             return ResponseEntity.ok(Map.of(
                     "result", 1,
                     "accessToken", tokens.accessToken(),

@@ -12,6 +12,7 @@ import spring.study.jwt.repository.RefreshTokenRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.repository.MemberRepository;
+import spring.study.common.service.IpLocationService;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -42,6 +43,9 @@ class RefreshTokenServiceTest {
     @MockBean
     private MemberTokenCacheService memberTokenCacheService;
 
+    @MockBean
+    private IpLocationService ipLocationService;
+
     @Test
     void savedTokenIsValidOnlyForItsMember() {
         Member member = member(1L);
@@ -52,6 +56,16 @@ class RefreshTokenServiceTest {
         assertThat(refreshTokenService.isValid("valid-jti", 2L)).isFalse();
         assertThat(member.getLastLoginTime()).isNotNull();
         verify(memberTokenCacheService).save(member, ttl);
+    }
+
+    @Test
+    void savedTokenKeepsLoginIpAddress() {
+        Member member = member(1L);
+
+        refreshTokenService.save("ip-jti", member, Duration.ofDays(14), "203.0.113.7");
+
+        RefreshToken token = refreshTokenRepository.findById("ip-jti").orElseThrow();
+        assertThat(token.getIpAddress()).isEqualTo("203.0.113.7");
     }
 
     @Test

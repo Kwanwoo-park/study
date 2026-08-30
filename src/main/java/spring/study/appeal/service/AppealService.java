@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.appeal.dto.AppealRequestDto;
@@ -16,6 +17,7 @@ import spring.study.appeal.entity.AppealStatus;
 import spring.study.appeal.repository.AppealRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.event.MemberChangedEvent;
 import spring.study.member.repository.MemberRepository;
 import spring.study.member.sanction.entity.MemberSanction;
 import spring.study.member.sanction.repository.MemberSanctionRepository;
@@ -23,6 +25,7 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +37,7 @@ public class AppealService {
     private final MemberSanctionRepository memberSanctionRepository;
     private final AppealVerificationService appealVerificationService;
     private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public AppealResponseDto create(AppealRequestDto requestDto, Member authenticatedMember) {
@@ -74,6 +78,34 @@ public class AppealService {
                 Sort.by(Sort.Order.desc("registerTime"), Sort.Order.desc("id"))
         );
         return appealRepository.findByStatus(resolvedStatus, pageable).map(AppealResponseDto::new);
+    }
+
+    @Transactional
+    public AppealResponseDto acceptAndUnblock(Long appealId) {
+        Appeal appeal = appealRepository.findById(appealId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "상소문을 찾을 수 없습니다"));
+        if (appeal.getStatus() != AppealStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리가 완료된 상소문입니다");
+        }
+
+        Member member = appeal.getMember();
+        if (!member.isAccessBlocked()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 차단이 해제된 회원입니다");
+        }
+
+        LocalDateTime processedAt = LocalDateTime.now();
+        member.activate();
+        appeal.accept();
+        if (appeal.getRelatedSanction() != null) {
+            appeal.getRelatedSanction().cancel(processedAt);
+        }
+        eventPublisher.publishEvent(new MemberChangedEvent(member.getId()));
+        notificationService.createNotification(
+                member,
+                "상소가 받아들여져 계정 차단이 해제되었습니다.",
+                Group.ADMIN
+        );
+        return new AppealResponseDto(appeal);
     }
 
     public void deleteByMember(Member member) {

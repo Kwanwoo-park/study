@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spring.study.admin.entity.SystemIncident;
 import spring.study.admin.repository.SystemIncidentRepository;
+import spring.study.common.service.IpLocationService;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -28,12 +29,16 @@ class SystemIncidentServiceTest {
     @Mock
     private HttpServletRequest request;
 
+    @Mock
+    private IpLocationService ipLocationService;
+
     @Test
     void recordShouldPersistSanitizedMostSpecificExceptionDetails() {
-        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository);
+        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository, ipLocationService);
         RuntimeException exception = new RuntimeException("outer", new IllegalStateException("database\nfailed\tbadly"));
         when(request.getMethod()).thenReturn("GET");
         when(request.getRequestURI()).thenReturn("/api/member/detail");
+        when(request.getRemoteAddr()).thenReturn("10.0.0.10");
         when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.7, 10.0.0.10");
 
         service.record(request, exception);
@@ -52,7 +57,7 @@ class SystemIncidentServiceTest {
 
     @Test
     void acknowledgeShouldMarkIncidentAsAcknowledged() {
-        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository);
+        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository, ipLocationService);
         SystemIncident incident = SystemIncident.builder()
                 .occurredAt(LocalDateTime.now())
                 .requestMethod("GET")
@@ -72,7 +77,7 @@ class SystemIncidentServiceTest {
 
     @Test
     void acknowledgeAllShouldMarkEveryUnacknowledgedIncident() {
-        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository);
+        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository, ipLocationService);
         when(systemIncidentRepository.acknowledgeAll(any(LocalDateTime.class))).thenReturn(3);
 
         int acknowledgedCount = service.acknowledgeAll();

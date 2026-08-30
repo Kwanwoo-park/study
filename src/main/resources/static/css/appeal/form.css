@@ -179,8 +179,6 @@ body.dark-mode .appeal-card {
 
 .admin-appeal-page {
     display: block;
-    height: auto;
-    min-height: 700px;
     padding: 24px;
 }
 
@@ -231,6 +229,12 @@ body.dark-mode .appeal-card {
     display: block;
 }
 
+.admin-appeal-email {
+    margin-top: 4px;
+    color: var(--text-primary) !important;
+    font-weight: 700;
+}
+
 .admin-appeal-card pre {
     margin: 14px 0;
     padding: 14px;
@@ -253,6 +257,12 @@ body.dark-mode .appeal-card {
 .admin-appeal-pagination {
     justify-content: center;
     margin-top: 18px;
+}
+
+.admin-appeal-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
 }
 
 @media (max-width: 576px) {

@@ -14,6 +14,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
 
     List<RefreshToken> findByExpiresAtLessThanEqual(Instant now);
 
+    List<RefreshToken> findTop50ByExpiresAtAfterOrderByExpiresAtDesc(Instant now);
+
     @Query("select distinct token.memberId from RefreshToken token")
     List<Long> findDistinctMemberIds();
 

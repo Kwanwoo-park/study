@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
+import spring.study.common.service.ClientIpResolver;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.PasswordVerificationRequestDto;
 import spring.study.member.entity.Member;
@@ -35,8 +36,8 @@ public class MemberApiController {
     private final PasswordChangeVerificationService passwordChangeVerificationService;
 
     @PatchMapping("/login")
-    public ResponseEntity<?> loginAction(@RequestBody MemberRequestDto dto, HttpServletResponse response) {
-        return memberFacade.login(dto, response);
+    public ResponseEntity<?> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request, HttpServletResponse response) {
+        return memberFacade.login(dto, response, ClientIpResolver.resolve(request));
     }
 
     @GetMapping("/logout")

@@ -12,6 +12,7 @@ import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MobileOAuthCodeService;
 import spring.study.member.service.MemberService;
+import spring.study.common.service.ClientIpResolver;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -41,7 +42,7 @@ public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             return;
         }
-        jwtAuthenticationService.login(member, response);
+        jwtAuthenticationService.login(member, response, ClientIpResolver.resolve(request));
         setDefaultTargetUrl("/board/main");
         super.onAuthenticationSuccess(request, response, authentication);
     }
