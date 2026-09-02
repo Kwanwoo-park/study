@@ -293,6 +293,29 @@ class TemplateStaticResourceRegressionTest {
     }
 
     @Test
+    void boardMainHeaderShouldRemainVisibleWhileFeedScrolls() throws IOException {
+        String boardMain = Files.readString(TEMPLATE_ROOT.resolve("board/main.html"));
+        String boardCss = Files.readString(BOARD_MAIN_CSS);
+
+        assertTrue(boardMain.contains("class=\"board-page-header-content\""),
+                "board title and book-review link should share a fixed header content row");
+        assertTrue(boardCss.contains(".board-page-header {\n    position: sticky;\n    top: 0;\n    z-index: 10;"),
+                "board header should stay at the top while the feed container scrolls");
+        assertTrue(boardCss.contains("background: var(--surface-bg);"),
+                "sticky board header should cover scrolling feed content in every theme");
+    }
+
+    @Test
+    void commonContainerShouldUseTheVisibleViewportHeight() throws IOException {
+        String commonCss = Files.readString(COMMON_CSS);
+
+        assertTrue(commonCss.contains("height: 100vh;\n    height: 100dvh;"),
+                "container height should follow the visible viewport instead of its content height");
+        assertTrue(commonCss.contains("overflow: auto;"),
+                "content exceeding the viewport should scroll inside the container");
+    }
+
+    @Test
     void chatParticipantProfileShouldOpenDetailWithBackOnlyNavigation() throws IOException {
         String chatJs = Files.readString(CHAT_JS);
         String memberDetail = Files.readString(MEMBER_SEARCH_DETAIL_TEMPLATE);

@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/common/common.css?v=20260830">
-    <link rel="stylesheet" href="/css/board/main.css?v=20260830">
+    <link rel="stylesheet" href="/css/common/common.css?v=20260903">
+    <link rel="stylesheet" href="/css/board/main.css?v=20260902">
     <link rel="stylesheet" href="/css/comment/modal.css">
     <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
@@ -15,8 +15,10 @@
     <div class="container">
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
         <header class="board-page-header">
-            <h1 class="simple-page-title">게시글</h1>
-            <a class="btn btn-outline-primary btn-sm" href="/book-reviews">독후감</a>
+            <div class="board-page-header-content">
+                <h1 class="simple-page-title">게시글</h1>
+                <a class="btn btn-outline-primary btn-sm" href="/book-reviews">독후감</a>
+            </div>
         </header>
     </div>
     <th:block th:replace="~{fragments/comment-modal :: commentModal}"></th:block>
