@@ -24,7 +24,7 @@ public class BoardImgApiController {
     private final CommonFacade commonFacade;
 
     @PostMapping("/save")
-    public ResponseEntity<Map<String, Object>> boardImgSave(@RequestParam Long id, @RequestPart List<MultipartFile> file, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> boardImgSave(@RequestParam Long id, @RequestPart("file") List<MultipartFile> file, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

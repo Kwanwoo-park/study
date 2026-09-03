@@ -49,7 +49,7 @@ function fnSave() {
             alert("다시 시도하여주십시오.");
         }
         else {
-            if (file) {
+            if (hasSelectedImages()) {
                 img_btn.click();
             } else {
                 alert("게시글이 저장되었습니다.");
@@ -63,6 +63,11 @@ function fnSave() {
 }
 
 function fnImgSave() {
+    if (!hasSelectedImages()) {
+        alert("업로드할 이미지를 다시 선택하여 주십시오.");
+        return;
+    }
+
     fetch(`/api/boardImg/save?id=` + id, {
         method: 'POST',
         body: formData,
@@ -80,7 +85,7 @@ function fnImgSave() {
             alert(json['message']);
             fnDelete(id)
         } else {
-            alert("게시글 사진 등록 실패");
+            alert(json['message'] || "게시글 사진 등록 실패");
             fnDelete(id)
         }
     })
@@ -146,6 +151,7 @@ function fnPrevious() {
     file = null;
     fidx = 0;
     size = 0;
+    upload.value = '';
 
     img.remove();
     imgArr = null;
@@ -153,7 +159,19 @@ function fnPrevious() {
 }
 
 function fnLoad(input) {
-    imgArr = new Array(input.files.length);
+    const selectedFiles = Array.from(input.files || []);
+    if (selectedFiles.length === 0) {
+        return;
+    }
+
+    if (selectedFiles.length > maxSize) {
+        alert('최대 ' + maxSize + "장의 사진만 업로드가 가능합니다")
+    }
+
+    file = selectedFiles.slice(0, maxSize);
+    size = file.length;
+    formData = new FormData();
+    imgArr = new Array(size);
 
     imgDiv.append(document.createElement('br'));
     imgDiv.append(document.createElement('br'));
@@ -166,17 +184,10 @@ function fnLoad(input) {
     content.style.display = 'inline';
     visibilityGroup.style.display = 'block';
 
-    file = Array.from(input.files);
     fidx = 0;
-    size = input.files.length;
 
     img = document.createElement('img');
     img.src = URL.createObjectURL(file[fidx]);
-
-    if (size > maxSize) {
-        alert('최대 ' + maxSize + "장의 사진만 업로드가 가능합니다")
-        size = maxSize;
-    }
 
     if (size > 1 && typeof initImageSwipe === 'function') {
         initImageSwipe(img, {
@@ -221,8 +232,10 @@ function fnLoad(input) {
     for (let i = 0; i < size; i++) {
         formData.append("file", file[i]);
     }
+}
 
-    input.value = null;
+function hasSelectedImages() {
+    return Array.isArray(file) && file.length > 0 && formData.has("file");
 }
 
 function fnDelete(boardId) {

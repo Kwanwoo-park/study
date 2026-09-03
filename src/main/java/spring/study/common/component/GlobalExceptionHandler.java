@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.service.SystemIncidentService;
 import spring.study.common.exception.BusinessStateException;
@@ -30,6 +32,22 @@ public class GlobalExceptionHandler {
                         "result", -10,
                         "message", e.getMessage()
                 ));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<?> handleMissingRequestPart(MissingServletRequestPartException e) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "result", -400,
+                "message", "업로드할 파일을 다시 선택하여 주십시오"
+        ));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<?> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of(
+                "result", -413,
+                "message", "업로드 가능한 파일 용량을 초과하였습니다"
+        ));
     }
 
     @ExceptionHandler(IllegalStateException.class)

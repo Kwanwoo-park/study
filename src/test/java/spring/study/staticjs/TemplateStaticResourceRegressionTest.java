@@ -24,6 +24,7 @@ class TemplateStaticResourceRegressionTest {
     private static final Path COMMON_ACTIONS_JS = Path.of("src/main/resources/static/js/board/common-actions.js");
     private static final Path IMAGE_SWIPE_JS = Path.of("src/main/resources/static/js/common/image-swipe.js");
     private static final Path BOARD_MAIN_JS = Path.of("src/main/resources/static/js/board/main.js");
+    private static final Path BOARD_WRITE_JS = Path.of("src/main/resources/static/js/board/write.js");
     private static final Path BOARD_VIEW_TEMPLATE = Path.of("src/main/resources/templates/board/view.html");
     private static final Path COMMON_JS = Path.of("src/main/resources/static/js/common/common.js");
     private static final Path NOTIFICATION_LIST_JS = Path.of("src/main/resources/static/js/notification/list.js");
@@ -313,6 +314,20 @@ class TemplateStaticResourceRegressionTest {
                 "container height should follow the visible viewport instead of its content height");
         assertTrue(commonCss.contains("overflow: auto;"),
                 "content exceeding the viewport should scroll inside the container");
+    }
+
+    @Test
+    void boardImageUploadShouldNeverSendAnEmptyMultipartRequest() throws IOException {
+        String boardWriteJs = Files.readString(BOARD_WRITE_JS);
+
+        assertTrue(boardWriteJs.contains("if (selectedFiles.length === 0)"),
+                "empty mobile file-picker results should be ignored");
+        assertTrue(boardWriteJs.contains("selectedFiles.slice(0, maxSize)"),
+                "only the supported number of selected files should be retained");
+        assertTrue(boardWriteJs.contains("formData.has(\"file\")"),
+                "image upload should require an actual multipart file part");
+        assertFalse(boardWriteJs.contains("input.value = null"),
+                "the mobile browser file handle should remain attached until upload");
     }
 
     @Test

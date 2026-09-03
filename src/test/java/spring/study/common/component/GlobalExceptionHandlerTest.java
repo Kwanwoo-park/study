@@ -4,14 +4,41 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import spring.study.admin.service.SystemIncidentService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class GlobalExceptionHandlerTest {
+
+    @Test
+    void missingUploadPartShouldReturnBadRequestWithoutRecordingAnIncident() {
+        SystemIncidentService incidentService = mock(SystemIncidentService.class);
+        GlobalExceptionHandler handler = new GlobalExceptionHandler(incidentService);
+
+        ResponseEntity<?> response = handler.handleMissingRequestPart(
+                new MissingServletRequestPartException("file"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    void oversizedUploadShouldReturnPayloadTooLargeWithoutRecordingAnIncident() {
+        SystemIncidentService incidentService = mock(SystemIncidentService.class);
+        GlobalExceptionHandler handler = new GlobalExceptionHandler(incidentService);
+
+        ResponseEntity<?> response = handler.handleMaxUploadSizeExceeded(
+                new MaxUploadSizeExceededException(10L));
+
+        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, response.getStatusCode());
+        verifyNoInteractions(incidentService);
+    }
 
     @Test
     void unexpectedExceptionShouldBeRecordedAndReturnInternalServerError() {
