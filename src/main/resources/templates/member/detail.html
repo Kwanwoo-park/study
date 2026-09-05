@@ -38,7 +38,7 @@
             </div>
           </div>
         </div>
-        <input type="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" id="upload">
+        <input type="file" name="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" id="upload">
         <div class="profileStats">
           <label class="form-label">Posts: </label>
           <label class="form-label" th:text="${board_count}"></label>
@@ -66,7 +66,8 @@
 <script src="/js/favorite/modal.js"></script>
 <script src="/js/common/image-swipe.js"></script>
 <script src="/js/member/boardModal.js?v=20260823"></script>
-<script src="/js/member/detail.js"></script>
+<script src="/js/common/image-upload.js?v=20260905-1"></script>
+<script src="/js/member/detail.js?v=20260905-1"></script>
 <script src="/js/common/common.js?v=20260824-1"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

@@ -37,6 +37,7 @@ let client = null;
 let reconnectTimer = null;
 let reconnectAttempt = 0;
 let pageLeaving = false;
+let isSendingImages = false;
 
 ignoreWebSocketLogs();
 
@@ -1023,33 +1024,28 @@ function getMessageDate(data) {
     return date;
 }
 
-function fnLoad(input) {
-    let file;
-    let imgArr;
-    let size;
+async function fnLoad(input) {
+    if (isSendingImages) return;
+    const selectedFiles = Array.from(input.files || []);
+    if (selectedFiles.length === 0) return;
 
-    let formData = new FormData();
-
-    file = Array.from(input.files);
-    size = input.files.length;
-
-    if (size > maxSize) {
-        alert('최대 ' + maxSize + "장의 사진만 업로드가 가능합니다")
-        size = maxSize;
+    if (selectedFiles.length > maxSize) {
+        alert('최대 ' + maxSize + "장의 사진만 업로드가 가능합니다");
     }
 
-    for (let i = 0; i < size; i++) {
-        formData.append("file", file[i]);
-    }
-
-    fetch(`/api/chat/sendImage`, {
-        method: 'POST',
-        body: formData,
-        credentials: "include",
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        if (json['result'] > 0) {
+    isSendingImages = true;
+    input.disabled = true;
+    if (btn) btn.disabled = true;
+    try {
+        const files = await ImageUpload.snapshotFiles(selectedFiles.slice(0, maxSize));
+        input.value = '';
+        const response = await fetch(`/api/chat/sendImage`, {
+            method: 'POST',
+            body: ImageUpload.buildFormData(files),
+            credentials: "include",
+        });
+        const json = await response.json();
+        if (response.ok && json['result'] > 0) {
             let talkMsg = {
                 id: json['messageId'],
                 type : "IMAGE",
@@ -1060,10 +1056,15 @@ function fnLoad(input) {
             };
             msgSend(talkMsg)
         }
-        else
-            alert("이미지 전송 실패");
-    })
-    .catch((error) => {
-        alert("다시 시도하여주십시오");
-    })
+        else {
+            alert(json.message || "이미지 전송 실패");
+        }
+    } catch (error) {
+        alert(error.message || "이미지를 전송하지 못했습니다. 다시 시도하여 주십시오.");
+    } finally {
+        isSendingImages = false;
+        input.value = '';
+        input.disabled = false;
+        if (btn) btn.disabled = false;
+    }
 }

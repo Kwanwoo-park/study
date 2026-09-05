@@ -13,11 +13,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = form.querySelector('button[type="submit"]');
     const deleteButton = document.getElementById('diaryDeleteButton');
     let selectedFiles = [];
+    let isPreparingImages = false;
+    let isSaving = false;
 
     function updateImageCount() {
         const count = imagePreviewList.querySelectorAll('.image-preview-item').length;
         imageCount.textContent = `${count} / ${maxImageCount}`;
-        imageSelectButton.disabled = count >= maxImageCount;
+        const busy = isPreparingImages || isSaving;
+        imageSelectButton.disabled = busy || count >= maxImageCount;
+        imageInput.disabled = busy;
+        submitButton.disabled = busy;
+        if (deleteButton) deleteButton.disabled = busy;
+        imagePreviewList.querySelectorAll('.image-remove-button').forEach(button => {
+            button.disabled = busy;
+        });
     }
 
     function addImagePreview(file) {
@@ -35,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
         removeButton.setAttribute('aria-label', '이미지 제거');
         removeButton.textContent = '×';
         removeButton.addEventListener('click', function() {
+            if (isPreparingImages || isSaving) return;
             selectedFiles = selectedFiles.filter(selectedFile => selectedFile !== file);
             URL.revokeObjectURL(previewUrl);
             item.remove();
@@ -47,31 +57,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
     imagePreviewList.querySelectorAll('[data-existing-url] .image-remove-button').forEach(function(button) {
         button.addEventListener('click', function() {
+            if (isPreparingImages || isSaving) return;
             button.closest('.image-preview-item').remove();
             updateImageCount();
         });
     });
 
     imageSelectButton.addEventListener('click', function() {
+        if (isPreparingImages || isSaving) return;
         imageInput.click();
     });
 
-    imageInput.addEventListener('change', function() {
+    imageInput.addEventListener('change', async function() {
+        if (isPreparingImages || isSaving) return;
         const currentCount = imagePreviewList.querySelectorAll('.image-preview-item').length;
         const availableCount = maxImageCount - currentCount;
         const files = Array.from(imageInput.files || []);
+        if (files.length === 0) return;
 
         if (files.length > availableCount) {
             showMessage(`이미지는 최대 ${maxImageCount}장까지 추가할 수 있습니다.`);
         }
 
-        files.slice(0, availableCount).forEach(function(file) {
-            selectedFiles.push(file);
-            addImagePreview(file);
-        });
-
-        imageInput.value = '';
+        isPreparingImages = true;
         updateImageCount();
+        try {
+            const snapshots = await ImageUpload.snapshotFiles(files.slice(0, availableCount));
+            snapshots.forEach(function(file) {
+                selectedFiles.push(file);
+                addImagePreview(file);
+            });
+            imageInput.value = '';
+        } catch (error) {
+            imageInput.value = '';
+            showMessage(error.message);
+        } finally {
+            isPreparingImages = false;
+            updateImageCount();
+        }
     });
 
     function updateTodoEmptyMessage() {
@@ -126,8 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return Promise.resolve([]);
         }
 
-        const imageFormData = new FormData();
-        selectedFiles.forEach(file => imageFormData.append('file', file));
+        const imageFormData = ImageUpload.buildFormData(selectedFiles);
 
         return fetch('/api/diary/image/upload', {
             method: 'POST',
@@ -157,10 +179,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     form.addEventListener('submit', async function(event) {
         event.preventDefault();
+        if (isPreparingImages || isSaving) return;
 
         const diaryId = form.dataset.diaryId;
-        submitButton.disabled = true;
-        if (deleteButton) deleteButton.disabled = true;
+        isSaving = true;
+        updateImageCount();
 
         try {
             const uploadedImageUrls = await uploadImages();
@@ -192,18 +215,20 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = '/diary/list';
         } catch (error) {
             showMessage(error.message);
-            submitButton.disabled = false;
-            if (deleteButton) deleteButton.disabled = false;
+        } finally {
+            isSaving = false;
+            updateImageCount();
         }
     });
 
     if (deleteButton) {
         deleteButton.addEventListener('click', async function() {
+            if (isPreparingImages || isSaving) return;
             const diaryId = form.dataset.diaryId;
             if (!diaryId || !confirm('이 일기를 삭제하시겠습니까?')) return;
 
-            submitButton.disabled = true;
-            deleteButton.disabled = true;
+            isSaving = true;
+            updateImageCount();
 
             try {
                 const response = await fetch(`/api/diary/${encodeURIComponent(diaryId)}`, {
@@ -217,8 +242,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = '/diary/list';
             } catch (error) {
                 showMessage(error.message);
-                submitButton.disabled = false;
-                deleteButton.disabled = false;
+            } finally {
+                isSaving = false;
+                updateImageCount();
             }
         });
     }

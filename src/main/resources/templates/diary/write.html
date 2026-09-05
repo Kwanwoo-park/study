@@ -56,7 +56,7 @@
                 </div>
                 <button id="imageSelectButton" class="btn btn-outline-primary btn-sm" type="button">이미지 추가</button>
             </div>
-            <input id="imageInput" class="is-hidden" type="file"
+            <input id="imageInput" name="file" class="is-hidden" type="file"
                    accept=".jpg,.jpeg,.png,.gif,image/jpeg,image/png,image/gif" multiple>
             <div id="imagePreviewList" class="image-preview-list">
                 <div class="image-preview-item"
@@ -101,7 +101,8 @@
         </div>
     </form>
 </main>
-<script src="/js/diary/write.js"></script>
+<script src="/js/common/image-upload.js?v=20260905-1"></script>
+<script src="/js/diary/write.js?v=20260905-1"></script>
 <script src="/js/common/common.js?v=20260824-1"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

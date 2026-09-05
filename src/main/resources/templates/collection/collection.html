@@ -27,7 +27,7 @@
     </div>
     <form method="dialog" enctype="multipart/form-data">
         <div class="imgDiv" id="imgDiv">
-            <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" class="is-hidden" />
+            <input type="file" id="upload" name="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" />
             <button type="button" class="btn btn-primary" id="btn">이미지</button>
             <button type="button" class="btn btn-outline-primary is-hidden" id="reselectBtn">이미지 다시 선택</button>
         </div>
@@ -46,7 +46,8 @@
 </div>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/collection/save.js"></script>
+<script src="/js/common/image-upload.js?v=20260905-1"></script>
+<script src="/js/collection/save.js?v=20260905-1"></script>
 <script src="/js/common/common.js?v=20260824-1"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

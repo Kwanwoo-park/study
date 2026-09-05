@@ -3,6 +3,7 @@ let file, fidx;
 let id;
 let img;
 let left, right, size, imageCounter;
+let isPreparingImages = false;
 
 const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
@@ -18,6 +19,7 @@ const maxSize = 10;
 btn.addEventListener('click', () => upload.click());
 
 function fnSave() {
+    if (isPreparingImages) return;
     const data = {
         content: content.value,
         visibility: visibility.value
@@ -60,6 +62,7 @@ function fnSave() {
 }
 
 function fnImgSave() {
+    if (isPreparingImages) return;
     const uploadFormData = buildImageFormData();
     if (!uploadFormData) {
         alert("업로드할 이미지를 다시 선택하여 주십시오.");
@@ -127,6 +130,7 @@ function updateImageCounter() {
 }
 
 function fnPrevious() {
+    if (isPreparingImages) return;
     btn.style.display = 'inline';
     imgDiv.style.marginTop = '300px';
 
@@ -155,6 +159,7 @@ function fnPrevious() {
 }
 
 async function fnLoad(input) {
+    if (isPreparingImages) return;
     const selectedFiles = Array.from(input.files || []);
     if (selectedFiles.length === 0) {
         return;
@@ -164,13 +169,18 @@ async function fnLoad(input) {
         alert('최대 ' + maxSize + "장의 사진만 업로드가 가능합니다")
     }
 
+    isPreparingImages = true;
+    upload.disabled = btn.disabled = submit.disabled = previous.disabled = true;
     try {
-        file = await Promise.all(selectedFiles.slice(0, maxSize).map(snapshotFile));
+        file = await ImageUpload.snapshotFiles(selectedFiles.slice(0, maxSize));
     } catch (error) {
         console.error(error);
-        file = null;
+        input.value = '';
         alert("선택한 사진을 읽을 수 없습니다. 사진을 다시 선택하여 주십시오.");
         return;
+    } finally {
+        isPreparingImages = false;
+        upload.disabled = btn.disabled = submit.disabled = previous.disabled = false;
     }
 
     size = file.length;
@@ -233,33 +243,6 @@ async function fnLoad(input) {
 
 }
 
-async function snapshotFile(selectedFile, index) {
-    const bytes = await selectedFile.arrayBuffer();
-    if (bytes.byteLength === 0) {
-        throw new Error("empty image file");
-    }
-
-    return new File([bytes], resolveFileName(selectedFile, index), {
-        type: selectedFile.type || "application/octet-stream",
-        lastModified: selectedFile.lastModified || Date.now(),
-    });
-}
-
-function resolveFileName(selectedFile, index) {
-    const originalName = typeof selectedFile.name === "string" ? selectedFile.name.trim() : "";
-    if (originalName) {
-        return originalName;
-    }
-
-    const extensionByType = {
-        "image/jpeg": "jpg",
-        "image/png": "png",
-        "image/gif": "gif",
-    };
-    const extension = extensionByType[selectedFile.type] || "bin";
-    return `mobile-image-${Date.now()}-${index}.${extension}`;
-}
-
 function hasSelectedImages() {
     return Array.isArray(file)
         && file.length > 0
@@ -271,11 +254,7 @@ function buildImageFormData() {
         return null;
     }
 
-    const uploadFormData = new FormData();
-    file.forEach((imageFile, index) => {
-        uploadFormData.append("file", imageFile, resolveFileName(imageFile, index));
-    });
-    return uploadFormData;
+    return ImageUpload.buildFormData(file);
 }
 
 function fnDelete(boardId) {

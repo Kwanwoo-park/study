@@ -67,7 +67,7 @@
     <div class="chat-room-controls">
         <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>
         <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
-        <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>
+        <input type="file" id="upload" name="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>
         <button type="button" class="btn btn-primary" id="btn">이미지 전송</button>
         <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
     </div>
@@ -77,7 +77,8 @@
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
-    <script src="/js/chat/chat.js?v=20260823"></script>
+    <script src="/js/common/image-upload.js?v=20260905-1"></script>
+    <script src="/js/chat/chat.js?v=20260905-1"></script>
     <script src="/js/chat/audio-call.js?v=20260824-2"></script>
 </body>
 <footer>

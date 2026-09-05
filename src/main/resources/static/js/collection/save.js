@@ -21,6 +21,9 @@ let previewUrl = null;
 let nextCursor = 1;
 let isLoading = false;
 let isSelectionMode = false;
+let isPreparingImage = false;
+let isSavingCollection = false;
+let isUploadingImage = false;
 const selectedCollectionIds = new Set();
 
 window.onload = async function() {
@@ -126,17 +129,18 @@ function drawCollections(collections) {
 }
 
 async function fnSave() {
-    await fnImgSave();
+    if (isPreparingImage || isSavingCollection || isUploadingImage) return;
+    if (!file || !url || !description) return;
 
-    if (!url || !description || !imgSrc) return;
-
-    const data = {
-        url: url.value,
-        description: description.value,
-        imgSrc: imgSrc
-    };
-
+    isSavingCollection = true;
+    updateImageControls();
     try {
+        if (!await fnImgSave()) return;
+        const data = {
+            url: url.value,
+            description: description.value,
+            imgSrc: imgSrc
+        };
         const response = await fetch(`/api/collection/save/collection`, {
             method: 'POST',
             headers: {
@@ -155,30 +159,39 @@ async function fnSave() {
     } catch (error) {
         console.error(error);
         alert("다시 시도하여주십시오");
+    } finally {
+        isSavingCollection = false;
+        updateImageControls();
     }
 }
 
 async function fnImgSave() {
-    const formData = new FormData();
-    formData.append("file", file);
+    if (isPreparingImage || isUploadingImage) return false;
+    isUploadingImage = true;
+    imgSrc = null;
+    updateImageControls();
 
     try {
         const response = await fetch(`/api/collection/save/img`, {
             method: 'POST',
-            body: formData,
+            body: ImageUpload.buildFormData([file]),
             credentials: "include",
         });
 
         const json = await response.json();
 
-        if (json.result < 0) {
-            alert('사진 등록에 실패하였습니다');
-        } else {
-            imgSrc = json.imgSrc;
+        if (!response.ok || !(json.result > 0) || !json.imgSrc) {
+            alert(json.message || '사진 등록에 실패하였습니다');
+            return false;
         }
+        imgSrc = json.imgSrc;
+        return true;
     } catch (error) {
-        console.error(error);
-        alert("다시 시도하여주십시오");
+        alert(error.message || "다시 시도하여주십시오");
+        return false;
+    } finally {
+        isUploadingImage = false;
+        updateImageControls();
     }
 }
 
@@ -244,37 +257,52 @@ async function fnDelete() {
     alert('게시글 삭제 중 오류가 발생하였습니다');
 }
 
-function fnLoad(input) {
-    const selectedFile = input.files[0];
+async function fnLoad(input) {
+    if (isPreparingImage || isSavingCollection || isUploadingImage) return;
+    const selectedFile = input.files && input.files[0];
     if (!selectedFile) return;
 
-    file = selectedFile;
+    isPreparingImage = true;
+    updateImageControls();
+    try {
+        const [snapshot] = await ImageUpload.snapshotFiles([selectedFile]);
+        const nextPreviewUrl = URL.createObjectURL(snapshot);
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        file = snapshot;
+        imgSrc = null;
+        previewUrl = nextPreviewUrl;
+        input.value = '';
 
-    if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
+        const preview = document.createElement('img');
+        preview.className = 'save-img';
+        preview.src = previewUrl;
+        preview.alt = '선택한 이미지 미리보기';
+
+        btn.classList.add('is-hidden');
+        reselectBtn.classList.remove('is-hidden');
+        submit.classList.remove('is-hidden');
+
+        const oldPreview = imgDiv.querySelector('.save-img');
+        if (oldPreview) oldPreview.remove();
+        imgDiv.insertBefore(preview, reselectBtn);
+    } catch (error) {
+        input.value = '';
+        alert(error.message);
+    } finally {
+        isPreparingImage = false;
+        updateImageControls();
     }
+}
 
-    previewUrl = URL.createObjectURL(file);
-
-    const preview = document.createElement('img');
-    preview.className = 'save-img';
-    preview.src = previewUrl;
-    preview.alt = '선택한 이미지 미리보기';
-
-    btn.classList.add('is-hidden');
-    reselectBtn.classList.remove('is-hidden');
-    submit.classList.remove('is-hidden');
-
-    const oldPreview = imgDiv.querySelector('.save-img');
-    if (oldPreview) {
-        oldPreview.remove();
-    }
-
-    imgDiv.insertBefore(preview, reselectBtn);
+function updateImageControls() {
+    const busy = isPreparingImage || isSavingCollection || isUploadingImage;
+    [upload, btn, reselectBtn, submit, imgBtn].forEach(element => {
+        if (element) element.disabled = busy;
+    });
 }
 
 function openImagePicker() {
-    if (!upload) return;
+    if (!upload || isPreparingImage || isSavingCollection || isUploadingImage) return;
 
     upload.value = '';
     upload.click();
