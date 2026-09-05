@@ -32,6 +32,8 @@ application-oauth.properties
 application-real.properties
 *.properties
 .env
+# Preserve ignored legacy local uploads; new admin files are stored in S3.
+/data/admin-files/
 
 ### NetBeans ###
 /nbproject/private/

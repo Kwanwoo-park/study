@@ -311,6 +311,35 @@ webrtc.ice.turn-credential-ttl-seconds=<seconds>
 
 AWS S3, Google/Naver OAuth2와 mail 계정도 각 환경의 property 또는 secret manager로 주입해야 합니다.
 
+### 관리자 파일 보관함
+
+관리자 홈의 **File Storage** 버튼 또는 `/admin/files`에서 파일을 업로드하고 목록 조회·다운로드할 수 있습니다. 실행 파일(`.exe`), 압축 파일, HTML, 확장자 없는 파일 등 형식을 제한하지 않습니다. 기존 게시글·채팅 이미지 업로드 제한은 변경하지 않습니다.
+
+- 화면과 `/api/admin/files/**` API는 모두 `ADMIN` 권한이 필요합니다. 파일 URL을 알아도 비로그인 사용자나 일반 회원은 내려받을 수 없습니다.
+- 업로드 전 `GET /api/admin/files/csrf`로 받은 `headerName`/`token`을 요청 헤더에 넣고, `POST /api/admin/files`의 multipart `file` 필드로 전송합니다. 페이지에서 자동 처리하며, API 직접 호출 시에도 CSRF 쿠키와 헤더가 필요합니다.
+- 실제 파일은 **별도 비공개 S3 버킷**의 `admin-files/<UUID>`에 저장합니다. DB의 `admin_file`에는 ID·원본 파일명·크기·업로더 ID·생성 시각만 저장합니다. 관리자 버킷은 설정값을 사용하고 객체 키는 `admin-files/{id}`로 계산하며, 버전 관리는 사용하지 않습니다. 기존 이미지용 `cloud.aws.s3.bucketName`과 업로드 기능은 그대로 유지합니다.
+- S3 공개 URL이나 presigned URL을 클라이언트에 제공하지 않습니다. 서버가 관리자 권한을 확인한 뒤 S3 스트림을 `attachment`/`application/octet-stream`으로 전달합니다. 실행·압축 해제·악성코드 검사는 하지 않습니다.
+- 관리자 S3 버킷 설정이 없거나 버킷의 퍼블릭 액세스 차단 4개 항목을 확인할 수 없으면 업로드/다운로드를 거부합니다. 공개 이미지 버킷이나 로컬 디스크로 대체 저장하지 않습니다. 버킷·IAM 권한을 자동 생성하거나 변경하지 않습니다.
+- 프로젝트 내부 영구 파일 저장과 전용 Docker 파일 볼륨은 사용하지 않습니다. 요청 처리 중에는 서블릿 컨테이너의 multipart 임시 파일이 사용될 수 있습니다. DB와 S3 데이터를 함께 보존하세요.
+- 용량은 기존 `spring.servlet.multipart.max-file-size`와 `max-request-size`를 따르며 화면에 실제 상한을 표시합니다. 큰 실행 파일을 올리려면 배포 설정에서 아래처럼 조정하세요. 요청 전체 제한에는 multipart 부가 데이터도 포함됩니다. 이 두 설정은 기존 업로드 API에도 적용되며, Nginx 사용 시 `client_max_body_size`도 맞춰야 합니다. 무제한 용량 설정은 지원하지 않습니다.
+
+Docker Compose 실행 전 `.env`에 실제 생성한 관리자 전용 버킷 이름을 넣습니다.
+
+```dotenv
+ADMIN_FILES_S3_BUCKET=your-private-admin-file-bucket
+```
+
+직접 JAR/IDE로 실행할 때는 같은 환경 변수 또는 배포용 `application.properties`를 사용합니다.
+
+```properties
+admin.files.s3.bucket=your-private-admin-file-bucket
+# 필요한 경우에만 용량 변경 (기존 설정은 자동으로 변경하지 않음)
+spring.servlet.multipart.max-file-size=100MB
+spring.servlet.multipart.max-request-size=110MB
+```
+
+버킷 준비, IAM 정책 예시, 오류별 확인 사항과 DB 변경은 [관리자 파일 S3 배포 안내](docs/admin-file-storage.md)를 확인하세요. 신규 테이블은 `ddl-auto=update`로 생성하거나 엔티티에 맞춰 직접 준비합니다. 기존 `s3_bucket`, `s3_key`, `s3_version_id` 컬럼은 `ddl-auto=update`로 삭제되지 않으므로 백업 및 사전 확인 후 DB에서 직접 제거해야 합니다. 별도 SQL 스크립트는 제공하지 않으며 실제 DB에 자동 적용하거나 기존 S3/로컬 파일을 삭제하지 않습니다.
+
 ### 로컬 jar 실행
 
 ```bash

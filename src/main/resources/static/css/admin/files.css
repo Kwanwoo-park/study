@@ -1,0 +1,29 @@
+.admin-files-page { padding-top: 32px; padding-bottom: 40px; color: var(--text-primary); }
+.admin-files-header, .admin-files-list-header, .admin-files-upload-actions, .admin-file-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.admin-files-header { margin-bottom: 24px; }
+.admin-files-header h1 { margin: 6px 0; font-size: 28px; font-weight: 800; }
+.admin-files-label { color: var(--text-secondary); font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+.admin-files-header p, .admin-files-panel p, #admin-file-selection { color: var(--text-secondary); }
+.admin-files-panel { margin-bottom: 20px; padding: 24px; border: 1px solid var(--border-color); border-radius: 14px; background: var(--surface-bg); }
+.admin-files-panel h2 { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+#admin-file-input { display: block; width: 100%; margin: 8px 0; padding: 16px; border: 1px dashed var(--border-color); border-radius: 8px; background: var(--surface-muted); color: var(--text-primary); }
+#admin-file-input::file-selector-button { margin-right: 12px; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--surface-bg); color: var(--text-primary); cursor: pointer; }
+#admin-file-selection { min-width: 0; overflow-wrap: anywhere; }
+#admin-file-progress { width: 100%; height: 12px; margin-top: 16px; accent-color: #0d6efd; }
+#admin-file-status { margin: 16px 0 0; min-height: 24px; }
+#admin-file-status.error { color: #b91c1c; }
+body.dark-mode #admin-file-status.error { color: #fca5a5; }
+.admin-files-list-header { margin-bottom: 12px; }
+.admin-files-list-header h2 { margin: 0; }
+#admin-file-count { color: var(--text-secondary); font-size: 14px; }
+.admin-file-row { padding: 16px 0; border-top: 1px solid var(--border-color); }
+.admin-file-details { min-width: 0; }
+.admin-file-name { display: block; margin-bottom: 6px; overflow-wrap: anywhere; }
+.admin-file-meta { color: var(--text-secondary); font-size: 13px; }
+.admin-files-page .btn { flex-shrink: 0; }
+.admin-files-pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px; }
+.admin-files-empty { padding: 28px 0; text-align: center; color: var(--text-secondary); }
+@media (max-width: 576px) {
+    .admin-files-header, .admin-files-upload-actions, .admin-file-row { flex-direction: column; align-items: stretch; }
+    .admin-files-panel { padding: 18px; }
+}

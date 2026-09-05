@@ -107,6 +107,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       WEBRTC_TURN_URLS: ${WEBRTC_TURN_URLS}
       TURN_SHARED_SECRET: ${TURN_SHARED_SECRET}
+      ADMIN_FILES_S3_BUCKET: ${ADMIN_FILES_S3_BUCKET:-}
     volumes:
       - app-data:/app/data/img
     networks:
