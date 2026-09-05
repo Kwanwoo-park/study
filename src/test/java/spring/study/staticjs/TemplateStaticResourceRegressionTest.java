@@ -319,15 +319,24 @@ class TemplateStaticResourceRegressionTest {
     @Test
     void boardImageUploadShouldNeverSendAnEmptyMultipartRequest() throws IOException {
         String boardWriteJs = Files.readString(BOARD_WRITE_JS);
+        String boardWrite = Files.readString(TEMPLATE_ROOT.resolve("board/write.html"));
 
         assertTrue(boardWriteJs.contains("if (selectedFiles.length === 0)"),
                 "empty mobile file-picker results should be ignored");
         assertTrue(boardWriteJs.contains("selectedFiles.slice(0, maxSize)"),
                 "only the supported number of selected files should be retained");
-        assertTrue(boardWriteJs.contains("formData.has(\"file\")"),
-                "image upload should require an actual multipart file part");
+        assertTrue(boardWriteJs.contains("await Promise.all(selectedFiles.slice(0, maxSize).map(snapshotFile))"),
+                "mobile temporary files should be copied while the picker handle is valid");
+        assertTrue(boardWriteJs.contains("const bytes = await selectedFile.arrayBuffer();"),
+                "selected mobile files should be retained as independent binary data");
+        assertTrue(boardWriteJs.contains("const uploadFormData = buildImageFormData();"),
+                "multipart data should be created immediately before the upload request");
+        assertTrue(boardWriteJs.contains("uploadFormData.append(\"file\", imageFile, resolveFileName(imageFile, index));"),
+                "every multipart image should include an explicit part name and filename");
         assertFalse(boardWriteJs.contains("input.value = null"),
                 "the mobile browser file handle should remain attached until upload");
+        assertTrue(boardWrite.contains("id=\"upload\" name=\"file\""),
+                "the native file input should use the same part name as the API");
     }
 
     @Test

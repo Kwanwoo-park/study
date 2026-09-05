@@ -4,9 +4,6 @@ let id;
 let img;
 let left, right, size, imageCounter;
 
-let formData = new FormData();
-let imgArr;
-
 const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
 const img_btn = document.getElementById("img_btn");
@@ -63,14 +60,15 @@ function fnSave() {
 }
 
 function fnImgSave() {
-    if (!hasSelectedImages()) {
+    const uploadFormData = buildImageFormData();
+    if (!uploadFormData) {
         alert("업로드할 이미지를 다시 선택하여 주십시오.");
         return;
     }
 
     fetch(`/api/boardImg/save?id=` + id, {
         method: 'POST',
-        body: formData,
+        body: uploadFormData,
         credentials: "include",
     })
     .then((response) => response.json())
@@ -154,11 +152,9 @@ function fnPrevious() {
     upload.value = '';
 
     img.remove();
-    imgArr = null;
-    formData = new FormData();
 }
 
-function fnLoad(input) {
+async function fnLoad(input) {
     const selectedFiles = Array.from(input.files || []);
     if (selectedFiles.length === 0) {
         return;
@@ -168,10 +164,16 @@ function fnLoad(input) {
         alert('최대 ' + maxSize + "장의 사진만 업로드가 가능합니다")
     }
 
-    file = selectedFiles.slice(0, maxSize);
+    try {
+        file = await Promise.all(selectedFiles.slice(0, maxSize).map(snapshotFile));
+    } catch (error) {
+        console.error(error);
+        file = null;
+        alert("선택한 사진을 읽을 수 없습니다. 사진을 다시 선택하여 주십시오.");
+        return;
+    }
+
     size = file.length;
-    formData = new FormData();
-    imgArr = new Array(size);
 
     imgDiv.append(document.createElement('br'));
     imgDiv.append(document.createElement('br'));
@@ -229,13 +231,51 @@ function fnLoad(input) {
     }
     else imgDiv.append(img);
 
-    for (let i = 0; i < size; i++) {
-        formData.append("file", file[i]);
+}
+
+async function snapshotFile(selectedFile, index) {
+    const bytes = await selectedFile.arrayBuffer();
+    if (bytes.byteLength === 0) {
+        throw new Error("empty image file");
     }
+
+    return new File([bytes], resolveFileName(selectedFile, index), {
+        type: selectedFile.type || "application/octet-stream",
+        lastModified: selectedFile.lastModified || Date.now(),
+    });
+}
+
+function resolveFileName(selectedFile, index) {
+    const originalName = typeof selectedFile.name === "string" ? selectedFile.name.trim() : "";
+    if (originalName) {
+        return originalName;
+    }
+
+    const extensionByType = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/gif": "gif",
+    };
+    const extension = extensionByType[selectedFile.type] || "bin";
+    return `mobile-image-${Date.now()}-${index}.${extension}`;
 }
 
 function hasSelectedImages() {
-    return Array.isArray(file) && file.length > 0 && formData.has("file");
+    return Array.isArray(file)
+        && file.length > 0
+        && file.every(imageFile => imageFile instanceof Blob && imageFile.size > 0);
+}
+
+function buildImageFormData() {
+    if (!hasSelectedImages()) {
+        return null;
+    }
+
+    const uploadFormData = new FormData();
+    file.forEach((imageFile, index) => {
+        uploadFormData.append("file", imageFile, resolveFileName(imageFile, index));
+    });
+    return uploadFormData;
 }
 
 function fnDelete(boardId) {

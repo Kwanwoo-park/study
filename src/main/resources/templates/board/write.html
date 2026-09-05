@@ -16,7 +16,7 @@
         <h1 class="simple-page-title">게시글 작성</h1>
         <form method="post" enctype="multipart/form-data">
             <div class="imgDiv">
-                <input type="file" id="upload" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>
+                <input type="file" id="upload" name="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>
                 <button type="button" class="btn btn-primary" id="btn">Image</button>
             </div>
             <textarea class="form-control is-hidden" rows="5" cols="" id="content" name="content"></textarea>
@@ -38,7 +38,7 @@
 	<script src="/js/lib/jquery.min.js"></script>
 	<script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
-	<script src="/js/board/write.js?v=20260904"></script>
+	<script src="/js/board/write.js?v=20260905"></script>
 	<script src="/js/common/common.js?v=20260824-1"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
