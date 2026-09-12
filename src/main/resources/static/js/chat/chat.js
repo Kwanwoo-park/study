@@ -30,6 +30,7 @@ let height = 0;
 let presenceRefreshInterval = null;
 let chatImageModalSources = [];
 let chatImageModalIndex = 0;
+let chatImageModalReturnFocus = null;
 let lastKnownReadAt = '';
 let lastReadMarkAt = 0;
 let socket = null;
@@ -197,6 +198,7 @@ function onMessageReceived(e) {
     }
 
     fnDraw(json)
+    window.dispatchEvent(new CustomEvent('chat:room-details-change', {detail: {roomId, type: json.type}}));
 }
 
 async function loadMoreChat() {
@@ -527,7 +529,22 @@ function initChatImageModal() {
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !modal.classList.contains('is-hidden')) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
             closeChatImageModal();
+        }
+
+        if (event.key === 'Tab' && !modal.classList.contains('is-hidden')) {
+            const controls = Array.from(modal.querySelectorAll('button:not(:disabled):not(.is-hidden)'));
+            const first = controls[0];
+            const last = controls[controls.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last?.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first?.focus();
+            }
         }
 
         if (event.key === 'ArrowLeft' && !modal.classList.contains('is-hidden')) {
@@ -563,12 +580,14 @@ function openChatImageModal(sources, initialIndex) {
 
     if (!modal || normalizedSources.length === 0) return;
 
+    chatImageModalReturnFocus = document.activeElement;
     chatImageModalSources = normalizedSources;
     chatImageModalIndex = Math.min(Math.max(initialIndex || 0, 0), chatImageModalSources.length - 1);
     preloadAdjacentImages(chatImageModalSources, chatImageModalIndex);
     renderChatImageModal();
     modal.classList.remove('is-hidden');
     document.body.classList.add('chat-image-modal-open');
+    modal.querySelector('.chat-image-modal-close')?.focus();
 }
 
 function closeChatImageModal() {
@@ -582,6 +601,9 @@ function closeChatImageModal() {
     chatImageModalSources = [];
     chatImageModalIndex = 0;
     document.body.classList.remove('chat-image-modal-open');
+    if (chatImageModalReturnFocus?.isConnected) chatImageModalReturnFocus.focus();
+    chatImageModalReturnFocus = null;
+    window.dispatchEvent(new Event('chat:image-preview-closed'));
 }
 
 function showPreviousChatImage(skipAnimation) {
@@ -859,6 +881,7 @@ async function deleteChatMessage(messageId, scope) {
 
         if (scope === 'ME') {
             removeChatMessageRow(messageId);
+            window.dispatchEvent(new CustomEvent('chat:room-details-change', {detail: {roomId, id: messageId, action: 'DELETED_FOR_ME'}}));
         } else if (json.event) {
             applyChatMessageEvent(json.event);
         }
@@ -871,6 +894,7 @@ function applyChatMessageEvent(event) {
     if (!event || !event.id) return;
 
     if (event.action === 'DELETED_FOR_ALL') {
+        window.dispatchEvent(new CustomEvent('chat:room-details-change', {detail: event}));
         const row = document.getElementById('chat-message-' + event.id);
         const messageArea = row ? row.querySelector('.chat-message-content') : null;
         if (row && messageArea) {

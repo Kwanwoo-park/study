@@ -128,6 +128,10 @@
 
         function drawBoardModal(data) {
             const board = data.board;
+            const registeredAt = board.registerTime ? new Date(board.registerTime) : null;
+            const createdDate = registeredAt && !Number.isNaN(registeredAt.getTime())
+                ? `${registeredAt.getFullYear()}년 ${registeredAt.getMonth() + 1}월 ${registeredAt.getDate()}일`
+                : '';
             const imageList = (board.img && board.img.length > 0)
                 ? board.img
                 : [{ imgSrc: "/img/IMG_0111.jpeg" }];
@@ -203,6 +207,7 @@
                         <label class="form-label" id="comment_cnt${board.id}">${data.comment_count}</label>
                         <label class="form-label">개 모두 보기</label>
                     </div>
+                    ${createdDate ? `<time class="modal-created-date" datetime="${escapeHtml(board.registerTime)}" aria-label="작성 일자">${createdDate}</time>` : ''}
                 </div>
             `;
 

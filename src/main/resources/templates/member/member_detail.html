@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/css/follow/follower-modal.css">
   <link rel="stylesheet" href="/css/follow/following-modal.css">
   <link rel="stylesheet" href="/css/common/common.css?v=20260830">
-  <link rel="stylesheet" href="/css/member/member-detail.css?v=20260830">
+  <link rel="stylesheet" href="/css/member/member-detail.css?v=20260912">
   <link rel="stylesheet" href="/css/comment/modal.css">
   <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
@@ -33,7 +33,7 @@
             <div class="profileActionMenu">
               <button type="button" th:if="${status}" id="follow" class="btn btn-success">Unfollow</button>
               <button type="button" th:unless="${status}" id="follow" class="btn btn-success">Follow</button>
-              <button type="button" id="chatting" class="btn btn-success">Chatting</button>
+              <button type="button" th:unless="${chatEntry}" id="chatting" class="btn btn-success">Chatting</button>
               <a class="btn btn-outline-danger"
                  th:href="@{/report(targetType='MEMBER',targetId=${member.email})}">
                 신고
@@ -72,7 +72,7 @@
 <script src="/js/comment/modal.js?v=20260823"></script>
 <script src="/js/favorite/modal.js"></script>
 <script src="/js/common/image-swipe.js"></script>
-<script src="/js/member/boardModal.js?v=20260823"></script>
+<script src="/js/member/boardModal.js?v=20260912"></script>
 <script src="/js/member/memberDetail.js?v=20260823"></script>
 <script src="/js/common/common.js?v=20260824-1"></script>
 </body>

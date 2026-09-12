@@ -334,6 +334,13 @@ body.modal-open {
     margin-bottom: 0;
 }
 
+.board-modal-content time.modal-created-date {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
 .board-modal-content .comment {
     display: flex;
     gap: 5px;

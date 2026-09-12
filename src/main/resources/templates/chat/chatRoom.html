@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css?v=20260830">
     <link rel="stylesheet" href="/css/chat/chat.css?v=20260830">
+    <link rel="stylesheet" href="/css/chat/room-details.css?v=20260912">
     <title>Chatting Room</title>
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
@@ -19,8 +20,14 @@
                 <span th:each="name, stat : ${participantNames}"
                       th:text="${name + (stat.last ? '' : ', ')}">참여자</span>
         </div>
-        <button th:if="${audioCallAvailable}" type="button" id="audio-call-start"
-                class="btn btn-success btn-sm">그룹 음성 통화</button>
+        <div class="chat-room-header-actions">
+            <button th:if="${audioCallAvailable}" type="button" id="audio-call-start"
+                    class="btn btn-success btn-sm">그룹 음성 통화</button>
+            <button type="button" id="chat-details-open" class="chat-details-icon-button"
+                    aria-label="채팅방 상세 열기" aria-controls="chat-details-panel" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
     </header>
     <div class="container chat-room-container">
         <form method="dialog" enctype="multipart/form-data">
@@ -72,13 +79,45 @@
         <button type="button" value="방나가기" class="btn btn-danger" onclick="quit()" formmethod="post">방 나가기</button>
     </div>
 
+    <div id="chat-details-overlay" class="chat-details-overlay" hidden>
+        <button type="button" id="chat-details-backdrop" class="chat-details-backdrop" tabindex="-1" aria-label="채팅방 상세 닫기"></button>
+        <aside id="chat-details-panel" class="chat-details-panel" role="dialog" aria-modal="true" aria-labelledby="chat-details-title" tabindex="-1">
+            <header class="chat-details-header">
+                <h2 id="chat-details-title">채팅방 상세</h2>
+                <button type="button" id="chat-details-close" class="chat-details-icon-button" aria-label="채팅방 상세 닫기">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+            </header>
+            <div class="chat-details-body">
+                <div class="chat-details-summary">
+                    <h3 id="chat-details-room-name">채팅방</h3>
+                    <button type="button" id="chat-details-refresh" class="btn btn-outline-primary btn-sm">새로고침</button>
+                </div>
+                <p id="chat-details-update" class="chat-details-muted" role="status" hidden></p>
+                <section aria-labelledby="chat-details-members-title">
+                    <h3 id="chat-details-members-title">참여자 <span id="chat-details-member-count"></span></h3>
+                    <p id="chat-details-members-status" class="chat-details-muted" role="status"></p>
+                    <ul id="chat-details-members" class="chat-details-members"></ul>
+                </section>
+                <section aria-labelledby="chat-details-images-title">
+                    <h3 id="chat-details-images-title">주고받은 사진</h3>
+                    <p class="chat-details-muted">최근 등록된 사진부터 표시합니다. 삭제한 메시지의 사진은 제외됩니다.</p>
+                    <p id="chat-details-images-status" class="chat-details-muted" role="status"></p>
+                    <div id="chat-details-images" class="chat-details-images"></div>
+                    <button type="button" id="chat-details-more" class="btn btn-outline-primary chat-details-more" hidden>사진 더 보기</button>
+                </section>
+            </div>
+        </aside>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
     <script src="/js/common/image-upload.js?v=20260905-1"></script>
-    <script src="/js/chat/chat.js?v=20260905-1"></script>
+    <script src="/js/chat/chat.js?v=20260912"></script>
+    <script src="/js/chat/room-details.js?v=20260912"></script>
     <script src="/js/chat/audio-call.js?v=20260824-2"></script>
 </body>
 <footer>

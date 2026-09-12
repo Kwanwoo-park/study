@@ -1,0 +1,28 @@
+.github-history-page { padding-top: 24px; padding-bottom: 32px; }
+.github-history-header, .github-history-toolbar, .github-entry-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.github-history-header { margin-bottom: 24px; flex-shrink: 0; }
+.github-history-header h1 { margin: 8px 0; font-size: 28px; font-weight: 800; }
+.github-history-header p { margin: 0; overflow-wrap: anywhere; }
+.github-history-header small { letter-spacing: .08em; }
+.github-history-panel { padding: 24px; border: 1px solid var(--border-color); border-radius: 14px; background: var(--surface-bg); }
+.github-history-toolbar { margin-bottom: 16px; flex-wrap: wrap; }
+.github-history-tabs { display: flex; gap: 8px; }
+.github-history-tabs [aria-pressed="true"] { background: #0069d9; border-color: #0069d9; color: #fff; }
+.github-history-page .github-muted, body.dark-mode .github-history-page .github-muted { color: var(--text-secondary) !important; font-size: 13px; }
+.github-entry { border-top: 1px solid var(--border-color); padding: 18px 0; overflow-wrap: anywhere; }
+.github-entry-heading { align-items: flex-start; margin-bottom: 10px; }
+.github-entry-heading h3 { font-size: 16px; font-weight: 700; margin: 0; white-space: pre-wrap; line-height: 1.6; }
+.github-entry-heading a { flex-shrink: 0; font-size: 13px; }
+.github-entry p { margin: 6px 0; }
+.github-entry code { color: var(--text-secondary); overflow-wrap: anywhere; }
+.github-entry-sha { font-family: monospace; font-size: 12px; }
+.github-history-pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 20px; }
+#github-status { min-height: 24px; }
+.github-history-page #github-status.error { color: #b91c1c; }
+body.dark-mode .github-history-page #github-status.error { color: #fca5a5 !important; }
+.github-history-page .btn { flex-shrink: 0; }
+@media (max-width: 576px) {
+    .github-history-header { align-items: flex-start; flex-direction: column; }
+    .github-history-panel { padding: 16px; }
+    .github-entry-heading { flex-direction: column; gap: 6px; }
+}

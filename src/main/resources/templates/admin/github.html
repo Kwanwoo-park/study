@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>GitHub 변경 내역 · 관리자</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/admin/github.css?v=20260912">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<main class="container github-history-page">
+  <header class="github-history-header">
+    <div>
+      <small>ADMIN ONLY · READ ONLY</small>
+      <h1>GitHub 변경 내역</h1>
+      <p id="github-repository">저장소 정보를 불러오는 중입니다.</p>
+    </div>
+    <a class="btn btn-primary" href="/admin/administrator">관리자 홈</a>
+  </header>
+  <section class="github-history-panel" aria-labelledby="github-history-title">
+    <h2 id="github-history-title" class="sr-only">커밋 및 Push 기록 조회</h2>
+    <div class="github-history-toolbar">
+      <div class="github-history-tabs" role="group" aria-label="조회할 내역">
+        <button id="github-commits" type="button" class="btn btn-outline-primary" aria-pressed="true">최근 커밋</button>
+        <button id="github-activity" type="button" class="btn btn-outline-primary" aria-pressed="false">Push 기록</button>
+      </div>
+      <button id="github-refresh" type="button" class="btn btn-outline-primary">새로고침</button>
+    </div>
+    <p id="github-description" class="github-muted">GitHub에 올라온 커밋입니다. 커밋 작성·반영 시각은 실제 Push 시각과 다를 수 있습니다.</p>
+    <p class="github-muted">조회 전용이며 배포·알림은 실행하지 않습니다. 시각은 한국 시간(KST)이고, 조회 결과는 서버에서 최대 1분간 캐시됩니다.</p>
+    <p id="github-status" role="status" aria-live="polite"></p>
+    <div id="github-list" aria-busy="true"></div>
+    <nav class="github-history-pagination" aria-label="변경 내역 페이지">
+      <button id="github-prev" type="button" class="btn btn-outline-primary" disabled>이전</button>
+      <span id="github-page">1 페이지</span>
+      <button id="github-next" type="button" class="btn btn-outline-primary" disabled>다음</button>
+    </nav>
+  </section>
+</main>
+<script src="/js/admin/github.js?v=20260912"></script>
+</body>
+</html>

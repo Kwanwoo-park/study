@@ -351,6 +351,10 @@ class TemplateStaticResourceRegressionTest {
                 "the navigation condition must not share a tag with fragment replacement");
         assertTrue(memberDetail.contains("id=\"chatMemberDetailBack\""),
                 "chat-sourced member detail should render a back button");
+        assertTrue(memberDetail.contains("th:unless=\"${chatEntry}\" id=\"chatting\""),
+                "the chat button should only render when member detail was not opened from chat");
+        assertTrue(memberDetailJs.contains("if (chatting) {"),
+                "the page script should tolerate an absent chat button");
         assertTrue(memberDetailJs.contains("window.history.back();"),
                 "the chat member detail back button should return to the chat room");
     }
