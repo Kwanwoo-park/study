@@ -4,11 +4,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,6 +20,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,7 +40,37 @@ class GitHubHistoryServiceTest {
     void setUp() {
         RestTemplate client = new RestTemplate();
         server = MockRestServiceServer.bindTo(client).build();
-        service = new GitHubHistoryService(client, "Kwanwoo-park", "study", "main", "test-token", clock);
+        service = new GitHubHistoryService(client, "Kwanwoo-park", "study", "main", "test-token");
+        // Only tests replace the internal clock so time boundaries need no actual waiting.
+        ReflectionTestUtils.setField(service, "clock", clock);
+    }
+
+    @Test
+    void springUsesTheSingleConstructorAndResolvesItsSettingsWithoutAutowired() {
+        try (var context = new AnnotationConfigApplicationContext()) {
+            RestTemplate client = new RestTemplate();
+            var configuredServer = MockRestServiceServer.bindTo(client).build();
+            configuredServer.expect(requestTo("https://api.github.com/repos/configured-owner/configured-repo/commits?per_page=20&sha=release&page=1"))
+                    .andExpect(header("Authorization", "Bearer configured-test-token"))
+                    .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+            context.getEnvironment().getPropertySources().addFirst(new MapPropertySource("github-test", Map.of(
+                    "admin.github.owner", "configured-owner",
+                    "admin.github.repository", "configured-repo",
+                    "admin.github.branch", "release",
+                    "admin.github.token", "configured-test-token"
+            )));
+            context.registerBean("gitHubHistoryRestTemplate", RestTemplate.class, () -> client);
+            context.registerBean("otherRestTemplate", RestTemplate.class, () -> new RestTemplate());
+            context.register(GitHubHistoryService.class);
+            context.refresh();
+
+            var result = context.getBean(GitHubHistoryService.class).commits(1);
+            assertThat(result.repository()).isEqualTo("configured-owner/configured-repo");
+            assertThat(result.branch()).isEqualTo("release");
+            assertThat(result.entries()).isEmpty();
+            assertThat(result.fetchedAt()).isNotNull();
+            configuredServer.verify();
+        }
     }
 
     @Test
@@ -177,7 +211,7 @@ class GitHubHistoryServiceTest {
     void supportsPublicRepositoriesAndEncodesBranchAsOneQueryValue() {
         RestTemplate client = new RestTemplate();
         var publicServer = MockRestServiceServer.bindTo(client).build();
-        var publicService = new GitHubHistoryService(client, "owner", "repo", "feature/a&b", "", clock);
+        var publicService = new GitHubHistoryService(client, "owner", "repo", "feature/a&b", "");
         publicServer.expect(requestTo("https://api.github.com/repos/owner/repo/commits?per_page=20&sha=feature%2Fa%26b&page=1"))
                 .andExpect(headerDoesNotExist("Authorization")).andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
         assertThat(publicService.commits(1).entries()).isEmpty();

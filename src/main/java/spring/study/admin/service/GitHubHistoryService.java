@@ -1,7 +1,6 @@
 package spring.study.admin.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -37,21 +36,16 @@ public class GitHubHistoryService {
     private final String repository;
     private final String branch;
     private final String token;
-    private final Clock clock;
+    private final Clock clock = Clock.systemUTC();
     private final Map<URI, CachedResponse> cache = new LinkedHashMap<>();
     private Instant retryAt = Instant.EPOCH;
     private String unavailableMessage;
 
-    @Autowired
     public GitHubHistoryService(@Qualifier("gitHubHistoryRestTemplate") RestTemplate client,
                                 @Value("${admin.github.owner:Kwanwoo-park}") String owner,
                                 @Value("${admin.github.repository:study}") String repository,
                                 @Value("${admin.github.branch:main}") String branch,
                                 @Value("${admin.github.token:${ADMIN_GITHUB_TOKEN:}}") String token) {
-        this(client, owner, repository, branch, token, Clock.systemUTC());
-    }
-
-    GitHubHistoryService(RestTemplate client, String owner, String repository, String branch, String token, Clock clock) {
         if (!validName(owner) || !validName(repository) || branch == null || branch.isBlank() || branch.length() > 255 || branch.chars().anyMatch(Character::isISOControl)) {
             throw new IllegalArgumentException("GitHub 저장소 및 브랜치 설정을 확인해 주세요");
         }
@@ -60,7 +54,6 @@ public class GitHubHistoryService {
         this.repository = repository;
         this.branch = branch;
         this.token = token == null ? "" : token.trim();
-        this.clock = clock;
     }
 
     public GitHubHistoryResponse<Commit> commits(int page) {
