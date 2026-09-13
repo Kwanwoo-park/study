@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import spring.study.account.dto.AccountResponseDto;
 import spring.study.account.dto.AccountTranDto;
 import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.dto.AccountCreateRequestDto;
@@ -37,37 +38,30 @@ public class AccountService {
 
     @Transactional
     public Account createAccount(Member member) {
-        return createAccount(member, AccountType.DEPOSIT_WITHDRAWAL);
+        AccountCreateRequestDto requestDto = new AccountCreateRequestDto();
+        requestDto.setAccountType(AccountType.DEPOSIT_WITHDRAWAL);
+
+        return createAccount(member, requestDto);
     }
 
     @Transactional
     public Account createAccount(Member member, AccountType accountType) {
         AccountCreateRequestDto requestDto = new AccountCreateRequestDto();
         requestDto.setAccountType(accountType);
+
         return createAccount(member, requestDto);
     }
 
     @Transactional
     public Account createAccount(Member member, AccountCreateRequestDto requestDto) {
-        AccountType resolvedType = requestDto == null || requestDto.getAccountType() == null
-                ? AccountType.DEPOSIT_WITHDRAWAL
-                : requestDto.getAccountType();
-        if (resolvedType.isInterestBearing()
-                && !accountRepository.existsByMemberAndAccountTypeAndAccountStatus(
-                member,
-                AccountType.DEPOSIT_WITHDRAWAL,
-                AccountStatus.ACTIVE
-        )) {
+        AccountType resolvedType = requestDto.getAccountType() == null ? AccountType.DEPOSIT_WITHDRAWAL : requestDto.getAccountType();
+
+        if (resolvedType.isInterestBearing() && !accountRepository.existsByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE)) {
             throw new IllegalArgumentException("예적금 계좌를 만들려면 먼저 활성 상태의 입출금 계좌가 필요합니다");
         }
 
-        Account savingsSourceAccount = resolvedType == AccountType.INSTALLMENT_SAVINGS
-                ? resolveSavingsSourceAccount(member, requestDto)
-                : null;
-        Account timeDepositSourceAccount = resolvedType == AccountType.TIME_DEPOSIT
-                ? resolveTimeDepositSourceAccount(member, requestDto)
-                : null;
-
+        Account savingsSourceAccount = resolvedType == AccountType.INSTALLMENT_SAVINGS ? resolveSavingsSourceAccount(member, requestDto) : null;
+        Account timeDepositSourceAccount = resolvedType == AccountType.TIME_DEPOSIT ? resolveTimeDepositSourceAccount(member, requestDto) : null;
         String accountFirst = "919";
         String accountLast = createAccountLast();
         String accountNumber = accountFirst + accountLast;
@@ -85,34 +79,17 @@ public class AccountService {
                 .member(member)
                 .build();
 
-        if (resolvedType == AccountType.INSTALLMENT_SAVINGS) {
-            account.configureSavingsAutoTransfer(
-                    savingsSourceAccount,
-                    requestDto.getMonthlySavingsAmount(),
-                    requestDto.getMonthlySavingsDay(),
-                    LocalDate.now()
-            );
-        }
-
-        if (resolvedType == AccountType.TIME_DEPOSIT) {
+        if (resolvedType == AccountType.INSTALLMENT_SAVINGS)
+            account.configureSavingsAutoTransfer(savingsSourceAccount, requestDto.getMonthlySavingsAmount(), requestDto.getMonthlySavingsDay(), LocalDate.now());
+        else if (resolvedType == AccountType.TIME_DEPOSIT)
             account.configureTimeDepositTerm(requestDto.getMaturityMonths());
-        }
 
         Account savedAccount = accountRepository.save(account);
-        if (resolvedType == AccountType.INSTALLMENT_SAVINGS) {
-            openSavingsAccount(
-                    savingsSourceAccount,
-                    savedAccount,
-                    requestDto.getMonthlySavingsAmount()
-            );
-        }
-        if (resolvedType == AccountType.TIME_DEPOSIT) {
-            openTimeDeposit(
-                    timeDepositSourceAccount,
-                    savedAccount,
-                    requestDto.getTimeDepositAmount()
-            );
-        }
+
+        if (resolvedType == AccountType.INSTALLMENT_SAVINGS)
+            openSavingsAccount(savingsSourceAccount, savedAccount, requestDto.getMonthlySavingsAmount());
+        else if (resolvedType == AccountType.TIME_DEPOSIT)
+            openTimeDeposit(timeDepositSourceAccount, savedAccount, requestDto.getTimeDepositAmount());
 
         return savedAccount;
     }
@@ -133,8 +110,8 @@ public class AccountService {
         return accountRepository.findByMember(member);
     }
 
-    public List<Account> findActiveByMember(Member member) {
-        return accountRepository.findByMemberAndAccountStatus(member, AccountStatus.ACTIVE);
+    public List<AccountResponseDto> findActiveByMember(Member member) {
+        return accountRepository.findByMemberAndAccountStatus(member, AccountStatus.ACTIVE).stream().map(AccountResponseDto::new).toList();
     }
 
     public List<Account> findAll() {
@@ -146,20 +123,17 @@ public class AccountService {
     }
 
     public boolean hasActiveSavingsUsingSource(Account sourceAccount) {
-        return accountRepository.existsBySavingsSourceAccountAndAccountStatusIn(
-                sourceAccount,
-                List.of(AccountStatus.ACTIVE, AccountStatus.MATURED)
-        );
+        return accountRepository.existsBySavingsSourceAccountAndAccountStatusIn(sourceAccount, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED));
     }
 
     @Transactional
     public void changeAccountName(String accountNum, String name) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("계좌명을 입력해주세요");
-        }
-        if (name.trim().length() > 100) {
+        } else if (name.trim().length() > 100) {
             throw new IllegalArgumentException("계좌명은 100자 이하여야 합니다");
         }
+
         Account account = findByAccount(accountNum);
 
         account.changeName(name.trim());
@@ -169,25 +143,20 @@ public class AccountService {
     public Account tranAccount(AccountTranDto dto) {
         if (dto.getAmount() < 10000) {
             throw new IllegalArgumentException("이체 금액은 1만원 이상이어야 합니다");
-        }
-
-        if (Objects.equals(dto.getAccount(), dto.getTranAccount())) {
+        } else if (Objects.equals(dto.getAccount(), dto.getTranAccount())) {
             throw new IllegalArgumentException("같은 계좌로 이체할 수 없습니다");
         }
 
-        String firstAccountNumber = dto.getAccount().compareTo(dto.getTranAccount()) <= 0
-                ? dto.getAccount() : dto.getTranAccount();
-        String secondAccountNumber = firstAccountNumber.equals(dto.getAccount())
-                ? dto.getTranAccount() : dto.getAccount();
+        String firstAccountNumber = dto.getAccount().compareTo(dto.getTranAccount()) <= 0 ? dto.getAccount() : dto.getTranAccount();
+        String secondAccountNumber = firstAccountNumber.equals(dto.getAccount()) ? dto.getTranAccount() : dto.getAccount();
         Account firstLockedAccount = findByAccountForUpdate(firstAccountNumber);
         Account secondLockedAccount = findByAccountForUpdate(secondAccountNumber);
         Account account = dto.getAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
         Account tranAccount = dto.getTranAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
+        LocalDateTime transactionTime = LocalDateTime.now();
 
         validateOutgoingTransaction(account);
         validateIncomingTransaction(tranAccount);
-
-        LocalDateTime transactionTime = LocalDateTime.now();
         prepareBalanceChange(account, transactionTime);
         prepareBalanceChange(tranAccount, transactionTime);
 
@@ -197,6 +166,7 @@ public class AccountService {
 
         account.subAmount(dto.getAmount());
         tranAccount.addAmount(dto.getAmount());
+
         AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
                 .transactionType(AccountTransactionType.TRANSFER)
                 .transactionStatus(AccountTransactionStatus.COMPLETED)
@@ -209,6 +179,7 @@ public class AccountService {
                 .bankName("Kwanwoo site account")
                 .transactionTime(transactionTime)
                 .build());
+
         notifyTransaction(transaction);
 
         return account;
@@ -221,10 +192,12 @@ public class AccountService {
         }
 
         Account account = findByAccount(accountNum);
-        validateIncomingTransaction(account);
         LocalDateTime transactionTime = LocalDateTime.now();
+
+        validateIncomingTransaction(account);
         prepareBalanceChange(account, transactionTime);
         account.addAmount(amount);
+
         AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
                 .transactionType(AccountTransactionType.DEPOSIT)
                 .transactionStatus(AccountTransactionStatus.COMPLETED)
@@ -236,6 +209,7 @@ public class AccountService {
                 .bankName("Kwanwoo site account")
                 .transactionTime(transactionTime)
                 .build());
+
         notifyTransaction(transaction);
 
         return account;
@@ -283,6 +257,7 @@ public class AccountService {
                 .build());
 
         AccountTransaction interestTransaction = null;
+
         if (interest > 0L) {
             settlementAccount.addAmount(interest);
             interestTransaction = accountTransactionRepository.save(AccountTransaction.builder()
@@ -300,18 +275,10 @@ public class AccountService {
         }
 
         notifyTransaction(principalTransaction);
-        if (interestTransaction != null) {
-            notifyTransaction(interestTransaction);
-        }
 
-        return new AccountSettlementResult(
-                source.getAccount(),
-                settlementAccount.getAccount(),
-                principal,
-                interest,
-                settlementAmount,
-                matured
-        );
+        if (interestTransaction != null) notifyTransaction(interestTransaction);
+
+        return new AccountSettlementResult(source.getAccount(), settlementAccount.getAccount(), principal, interest, settlementAmount, matured);
     }
 
     @Transactional
@@ -321,9 +288,7 @@ public class AccountService {
     }
 
     public void accrueInterest(Account account, LocalDateTime calculationTime) {
-        if (account != null) {
-            prepareBalanceChange(account, calculationTime);
-        }
+        if (account != null) prepareBalanceChange(account, calculationTime);
     }
 
     @Transactional
@@ -348,26 +313,18 @@ public class AccountService {
     }
 
     private String createDefaultAccountName(AccountType accountType) {
-        AccountType resolvedType = accountType == null
-                ? AccountType.DEPOSIT_WITHDRAWAL
-                : accountType;
+        AccountType resolvedType = accountType == null ? AccountType.DEPOSIT_WITHDRAWAL : accountType;
 
         return resolvedType.getDefaultAccountName();
     }
 
     void notifyTransaction(AccountTransaction transaction) {
         if (transaction.getWithdrawalAccount() != null) {
-            notifyAccountMember(
-                    transaction.getWithdrawalAccount(),
-                    createTransactionMessage(transaction, transaction.getWithdrawalAccount())
-            );
+            notifyAccountMember(transaction.getWithdrawalAccount(), createTransactionMessage(transaction, transaction.getWithdrawalAccount()));
         }
 
         if (transaction.getDepositAccount() != null) {
-            notifyAccountMember(
-                    transaction.getDepositAccount(),
-                    createTransactionMessage(transaction, transaction.getDepositAccount())
-            );
+            notifyAccountMember(transaction.getDepositAccount(), createTransactionMessage(transaction, transaction.getDepositAccount()));
         }
     }
 
@@ -432,53 +389,40 @@ public class AccountService {
     }
 
     private void validateSettlement(Account source, Account settlementAccount, Member member) {
-        if (source.getMember() == null || !source.getMember().getId().equals(member.getId())
-                || settlementAccount.getMember() == null
-                || !settlementAccount.getMember().getId().equals(member.getId())) {
+        if (source.getMember() == null || !source.getMember().getId().equals(member.getId()) || settlementAccount.getMember() == null || !settlementAccount.getMember().getId().equals(member.getId())) {
             throw new SecurityException("본인 계좌로만 해지 정산할 수 있습니다");
-        }
-        if (!source.isInterestBearing()) {
+        } else if (!source.isInterestBearing()) {
             throw new IllegalArgumentException("예적금 계좌만 해지할 수 있습니다");
-        }
-        if (source.getAccountStatus() == AccountStatus.TERMINATED) {
+        } else if (source.getAccountStatus() == AccountStatus.TERMINATED) {
             throw new IllegalArgumentException("이미 해지된 계좌입니다");
-        }
-        if (settlementAccount.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL
+        } else if (settlementAccount.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL
                 || settlementAccount.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("활성 상태의 입출금 계좌로만 정산할 수 있습니다");
-        }
-        if (source.getAccount().equals(settlementAccount.getAccount())) {
+        } else if (source.getAccount().equals(settlementAccount.getAccount())) {
             throw new IllegalArgumentException("해지할 계좌와 정산 계좌는 다르게 선택해주세요");
         }
     }
 
     private Account resolveSavingsSourceAccount(Member member, AccountCreateRequestDto requestDto) {
-        if (requestDto == null || requestDto.getMonthlySavingsAmount() == null
-                || requestDto.getMonthlySavingsAmount() < 10_000L) {
+        if (requestDto == null || requestDto.getMonthlySavingsAmount() == null || requestDto.getMonthlySavingsAmount() < 10_000L) {
             throw new IllegalArgumentException("적금 월 납입액은 1만원 이상이어야 합니다");
-        }
-        if (requestDto.getMonthlySavingsDay() == null
-                || requestDto.getMonthlySavingsDay() < 1
-                || requestDto.getMonthlySavingsDay() > 31) {
+        } else if (requestDto.getMonthlySavingsDay() == null || requestDto.getMonthlySavingsDay() < 1 || requestDto.getMonthlySavingsDay() > 31) {
             throw new IllegalArgumentException("적금 자동이체일은 1일부터 31일 사이로 선택해주세요");
-        }
-        if (!Boolean.TRUE.equals(requestDto.getAutoTerminationAcknowledged())) {
+        } else if (!Boolean.TRUE.equals(requestDto.getAutoTerminationAcknowledged())) {
             throw new IllegalArgumentException("3일 내 미납 시 적금 계좌가 자동 해지된다는 내용에 동의해주세요");
         }
 
-        List<Account> checkingAccounts = accountRepository.findByMemberAndAccountTypeAndAccountStatus(
-                member,
-                AccountType.DEPOSIT_WITHDRAWAL,
-                AccountStatus.ACTIVE
-        );
+        List<Account> checkingAccounts = accountRepository.findByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE);
         String requestedSource = requestDto.getSavingsSourceAccount();
         Account selected;
+
         if (checkingAccounts.size() == 1 && (requestedSource == null || requestedSource.isBlank())) {
             selected = checkingAccounts.get(0);
         } else {
             if (requestedSource == null || requestedSource.isBlank()) {
                 throw new IllegalArgumentException("적금 자동이체에 사용할 입출금 계좌를 선택해주세요");
             }
+
             selected = checkingAccounts.stream()
                     .filter(account -> account.getAccount().equals(requestedSource))
                     .findFirst()
@@ -486,47 +430,38 @@ public class AccountService {
                             "본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다"
                     ));
         }
+
         return lockAndValidateSavingsSource(selected, member, requestDto.getMonthlySavingsAmount());
     }
 
     private Account lockAndValidateSavingsSource(Account selected, Member member, long paymentAmount) {
         Account lockedSource = findForUpdate(selected.getAccount());
-        if (lockedSource.getMember() == null
-                || !lockedSource.getMember().getId().equals(member.getId())
-                || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL
-                || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
+        if (lockedSource.getMember() == null || !lockedSource.getMember().getId().equals(member.getId()) || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다");
-        }
-        if (lockedSource.getAmount() < paymentAmount) {
+        } else if (lockedSource.getAmount() < paymentAmount) {
             throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 적금 납입 금액보다 부족합니다");
         }
         return lockedSource;
     }
 
     private Account resolveTimeDepositSourceAccount(Member member, AccountCreateRequestDto requestDto) {
-        if (requestDto == null || requestDto.getTimeDepositAmount() == null
-                || requestDto.getTimeDepositAmount() < 10_000L) {
+        if (requestDto == null || requestDto.getTimeDepositAmount() == null || requestDto.getTimeDepositAmount() < 10_000L) {
             throw new IllegalArgumentException("예금 금액은 1만원 이상이어야 합니다");
-        }
-        if (requestDto.getMaturityMonths() == null
-                || requestDto.getMaturityMonths() < 1
-                || requestDto.getMaturityMonths() > 24) {
+        } else if (requestDto.getMaturityMonths() == null || requestDto.getMaturityMonths() < 1 || requestDto.getMaturityMonths() > 24) {
             throw new IllegalArgumentException("예금 만기 기간은 1개월부터 24개월까지 선택할 수 있습니다");
         }
 
-        List<Account> checkingAccounts = accountRepository.findByMemberAndAccountTypeAndAccountStatus(
-                member,
-                AccountType.DEPOSIT_WITHDRAWAL,
-                AccountStatus.ACTIVE
-        );
+        List<Account> checkingAccounts = accountRepository.findByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE);
         String requestedSource = requestDto.getTimeDepositSourceAccount();
         Account selected;
+
         if (checkingAccounts.size() == 1 && (requestedSource == null || requestedSource.isBlank())) {
             selected = checkingAccounts.get(0);
         } else {
             if (requestedSource == null || requestedSource.isBlank()) {
                 throw new IllegalArgumentException("예금 원금을 출금할 입출금 계좌를 선택해주세요");
             }
+
             selected = checkingAccounts.stream()
                     .filter(account -> account.getAccount().equals(requestedSource))
                     .findFirst()
@@ -536,22 +471,22 @@ public class AccountService {
         }
 
         Account lockedSource = findForUpdate(selected.getAccount());
-        if (lockedSource.getMember() == null
-                || !lockedSource.getMember().getId().equals(member.getId())
-                || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL
-                || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
+
+        if (lockedSource.getMember() == null || !lockedSource.getMember().getId().equals(member.getId()) || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("본인의 활성 입출금 계좌만 예금 출금 계좌로 선택할 수 있습니다");
-        }
-        if (lockedSource.getAmount() < requestDto.getTimeDepositAmount()) {
+        } else if (lockedSource.getAmount() < requestDto.getTimeDepositAmount()) {
             throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 예금 금액보다 부족합니다");
         }
+
         return lockedSource;
     }
 
     private void openTimeDeposit(Account source, Account timeDeposit, long amount) {
         LocalDateTime openingTime = LocalDateTime.now();
+
         source.subAmount(amount);
         timeDeposit.addAmount(amount);
+
         AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
                 .transactionType(AccountTransactionType.TIME_DEPOSIT_OPENING)
                 .transactionStatus(AccountTransactionStatus.COMPLETED)
@@ -565,13 +500,16 @@ public class AccountService {
                 .bankName("Kwanwoo site account")
                 .transactionTime(openingTime)
                 .build());
+
         notifyTransaction(transaction);
     }
 
     private void openSavingsAccount(Account source, Account savings, long amount) {
         LocalDateTime openingTime = LocalDateTime.now();
+
         source.subAmount(amount);
         savings.addAmount(amount);
+
         AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
                 .transactionType(AccountTransactionType.SAVINGS_PAYMENT)
                 .transactionStatus(AccountTransactionStatus.COMPLETED)
@@ -585,6 +523,7 @@ public class AccountService {
                 .bankName("Kwanwoo site account")
                 .transactionTime(openingTime)
                 .build());
+
         savings.completeInitialSavingsPayment(openingTime.toLocalDate());
         notifyTransaction(transaction);
     }

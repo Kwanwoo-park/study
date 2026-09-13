@@ -27,11 +27,18 @@ public class AccountFacade {
     public ResponseEntity<?> create(Member member, AccountType accountType) {
         AccountCreateRequestDto requestDto = new AccountCreateRequestDto();
         requestDto.setAccountType(accountType);
+
         return create(member, requestDto);
     }
 
     public ResponseEntity<?> create(Member member, AccountCreateRequestDto requestDto) {
         Account account;
+
+        if (requestDto == null) {
+            requestDto = new AccountCreateRequestDto();
+            requestDto.setAccountType(AccountType.DEPOSIT_WITHDRAWAL);
+        }
+
         try {
             account = accountService.createAccount(member, requestDto);
         } catch (IllegalArgumentException e) {
@@ -57,18 +64,11 @@ public class AccountFacade {
     }
 
     public ResponseEntity<?> tranAccount(AccountTranDto dto, Member member) {
-        if (dto.getTranAccount() == null || dto.getTranAccount().isBlank()) {
-            return accountNotFound();
-        }
+        ResponseEntity<?> validation = validateOwner(dto.getTranAccount());
+        if (validation != null) return validation;
 
-        if (accountService.existsByAccount(dto.getTranAccount())) {
-            return accountNotFound();
-        }
-
-        ResponseEntity<?> validation = validateOwner(dto.getAccount(), member);
-        if (validation != null) {
-            return validation;
-        }
+        validation = validateOwner(dto.getAccount(), member);
+        if (validation != null) return validation;
 
         Account account;
 
@@ -90,9 +90,7 @@ public class AccountFacade {
 
     public ResponseEntity<?> deposit(AccountRequestDto dto, Member member) {
         ResponseEntity<?> validation = validateOwner(dto.getAccount(), member);
-        if (validation != null) {
-            return validation;
-        }
+        if (validation != null) return validation;
 
         Account account;
 
@@ -114,9 +112,7 @@ public class AccountFacade {
 
     public ResponseEntity<?> changeAccountName(AccountRequestDto dto, Member member) {
         ResponseEntity<?> validation = validateOwner(dto.getAccount(), member);
-        if (validation != null) {
-            return validation;
-        }
+        if (validation != null) return validation;
 
         accountService.changeAccountName(dto.getAccount(), dto.getName());
 
@@ -127,19 +123,16 @@ public class AccountFacade {
 
     public ResponseEntity<?> delete(String account, Member member) {
         ResponseEntity<?> validation = validateOwner(account, member);
-        if (validation != null) {
-            return validation;
-        }
+        if (validation != null) return validation;
 
         Account target = accountService.findByAccount(account);
-        if (target.getAccountType() == AccountType.DEPOSIT_WITHDRAWAL
-                && accountService.hasActiveSavingsUsingSource(target)) {
+
+        if (target.getAccountType() == AccountType.DEPOSIT_WITHDRAWAL && accountService.hasActiveSavingsUsingSource(target)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
                     "message", "적금 자동이체에 사용 중인 입출금 계좌는 삭제할 수 없습니다"
             ));
-        }
-        if (target.isInterestBearing() && target.getAccountStatus() != AccountStatus.TERMINATED) {
+        } else if (target.isInterestBearing() && target.getAccountStatus() != AccountStatus.TERMINATED) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
                     "message", "예적금 계좌는 해지 정산 기능을 이용해주세요"
@@ -155,11 +148,7 @@ public class AccountFacade {
 
     public ResponseEntity<?> terminate(String accountNumber, String settlementAccountNumber, Member member) {
         try {
-            AccountSettlementResult settlement = accountService.terminateInterestAccount(
-                    accountNumber,
-                    settlementAccountNumber,
-                    member
-            );
+            AccountSettlementResult settlement = accountService.terminateInterestAccount(accountNumber, settlementAccountNumber, member);
 
             return ResponseEntity.ok(Map.of(
                     "result", 10L,
@@ -189,11 +178,24 @@ public class AccountFacade {
         }
 
         Account account = accountService.findByAccount(accountNumber);
+
         if (!account.getMember().getId().equals(member.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "result", -10L,
                     "message", "본인 계좌만 사용할 수 있습니다"
             ));
+        }
+
+        return null;
+    }
+
+    private ResponseEntity<?> validateOwner(String tranAccountNumber) {
+        if (tranAccountNumber == null || tranAccountNumber.isBlank()) {
+            return accountNotFound();
+        }
+
+        if (accountService.existsByAccount(tranAccountNumber)) {
+            return accountNotFound();
         }
 
         return null;

@@ -64,9 +64,7 @@ public class AccountInterest implements Serializable {
     @Column(name = "paid_amount", nullable = false)
     private long paidAmount;
 
-    static AccountInterest create(Account account,
-                                  BigDecimal annualInterestRate,
-                                  LocalDateTime openedAt) {
+    static AccountInterest create(Account account, BigDecimal annualInterestRate, LocalDateTime openedAt) {
         AccountInterest interest = new AccountInterest();
         interest.account = account;
         interest.annualInterestRate = annualInterestRate;
@@ -77,32 +75,28 @@ public class AccountInterest implements Serializable {
         return interest;
     }
 
-    BigDecimal calculateAccruedInterestAt(long principal,
-                                          AccountStatus accountStatus,
-                                          LocalDateTime calculationTime) {
+    BigDecimal calculateAccruedInterestAt(long principal, AccountStatus accountStatus, LocalDateTime calculationTime) {
         BigDecimal accumulated = accruedInterest == null ? BigDecimal.ZERO : accruedInterest;
-        if (accountStatus == AccountStatus.TERMINATED) {
-            return accumulated;
-        }
+
+        if (accountStatus == AccountStatus.TERMINATED) return accumulated;
 
         LocalDateTime end = calculationTime.isAfter(maturityAt) ? maturityAt : calculationTime;
-        if (!end.isAfter(lastCalculatedAt) || principal <= 0L) {
-            return accumulated;
-        }
+
+        if (!end.isAfter(lastCalculatedAt) || principal <= 0L) return accumulated;
 
         long seconds = Duration.between(lastCalculatedAt, end).getSeconds();
         BigDecimal pending = BigDecimal.valueOf(principal)
                 .multiply(annualInterestRate)
                 .multiply(BigDecimal.valueOf(seconds))
                 .divide(BigDecimal.valueOf(365L * 24L * 60L * 60L), 10, RoundingMode.HALF_UP);
+
         return accumulated.add(pending);
     }
 
-    void accrueUntil(long principal,
-                     AccountStatus accountStatus,
-                     LocalDateTime calculationTime) {
+    void accrueUntil(long principal, AccountStatus accountStatus, LocalDateTime calculationTime) {
         LocalDateTime end = calculationTime.isAfter(maturityAt) ? maturityAt : calculationTime;
         accruedInterest = calculateAccruedInterestAt(principal, accountStatus, calculationTime);
+
         if (end.isAfter(lastCalculatedAt)) {
             lastCalculatedAt = end;
         }
@@ -112,6 +106,7 @@ public class AccountInterest implements Serializable {
         long payableInterest = accruedInterest.setScale(0, RoundingMode.DOWN).longValue();
         paidAt = settlementTime;
         paidAmount = payableInterest;
+
         return payableInterest;
     }
 

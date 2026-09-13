@@ -54,11 +54,7 @@ public class SavingsAutoTransfer implements Serializable {
     @Column(name = "last_failure_notification_date")
     private LocalDate lastFailureNotificationDate;
 
-    static SavingsAutoTransfer create(Account savingsAccount,
-                                      Account sourceAccount,
-                                      long monthlyAmount,
-                                      int paymentDay,
-                                      LocalDate configuredDate) {
+    static SavingsAutoTransfer create(Account savingsAccount, Account sourceAccount, long monthlyAmount, int paymentDay, LocalDate configuredDate) {
         SavingsAutoTransfer transfer = new SavingsAutoTransfer();
         transfer.savingsAccount = savingsAccount;
         transfer.sourceAccount = sourceAccount;
@@ -75,18 +71,14 @@ public class SavingsAutoTransfer implements Serializable {
 
         YearMonth nextMonth = YearMonth.from(nextPaymentDate).plusMonths(1L);
         LocalDate nextDate = nextMonth.atDay(Math.min(paymentDay, nextMonth.lengthOfMonth()));
-        nextPaymentDate = maturityAt != null && nextDate.isAfter(maturityAt.toLocalDate())
-                ? null
-                : nextDate;
+        nextPaymentDate = maturityAt != null && nextDate.isAfter(maturityAt.toLocalDate()) ? null : nextDate;
         lastFailureNotificationDate = null;
     }
 
     void completeInitialPayment(LocalDate paymentDate, LocalDateTime maturityAt) {
         YearMonth nextMonth = YearMonth.from(paymentDate).plusMonths(1L);
         LocalDate nextDate = nextMonth.atDay(Math.min(paymentDay, nextMonth.lengthOfMonth()));
-        nextPaymentDate = maturityAt != null && nextDate.isAfter(maturityAt.toLocalDate())
-                ? null
-                : nextDate;
+        nextPaymentDate = maturityAt != null && nextDate.isAfter(maturityAt.toLocalDate()) ? null : nextDate;
         lastFailureNotificationDate = null;
     }
 
@@ -101,19 +93,18 @@ public class SavingsAutoTransfer implements Serializable {
     }
 
     boolean isConfigured() {
-        return sourceAccount != null
-                && monthlyAmount != null
-                && paymentDay != null
-                && nextPaymentDate != null;
+        return sourceAccount != null && monthlyAmount != null && paymentDay != null && nextPaymentDate != null;
     }
 
     private static LocalDate calculateNextPaymentDate(LocalDate configuredDate, int paymentDay) {
         YearMonth currentMonth = YearMonth.from(configuredDate);
         LocalDate candidate = currentMonth.atDay(Math.min(paymentDay, currentMonth.lengthOfMonth()));
+
         if (!candidate.isAfter(configuredDate)) {
             YearMonth nextMonth = currentMonth.plusMonths(1L);
             candidate = nextMonth.atDay(Math.min(paymentDay, nextMonth.lengthOfMonth()));
         }
+
         return candidate;
     }
 }

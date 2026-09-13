@@ -164,9 +164,7 @@ public class MemberViewController {
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
         model.addAttribute("chatEntry", "chat".equalsIgnoreCase(source));
-        model.addAttribute("transferAccounts", accountService.findActiveByMember(search_member).stream()
-                .map(AccountResponseDto::new)
-                .toList());
+        model.addAttribute("transferAccounts", accountService.findActiveByMember(search_member));
 
         return "member/member_detail";
     }

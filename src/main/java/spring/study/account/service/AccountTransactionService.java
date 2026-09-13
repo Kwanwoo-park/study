@@ -31,11 +31,7 @@ public class AccountTransactionService {
     public Page<AccountTransaction> findByAccount(String accountNumber, int page) {
         Account account = accountService.findByAccount(accountNumber);
 
-        return accountTransactionRepository.findByWithdrawalAccountOrDepositAccount(
-                account,
-                account,
-                createPageRequest(page)
-        );
+        return accountTransactionRepository.findByWithdrawalAccountOrDepositAccount(account, account, createPageRequest(page));
     }
 
     public Page<AccountTransaction> findByWithdrawalAccount(String accountNumber, int page) {
@@ -67,9 +63,11 @@ public class AccountTransactionService {
         if (reversalWithdrawalAccount != null) {
             accountService.validateOutgoingTransaction(reversalWithdrawalAccount);
             accountService.accrueInterest(reversalWithdrawalAccount, cancellationTime);
+
             if (reversalWithdrawalAccount.getAmount() < transaction.getAmount()) {
                 throw new IllegalArgumentException("취소할 계좌의 잔액이 부족합니다");
             }
+
             reversalWithdrawalAccount.subAmount(transaction.getAmount());
         }
 
@@ -100,28 +98,15 @@ public class AccountTransactionService {
 
     private void validateCancelable(AccountTransaction transaction, Member member) {
         if (!isTransactionOwner(transaction, member)) {
-            String message = transaction.getTransactionType() == AccountTransactionType.TRANSFER
-                    ? "계좌이체는 보낸 사람만 취소할 수 있습니다"
-                    : "본인 거래만 취소할 수 있습니다";
+            String message = transaction.getTransactionType() == AccountTransactionType.TRANSFER ? "계좌이체는 보낸 사람만 취소할 수 있습니다" : "본인 거래만 취소할 수 있습니다";
             throw new SecurityException(message);
-        }
-
-        if (transaction.getTransactionType() == AccountTransactionType.CANCEL) {
+        } else if (transaction.getTransactionType() == AccountTransactionType.CANCEL) {
             throw new IllegalArgumentException("취소 거래는 다시 취소할 수 없습니다");
-        }
-
-        if (transaction.getTransactionType() == AccountTransactionType.INTEREST
-                || transaction.getTransactionType() == AccountTransactionType.TERMINATION
-                || transaction.getTransactionType() == AccountTransactionType.SAVINGS_PAYMENT
-                || transaction.getTransactionType() == AccountTransactionType.TIME_DEPOSIT_OPENING) {
+        } else if (transaction.getTransactionType() == AccountTransactionType.INTEREST || transaction.getTransactionType() == AccountTransactionType.TERMINATION || transaction.getTransactionType() == AccountTransactionType.SAVINGS_PAYMENT || transaction.getTransactionType() == AccountTransactionType.TIME_DEPOSIT_OPENING) {
             throw new IllegalArgumentException("이자, 해지 정산 및 예적금 개설 거래는 취소할 수 없습니다");
-        }
-
-        if (transaction.getTransactionStatus() != AccountTransactionStatus.COMPLETED) {
+        } else if (transaction.getTransactionStatus() != AccountTransactionStatus.COMPLETED) {
             throw new IllegalArgumentException("완료된 거래만 취소할 수 있습니다");
-        }
-
-        if (transaction.getTransactionTime().plusDays(1).isBefore(LocalDateTime.now())) {
+        } else if (transaction.getTransactionTime().plusDays(1).isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("거래 후 하루가 지난 거래는 취소할 수 없습니다");
         }
     }
@@ -142,35 +127,29 @@ public class AccountTransactionService {
         if (first == null) return new Account[]{accountService.findByAccountForUpdate(second.getAccount())};
         if (second == null) return new Account[]{accountService.findByAccountForUpdate(first.getAccount())};
 
-        String firstNumber = first.getAccount().compareTo(second.getAccount()) <= 0
-                ? first.getAccount() : second.getAccount();
+        String firstNumber = first.getAccount().compareTo(second.getAccount()) <= 0 ? first.getAccount() : second.getAccount();
         String secondNumber = firstNumber.equals(first.getAccount()) ? second.getAccount() : first.getAccount();
-        return new Account[]{
-                accountService.findByAccountForUpdate(firstNumber),
-                accountService.findByAccountForUpdate(secondNumber)
-        };
+        return new Account[]{ accountService.findByAccountForUpdate(firstNumber), accountService.findByAccountForUpdate(secondNumber) };
     }
 
     private Account accountByNumber(Account[] accounts, Account original) {
         if (original == null) return null;
+
         for (Account account : accounts) {
             if (account.getAccount().equals(original.getAccount())) return account;
         }
+
         throw new IllegalStateException("거래 계좌 잠금에 실패했습니다");
     }
 
     private boolean isAccountOwner(Account account, Long memberId) {
-        return account != null
-                && account.getMember() != null
-                && account.getMember().getId().equals(memberId);
+        return account != null && account.getMember() != null && account.getMember().getId().equals(memberId);
     }
 
     private long getBalanceAfterCancel(Account withdrawalAccount, Account depositAccount) {
         if (withdrawalAccount != null) {
             return withdrawalAccount.getAmount();
-        }
-
-        if (depositAccount != null) {
+        } else if (depositAccount != null) {
             return depositAccount.getAmount();
         }
 
@@ -178,10 +157,6 @@ public class AccountTransactionService {
     }
 
     private PageRequest createPageRequest(int page) {
-        return PageRequest.of(
-                Math.max(page, 0),
-                PAGE_SIZE,
-                Sort.by(Sort.Order.desc("transactionTime"), Sort.Order.desc("id"))
-        );
+        return PageRequest.of(Math.max(page, 0), PAGE_SIZE, Sort.by(Sort.Order.desc("transactionTime"), Sort.Order.desc("id")));
     }
 }

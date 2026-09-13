@@ -25,7 +25,10 @@ public class AccountViewController {
     private final MemberService memberService;
 
     @GetMapping
-    public String account(Model model, HttpServletRequest request, @RequestParam(value = "tranAccount", required = false) String tranAccount, @RequestParam(value = "tranName", required = false) String tranName) {
+    public String account(Model model,
+                          HttpServletRequest request,
+                          @RequestParam(value = "tranAccount") String tranAccount,
+                          @RequestParam(value = "tranName") String tranName) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             return "redirect:/member/login?error=true&exception=Not Found&url=/account";
@@ -47,9 +50,7 @@ public class AccountViewController {
         }
 
         Member transferMember = memberService.findMember(email);
-        List<AccountResponseDto> transferAccounts = accountService.findActiveByMember(transferMember).stream()
-                .map(AccountResponseDto::new)
-                .toList();
+        List<AccountResponseDto> transferAccounts = accountService.findActiveByMember(transferMember);
 
         if (transferAccounts.size() == 1) {
             redirectAttributes.addAttribute("tranAccount", transferAccounts.get(0).getAccount());

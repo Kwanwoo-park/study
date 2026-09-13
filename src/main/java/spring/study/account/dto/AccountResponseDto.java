@@ -18,7 +18,6 @@ public class AccountResponseDto {
     private long amount;
     private String name;
     private AccountType accountType;
-    private String accountTypeName;
     private AccountStatus accountStatus;
     private BigDecimal annualInterestRate;
     private BigDecimal annualInterestRatePercent;
@@ -39,7 +38,6 @@ public class AccountResponseDto {
         this.amount = entity.getAmount();
         this.name = entity.getName();
         this.accountType = entity.getAccountType();
-        this.accountTypeName = entity.getAccountType().getDisplayName();
         this.accountStatus = entity.getAccountStatus();
         this.annualInterestRate = entity.getAnnualInterestRate();
         this.annualInterestRatePercent = entity.getAnnualInterestRate().multiply(BigDecimal.valueOf(100L));

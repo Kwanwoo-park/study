@@ -178,7 +178,7 @@
                 payload.monthlySavingsDay = paymentDay;
                 payload.autoTerminationAcknowledged = true;
             }
-            if (accountType === 'TIME_DEPOSIT') {
+            else if (accountType === 'TIME_DEPOSIT') {
                 const amount = Number(timeDepositAmount?.value || 0);
                 const maturityMonths = Number(timeDepositMaturityMonths?.value || 0);
                 const sourceAccount = getSelectedCheckingAccount(timeDepositSourceAccountSelect);
@@ -186,15 +186,15 @@
                     alert('예금 원금을 출금할 입출금 계좌를 선택해주세요');
                     return;
                 }
-                if (amount < 10000) {
+                else if (amount < 10000) {
                     alert('예금 금액은 1만원 이상으로 입력해주세요');
                     return;
                 }
-                if (amount > Number(sourceAccount.amount || 0)) {
+                else if (amount > Number(sourceAccount.amount || 0)) {
                     alert('선택한 입출금 계좌의 잔액이 부족합니다');
                     return;
                 }
-                if (maturityMonths < 1 || maturityMonths > 24) {
+                else if (maturityMonths < 1 || maturityMonths > 24) {
                     alert('예금 만기 기간은 최대 24개월까지 선택할 수 있습니다');
                     return;
                 }
@@ -620,7 +620,7 @@
     }
 
     function getAccountTypeName(account) {
-        if (account.accountTypeName) return account.accountTypeName;
+        if (account.accountType.displayName) return account.accountType.displayName;
 
         const names = {
             DEPOSIT_WITHDRAWAL: '입출금',

@@ -24,16 +24,13 @@ public class AccountTransactionFacade {
 
     public ResponseEntity<?> getListByAccount(String accountNumber, int page, Member member) {
         ResponseEntity<?> validation = validateOwner(accountNumber, member);
-        if (validation != null) {
-            return validation;
-        }
+        if (validation != null) return validation;
 
         Page<AccountTransaction> transactionPage = accountTransactionService.findByAccount(accountNumber, page);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "list", transactionPage.getContent()
-                        .stream()
+                "list", transactionPage.getContent().stream()
                         .map(transaction -> new AccountTransactionResponseDto(transaction, member))
                         .toList(),
                 "page", transactionPage.getNumber(),

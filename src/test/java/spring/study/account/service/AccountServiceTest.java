@@ -68,7 +68,6 @@ class AccountServiceTest {
         assertEquals(AccountType.INSTALLMENT_SAVINGS, account.getAccountType());
         assertEquals("Kwanwoo site savings account", account.getName());
         AccountResponseDto response = new AccountResponseDto(account);
-        assertEquals("적금", response.getAccountTypeName());
         assertEquals(false, response.isOutgoingTransferAllowed());
         assertEquals(checking.getAccount(), response.getSavingsSourceAccount());
         assertEquals(100_000L, response.getMonthlySavingsAmount());

@@ -11,7 +11,6 @@ import spring.study.account.dto.AccountTerminationRequestDto;
 import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.facade.AccountFacade;
 import spring.study.account.facade.AccountTransactionFacade;
-import spring.study.account.entity.AccountType;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
@@ -27,16 +26,11 @@ public class AccountApiController {
     private final CommonFacade commonFacade;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createAccount(@RequestParam(required = false) AccountType accountType, @RequestBody(required = false) AccountCreateRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<?> createAccount(@RequestBody AccountCreateRequestDto requestDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        AccountCreateRequestDto resolvedRequest = requestDto == null ? new AccountCreateRequestDto() : requestDto;
-        if (resolvedRequest.getAccountType() == null) {
-            resolvedRequest.setAccountType(accountType == null ? AccountType.DEPOSIT_WITHDRAWAL : accountType);
-        }
-
-        return accountFacade.create(member, resolvedRequest);
+        return accountFacade.create(member, requestDto);
     }
 
     @GetMapping("/list")

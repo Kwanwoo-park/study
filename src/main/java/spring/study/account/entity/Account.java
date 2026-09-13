@@ -72,30 +72,26 @@ public class Account implements Serializable {
     @ManyToOne
     private Member member;
 
+    @PostLoad
+    @PrePersist
+    void applyDefaults() {
+        if (accountType == null) accountType = AccountType.DEPOSIT_WITHDRAWAL;
+
+        if (accountStatus == null) accountStatus = AccountStatus.ACTIVE;
+
+        if (openedAt == null) openedAt = LocalDateTime.now();
+
+        initializeInterestDetail();
+    }
+
     @Builder
     public Account(String account, long amount, String name, AccountType accountType, Member member) {
         this.account = account;
         this.amount = amount;
         this.name = name;
-        this.accountType = accountType == null ? AccountType.DEPOSIT_WITHDRAWAL : accountType;
-        this.accountStatus = AccountStatus.ACTIVE;
+        this.accountType = accountType;
         this.openedAt = LocalDateTime.now();
         this.member = member;
-        initializeInterestDetail();
-    }
-
-    @PostLoad
-    @PrePersist
-    void applyDefaults() {
-        if (accountType == null) {
-            accountType = AccountType.DEPOSIT_WITHDRAWAL;
-        }
-        if (accountStatus == null) {
-            accountStatus = AccountStatus.ACTIVE;
-        }
-        if (openedAt == null) {
-            openedAt = LocalDateTime.now();
-        }
         initializeInterestDetail();
     }
 
@@ -104,10 +100,10 @@ public class Account implements Serializable {
     }
 
     public BigDecimal calculateAccruedInterestAt(LocalDateTime calculationTime) {
-        if (!isInterestBearing()) {
-            return BigDecimal.ZERO;
-        }
+        if (!isInterestBearing()) return BigDecimal.ZERO;
+
         initializeInterestDetail();
+
         return interestDetail.calculateAccruedInterestAt(amount, accountStatus, calculationTime);
     }
 
@@ -115,63 +111,52 @@ public class Account implements Serializable {
         if (!isInterestBearing() || accountStatus == AccountStatus.TERMINATED) {
             return;
         }
+
         initializeInterestDetail();
         interestDetail.accrueUntil(amount, accountStatus, calculationTime);
-        if (!calculationTime.isBefore(interestDetail.getMaturityAt())) {
-            accountStatus = AccountStatus.MATURED;
-        }
+
+        if (!calculationTime.isBefore(interestDetail.getMaturityAt())) accountStatus = AccountStatus.MATURED;
     }
 
     public long terminateAndGetInterest(LocalDateTime terminationTime) {
         accrueInterestUntil(terminationTime);
+
         long payableInterest = interestDetail.settle(terminationTime);
         accountStatus = AccountStatus.TERMINATED;
-        if (savingsAutoTransfer != null) {
-            savingsAutoTransfer.disable();
-        }
+
+        if (savingsAutoTransfer != null) savingsAutoTransfer.disable();
+
         return payableInterest;
     }
 
     public void configureSavingsAutoTransfer(Account sourceAccount, long monthlyAmount, int paymentDay, LocalDate configuredDate) {
-        savingsAutoTransfer = SavingsAutoTransfer.create(
-                this,
-                sourceAccount,
-                monthlyAmount,
-                paymentDay,
-                configuredDate
-        );
+        savingsAutoTransfer = SavingsAutoTransfer.create(this, sourceAccount, monthlyAmount, paymentDay, configuredDate);
     }
 
     public void configureTimeDepositTerm(int maturityMonths) {
         if (accountType != AccountType.TIME_DEPOSIT) {
             throw new IllegalStateException("예금 계좌에만 만기 기간을 설정할 수 있습니다");
         }
+
         initializeInterestDetail();
+
         interestDetail.configureTerm(openedAt, maturityMonths);
     }
 
     public void completeSavingsPayment() {
-        if (savingsAutoTransfer != null) {
-            savingsAutoTransfer.completePayment(getMaturityAt());
-        }
+        if (savingsAutoTransfer != null) savingsAutoTransfer.completePayment(getMaturityAt());
     }
 
     public void completeInitialSavingsPayment(LocalDate paymentDate) {
-        if (savingsAutoTransfer != null) {
-            savingsAutoTransfer.completeInitialPayment(paymentDate, getMaturityAt());
-        }
+        if (savingsAutoTransfer != null) savingsAutoTransfer.completeInitialPayment(paymentDate, getMaturityAt());
     }
 
     public void recordSavingsFailureNotification(LocalDate notificationDate) {
-        if (savingsAutoTransfer != null) {
-            savingsAutoTransfer.recordFailureNotification(notificationDate);
-        }
+        if (savingsAutoTransfer != null) savingsAutoTransfer.recordFailureNotification(notificationDate);
     }
 
     public boolean isSavingsAutoTransferConfigured() {
-        return accountType == AccountType.INSTALLMENT_SAVINGS
-                && savingsAutoTransfer != null
-                && savingsAutoTransfer.isConfigured();
+        return accountType == AccountType.INSTALLMENT_SAVINGS && savingsAutoTransfer != null && savingsAutoTransfer.isConfigured();
     }
 
     public BigDecimal getAnnualInterestRate() {
@@ -259,8 +244,7 @@ public class Account implements Serializable {
     }
 
     private void initializeInterestDetail() {
-        if (isInterestBearing() && interestDetail == null && openedAt != null) {
+        if (isInterestBearing() && interestDetail == null && openedAt != null)
             interestDetail = AccountInterest.create(this, accountType.getAnnualInterestRate(), openedAt);
-        }
     }
 }

@@ -45,14 +45,18 @@ public class AccountTransactionResponseDto {
         this.counterpartyName = entity.getCounterpartyName();
         this.bankName = entity.getBankName();
         this.transactionTime = entity.getTransactionTime();
-        this.cancelable = entity.getTransactionStatus() == AccountTransactionStatus.COMPLETED
+        this.cancelable = canTransactionCancel(entity, member);
+    }
+
+    private boolean canTransactionCancel(AccountTransaction entity, Member member) {
+        return canMemberCancel(entity, member)
+                && entity.getTransactionStatus() == AccountTransactionStatus.COMPLETED
                 && entity.getTransactionType() != AccountTransactionType.CANCEL
                 && entity.getTransactionType() != AccountTransactionType.INTEREST
                 && entity.getTransactionType() != AccountTransactionType.TERMINATION
                 && entity.getTransactionType() != AccountTransactionType.SAVINGS_PAYMENT
                 && entity.getTransactionType() != AccountTransactionType.TIME_DEPOSIT_OPENING
-                && entity.getTransactionTime().plusDays(1).isAfter(LocalDateTime.now())
-                && canMemberCancel(entity, member);
+                && entity.getTransactionTime().plusDays(1).isAfter(LocalDateTime.now());
     }
 
     private boolean canMemberCancel(AccountTransaction entity, Member member) {

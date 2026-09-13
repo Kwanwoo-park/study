@@ -21,11 +21,7 @@ public interface AccountTransactionRepository extends JpaRepository<AccountTrans
     Optional<AccountTransaction> findByIdForUpdate(@Param("id") Long id);
 
     @EntityGraph(attributePaths = {"withdrawalAccount", "depositAccount"})
-    Page<AccountTransaction> findByWithdrawalAccountOrDepositAccount(
-            Account withdrawalAccount,
-            Account depositAccount,
-            Pageable pageable
-    );
+    Page<AccountTransaction> findByWithdrawalAccountOrDepositAccount(Account withdrawalAccount, Account depositAccount, Pageable pageable);
 
     @EntityGraph(attributePaths = {"withdrawalAccount", "depositAccount"})
     Page<AccountTransaction> findByWithdrawalAccount(Account withdrawalAccount, Pageable pageable);

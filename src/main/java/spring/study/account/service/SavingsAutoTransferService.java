@@ -31,11 +31,7 @@ public class SavingsAutoTransferService {
     private final NotificationService notificationService;
 
     public List<String> findDueSavingsAccountNumbers(LocalDate processingDate) {
-        return accountRepository.findDueSavingsAccountNumbers(
-                AccountType.INSTALLMENT_SAVINGS,
-                List.of(AccountStatus.ACTIVE, AccountStatus.MATURED),
-                processingDate
-        );
+        return accountRepository.findDueSavingsAccountNumbers(AccountType.INSTALLMENT_SAVINGS, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED), processingDate);
     }
 
     @Transactional
@@ -62,18 +58,13 @@ public class SavingsAutoTransferService {
 
         LocalDate dueDate = savings.getNextSavingsPaymentDate();
         LocalDate terminationDate = dueDate.plusDays(PAYMENT_GRACE_DAYS);
+
         if (!processingDate.isBefore(terminationDate)) {
-            accountService.terminateInterestAccount(
-                    savings.getAccount(),
-                    source.getAccount(),
-                    savings.getMember()
-            );
-            notificationService.createNotification(
-                    savings.getMember(),
+            accountService.terminateInterestAccount(savings.getAccount(), source.getAccount(), savings.getMember());
+            notificationService.createNotification(savings.getMember(),
                     savings.getName() + " 계좌가 자동이체일로부터 3일 동안 미납되어 자동 해지되었습니다.",
                     Group.TRAN,
-                    savings.getAccount()
-            );
+                    savings.getAccount());
             return;
         }
 
@@ -85,25 +76,16 @@ public class SavingsAutoTransferService {
                     savings.getName() + " 계좌의 " + amount + "원 자동이체가 잔액 부족으로 실패했습니다. "
                             + terminationDate + "까지 납입되지 않으면 자동 해지됩니다.",
                     Group.TRAN,
-                    savings.getAccount()
-            );
+                    savings.getAccount());
         }
     }
 
     private boolean isDue(Account savings, LocalDate processingDate) {
-        return savings != null
-                && savings.isSavingsAutoTransferConfigured()
-                && savings.getAccountStatus() != AccountStatus.TERMINATED
-                && !savings.getNextSavingsPaymentDate().isAfter(processingDate);
+        return savings != null && savings.isSavingsAutoTransferConfigured() && savings.getAccountStatus() != AccountStatus.TERMINATED && !savings.getNextSavingsPaymentDate().isAfter(processingDate);
     }
 
     private boolean isValidSource(Account savings, Account source) {
-        return source != null
-                && source.getAccountType() == AccountType.DEPOSIT_WITHDRAWAL
-                && source.getAccountStatus() == AccountStatus.ACTIVE
-                && source.getMember() != null
-                && savings.getMember() != null
-                && source.getMember().getId().equals(savings.getMember().getId());
+        return source != null && source.getAccountType() == AccountType.DEPOSIT_WITHDRAWAL && source.getAccountStatus() == AccountStatus.ACTIVE && source.getMember() != null && savings.getMember() != null && source.getMember().getId().equals(savings.getMember().getId());
     }
 
     private void transferPayment(Account savings, Account source, long paymentAmount, LocalDateTime processingTime) {
@@ -124,6 +106,7 @@ public class SavingsAutoTransferService {
                 .bankName("Kwanwoo site account")
                 .transactionTime(processingTime)
                 .build());
+
         savings.completeSavingsPayment();
         accountService.notifyTransaction(transaction);
     }
