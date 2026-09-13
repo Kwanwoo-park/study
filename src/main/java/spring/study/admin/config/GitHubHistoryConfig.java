@@ -52,8 +52,7 @@ public class GitHubHistoryConfig {
 
     private static void deny(HttpServletRequest request, HttpServletResponse response, int status) throws IOException {
         response.setHeader("Cache-Control", "no-store");
-        if (request.getServletPath().startsWith("/api/")
-                || request.getRequestURI().startsWith(request.getContextPath() + "/api/")) {
+        if (request.getServletPath().startsWith("/api/") || request.getRequestURI().startsWith(request.getContextPath() + "/api/")) {
             response.setStatus(status);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"message\":\"관리자 인증이 필요합니다\"}");

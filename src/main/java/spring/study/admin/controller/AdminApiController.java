@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.admin.facade.AdminFacade;
 import spring.study.appeal.entity.AppealStatus;
-import spring.study.appeal.service.AppealService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.forbidden.dto.ForbiddenChangeRequestDto;
@@ -19,26 +18,21 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.facade.MemberFacade;
-import spring.study.member.service.MemberService;
 import spring.study.report.dto.ReportProcessRequestDto;
 import spring.study.report.entity.ReportStatus;
 import spring.study.report.facade.ReportFacade;
-
-import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/admin")
 @Slf4j
 public class AdminApiController {
-    private final MemberService memberService;
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final AdminFacade adminFacade;
     private final MemberFacade memberFacade;
     private final ForbiddenFacade forbiddenFacade;
     private final ReportFacade reportFacade;
-    private final AppealService appealService;
 
     @PatchMapping("/member/permit")
     public ResponseEntity<?> memberPermit(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
@@ -50,10 +44,7 @@ public class AdminApiController {
             return commonFacade.wrongAccess();
         }
 
-        memberService.activate(requestDto.getId());
-        return ResponseEntity.ok(Map.of(
-                "result", memberService.updateRole(requestDto.getId(), Role.USER)
-        ));
+        return adminFacade.memberPermit(requestDto);
     }
 
     @PatchMapping("/member/deny")
@@ -66,15 +57,7 @@ public class AdminApiController {
             return commonFacade.wrongAccess();
         }
 
-        Long targetMemberId = requestDto.getId();
-        if (targetMemberId == null && requestDto.getEmail() != null && !requestDto.getEmail().isBlank()) {
-            targetMemberId = memberService.findMember(requestDto.getEmail()).getId();
-        }
-
-        memberService.ban(targetMemberId);
-        return ResponseEntity.ok(Map.of(
-                "result", memberService.updateRole(targetMemberId, Role.DENIED)
-        ));
+        return adminFacade.memberDeny(requestDto);
     }
 
     @DeleteMapping("/member/withdrawal")
@@ -169,12 +152,9 @@ public class AdminApiController {
     }
 
     @GetMapping("/report/history")
-    public ResponseEntity<?> findReportHistory(
-            @RequestParam(required = false) ReportStatus status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> findReportHistory(@RequestParam(required = false) ReportStatus status,
+                                               @RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "10") int size, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -213,12 +193,10 @@ public class AdminApiController {
     }
 
     @GetMapping("/appeal")
-    public ResponseEntity<?> findAppeals(
-            @RequestParam(required = false) AppealStatus status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> findAppeals(@RequestParam(required = false) AppealStatus status,
+                                         @RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "20") int size,
+                                         HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -227,21 +205,11 @@ public class AdminApiController {
             return commonFacade.wrongAccess();
         }
 
-        var appeals = appealService.findAll(status, page, size);
-        return ResponseEntity.ok(Map.of(
-                "result", appeals.getTotalElements(),
-                "list", appeals.getContent(),
-                "page", appeals.getNumber(),
-                "totalPages", appeals.getTotalPages(),
-                "totalElements", appeals.getTotalElements()
-        ));
+        return adminFacade.findAppeals(status, page, size);
     }
 
     @PatchMapping("/appeal/{appealId}/unblock")
-    public ResponseEntity<?> acceptAppealAndUnblock(
-            @PathVariable Long appealId,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<?> acceptAppealAndUnblock(@PathVariable Long appealId, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -250,12 +218,7 @@ public class AdminApiController {
             return commonFacade.wrongAccess();
         }
 
-        var appeal = appealService.acceptAndUnblock(appealId);
-        return ResponseEntity.ok(Map.of(
-                "result", appeal.getId(),
-                "appeal", appeal,
-                "message", "회원 차단을 해제하고 상소를 승인했습니다"
-        ));
+        return adminFacade.acceptAppeal(appealId);
     }
 
     @GetMapping("/member/online")

@@ -124,11 +124,12 @@ public class AccountTransactionService {
 
     private Account[] lockAccounts(Account first, Account second) {
         if (first == null && second == null) return new Account[0];
-        if (first == null) return new Account[]{accountService.findByAccountForUpdate(second.getAccount())};
-        if (second == null) return new Account[]{accountService.findByAccountForUpdate(first.getAccount())};
+        else if (first == null) return new Account[]{accountService.findByAccountForUpdate(second.getAccount())};
+        else if (second == null) return new Account[]{accountService.findByAccountForUpdate(first.getAccount())};
 
         String firstNumber = first.getAccount().compareTo(second.getAccount()) <= 0 ? first.getAccount() : second.getAccount();
         String secondNumber = firstNumber.equals(first.getAccount()) ? second.getAccount() : first.getAccount();
+
         return new Account[]{ accountService.findByAccountForUpdate(firstNumber), accountService.findByAccountForUpdate(secondNumber) };
     }
 

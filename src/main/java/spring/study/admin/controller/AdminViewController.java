@@ -155,6 +155,12 @@ public class AdminViewController {
 
         model.addAttribute("email", member.getEmail());
         model.addAttribute("profile", member.getProfile());
+
         return "admin/appeal_list";
+    }
+
+    @GetMapping("/files")
+    public String page() {
+        return "admin/files";
     }
 }

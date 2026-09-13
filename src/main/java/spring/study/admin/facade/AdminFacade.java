@@ -3,11 +3,15 @@ package spring.study.admin.facade;
 import com.sun.management.OperatingSystemMXBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.admin.dto.AdminNewBoardResponseDto;
 import spring.study.admin.service.SystemIncidentService;
+import spring.study.appeal.dto.AppealResponseDto;
+import spring.study.appeal.entity.AppealStatus;
+import spring.study.appeal.service.AppealService;
 import spring.study.board.service.BoardService;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
@@ -15,7 +19,9 @@ import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.AudioCallSignalingService;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.aws.repository.ImageCleanupTaskRepository;
+import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.service.RefreshTokenService;
@@ -36,6 +42,7 @@ import java.util.Set;
 public class AdminFacade {
     private final MemberService memberService;
     private final BoardService boardService;
+    private final AppealService appealService;
     private final ChatMessageService chatMessageService;
     private final RedisTemplate<String, String> redisTemplate;
     private final SystemIncidentService systemIncidentService;
@@ -198,6 +205,56 @@ public class AdminFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "message", "통화를 강제로 종료했습니다"
+        ));
+    }
+
+    public ResponseEntity<?> memberPermit(MemberRequestDto requestDto) {
+        Long targetMemberId = requestDto.getId();
+
+        if (targetMemberId == null && requestDto.getEmail() != null && !requestDto.getEmail().isBlank()) {
+            targetMemberId = memberService.findMember(requestDto.getEmail()).getId();
+        }
+
+        memberService.activate(targetMemberId);
+
+        return ResponseEntity.ok(Map.of(
+                "result", memberService.updateRole(targetMemberId, Role.USER)
+        ));
+    }
+
+    public ResponseEntity<?> memberDeny(MemberRequestDto requestDto) {
+        Long targetMemberId = requestDto.getId();
+
+        if (targetMemberId == null && requestDto.getEmail() != null && !requestDto.getEmail().isBlank()) {
+            targetMemberId = memberService.findMember(requestDto.getEmail()).getId();
+        }
+
+        memberService.ban(targetMemberId);
+
+        return ResponseEntity.ok(Map.of(
+                "result", memberService.updateRole(targetMemberId, Role.DENIED)
+        ));
+    }
+
+    public ResponseEntity<?> findAppeals(AppealStatus status, int page, int size) {
+        Page<AppealResponseDto> appeals = appealService.findAll(status, page, size);
+
+        return ResponseEntity.ok(Map.of(
+                "result", appeals.getTotalElements(),
+                "list", appeals.getContent(),
+                "page", appeals.getNumber(),
+                "totalPages", appeals.getTotalPages(),
+                "totalElements", appeals.getTotalElements()
+        ));
+    }
+
+    public ResponseEntity<?> acceptAppeal(Long appealId) {
+        AppealResponseDto appeal = appealService.acceptAndUnblock(appealId);
+
+        return ResponseEntity.ok(Map.of(
+                "result", appeal.getId(),
+                "appeal", appeal,
+                "message", "회원 차단을 해제하고 상소를 승인했습니다"
         ));
     }
 

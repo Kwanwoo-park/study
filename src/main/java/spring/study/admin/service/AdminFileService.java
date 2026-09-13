@@ -119,6 +119,5 @@ public class AdminFileService {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "파일을 찾을 수 없습니다");
     }
 
-    public record Download(AdminFileResponseDto metadata, Resource resource) {
-    }
+    public record Download(AdminFileResponseDto metadata, Resource resource) { }
 }

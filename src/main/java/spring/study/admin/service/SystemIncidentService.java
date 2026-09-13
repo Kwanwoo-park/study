@@ -36,9 +36,7 @@ public class SystemIncidentService {
         String exceptionType = limit(cause.getClass().getName(), MAX_TYPE_LENGTH);
         String errorMessage = limit(sanitize(valueOrDefault(cause.getMessage(), "메시지 없는 서버 오류")), MAX_MESSAGE_LENGTH);
 
-        SystemIncident existing = systemIncidentRepository
-                .findFirstByRequestMethodAndRequestPathAndRequestIpAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(requestMethod, requestPath, requestIp, exceptionType, errorMessage)
-                .orElse(null);
+        SystemIncident existing = systemIncidentRepository.findFirstByRequestMethodAndRequestPathAndRequestIpAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(requestMethod, requestPath, requestIp, exceptionType, errorMessage).orElse(null);
         if (existing != null) {
             existing.recordRecurrence(occurredAt);
             return;
@@ -58,10 +56,7 @@ public class SystemIncidentService {
     @Transactional(readOnly = true)
     public List<SystemIncidentResponseDto> findRecent() {
         return systemIncidentRepository.findTop50ByOrderByOccurredAtDesc().stream()
-                .map(incident -> new SystemIncidentResponseDto(
-                        incident,
-                        ipLocationService.find(incident.getRequestIp())
-                ))
+                .map(incident -> new SystemIncidentResponseDto(incident, ipLocationService.find(incident.getRequestIp())))
                 .toList();
     }
 
@@ -72,8 +67,7 @@ public class SystemIncidentService {
 
     @Transactional
     public void acknowledge(Long id) {
-        SystemIncident incident = systemIncidentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 장애 기록입니다"));
+        SystemIncident incident = systemIncidentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 장애 기록입니다"));
         if (!incident.isAcknowledged()) {
             incident.acknowledge(LocalDateTime.now());
         }

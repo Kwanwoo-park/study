@@ -11,15 +11,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SystemIncidentRepository extends JpaRepository<SystemIncident, Long> {
-    List<SystemIncident> findTop50ByOrderByOccurredAtDesc();
-
-    long countByAcknowledgedFalse();
-
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update SystemIncident incident " +
             "set incident.acknowledged = true, incident.acknowledgedAt = :acknowledgedAt " +
             "where incident.acknowledged = false")
     int acknowledgeAll(@Param("acknowledgedAt") LocalDateTime acknowledgedAt);
+
+    List<SystemIncident> findTop50ByOrderByOccurredAtDesc();
+
+    long countByAcknowledgedFalse();
 
     Optional<SystemIncident> findFirstByRequestMethodAndRequestPathAndRequestIpAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(String requestMethod, String requestPath, String requestIp, String exceptionType, String errorMessage);
 }

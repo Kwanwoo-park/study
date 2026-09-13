@@ -44,16 +44,15 @@ public class GitHubHistoryService {
 
     @Autowired
     public GitHubHistoryService(@Qualifier("gitHubHistoryRestTemplate") RestTemplate client,
-            @Value("${admin.github.owner:Kwanwoo-park}") String owner,
-            @Value("${admin.github.repository:study}") String repository,
-            @Value("${admin.github.branch:main}") String branch,
-            @Value("${admin.github.token:${ADMIN_GITHUB_TOKEN:}}") String token) {
+                                @Value("${admin.github.owner:Kwanwoo-park}") String owner,
+                                @Value("${admin.github.repository:study}") String repository,
+                                @Value("${admin.github.branch:main}") String branch,
+                                @Value("${admin.github.token:${ADMIN_GITHUB_TOKEN:}}") String token) {
         this(client, owner, repository, branch, token, Clock.systemUTC());
     }
 
     GitHubHistoryService(RestTemplate client, String owner, String repository, String branch, String token, Clock clock) {
-        if (!validName(owner) || !validName(repository) || branch == null || branch.isBlank()
-                || branch.length() > 255 || branch.chars().anyMatch(Character::isISOControl)) {
+        if (!validName(owner) || !validName(repository) || branch == null || branch.isBlank() || branch.length() > 255 || branch.chars().anyMatch(Character::isISOControl)) {
             throw new IllegalArgumentException("GitHub 저장소 및 브랜치 설정을 확인해 주세요");
         }
         this.client = client;
@@ -66,15 +65,13 @@ public class GitHubHistoryService {
 
     public GitHubHistoryResponse<Commit> commits(int page) {
         if (page < 1 || page > 1000) throw badRequest("페이지는 1~1000 범위여야 합니다");
-        URI uri = baseUri("commits").queryParam("sha", "{branch}")
-                .queryParam("page", page).encode().buildAndExpand(branch).toUri();
+        URI uri = baseUri("commits").queryParam("sha", "{branch}").queryParam("page", page).encode().buildAndExpand(branch).toUri();
         CachedResponse response = request(uri);
         List<Commit> entries = new ArrayList<>();
         for (JsonNode item : response.body()) {
             JsonNode commit = item.path("commit");
             String sha = text(item, "sha");
-            entries.add(new Commit(sha, text(commit, "message"), text(commit.path("author"), "name"),
-                    text(commit.path("author"), "date"), text(commit.path("committer"), "date"), commitUrl(sha)));
+            entries.add(new Commit(sha, text(commit, "message"), text(commit.path("author"), "name"), text(commit.path("author"), "date"), text(commit.path("committer"), "date"), commitUrl(sha)));
         }
         String next = nextParameter(response, uri, "page");
         if (!String.valueOf(page + 1).equals(next) || page == 1000) next = null;
