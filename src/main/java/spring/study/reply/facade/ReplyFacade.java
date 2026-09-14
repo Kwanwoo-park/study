@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import spring.study.comment.dto.reply.ReplyRequestDto;
-import spring.study.comment.dto.reply.ReplyResponseDto;
+import spring.study.reply.dto.ReplyRequestDto;
+import spring.study.reply.dto.ReplyResponseDto;
 import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
 import spring.study.common.service.ModerationService;
@@ -17,7 +17,6 @@ import spring.study.reply.entity.Reply;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.common.service.VisibilityAccessPolicy;
-import spring.study.reply.entity.Reply;
 import spring.study.reply.service.ReplyService;
 
 import java.util.List;

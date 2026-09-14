@@ -36,21 +36,8 @@ public class CommentFacade {
     private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     public ResponseEntity<?> saveComment(CommentRequestDto dto, Member member, HttpServletResponse response) {
-        int risk = moderationService.validate(dto.getComments(), member, response);
-
-        if (risk != 0) {
-            if (risk == -99) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "result", -10L,
-                        "message", "댓글이 입력되지 않았습니다"
-                ));
-            }
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -risk,
-                    "message", "금칙어를 사용하였습니다"
-            ));
-        }
+        ResponseEntity<?> validation = validateContent(dto.getComments(), member, response);
+        if (validation != null) return validation;
 
         Board board = boardService.findById(dto.getId());
         if (!visibilityAccessPolicy.canViewBoard(board, member)) {
@@ -84,21 +71,8 @@ public class CommentFacade {
             return forbiddenBoard();
         }
 
-        int risk = moderationService.validate(dto.getComments(), member, response);
-
-        if (risk != 0) {
-            if (risk == -99) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "result", -10L,
-                        "message", "댓글이 입력되지 않았습니다"
-                ));
-            }
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -risk,
-                    "message", "금칙어를 사용하였습니다"
-            ));
-        }
+        ResponseEntity<?> validation = validateContent(dto.getComments(), member, response);
+        if (validation != null) return validation;
 
         return ResponseEntity.ok(Map.of(
                 "result", commentService.updateComments(dto.getId(), dto.getComments())
@@ -165,5 +139,25 @@ public class CommentFacade {
                 "result", -403L,
                 "message", "접근할 수 없는 게시글입니다"
         ));
+    }
+
+    private ResponseEntity<?> validateContent(String content, Member member, HttpServletResponse response) {
+        int risk = moderationService.validate(content, member, response);
+
+        if (risk != 0) {
+            if (risk == -99) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                        "result", -10L,
+                        "message", "댓글이 입력되지 않았습니다"
+                ));
+            }
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -risk,
+                    "message", "금칙어를 사용하였습니다"
+            ));
+        }
+
+        return null;
     }
 }

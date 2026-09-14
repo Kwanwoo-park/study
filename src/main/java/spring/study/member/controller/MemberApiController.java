@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -17,11 +16,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.PasswordVerificationRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
-import spring.study.jwt.service.JwtAuthenticationService;
-import spring.study.member.service.MemberService;
-import spring.study.member.service.PasswordChangeVerificationService;
-
-import java.util.Map;
+import spring.study.member.facade.MemberAuthFacade;
 
 @RequiredArgsConstructor
 @RestController
@@ -31,9 +26,7 @@ public class MemberApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final MemberFacade memberFacade;
-    private final MemberService memberService;
-    private final JwtAuthenticationService jwtAuthenticationService;
-    private final PasswordChangeVerificationService passwordChangeVerificationService;
+    private final MemberAuthFacade memberAuthFacade;
 
     @PatchMapping("/login")
     public ResponseEntity<?> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request, HttpServletResponse response) {
@@ -42,12 +35,7 @@ public class MemberApiController {
 
     @GetMapping("/logout")
     public ResponseEntity<?> logoutAction(HttpServletRequest request, HttpServletResponse response) {
-        Member member = jwtManager.getLoginMember(request);
-        jwtAuthenticationService.logout(request, response);
-
-        return ResponseEntity.ok(Map.of(
-                "result", member == null ? 0L : member.getId()
-        ));
+        return memberAuthFacade.logout(jwtManager.getLoginMember(request), request, response);
     }
 
     @PostMapping("/register")
@@ -80,16 +68,7 @@ public class MemberApiController {
 
     @PatchMapping("/updatePassword")
     public ResponseEntity<?> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request, HttpServletResponse response) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "회원 설정의 비밀번호 변경 절차를 이용해주세요"
-            ));
-        }
-
-        member = memberService.findMember(memberUpdateDto.getEmail());
-        return memberFacade.updatePassword(memberUpdateDto.getPassword(), member);
+        return memberAuthFacade.recoverPassword(memberUpdateDto, jwtManager.getLoginMember(request));
     }
 
     @PostMapping("/password-verification/send")
@@ -97,11 +76,7 @@ public class MemberApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        passwordChangeVerificationService.sendCode(member);
-        return ResponseEntity.ok(Map.of(
-                "result", member.getId(),
-                "message", "인증번호를 이메일로 발송했습니다"
-        ));
+        return memberAuthFacade.sendPasswordVerification(member);
     }
 
     @PostMapping("/password-verification/verify")
@@ -112,21 +87,9 @@ public class MemberApiController {
     ) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
-        if (bindingResult.hasErrors()) {
-            String message = bindingResult.getFieldErrors().isEmpty()
-                    ? "인증번호를 확인해주세요"
-                    : bindingResult.getFieldErrors().get(0).getDefaultMessage();
-            return ResponseEntity.badRequest().body(Map.of(
-                    "result", -10L,
-                    "message", message == null ? "인증번호를 확인해주세요" : message
-            ));
-        }
+        if (bindingResult.hasErrors()) return commonFacade.validationFailure(bindingResult, "인증번호를 확인해주세요");
 
-        passwordChangeVerificationService.verifyCode(member, verificationRequest.getCode());
-        return ResponseEntity.ok(Map.of(
-                "result", member.getId(),
-                "message", "이메일 인증이 완료되었습니다"
-        ));
+        return memberAuthFacade.verifyPasswordChange(verificationRequest.getCode(), member);
     }
 
     @PatchMapping("/updatePassword/authenticated")
@@ -137,21 +100,8 @@ public class MemberApiController {
     ) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
-        if (memberUpdateDto.getPassword() == null || memberUpdateDto.getPassword().isBlank()) {
-            return memberFacade.updatePassword(memberUpdateDto.getPassword(), member);
-        }
-        if (!passwordChangeVerificationService.consumeVerification(member)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -10L,
-                    "message", "이메일 인증 후 비밀번호를 변경할 수 있습니다"
-            ));
-        }
 
-        ResponseEntity<?> result = memberFacade.updatePassword(memberUpdateDto.getPassword(), member);
-        if (result.getStatusCode().is2xxSuccessful()) {
-            jwtAuthenticationService.logout(request, response);
-        }
-        return result;
+        return memberAuthFacade.updateAuthenticatedPassword(memberUpdateDto.getPassword(), member, request, response);
     }
 
     @PatchMapping("/updatePhone")
@@ -180,8 +130,6 @@ public class MemberApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        ResponseEntity<?> result = memberFacade.deleteMember(member, request);
-        jwtAuthenticationService.logout(request, response);
-        return result;
+        return memberAuthFacade.withdraw(member, request, response);
     }
 }

@@ -10,6 +10,12 @@ import spring.study.admin.service.SystemIncidentService;
 import spring.study.chat.dto.ChatRoomDetailsResponse;
 import spring.study.chat.dto.ChatRoomImagesResponse;
 import spring.study.chat.service.ChatRoomDetailsService;
+import spring.study.chat.service.ChatRoomService;
+import spring.study.chat.service.ChatRoomMemberService;
+import spring.study.chat.service.ChatPresenceService;
+import spring.study.chat.facade.ChatRoomFacade;
+import spring.study.chat.facade.ChatViewFacade;
+import spring.study.notification.service.NotificationService;
 import spring.study.common.component.GlobalExceptionHandler;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
@@ -29,7 +35,9 @@ class ChatRoomDetailsControllerTest {
 
     @BeforeEach
     void setUp() {
-        mvc = MockMvcBuilders.standaloneSetup(new ChatRoomDetailsController(jwt, service))
+        ChatRoomFacade facade = new ChatRoomFacade(mock(ChatViewFacade.class), mock(ChatRoomService.class),
+                mock(ChatRoomMemberService.class), mock(ChatPresenceService.class), mock(NotificationService.class), service);
+        mvc = MockMvcBuilders.standaloneSetup(new ChatRoomDetailsController(jwt, facade))
                 .setControllerAdvice(new GlobalExceptionHandler(mock(SystemIncidentService.class))).build();
         when(jwt.getLoginMember(any())).thenReturn(viewer);
     }

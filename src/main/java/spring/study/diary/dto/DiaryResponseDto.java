@@ -19,7 +19,6 @@ public class DiaryResponseDto {
     private LocalDateTime registerTime;
     private LocalDateTime updateTime;
     private List<DiaryImageResponseDto> images;
-    private List<DiaryTodoResponseDto> todos;
 
     public DiaryResponseDto(Diary diary) {
         this.id = diary.getId();
@@ -31,9 +30,6 @@ public class DiaryResponseDto {
         this.updateTime = diary.getUpdateTime();
         this.images = diary.getImages().stream()
                 .map(DiaryImageResponseDto::new)
-                .toList();
-        this.todos = diary.getTodos().stream()
-                .map(DiaryTodoResponseDto::new)
                 .toList();
     }
 }

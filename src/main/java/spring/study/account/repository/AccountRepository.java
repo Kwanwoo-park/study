@@ -19,15 +19,15 @@ import java.util.Collection;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, String> {
-    @Query("select a.account from account a" +
+    @Query("select a.account from account a " +
             "join a.savingsAutoTransfer transfer " +
             "where a.accountType = :accountType and " +
             "a.accountStatus in :statuses and " +
             "transfer.nextPaymentDate <= :processingDate")
     List<String> findDueSavingsAccountNumbers(@Param("accountType") AccountType accountType, @Param("statuses") Collection<AccountStatus> statuses, @Param("processingDate") LocalDate processingDate);
 
-    @Query("select case when count(a) > 0 then true else false end from account a" +
-            "join a.savingsAutoTransfer transfer" +
+    @Query("select case when count(a) > 0 then true else false end from account a " +
+            "join a.savingsAutoTransfer transfer " +
             "where transfer.sourceAccount = :sourceAccount and " +
             "a.accountStatus in :statuses")
     boolean existsBySavingsSourceAccountAndAccountStatusIn(@Param("sourceAccount") Account savingsSourceAccount, @Param("statuses") Collection<AccountStatus> accountStatuses);
@@ -36,8 +36,8 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     @Query("select a from account a where a.account = :account")
     Optional<Account> findByAccountForUpdate(@Param("account") String account);
 
-    @Query("select a from account a" +
-            "join a.interestDetail interest" +
+    @Query("select a from account a " +
+            "join a.interestDetail interest " +
             "where a.accountStatus = :accountStatus and " +
             "interest.maturityAt <= :maturityAt")
     List<Account> findByAccountStatusAndMaturityAtLessThanEqual(@Param("accountStatus") AccountStatus accountStatus, @Param("maturityAt") LocalDateTime maturityAt);

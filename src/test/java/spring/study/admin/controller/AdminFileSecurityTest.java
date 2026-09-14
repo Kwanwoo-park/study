@@ -29,7 +29,9 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import spring.study.admin.config.AdminFileSecurityConfig;
 import spring.study.admin.dto.AdminFileResponseDto;
 import spring.study.admin.entity.AdminFile;
+import spring.study.admin.facade.AdminFileFacade;
 import spring.study.admin.service.AdminFileService;
+import spring.study.common.service.JwtManager;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.component.JwtAuthenticationFilter;
 import spring.study.jwt.component.JwtTokenProvider;
@@ -38,6 +40,8 @@ import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.service.MemberService;
+import spring.study.forbidden.service.ForbiddenService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -171,8 +175,17 @@ class AdminFileSecurityTest {
     @EnableWebMvc
     @EnableWebSecurity
     @EnableMethodSecurity
-    @Import({AdminFileSecurityConfig.class, AdminFileController.class})
+    @Import({AdminFileSecurityConfig.class, AdminFileController.class, AdminFileFacade.class, AdminViewController.class})
     static class Config {
+        @Bean
+        MemberService memberService() { return mock(MemberService.class); }
+
+        @Bean
+        JwtManager jwtManager() { return mock(JwtManager.class); }
+
+        @Bean
+        ForbiddenService forbiddenService() { return mock(ForbiddenService.class); }
+
         @Bean
         AdminFileService service() { return mock(AdminFileService.class, withSettings().withoutAnnotations()); }
 

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import spring.study.chat.dto.ChatRoomDetailsResponse;
 import spring.study.chat.dto.ChatRoomImagesResponse;
-import spring.study.chat.service.ChatRoomDetailsService;
+import spring.study.chat.facade.ChatRoomFacade;
 import spring.study.common.service.JwtManager;
 
 import java.util.Map;
@@ -18,19 +18,17 @@ import java.util.Map;
 @RequestMapping("/api/chat/rooms/{roomId}")
 public class ChatRoomDetailsController {
     private final JwtManager jwtManager;
-    private final ChatRoomDetailsService service;
+    private final ChatRoomFacade chatRoomFacade;
 
     @GetMapping("/details")
     public ResponseEntity<ChatRoomDetailsResponse> details(@PathVariable String roomId, HttpServletRequest request) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                .body(service.details(roomId, jwtManager.getLoginMember(request)));
+        return chatRoomFacade.details(roomId, jwtManager.getLoginMember(request));
     }
 
     @GetMapping("/images")
     public ResponseEntity<ChatRoomImagesResponse> images(@PathVariable String roomId,
             @RequestParam(required = false) Long cursor, HttpServletRequest request) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                .body(service.images(roomId, jwtManager.getLoginMember(request), cursor));
+        return chatRoomFacade.images(roomId, jwtManager.getLoginMember(request), cursor);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

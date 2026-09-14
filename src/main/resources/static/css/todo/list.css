@@ -1,0 +1,176 @@
+.todo-page {
+    padding: 0 24px 110px;
+}
+
+.todo-page-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface-bg);
+}
+
+.todo-page-header .simple-page-title {
+    margin: 0 0 6px;
+}
+
+.todo-page-header p,
+.todo-create-form small,
+.todo-count,
+.todo-empty,
+.todo-pagination {
+    color: var(--text-secondary);
+}
+
+.todo-page-header p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.todo-page-header a {
+    flex-shrink: 0;
+}
+
+.todo-create-form {
+    margin: 24px 0;
+    padding: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--surface-muted);
+}
+
+.todo-create-form label {
+    font-weight: 600;
+}
+
+.todo-create-fields {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.todo-create-fields input {
+    min-width: 0;
+}
+
+.todo-create-fields button {
+    flex-shrink: 0;
+}
+
+.todo-toolbar,
+.todo-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.todo-filters {
+    display: flex;
+    gap: 6px;
+}
+
+.todo-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.todo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.todo-checkbox {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    accent-color: #007bff;
+}
+
+.todo-label {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.todo-row.is-completed .todo-label {
+    color: var(--text-secondary);
+    text-decoration: line-through;
+}
+
+.todo-row-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+.todo-edit-form {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+}
+
+.todo-edit-form input {
+    flex: 1;
+    min-width: 0;
+}
+
+.todo-message {
+    margin: 16px 0 0;
+}
+
+.todo-message:empty {
+    display: none;
+}
+
+.todo-empty {
+    padding: 48px 12px;
+    text-align: center;
+}
+
+.todo-pagination {
+    justify-content: center;
+    padding: 24px 0;
+}
+
+@media (max-width: 576px) {
+    .todo-page {
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+
+    .todo-page-header .simple-page-title {
+        font-size: 22px;
+    }
+
+    .todo-row {
+        flex-wrap: wrap;
+    }
+
+    .todo-row-actions {
+        margin-left: auto;
+    }
+
+    .todo-edit-form {
+        flex-wrap: wrap;
+    }
+
+    .todo-edit-form input {
+        flex-basis: 100%;
+    }
+}

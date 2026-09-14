@@ -61,11 +61,6 @@ public class Diary extends BasetimeEntity {
     @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DiaryImage> images = new ArrayList<>();
 
-    @JsonIgnore
-    @OrderBy("todoOrder ASC, id ASC")
-    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DiaryTodo> todos = new ArrayList<>();
-
     @Builder
     public Diary(Long id, Member member, String title, String content, CommonVisibility visibility) {
         this.id = id;
@@ -92,19 +87,6 @@ public class Diary extends BasetimeEntity {
     public void removeImage(DiaryImage image) {
         if (images.remove(image)) {
             image.removeDiary();
-        }
-    }
-
-    public void addTodo(DiaryTodo todo) {
-        if (!todos.contains(todo)) {
-            todos.add(todo);
-        }
-        todo.addDiary(this);
-    }
-
-    public void removeTodo(DiaryTodo todo) {
-        if (todos.remove(todo)) {
-            todo.removeDiary();
         }
     }
 

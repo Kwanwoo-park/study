@@ -1,5 +1,6 @@
 package spring.study.chat.facade;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.kafka.service.MessageProducer;
+import spring.study.common.facade.CommonFacade;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;
@@ -40,6 +42,20 @@ public class ChatSendFacade {
     private final ChatPresenceService chatPresenceService;
     private final NotificationService notificationService;
     private final MessageProducer producer;
+    private final ChatFacade chatFacade;
+    private final CommonFacade commonFacade;
+
+    public ResponseEntity<?> sendMessage(ChatMessageRequestDto message, Member member, HttpServletResponse response) {
+        ChatRoom room = roomService.find(message.getRoomId());
+        if (room == null || !roomMemberService.exist(member, room)) return commonFacade.wrongAccess();
+
+        ResponseEntity<?> validation = chatFacade.messageCheck(message.getMessage(), member, response);
+        if (!validation.getStatusCode().is2xxSuccessful()) return validation;
+
+        message.setEmail(member.getEmail());
+
+        return messageSend(message);
+    }
 
     public ResponseEntity<?> messageSend(ChatMessageRequestDto dto) {
         ChatRoom room = roomService.find(dto.getRoomId());

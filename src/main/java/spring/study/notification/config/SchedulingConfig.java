@@ -1,4 +1,4 @@
-package spring.study.notification.confg;
+package spring.study.notification.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;

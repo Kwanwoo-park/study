@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>내 To-do list</title>
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css?v=20260830">
+    <link rel="stylesheet" href="/css/todo/list.css?v=20260914">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main id="todoPage" class="container todo-page">
+    <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+    <header class="todo-page-header">
+        <div>
+            <h1 class="simple-page-title">내 To-do list</h1>
+            <p>일기와 별개로 관리하는, 나만의 할 일 목록입니다.</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="/diary/list">내 일기</a>
+    </header>
+
+    <form id="todoCreateForm" class="todo-create-form">
+        <label for="todoContent">새로운 할 일</label>
+        <div class="todo-create-fields">
+            <input id="todoContent" class="form-control" type="text" maxlength="255"
+                   placeholder="할 일을 입력하세요" required autocomplete="off" aria-describedby="todoHelp">
+            <button class="btn btn-primary" type="submit">추가</button>
+        </div>
+        <small id="todoHelp">최대 255자 · 완료한 일은 체크해 주세요.</small>
+    </form>
+
+    <div class="todo-toolbar">
+        <div id="todoFilters" class="todo-filters" role="group" aria-label="할 일 상태 필터">
+            <button class="btn btn-outline-primary active" type="button" data-completed="" aria-pressed="true">전체</button>
+            <button class="btn btn-outline-primary" type="button" data-completed="false" aria-pressed="false">미완료</button>
+            <button class="btn btn-outline-primary" type="button" data-completed="true" aria-pressed="false">완료</button>
+        </div>
+        <span id="todoCount" class="todo-count"></span>
+    </div>
+    <div id="todoMessage" class="todo-message" role="status" aria-live="polite"></div>
+    <button id="todoRetry" class="btn btn-outline-secondary is-hidden" type="button">목록 다시 불러오기</button>
+    <ul id="todoList" class="todo-list" aria-label="나의 할 일"></ul>
+    <p id="todoEmpty" class="todo-empty is-hidden">아직 등록된 할 일이 없습니다.</p>
+    <nav class="todo-pagination" aria-label="할 일 목록 페이지">
+        <button id="todoPrevious" class="btn btn-outline-secondary btn-sm" type="button" disabled>이전</button>
+        <span id="todoPageNumber">0 / 0</span>
+        <button id="todoNext" class="btn btn-outline-secondary btn-sm" type="button" disabled>다음</button>
+    </nav>
+    <noscript>할 일 목록을 사용하려면 JavaScript를 활성화해 주세요.</noscript>
+</main>
+<script src="/js/todo/list.js?v=20260914"></script>
+<script src="/js/common/common.js?v=20260824-1"></script>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+</body>
+</html>

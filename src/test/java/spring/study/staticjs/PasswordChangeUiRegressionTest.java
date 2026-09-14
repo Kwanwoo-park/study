@@ -15,6 +15,8 @@ class PasswordChangeUiRegressionTest {
         String script = Files.readString(Path.of("src/main/resources/static/js/member/updatePassword.js"));
         String controller = Files.readString(Path.of(
                 "src/main/java/spring/study/member/controller/MemberApiController.java"));
+        String facade = Files.readString(Path.of(
+                "src/main/java/spring/study/member/facade/MemberAuthFacade.java"));
 
         assertTrue(template.contains("data-verification-required=${emailVerificationRequired}"));
         assertTrue(template.contains("th:if=\"${emailVerificationRequired}\""));
@@ -22,7 +24,8 @@ class PasswordChangeUiRegressionTest {
         assertTrue(script.contains("/api/member/password-verification/send"));
         assertTrue(script.contains("/api/member/password-verification/verify"));
         assertTrue(script.contains("/api/member/updatePassword/authenticated"));
-        assertTrue(controller.contains("passwordChangeVerificationService.consumeVerification(member)"));
+        assertTrue(controller.contains("memberAuthFacade.updateAuthenticatedPassword("));
+        assertTrue(facade.contains("passwordChangeVerificationService.consumeVerification(member)"));
     }
 
     @Test

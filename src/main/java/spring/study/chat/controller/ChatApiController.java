@@ -7,28 +7,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.ChatMessageDeleteScope;
 import spring.study.chat.dto.ChatMessageRequestDto;
-import spring.study.chat.dto.MobileChatRoomResponse;
 import spring.study.chat.dto.AudioCallPreferenceRequest;
 import spring.study.chat.facade.ChatFacade;
+import spring.study.chat.facade.AudioCallFacade;
+import spring.study.chat.facade.ChatRoomFacade;
 import spring.study.chat.facade.ChatSendFacade;
-import spring.study.chat.facade.ChatViewFacade;
-import spring.study.chat.service.ChatPresenceService;
-import spring.study.chat.service.ChatRoomMemberService;
-import spring.study.chat.service.ChatRoomService;
-import spring.study.chat.service.IceServerService;
-import spring.study.chat.service.AudioCallSignalingService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.notification.entity.Group;
-import spring.study.notification.service.NotificationService;
 
-import java.util.*;
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -38,46 +30,24 @@ public class ChatApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final ChatFacade chatFacade;
-    private final ChatPresenceService chatPresenceService;
-    private final ChatRoomService chatRoomService;
-    private final ChatRoomMemberService chatRoomMemberService;
-    private final NotificationService notificationService;
-    private final IceServerService iceServerService;
     private final ChatSendFacade chatSendFacade;
-    private final ChatViewFacade chatViewFacade;
-    private final AudioCallSignalingService audioCallSignalingService;
+    private final ChatRoomFacade chatRoomFacade;
+    private final AudioCallFacade audioCallFacade;
 
     @GetMapping("/rooms")
     public ResponseEntity<?> rooms(HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        List<ChatRoom> rooms = chatViewFacade.chatList(member);
-        Map<String, List<Member>> participants = chatRoomMemberService.findMember(rooms, member);
-        Map<String, Long> unreadCounts = chatViewFacade.unreadCount(member, rooms);
-        List<MobileChatRoomResponse> list = rooms.stream()
-                .map(room -> MobileChatRoomResponse.from(
-                        room,
-                        participants.getOrDefault(room.getRoomId(), List.of()),
-                        unreadCounts.getOrDefault(room.getRoomId(), 0L)
-                ))
-                .toList();
-
-        return ResponseEntity.ok(Map.of("result", 1L, "list", list));
+        return chatRoomFacade.rooms(member);
     }
 
     @PostMapping("/send")
     public ResponseEntity<?> sendMessage(@RequestBody ChatMessageRequestDto message, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
-        ChatRoom room = chatRoomService.find(message.getRoomId());
-        if (room == null || !chatRoomMemberService.exist(member, room)) return commonFacade.wrongAccess();
 
-        ResponseEntity<?> validation = chatFacade.messageCheck(message.getMessage(), member, response);
-        if (!validation.getStatusCode().is2xxSuccessful()) return validation;
-
-        message.setEmail(member.getEmail());
-        return chatSendFacade.messageSend(message);
+        return chatSendFacade.sendMessage(message, member, response);
     }
 
     @GetMapping("/audio/ice-servers")
@@ -85,7 +55,7 @@ public class ChatApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return ResponseEntity.ok(Map.of("iceServers", iceServerService.createIceServers(member)));
+        return audioCallFacade.iceServers(member);
     }
 
     @GetMapping("/audio/preference")
@@ -93,10 +63,7 @@ public class ChatApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return ResponseEntity.ok(Map.of(
-                "result", 1L,
-                "enabled", member.isAudioCallEnabled()
-        ));
+        return audioCallFacade.preference(member);
     }
 
     @PatchMapping("/audio/preference")
@@ -106,22 +73,8 @@ public class ChatApiController {
     ) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
-        if (preference == null || preference.enabled() == null) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "result", -1L,
-                    "message", "통화 알림 설정을 선택해 주세요"
-            ));
-        }
 
-        boolean enabled = audioCallSignalingService.updateIncomingCallPreference(
-                member.getEmail(), preference.enabled());
-        return ResponseEntity.ok(Map.of(
-                "result", 1L,
-                "enabled", enabled,
-                "message", enabled
-                        ? "통화 알림을 허용했습니다"
-                        : "통화 알림을 미허용으로 설정했습니다"
-        ));
+        return audioCallFacade.updatePreference(preference, member);
     }
 
     @GetMapping("/audio/incoming")
@@ -129,9 +82,7 @@ public class ChatApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return audioCallSignalingService.findIncomingCall(member.getEmail(), roomId)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
+        return audioCallFacade.incoming(roomId, member);
     }
 
     @PostMapping("/audio/{callId}/reject")
@@ -139,8 +90,7 @@ public class ChatApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        audioCallSignalingService.rejectIncomingCall(callId, member.getEmail());
-        return ResponseEntity.ok(Map.of("result", 1L));
+        return audioCallFacade.reject(callId, member);
     }
 
     @GetMapping("/load")
@@ -225,17 +175,7 @@ public class ChatApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        chatPresenceService.active(roomId, member);
-        notificationService.updateReadByGroupAndUrl(member, Group.CHAT, roomId);
-        ChatRoom room = chatRoomService.find(roomId);
-
-        if (room != null) {
-            chatRoomMemberService.markRead(member, room);
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "result", 1L
-        ));
+        return chatRoomFacade.active(roomId, member);
     }
 
     @PostMapping("/presence/inactive")
@@ -243,10 +183,6 @@ public class ChatApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        chatPresenceService.inactive(roomId, member);
-
-        return ResponseEntity.ok(Map.of(
-                "result", 1L
-        ));
+        return chatRoomFacade.inactive(roomId, member);
     }
 }

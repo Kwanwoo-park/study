@@ -1,7 +1,9 @@
 package spring.study.chat.facade;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.http.ResponseEntity;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatRoom;
@@ -13,6 +15,7 @@ import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.kafka.service.MessageProducer;
+import spring.study.common.facade.CommonFacade;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -26,6 +29,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class ChatSendFacadeTest {
 
@@ -38,6 +43,7 @@ class ChatSendFacadeTest {
     private final ChatPresenceService chatPresenceService = mock(ChatPresenceService.class);
     private final NotificationService notificationService = mock(NotificationService.class);
     private final MessageProducer producer = mock(MessageProducer.class);
+    private final ChatFacade chatFacade = mock(ChatFacade.class);
     private final ChatSendFacade chatSendFacade = new ChatSendFacade(
             roomService,
             roomMemberService,
@@ -47,8 +53,56 @@ class ChatSendFacadeTest {
             memberService,
             chatPresenceService,
             notificationService,
-            producer
+            producer,
+            chatFacade,
+            new CommonFacade()
     );
+
+    @Test
+    void httpSendRejectsNonparticipantsBeforeModerationOrPublishing() {
+        Member sender = createMember(1L, "sender@test.com");
+        ChatRoom room = ChatRoom.builder().roomId("room").build();
+        ChatMessageRequestDto dto = ChatMessageRequestDto.builder().roomId("room").message("hello").build();
+        when(roomService.find("room")).thenReturn(room);
+
+        var response = chatSendFacade.sendMessage(dto, sender, mock(HttpServletResponse.class));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(401);
+        verifyNoInteractions(chatFacade, producer, notificationService);
+    }
+
+    @Test
+    void httpSendPreservesModerationFailureAndDoesNotPublish() {
+        Member sender = createMember(1L, "sender@test.com");
+        ChatRoom room = ChatRoom.builder().roomId("room").build();
+        ChatMessageRequestDto dto = ChatMessageRequestDto.builder().roomId("room").message("blocked").build();
+        HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        ResponseEntity<?> failure = ResponseEntity.status(403).build();
+        when(roomService.find("room")).thenReturn(room);
+        when(roomMemberService.exist(sender, room)).thenReturn(true);
+        doReturn(failure).when(chatFacade).messageCheck("blocked", sender, servletResponse);
+
+        assertThat(chatSendFacade.sendMessage(dto, sender, servletResponse)).isSameAs(failure);
+        verifyNoInteractions(producer, notificationService);
+    }
+
+    @Test
+    void httpSendReplacesClientSuppliedIdentityWithAuthenticatedSender() {
+        Member sender = createMember(1L, "sender@test.com");
+        ChatRoom room = ChatRoom.builder().roomId("room").build();
+        ChatMessageRequestDto dto = ChatMessageRequestDto.builder().roomId("room").message("hello")
+                .type(MessageType.TALK).email("forged@test.com").build();
+        HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        when(roomService.find("room")).thenReturn(room);
+        when(roomMemberService.exist(sender, room)).thenReturn(true);
+        when(memberService.findMember(sender.getEmail())).thenReturn(sender);
+        when(roomMemberService.findMember(room, sender)).thenReturn(List.of());
+        doReturn(ResponseEntity.ok().build()).when(chatFacade).messageCheck("hello", sender, servletResponse);
+
+        assertThat(chatSendFacade.sendMessage(dto, sender, servletResponse).getStatusCode().value()).isEqualTo(200);
+        assertThat(dto.getEmail()).isEqualTo(sender.getEmail());
+        verify(producer).sendMessage(dto);
+    }
 
     @Test
     @SuppressWarnings("unchecked")

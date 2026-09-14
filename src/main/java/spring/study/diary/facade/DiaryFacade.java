@@ -13,7 +13,6 @@ import spring.study.diary.dto.DiaryImageRequestDto;
 import spring.study.diary.dto.DiaryListResponseDto;
 import spring.study.diary.dto.DiaryRequestDto;
 import spring.study.diary.dto.DiaryResponseDto;
-import spring.study.diary.dto.DiaryTodoRequestDto;
 import spring.study.diary.entity.Diary;
 import spring.study.diary.entity.DiaryImage;
 import spring.study.diary.service.DiaryService;
@@ -96,15 +95,7 @@ public class DiaryFacade {
 
         List<DiaryListResponseDto> diaries = diaryService.findListByMember(member, page, size);
         long totalCount = diaryService.countByMember(member);
-        boolean hasNext = (long) (page + 1) * size < totalCount;
-
-        return ResponseEntity.ok(Map.of(
-                "result", diaries.size(),
-                "diaries", diaries,
-                "totalCount", totalCount,
-                "hasNext", hasNext,
-                "nextPage", hasNext ? page + 1 : 0
-        ));
+        return pageResponse(diaries, totalCount, page, size);
     }
 
     @Transactional(readOnly = true)
@@ -118,15 +109,7 @@ public class DiaryFacade {
 
         List<DiaryListResponseDto> diaries = diaryService.searchByTitle(member, title, page, size);
         long totalCount = diaryService.countByMemberAndTitle(member, title);
-        boolean hasNext = (long) (page + 1) * size < totalCount;
-
-        return ResponseEntity.ok(Map.of(
-                "result", diaries.size(),
-                "diaries", diaries,
-                "totalCount", totalCount,
-                "hasNext", hasNext,
-                "nextPage", hasNext ? page + 1 : 0
-        ));
+        return pageResponse(diaries, totalCount, page, size);
     }
 
     @Transactional(readOnly = true)
@@ -160,14 +143,6 @@ public class DiaryFacade {
                     .filter(java.util.Objects::nonNull)
                     .map(DiaryImageRequestDto::toEntity)
                     .forEach(diary::addImage);
-        }
-
-        if (requestDto.getTodos() != null) {
-            new ArrayList<>(diary.getTodos()).forEach(diary::removeTodo);
-            requestDto.getTodos().stream()
-                    .filter(java.util.Objects::nonNull)
-                    .map(DiaryTodoRequestDto::toEntity)
-                    .forEach(diary::addTodo);
         }
 
         DiaryResponseDto responseDto = new DiaryResponseDto(diaryService.save(diary));
@@ -221,5 +196,17 @@ public class DiaryFacade {
         if (requestDto.getContent() == null) {
             throw new IllegalArgumentException("본문을 입력해 주세요");
         }
+    }
+
+    private ResponseEntity<?> pageResponse(List<DiaryListResponseDto> diaries, long totalCount, int page, int size) {
+        boolean hasNext = (long) (page + 1) * size < totalCount;
+
+        return ResponseEntity.ok(Map.of(
+                "result", diaries.size(),
+                "diaries", diaries,
+                "totalCount", totalCount,
+                "hasNext", hasNext,
+                "nextPage", hasNext ? page + 1 : 0
+        ));
     }
 }

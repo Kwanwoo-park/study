@@ -27,8 +27,7 @@
 }
 
 .diary-section-header p,
-.diary-field-help,
-.diary-empty-message {
+.diary-field-help {
     margin: 0;
     color: var(--text-secondary);
     font-size: 13px;
@@ -76,34 +75,6 @@
     text-align: right;
 }
 
-.todo-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.todo-item {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px;
-}
-
-.todo-completed {
-    width: 20px;
-    height: 20px;
-}
-
-.todo-item:has(.todo-completed:checked) .todo-content {
-    color: var(--text-secondary);
-    text-decoration: line-through;
-}
-
-.diary-empty-message {
-    padding: 16px 0 4px;
-    text-align: center;
-}
-
 .diary-form-actions {
     display: flex;
     align-items: center;
@@ -118,14 +89,5 @@
     .diary-section-header {
         align-items: stretch;
         flex-direction: column;
-    }
-
-    .todo-item {
-        grid-template-columns: auto minmax(0, 1fr);
-    }
-
-    .todo-remove-button {
-        grid-column: 2;
-        justify-self: end;
     }
 }

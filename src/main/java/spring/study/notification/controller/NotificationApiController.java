@@ -10,7 +10,6 @@ import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
-import spring.study.common.service.EmitterService;
 import spring.study.notification.facade.NotificationFacade;
 
 
@@ -21,7 +20,6 @@ import spring.study.notification.facade.NotificationFacade;
 public class NotificationApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
-    private final EmitterService emitterService;
     private final NotificationFacade notificationFacade;
 
     @GetMapping(value = "/stream", produces = "text/event-stream")
@@ -29,7 +27,7 @@ public class NotificationApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return null;
 
-        return emitterService.addEmitter(member.getId().toString());
+        return notificationFacade.stream(member);
     }
 
     @GetMapping("/load")

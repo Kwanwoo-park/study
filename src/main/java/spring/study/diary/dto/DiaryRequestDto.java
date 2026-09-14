@@ -33,17 +33,13 @@ public class DiaryRequestDto {
     @Valid
     private List<DiaryImageRequestDto> images;
 
-    @Valid
-    private List<DiaryTodoRequestDto> todos;
-
     @Builder
-    public DiaryRequestDto(Long id, String title, String content, CommonVisibility visibility, List<DiaryImageRequestDto> images, List<DiaryTodoRequestDto> todos) {
+    public DiaryRequestDto(Long id, String title, String content, CommonVisibility visibility, List<DiaryImageRequestDto> images) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.visibility = visibility;
         this.images = images;
-        this.todos = todos;
     }
 
     public Diary toEntity(Member member) {
@@ -59,13 +55,6 @@ public class DiaryRequestDto {
                     .filter(Objects::nonNull)
                     .map(DiaryImageRequestDto::toEntity)
                     .forEach(diary::addImage);
-        }
-
-        if (todos != null) {
-            todos.stream()
-                    .filter(Objects::nonNull)
-                    .map(DiaryTodoRequestDto::toEntity)
-                    .forEach(diary::addTodo);
         }
 
         return diary;

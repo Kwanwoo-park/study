@@ -6,6 +6,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import spring.study.common.service.JwtManager;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.dto.MobileAuthResponse;
+import spring.study.jwt.facade.MobileAuthFacade;
 import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
@@ -28,8 +29,8 @@ class MobileAuthControllerTest {
         JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
         OnlineUserService onlineUserService = mock(OnlineUserService.class);
         MobileAuthController controller = new MobileAuthController(
-                memberService, passwordEncoder, authenticationService,
-                mock(JwtManager.class), onlineUserService);
+                new MobileAuthFacade(memberService, passwordEncoder, authenticationService, onlineUserService),
+                mock(JwtManager.class));
         Member member = Member.builder()
                 .id(3L).email("app@test.com").pwd("encoded-secret").name("app user")
                 .role(Role.USER).phone("01000000000").birth("20000101").profile("profile.png")
@@ -61,8 +62,8 @@ class MobileAuthControllerTest {
         JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
         OnlineUserService onlineUserService = mock(OnlineUserService.class);
         MobileAuthController controller = new MobileAuthController(
-                mock(MemberService.class), mock(BCryptPasswordEncoder.class), authenticationService,
-                mock(JwtManager.class), onlineUserService);
+                new MobileAuthFacade(mock(MemberService.class), mock(BCryptPasswordEncoder.class), authenticationService, onlineUserService),
+                mock(JwtManager.class));
         when(authenticationService.revokeAndGetMemberId("refresh"))
                 .thenReturn(OptionalLong.of(3L));
 

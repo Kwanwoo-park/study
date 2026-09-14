@@ -12,6 +12,7 @@ import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
+import spring.study.member.facade.MemberAuthFacade;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.PasswordChangeVerificationService;
 
@@ -42,9 +43,7 @@ class MemberPasswordChangeControllerTest {
                 jwtManager,
                 commonFacade,
                 memberFacade,
-                memberService,
-                authenticationService,
-                verificationService
+                new MemberAuthFacade(memberFacade, memberService, authenticationService, verificationService)
         );
         member = Member.builder().id(7L).email("member@example.com").build();
     }
@@ -94,5 +93,39 @@ class MemberPasswordChangeControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(memberFacade).updatePassword("new-password", member);
         verify(verificationService, never()).consumeVerification(member);
+    }
+
+    @Test
+    void blankPasswordDoesNotConsumeVerificationOrLogOut() {
+        MemberRequestDto request = MemberRequestDto.builder().password(" ").build();
+        when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
+        doReturn(ResponseEntity.badRequest().build()).when(memberFacade).updatePassword(" ", member);
+
+        assertThat(controller.updateAuthenticatedPassword(request, httpRequest, httpResponse).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        verify(verificationService, never()).consumeVerification(member);
+        verify(authenticationService, never()).logout(httpRequest, httpResponse);
+    }
+
+    @Test
+    void rejectedPasswordUpdateDoesNotLogOutEvenAfterVerification() {
+        MemberRequestDto request = MemberRequestDto.builder().password("new-password").build();
+        when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
+        when(verificationService.consumeVerification(member)).thenReturn(true);
+        doReturn(ResponseEntity.badRequest().build()).when(memberFacade).updatePassword("new-password", member);
+
+        assertThat(controller.updateAuthenticatedPassword(request, httpRequest, httpResponse).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        verify(authenticationService, never()).logout(httpRequest, httpResponse);
+    }
+
+    @Test
+    void loggedInMemberCannotBypassVerificationThroughRecoveryEndpoint() {
+        MemberRequestDto request = MemberRequestDto.builder().email(member.getEmail()).password("new-password").build();
+        when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
+
+        assertThat(controller.updatePasswordAction(request, httpRequest, httpResponse).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        org.mockito.Mockito.verifyNoInteractions(memberService, memberFacade, verificationService);
     }
 }

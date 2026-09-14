@@ -6,7 +6,7 @@
     <title>내 일기</title>
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css?v=20260830">
-    <link rel="stylesheet" href="/css/diary/list.css?v=20260830">
+    <link rel="stylesheet" href="/css/diary/list.css?v=20260914">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
@@ -17,7 +17,10 @@
             <h1 class="simple-page-title mb-1">내 일기</h1>
             <p class="text-muted mb-0">총 <span id="diaryCount" th:text="${count}">0</span>개의 일기가 있습니다.</p>
         </div>
-        <a class="btn btn-primary" href="/diary/write">일기 쓰기</a>
+        <div class="diary-list-actions">
+            <a class="btn btn-outline-primary" href="/todo">To-do list</a>
+            <a class="btn btn-primary" href="/diary/write">일기 쓰기</a>
+        </div>
     </header>
 
     <form id="diarySearchForm" class="diary-search-form" role="search">

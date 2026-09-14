@@ -24,13 +24,13 @@ public class AdminFileController {
         return adminFileFacade.csrf(token);
     }
 
-    @GetMapping("/")
+    @GetMapping({"", "/"})
     @ResponseBody
     public ResponseEntity<?> list(@RequestParam(defaultValue = "0") int page) {
         return adminFileFacade.list(page);
     }
 
-    @PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = {"", "/"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Member member) {
         return adminFileFacade.upload(file, member);

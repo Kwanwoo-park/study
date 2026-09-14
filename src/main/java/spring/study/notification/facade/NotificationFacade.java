@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import spring.study.common.service.EmitterService;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
@@ -18,6 +20,11 @@ import java.util.Map;
 @Slf4j
 public class NotificationFacade {
     private final NotificationService notificationService;
+    private final EmitterService emitterService;
+
+    public SseEmitter stream(Member member) {
+        return emitterService.addEmitter(member.getId().toString());
+    }
 
     public ResponseEntity<?> load(Member member) {
         return load(member, 0, 100);

@@ -41,6 +41,7 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.report.service.ReportService;
 import spring.study.reply.service.ReplyService;
+import spring.study.todo.service.TodoService;
 
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,7 @@ public class MemberFacade {
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationService jwtAuthenticationService;
     private final ImageCleanupService imageCleanupService;
+    private final TodoService todoService;
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
         return login(dto, response, null);
@@ -443,6 +445,7 @@ public class MemberFacade {
         collectionService.deleteByMember(member);
 
         accountService.deleteByMember(member);
+        todoService.deleteByMember(member);
 
         imageCleanupService.enqueue(member.getProfile());
         memberService.deleteById(member.getId());

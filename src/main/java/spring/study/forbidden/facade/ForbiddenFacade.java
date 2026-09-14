@@ -30,19 +30,13 @@ public class ForbiddenFacade {
 
         List<ForbiddenResponseDto> list = forbiddenService.findByWord(word);
 
-        return ResponseEntity.ok(Map.of(
-                "result", list.size(),
-                "list", list
-        ));
+        return listResponse(list);
     }
 
     public ResponseEntity<?> getStatus(Status status) {
         List<ForbiddenResponseDto> list = forbiddenService.findByStatus(status);
 
-        return ResponseEntity.ok(Map.of(
-                "result", list.size(),
-                "list", list
-        ));
+        return listResponse(list);
     }
 
     public ResponseEntity<?> updateStatus(Status status, ForbiddenChangeRequestDto dto) {
@@ -92,6 +86,13 @@ public class ForbiddenFacade {
 
         return ResponseEntity.ok(Map.of(
                 "result", forbiddenService.save(dto).getId()
+        ));
+    }
+
+    private ResponseEntity<?> listResponse(List<ForbiddenResponseDto> list) {
+        return ResponseEntity.ok(Map.of(
+                "result", list.size(),
+                "list", list
         ));
     }
 }

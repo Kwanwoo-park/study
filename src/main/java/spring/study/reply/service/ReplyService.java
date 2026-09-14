@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import spring.study.comment.dto.reply.ReplyRequestDto;
+import spring.study.reply.dto.ReplyRequestDto;
 import spring.study.comment.entity.Comment;
 import spring.study.reply.entity.Reply;
 import spring.study.member.entity.Member;

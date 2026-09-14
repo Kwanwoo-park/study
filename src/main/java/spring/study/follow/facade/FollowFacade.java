@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +58,7 @@ public class FollowFacade {
 
         return ResponseEntity.ok(Map.of(
                 "follower", followers.stream().map(FollowResponseDto::new).toList(),
-                "follow", checkFollowingFollowers(followers, followService.findByFollower(member)),
+                "follow", checkFollowing(followers, followService.findByFollower(member), Follow::getFollower),
                 "email", member.getEmail(),
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
@@ -92,7 +93,7 @@ public class FollowFacade {
 
         return ResponseEntity.ok(Map.of(
                 "following", followings.stream().map(FollowResponseDto::new).toList(),
-                "follow", checkFollowingFollowing(followings, followService.findByFollower(member)),
+                "follow", checkFollowing(followings, followService.findByFollower(member), Follow::getFollowing),
                 "email", member.getEmail(),
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
@@ -164,32 +165,16 @@ public class FollowFacade {
         ));
     }
 
-    private HashMap<Long, Boolean> checkFollowingFollowers(List<Follow> follows, List<Follow> memberFollowers) {
+    private HashMap<Long, Boolean> checkFollowing(List<Follow> follows, List<Follow> memberFollowers,
+                                                 Function<Follow, Member> targetMember) {
         HashMap<Long, Boolean> map = new HashMap<>();
 
-        for (Follow following : follows) {
-            map.put(following.getId(), false);
+        for (Follow follow : follows) {
+            map.put(follow.getId(), false);
 
-            for (Follow follower : memberFollowers) {
-                if (Objects.equals(following.getFollower().getEmail(), follower.getFollowing().getEmail())) {
-                    map.put(following.getId(), true);
-                    break;
-                }
-            }
-        }
-
-        return map;
-    }
-
-    private HashMap<Long, Boolean> checkFollowingFollowing(List<Follow> follows, List<Follow> memberFollowers) {
-        HashMap<Long, Boolean> map = new HashMap<>();
-
-        for (Follow following : follows) {
-            map.put(following.getId(), false);
-
-            for (Follow follower : memberFollowers) {
-                if (Objects.equals(following.getFollowing().getEmail(), follower.getFollowing().getEmail())) {
-                    map.put(following.getId(), true);
+            for (Follow memberFollow : memberFollowers) {
+                if (Objects.equals(targetMember.apply(follow).getEmail(), memberFollow.getFollowing().getEmail())) {
+                    map.put(follow.getId(), true);
                     break;
                 }
             }

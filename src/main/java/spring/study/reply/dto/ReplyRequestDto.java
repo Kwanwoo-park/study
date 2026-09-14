@@ -1,4 +1,4 @@
-package spring.study.comment.dto.reply;
+package spring.study.reply.dto;
 
 import lombok.Builder;
 import lombok.Getter;

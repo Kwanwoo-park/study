@@ -70,10 +70,7 @@ public class ChatFacade {
                 "lastReadAt", lastReadAt,
                 "nextCursor", nextCursor,
                 "message", list.stream().sorted(Comparator.comparing(ChatMessageResponseDto::getRegisterTime).reversed()).toList(),
-                "img", messageImgService.findMessageImg(list.stream()
-                        .filter(item -> item.getType().equals(MessageType.IMAGE))
-                        .filter(item -> item.getStatus() != ChatMessageStatus.DELETED_FOR_ALL)
-                        .toList())
+                "img", messageImgService.findMessageImg(visibleImageMessages(list))
         ));
     }
 
@@ -96,11 +93,15 @@ public class ChatFacade {
                 "member", member,
                 "message", list,
                 "nextCursor", nextCursor,
-                "img", messageImgService.findMessageImg(list.stream()
-                        .filter(item -> item.getType().equals(MessageType.IMAGE))
-                        .filter(item -> item.getStatus() != ChatMessageStatus.DELETED_FOR_ALL)
-                        .toList())
+                "img", messageImgService.findMessageImg(visibleImageMessages(list))
         ));
+    }
+
+    private List<ChatMessageResponseDto> visibleImageMessages(List<ChatMessageResponseDto> messages) {
+        return messages.stream()
+                .filter(item -> item.getType().equals(MessageType.IMAGE))
+                .filter(item -> item.getStatus() != ChatMessageStatus.DELETED_FOR_ALL)
+                .toList();
     }
 
     public ResponseEntity<?> createRoom(String name, Member member) {

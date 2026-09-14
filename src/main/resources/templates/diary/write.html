@@ -6,7 +6,7 @@
     <title th:text="${diary == null ? '일기 쓰기' : '일기 수정'}">일기 쓰기</title>
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css">
-    <link rel="stylesheet" href="/css/diary/write.css">
+    <link rel="stylesheet" href="/css/diary/write.css?v=20260914">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
@@ -69,27 +69,6 @@
             <p id="imageCount" class="diary-field-help">0 / 10</p>
         </section>
 
-        <section class="diary-section" aria-labelledby="diary-todo-title">
-            <div class="diary-section-header">
-                <div>
-                    <h2 id="diary-todo-title">To-do list</h2>
-                    <p>할 일을 추가하고 완료 여부를 표시할 수 있습니다.</p>
-                </div>
-                <button id="todoAddButton" class="btn btn-outline-primary btn-sm" type="button">할 일 추가</button>
-            </div>
-            <div id="todoList" class="todo-list">
-                <div class="todo-item" th:each="todo : ${diary != null ? diary.todos : null}">
-                    <input class="todo-completed" type="checkbox"
-                           th:checked="${todo.completed}" aria-label="완료 여부">
-                    <input class="form-control todo-content" type="text"
-                           th:value="${todo.content}" maxlength="255" placeholder="할 일을 입력하세요">
-                    <button class="btn btn-outline-danger btn-sm todo-remove-button"
-                            type="button" aria-label="할 일 삭제">삭제</button>
-                </div>
-            </div>
-            <p id="todoEmptyMessage" class="diary-empty-message">등록된 할 일이 없습니다.</p>
-        </section>
-
         <div id="diaryMessage" class="mb-3" role="status" aria-live="polite"></div>
         <div class="diary-form-actions">
             <button class="btn btn-primary" type="submit"
@@ -102,7 +81,7 @@
     </form>
 </main>
 <script src="/js/common/image-upload.js?v=20260905-1"></script>
-<script src="/js/diary/write.js?v=20260905-1"></script>
+<script src="/js/diary/write.js?v=20260914"></script>
 <script src="/js/common/common.js?v=20260824-1"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

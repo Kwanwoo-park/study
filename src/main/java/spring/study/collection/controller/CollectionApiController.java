@@ -13,7 +13,6 @@ import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -39,9 +38,7 @@ public class CollectionApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return ResponseEntity.ok(Map.of(
-           "result", member.getId()
-        ));
+        return facade.check(member);
     }
 
     @PostMapping("/save/collection")

@@ -7,9 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageSelectButton = document.getElementById('imageSelectButton');
     const imagePreviewList = document.getElementById('imagePreviewList');
     const imageCount = document.getElementById('imageCount');
-    const todoList = document.getElementById('todoList');
-    const todoAddButton = document.getElementById('todoAddButton');
-    const todoEmptyMessage = document.getElementById('todoEmptyMessage');
     const submitButton = form.querySelector('button[type="submit"]');
     const deleteButton = document.getElementById('diaryDeleteButton');
     let selectedFiles = [];
@@ -97,47 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function updateTodoEmptyMessage() {
-        todoEmptyMessage.classList.toggle('is-hidden', todoList.querySelector('.todo-item') !== null);
-    }
-
-    function bindTodoRemoveButton(button) {
-        button.addEventListener('click', function() {
-            button.closest('.todo-item').remove();
-            updateTodoEmptyMessage();
-        });
-    }
-
-    todoList.querySelectorAll('.todo-remove-button').forEach(bindTodoRemoveButton);
-
-    todoAddButton.addEventListener('click', function() {
-        const item = document.createElement('div');
-        item.className = 'todo-item';
-
-        const completed = document.createElement('input');
-        completed.className = 'todo-completed';
-        completed.type = 'checkbox';
-        completed.setAttribute('aria-label', '완료 여부');
-
-        const content = document.createElement('input');
-        content.className = 'form-control todo-content';
-        content.type = 'text';
-        content.maxLength = 255;
-        content.placeholder = '할 일을 입력하세요';
-
-        const removeButton = document.createElement('button');
-        removeButton.className = 'btn btn-outline-danger btn-sm todo-remove-button';
-        removeButton.type = 'button';
-        removeButton.setAttribute('aria-label', '할 일 삭제');
-        removeButton.textContent = '삭제';
-        bindTodoRemoveButton(removeButton);
-
-        item.append(completed, content, removeButton);
-        todoList.append(item);
-        content.focus();
-        updateTodoEmptyMessage();
-    });
-
     function showMessage(message) {
         const messageElement = document.getElementById('diaryMessage');
         messageElement.className = 'alert alert-danger';
@@ -165,18 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function getTodoPayload() {
-        return Array.from(todoList.querySelectorAll('.todo-item'))
-                .map(function(item, index) {
-                    return {
-                        content: item.querySelector('.todo-content').value.trim(),
-                        completed: item.querySelector('.todo-completed').checked,
-                        todoOrder: index
-                    };
-                })
-                .filter(todo => todo.content.length > 0);
-    }
-
     form.addEventListener('submit', async function(event) {
         event.preventDefault();
         if (isPreparingImages || isSaving) return;
@@ -194,8 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 content: document.getElementById('content').value,
                 visibility: document.getElementById('visibility').value,
                 images: existingImageUrls.concat(uploadedImageUrls)
-                        .map(imageUrl => ({ imageUrl })),
-                todos: getTodoPayload()
+                        .map(imageUrl => ({ imageUrl }))
             };
 
             if (diaryId) payload.id = Number(diaryId);
@@ -250,5 +193,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     updateImageCount();
-    updateTodoEmptyMessage();
 });

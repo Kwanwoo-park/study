@@ -115,20 +115,8 @@ public class BoardFacade {
     }
 
     public ResponseEntity<?> write(BoardRequestDto dto, Member member, HttpServletResponse response) {
-        int risk = moderationService.validate(dto.getContent(), member, response);
-
-        if (risk != 0) {
-            if (risk == -99)
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "result", risk,
-                        "message", "게시글 내용이 없습니다"
-                ));
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -risk,
-                    "message", "금칙어를 사용하였습니다"
-            ));
-        }
+        ResponseEntity<?> validation = validateContent(dto.getContent(), member, response);
+        if (validation != null) return validation;
 
         dto.setMember(member);
         Board board = dto.toEntity();
@@ -155,21 +143,8 @@ public class BoardFacade {
             ));
         }
 
-        int risk = moderationService.validate(dto.getContent(), member, response);
-
-        if (risk != 0) {
-            if (risk == -99) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "result", risk,
-                        "message", "게시글 내용이 없습니다"
-                ));
-            }
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -risk,
-                    "message", "금칙어를 사용하였습니다"
-            ));
-        }
+        ResponseEntity<?> validation = validateContent(dto.getContent(), member, response);
+        if (validation != null) return validation;
 
         return ResponseEntity.ok(Map.of(
                 "result", boardService.updateBoard(dto.getId(), dto.getContent(), dto.getVisibility())
@@ -235,5 +210,25 @@ public class BoardFacade {
                 "result", -1,
                 "message", "비공개 설정으로 조회할 수 없습니다."
         ));
+    }
+
+    private ResponseEntity<?> validateContent(String content, Member member, HttpServletResponse response) {
+        int risk = moderationService.validate(content, member, response);
+
+        if (risk != 0) {
+            if (risk == -99) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                        "result", risk,
+                        "message", "게시글 내용이 없습니다"
+                ));
+            }
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -risk,
+                    "message", "금칙어를 사용하였습니다"
+            ));
+        }
+
+        return null;
     }
 }

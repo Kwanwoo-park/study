@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import spring.study.jwt.dto.MobileAuthResponse;
 import spring.study.jwt.dto.MobileOAuthExchangeRequest;
+import spring.study.jwt.facade.MobileOAuthFacade;
 import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MobileOAuthCodeService;
@@ -31,7 +32,7 @@ class MobileOAuthControllerTest {
     private final JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
     private final OnlineUserService onlineUserService = mock(OnlineUserService.class);
     private final MobileOAuthController controller = new MobileOAuthController(
-            cookieService, codeService, memberService, authenticationService, onlineUserService);
+            new MobileOAuthFacade(cookieService, codeService, memberService, authenticationService, onlineUserService));
 
     @Test
     void startsSupportedProviderThroughServerAuthorizationEndpoint() {

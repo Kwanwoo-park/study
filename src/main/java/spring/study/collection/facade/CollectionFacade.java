@@ -27,6 +27,10 @@ public class CollectionFacade {
     private final ImageS3Service imageS3Service;
     private final ImageCleanupService imageCleanupService;
 
+    public ResponseEntity<?> check(Member member) {
+        return ResponseEntity.ok(Map.of("result", member.getId()));
+    }
+
     public ResponseEntity<?> load(int cursor, int limit, Member member) {
         List<CollectionResponseDto> list = collectionService.getCollections(cursor, limit, member);
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
