@@ -1,5 +1,6 @@
 package spring.study.admin.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -24,20 +25,19 @@ import java.util.UUID;
 @Service
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminFileService {
-    private final AdminFileRepository repository;
+    private final AdminFileRepository adminFileRepository;
     private final TransactionTemplate transactionTemplate;
     private final AdminFileS3Storage storage;
     private final long maxFileSize;
 
-    public AdminFileService(AdminFileRepository repository, PlatformTransactionManager transactionManager, MultipartProperties multipartProperties, AdminFileS3Storage storage) {
-        this.repository = repository;
+    public AdminFileService(AdminFileRepository adminFileRepository, PlatformTransactionManager transactionManager, MultipartProperties multipartProperties, AdminFileS3Storage storage, @Value("${admin.files.max-file-size}") long adminFileLimit) {
+        this.adminFileRepository = adminFileRepository;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.storage = storage;
-        long fileLimit = multipartProperties.getMaxFileSize().toBytes();
         long requestLimit = multipartProperties.getMaxRequestSize().toBytes();
         // Even if servlet limits are disabled, this endpoint retains a finite streaming limit.
-        this.maxFileSize = Math.min(fileLimit < 0 ? Long.MAX_VALUE : fileLimit, requestLimit < 0 ? Long.MAX_VALUE : requestLimit);
+        this.maxFileSize = Math.min(adminFileLimit < 0 ? Long.MAX_VALUE : adminFileLimit, requestLimit < 0 ? Long.MAX_VALUE : requestLimit);
         if (maxFileSize == Long.MAX_VALUE || maxFileSize <= 0) {
             throw new IllegalArgumentException("관리자 파일 업로드에는 양수의 multipart 용량 제한이 필요합니다");
         }
@@ -49,7 +49,7 @@ public class AdminFileService {
 
     public Page<AdminFileResponseDto> list(int page) {
         if (page < 0 || page > 1000000) throw new IllegalArgumentException("올바른 페이지 번호를 입력해 주세요");
-        return repository.findAll(PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt", "id"))).map(AdminFileResponseDto::from);
+        return adminFileRepository.findAll(PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt", "id"))).map(AdminFileResponseDto::from);
     }
 
     public AdminFileResponseDto upload(MultipartFile file, Long uploadedBy) {
@@ -67,7 +67,7 @@ public class AdminFileService {
             }
             AdminFile metadata = new AdminFile(id, originalFilename, size, uploadedBy);
             // Complete the commit here so commit failures also remove the S3 object.
-            return transactionTemplate.execute(status -> AdminFileResponseDto.from(repository.saveAndFlush(metadata)));
+            return transactionTemplate.execute(status -> AdminFileResponseDto.from(adminFileRepository.saveAndFlush(metadata)));
         } catch (IOException error) {
             if (uploaded) storage.removeFailedUpload(id);
             throw new IllegalStateException("업로드 파일을 읽지 못했습니다", error);
@@ -79,7 +79,7 @@ public class AdminFileService {
 
     public Download download(String id) {
         validateId(id);
-        AdminFile metadata = repository.findById(id).orElseThrow(this::notFound);
+        AdminFile metadata = adminFileRepository.findById(id).orElseThrow(this::notFound);
         return new Download(AdminFileResponseDto.from(metadata), storage.download(id));
     }
 

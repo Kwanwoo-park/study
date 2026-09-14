@@ -42,10 +42,10 @@ public class GitHubHistoryService {
     private String unavailableMessage;
 
     public GitHubHistoryService(@Qualifier("gitHubHistoryRestTemplate") RestTemplate client,
-                                @Value("${admin.github.owner:Kwanwoo-park}") String owner,
-                                @Value("${admin.github.repository:study}") String repository,
-                                @Value("${admin.github.branch:main}") String branch,
-                                @Value("${admin.github.token:${ADMIN_GITHUB_TOKEN:}}") String token) {
+                                @Value("${admin.github.owner:}") String owner,
+                                @Value("${admin.github.repository:}") String repository,
+                                @Value("${admin.github.branch:}") String branch,
+                                @Value("${admin.github.token:}") String token) {
         if (!validName(owner) || !validName(repository) || branch == null || branch.isBlank() || branch.length() > 255 || branch.chars().anyMatch(Character::isISOControl)) {
             throw new IllegalArgumentException("GitHub 저장소 및 브랜치 설정을 확인해 주세요");
         }

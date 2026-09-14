@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PublicAccessBlockConfiguration;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
@@ -24,15 +25,13 @@ import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class AdminFileS3Storage {
     private static final String PREFIX = "admin-files/";
     private final AmazonS3 amazonS3;
-    private final String bucket;
 
-    public AdminFileS3Storage(AmazonS3 amazonS3, @Value("${admin.files.s3.bucket:}") String bucket) {
-        this.amazonS3 = amazonS3;
-        this.bucket = bucket.strip();
-    }
+    @Value("${admin.files.s3.bucket}")
+    private String bucket;
 
     public void upload(String id, String filename, long size, InputStream input) {
         requirePrivateBucket();

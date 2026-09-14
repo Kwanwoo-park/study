@@ -47,7 +47,7 @@ class AdminFileServiceTest {
         MultipartProperties properties = new MultipartProperties();
         properties.setMaxFileSize(DataSize.ofBytes(100));
         properties.setMaxRequestSize(DataSize.ofBytes(200));
-        service = new AdminFileService(repository, transactionManager, properties, storage);
+        service = new AdminFileService(repository, transactionManager, properties, storage, 100);
     }
 
     @ParameterizedTest
