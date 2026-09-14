@@ -39,7 +39,7 @@ class AdminFileS3StorageTest {
 
     @BeforeEach
     void setUp() {
-        storage = new AdminFileS3Storage(amazonS3, BUCKET);
+        storage = new AdminFileS3Storage(amazonS3);
     }
 
     @Test
@@ -84,7 +84,7 @@ class AdminFileS3StorageTest {
 
     @Test
     void missingBucketDoesNotFallBackToPublicImageBucketOrLocalDisk() {
-        storage = new AdminFileS3Storage(amazonS3, "");
+        storage = new AdminFileS3Storage(amazonS3);
         assertUnavailable(() -> storage.upload(ID, "test.exe", 0, new ByteArrayInputStream(new byte[0])));
         verifyNoInteractions(amazonS3);
     }
@@ -130,7 +130,7 @@ class AdminFileS3StorageTest {
 
     @Test
     void missingBucketBlocksDownloadWithoutAccessingAnyOtherStorage() {
-        storage = new AdminFileS3Storage(amazonS3, "");
+        storage = new AdminFileS3Storage(amazonS3);
         assertUnavailable(() -> storage.download(ID));
         verifyNoInteractions(amazonS3);
     }
