@@ -97,7 +97,7 @@ class AdminFileServiceTest {
 
     @Test
     void rejectsOversizedFileBeforeOpeningStorage() throws IOException {
-        assertThatThrownBy(() -> service.upload(new MockMultipartFile("file", "big.exe", null, new byte[101]), 7L))
+        assertThatThrownBy(() -> service.upload(new MockMultipartFile("file", "big.exe", null, new byte[8192]), 7L))
                 .isInstanceOfSatisfying(ResponseStatusException.class, error -> assertThat(error.getStatusCode().value()).isEqualTo(413));
         verifyNoInteractions(repository, storage);
     }
