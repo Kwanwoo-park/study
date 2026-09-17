@@ -181,7 +181,13 @@ public class GitHubHistoryService {
         try {
             URI next = URI.create(matcher.group(1));
             if (!"https".equals(next.getScheme()) || !"api.github.com".equals(next.getHost())
-                    || !requestUri.getPath().equals(next.getPath())) return null;
+                    || next.getUserInfo() != null || next.getPort() != -1 || next.getFragment() != null) return null;
+            String requestPath = requestUri.getPath();
+            String resourcePath = requestPath.substring(requestPath.lastIndexOf('/'));
+            // GitHub canonicalizes Link URLs to /repositories/{numeric-id}/{resource}.
+            // Read only the page/cursor; subsequent requests still use our configured repository.
+            if (!requestPath.equals(next.getPath())
+                    && !next.getPath().matches("/repositories/[1-9][0-9]*" + Pattern.quote(resourcePath))) return null;
             String value = UriComponentsBuilder.fromUri(next).build().getQueryParams().getFirst(name);
             return value == null ? null : UriUtils.decode(value, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException error) {

@@ -13,15 +13,16 @@
   <script src="/js/common/theme.js"></script>
   <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
   <div class="container">
+    <th:block th:replace="~{fragments/common :: pageBack('/board/main')}"></th:block>
     <h1>Admin view</h1>
       <div class="float-left">
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/memberCheck'">Member List</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/board/all'">Board List</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/board/main'">Board Main</button>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/portfolio'">Portfolio</button>
-        <button type="button" class="btn btn-primary" onclick="location.href='/admin/files'">File Storage</button>
+        <button type="button" class="btn btn-primary" onclick="location.replace('/admin/memberCheck')">Member List</button>
+        <button type="button" class="btn btn-primary" onclick="location.replace('/board/all')">Board List</button>
+        <button type="button" class="btn btn-primary" onclick="location.replace('/board/main')">Board Main</button>
+        <button type="button" class="btn btn-primary" onclick="location.replace('/portfolio')">Portfolio</button>
+        <button type="button" class="btn btn-primary" onclick="location.replace('/admin/files')">File Storage</button>
         <a class="btn btn-primary" href="/admin/github">GitHub 내역</a>
-        <button type="button" class="btn btn-primary" onclick="javascript:location.href='/admin/forbidden/word/apply'">Forbbiden apply</button>
+        <button type="button" class="btn btn-primary" onclick="location.replace('/admin/forbidden/word/apply')">Forbbiden apply</button>
       </div>
       <section class="admin-system-panel">
         <div class="admin-system-header">
@@ -67,10 +68,10 @@
             <span>접수되지 않은 최근 신고 10건</span>
           </div>
           <div class="admin-report-dashboard-actions">
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.href='/admin/report'">전체 보기</button>
-            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.href='/admin/appeal'">상소문 확인</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.href='/admin/report/process'">처리 화면</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.href='/admin/report/history'">처리 내역</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.replace('/admin/report')">전체 보기</button>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.replace('/admin/appeal')">상소문 확인</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.replace('/admin/report/process')">처리 화면</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.replace('/admin/report/history')">처리 내역</button>
           </div>
         </div>
         <div id="recent-report-list" class="admin-report-card-grid"></div>
@@ -95,7 +96,7 @@
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/admin/main.js?v=20260830"></script>
-<script src="/js/common/common.js?v=20260824-1"></script>
+<script src="/js/admin/main.js?v=20260916-replace"></script>
+<script src="/js/common/common.js?v=20260916-replace"></script>
 </body>
 </html>

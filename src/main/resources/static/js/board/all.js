@@ -5,7 +5,7 @@ if (title) {
     title.addEventListener('keydown', (event) => {
         if (event.key == 'Enter') {
             //console.log(title.value)
-            location.href = "/board/all?title=" + title.value;
+            location.replace("/board/all?title=" + title.value);
         }
     })
 }

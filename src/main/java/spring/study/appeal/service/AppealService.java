@@ -1,6 +1,6 @@
 package spring.study.appeal.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -58,18 +58,21 @@ public class AppealService {
         return new AppealResponseDto(appeal);
     }
 
+    @Transactional(readOnly = true)
     public List<AppealSanctionResponseDto> findSanctions(Member member) {
         return memberSanctionRepository.findByMemberOrderByStartedAtDesc(member).stream()
                 .map(AppealSanctionResponseDto::new)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<AppealResponseDto> findByMember(Member member) {
         return appealRepository.findByMemberOrderByRegisterTimeDesc(member).stream()
                 .map(AppealResponseDto::new)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public Page<AppealResponseDto> findAll(AppealStatus status, int page, int size) {
         AppealStatus resolvedStatus = status == null ? AppealStatus.PENDING : status;
         PageRequest pageable = PageRequest.of(

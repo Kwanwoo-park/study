@@ -1,7 +1,7 @@
 package spring.study.chat.service;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,6 +47,7 @@ public class ChatRoomService {
         return save;
     }
 
+    @Transactional(readOnly = true)
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
 
@@ -60,14 +61,17 @@ public class ChatRoomService {
         return resultMap;
     }
 
+    @Transactional(readOnly = true)
     public List<ChatRoom> findAll() {
         return chatRoomRepository.findAll(Sort.by("id").descending());
     }
 
+    @Transactional(readOnly = true)
     public ChatRoom find(String roomId) {
         return chatRoomRepository.findByRoomId(roomId);
     }
 
+    @Transactional(readOnly = true)
     public ChatRoom findByName(Member sessionMember, Member searchMember) {
         String name1 = sessionMember.getEmail() + " " + searchMember.getEmail();
         String name2 = searchMember.getEmail() + " " + sessionMember.getEmail();

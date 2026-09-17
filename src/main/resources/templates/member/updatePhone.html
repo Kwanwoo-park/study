@@ -10,6 +10,7 @@
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <div class="container">
+  <th:block th:replace="~{fragments/common :: pageBack('/board/main')}"></th:block>
   <h1>Password Update</h1>
     <label>생년월일이 1900-01-01 이거나 전화번호가 공백인 고객만 보이는 화면으로</label>
     <label>아래의 칸을 공백 없이 입력해주세요!!</label>
@@ -32,6 +33,6 @@
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/member/updatePhone.js"></script>
+<script src="/js/member/updatePhone.js?v=20260916-replace"></script>
 </body>
 </html>

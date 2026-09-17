@@ -15,6 +15,7 @@
 <button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
 <button type="button" th:unless="${next == 0}" id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
 	<div class="container">
+		<th:block th:replace="~{fragments/common :: pageBack('/board/main')}"></th:block>
 		<h1 class="simple-page-title">게시글</h1>
 		<div class="editDiv" th:if="${#strings.equals(board.member.email, member)}">
 			<span th:onclick="fnEdit()" id="edit">Edit</span>
@@ -87,7 +88,7 @@
 		    <script src="/js/lib/bootstrap.min.js"></script>
             <script src="/js/favorite/modal.js"></script>
 			<script src="/js/common/image-swipe.js"></script>
-			<script src="/js/board/common-actions.js"></script>
+			<script src="/js/board/common-actions.js?v=20260916-replace"></script>
 			<script src="/js/comment/modal.js?v=20260823"></script>
 			<script src="/js/board/view.js"></script>
 			<script th:if="${board.img.size > 1}" th:inline="javascript">

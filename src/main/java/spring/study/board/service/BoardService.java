@@ -34,18 +34,22 @@ public class BoardService {
         return boardRepository.save(board);
     }
 
+    @Transactional(readOnly = true)
     public List<Board> findNewBoard(LocalDateTime start, LocalDateTime end) {
         return boardRepository.findByRegisterTimeBetween(start, end);
     }
 
+    @Transactional(readOnly = true)
     public List<Board> getBoard(int cursor, int limit, List<Member> list) {
         return boardRepository.findByMemberIn(list, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()));
     }
 
+    @Transactional(readOnly = true)
     public List<Board> getBoardByMember(int cursor, int limit, Member member) {
         return getBoardByMember(cursor, limit, member, true);
     }
 
+    @Transactional(readOnly = true)
     public List<Board> getBoardByMember(int cursor, int limit, Member member, boolean includePrivate) {
         PageRequest pageable = PageRequest.of(cursor, limit, Sort.by("registerTime").descending());
         if (includePrivate) {
@@ -54,6 +58,7 @@ public class BoardService {
         return boardRepository.findByMemberAndVisibility(member, CommonVisibility.PUBLIC, pageable);
     }
 
+    @Transactional(readOnly = true)
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
 
@@ -67,26 +72,32 @@ public class BoardService {
         return resultMap;
     }
 
+    @Transactional(readOnly = true)
     public List<Board> findByMember(Member member) {
         return boardRepository.findByMember(member, Sort.by("id").descending());
     }
 
+    @Transactional(readOnly = true)
     public List<Board> findAll() {
         return boardRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Board findById(Long id) {
         return boardRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다"));
     }
 
+    @Transactional(readOnly = true)
     public Boolean existBoard(Long id) {
         return boardRepository.existsById(id);
     }
 
+    @Transactional(readOnly = true)
     public Long countByMember(Member member) {
         return boardRepository.countByMember(member);
     }
 
+    @Transactional(readOnly = true)
     public long countByMember(Member member, boolean includePrivate) {
         if (includePrivate) {
             return boardRepository.countByMember(member);
@@ -94,14 +105,17 @@ public class BoardService {
         return boardRepository.countByMemberAndVisibility(member, CommonVisibility.PUBLIC);
     }
 
+    @Transactional(readOnly = true)
     public long countByMembers(List<Member> members) {
         return members.isEmpty() ? 0L : boardRepository.countByMemberIn(members);
     }
 
+    @Transactional(readOnly = true)
     public long[] getBoardIdList(Long id, Member member) {
         return getBoardIdList(id, member, true);
     }
 
+    @Transactional(readOnly = true)
     public long[] getBoardIdList(Long id, Member member, boolean includePrivate) {
         Board previous = includePrivate
                 ? boardRepository.findFirstByMemberAndIdGreaterThanOrderByIdAsc(member, id).orElse(null)

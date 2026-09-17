@@ -251,7 +251,7 @@ function fnAcceptIncomingAudioCall() {
     fnMarkNotificationAsRead(call.notificationId);
     const target = new URL(call.url, window.location.origin);
     target.searchParams.set('acceptAudioCall', call.callId);
-    window.location.href = target.pathname + target.search;
+    window.location.replace(target.pathname + target.search);
 }
 
 function fnParseAudioCallUrl(value) {
@@ -654,10 +654,10 @@ function fnForbidden() {
 
 function fnNotificationMove(group, url) {
     if (group == "CHAT")
-        location.href = `/chat/chatRoom?roomId=` + url;
+        location.replace(`/chat/chatRoom?roomId=` + url);
     else if (group == "CALL") {
         const call = fnParseAudioCallUrl(url);
-        if (call) location.href = call.url;
+        if (call) location.replace(call.url);
     }
     else if (group == "COMMENT" || group == "REPLY")
         location.replace(`/comment?id=` + url);

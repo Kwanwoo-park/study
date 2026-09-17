@@ -11,6 +11,7 @@
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
 <main class="container admin-files-page">
+  <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
   <header class="admin-files-header">
     <div>
       <span class="admin-files-label">ADMIN ONLY</span>

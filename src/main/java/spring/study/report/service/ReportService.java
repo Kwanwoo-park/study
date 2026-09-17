@@ -1,6 +1,6 @@
 package spring.study.report.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -93,15 +93,18 @@ public class ReportService {
         }
     }
 
+    @Transactional(readOnly = true)
     public ReportResponseDto findById(Long id) {
         return new ReportResponseDto(findEntity(id));
     }
 
+    @Transactional(readOnly = true)
     public Page<ReportResponseDto> findByReporter(Member reporter, int page, int size) {
         return reportRepository.findByReporter(reporter, createPageRequest(page, size))
                 .map(ReportResponseDto::new);
     }
 
+    @Transactional(readOnly = true)
     public Page<ReportResponseDto> findAll(ReportStatus status, int page, int size) {
         PageRequest pageable = createPageRequest(page, size);
         Page<Report> reports = status == null
@@ -111,6 +114,7 @@ public class ReportService {
         return reports.map(ReportResponseDto::new);
     }
 
+    @Transactional(readOnly = true)
     public Page<ReportResponseDto> findHistory(ReportStatus status, int page, int size) {
         PageRequest pageable = createPageRequest(page, size);
         Page<Report> reports;
@@ -129,6 +133,7 @@ public class ReportService {
         return reports.map(ReportResponseDto::new);
     }
 
+    @Transactional(readOnly = true)
     public List<ReportResponseDto> findAllByStatus(ReportStatus status) {
         return reportRepository.findByStatus(status, Sort.by("registerTime").descending())
                 .stream()

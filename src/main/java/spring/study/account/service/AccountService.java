@@ -1,6 +1,6 @@
 package spring.study.account.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
@@ -94,6 +94,7 @@ public class AccountService {
         return savedAccount;
     }
 
+    @Transactional(readOnly = true)
     public Account findByAccount(String accountNum) {
         return accountRepository.findById(accountNum).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 계좌입니다"
@@ -106,22 +107,27 @@ public class AccountService {
         ));
     }
 
+    @Transactional(readOnly = true)
     public List<Account> findByMember(Member member) {
         return accountRepository.findByMember(member);
     }
 
+    @Transactional(readOnly = true)
     public List<AccountResponseDto> findActiveByMember(Member member) {
         return accountRepository.findByMemberAndAccountStatus(member, AccountStatus.ACTIVE).stream().map(AccountResponseDto::new).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<Account> findAll() {
         return accountRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public boolean existsByAccount(String accountNum) {
         return !accountRepository.existsById(accountNum);
     }
 
+    @Transactional(readOnly = true)
     public boolean hasActiveSavingsUsingSource(Account sourceAccount) {
         return accountRepository.existsBySavingsSourceAccountAndAccountStatusIn(sourceAccount, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED));
     }

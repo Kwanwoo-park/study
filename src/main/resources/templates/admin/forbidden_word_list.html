@@ -11,6 +11,7 @@
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
 <div class="container">
+  <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
   <h1>Forbidden word list</h1>
   <button type="button" id="btn" class="btn btn-success">Forbidden word upload</button>
   <div id="uploadDiv" class="is-hidden">

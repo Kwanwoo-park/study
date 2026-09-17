@@ -144,7 +144,7 @@ function fnComment(listId) {
         return;
     }
 
-    location.href = '/comment?id=' + listId;
+    location.replace('/comment?id=' + listId);
 }
 
 function fnHref(listId) {
@@ -153,13 +153,13 @@ function fnHref(listId) {
         return;
     }
 
-    location.href = '/favorites?id=' + listId;
+    location.replace('/favorites?id=' + listId);
 }
 
 function fnReportBoard(listId) {
-    location.href = `/report?targetType=BOARD&targetId=${encodeURIComponent(listId)}`;
+    location.replace(`/report?targetType=BOARD&targetId=${encodeURIComponent(listId)}`);
 }
 
 function fnProfile(email) {
-    location.href = '/member/search/detail?email=' + email;
+    location.replace('/member/search/detail?email=' + email);
 }

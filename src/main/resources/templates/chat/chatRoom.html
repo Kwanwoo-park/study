@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css?v=20260830">
-    <link rel="stylesheet" href="/css/chat/chat.css?v=20260830">
+    <link rel="stylesheet" href="/css/chat/chat.css?v=20260916">
     <link rel="stylesheet" href="/css/chat/room-details.css?v=20260912">
     <title>Chatting Room</title>
 </head>
@@ -16,6 +16,7 @@
     <input type="hidden" id="isAdmin" th:value="${isAdmin}">
     <input type="hidden" id="flag" th:value="${flag}">
     <header class="chat-room-header">
+        <th:block th:replace="~{fragments/common :: pageBack('/chat/chatList')}"></th:block>
         <div class="chat-room-participants">
                 <span th:each="name, stat : ${participantNames}"
                       th:text="${name + (stat.last ? '' : ', ')}">참여자</span>
@@ -116,7 +117,7 @@
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
     <script src="/js/common/image-upload.js?v=20260905-1"></script>
-    <script src="/js/chat/chat.js?v=20260912"></script>
+    <script src="/js/chat/chat.js?v=20260916-replace"></script>
     <script src="/js/chat/room-details.js?v=20260912"></script>
     <script src="/js/chat/audio-call.js?v=20260824-2"></script>
 </body>

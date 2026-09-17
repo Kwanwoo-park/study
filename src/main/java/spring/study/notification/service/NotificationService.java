@@ -1,6 +1,6 @@
 package spring.study.notification.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -128,34 +128,42 @@ public class NotificationService {
         notification.changeToRead();
     }
 
+    @Transactional(readOnly = true)
     public Long countUnReadNotification(Member member) {
         return notificationRepository.countByMemberAndReadStatus(member, Status.UNREAD);
     }
 
+    @Transactional(readOnly = true)
     public Notification findById(Long id) {
         return notificationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("알림을 찾을 수 없습니다"));
     }
 
+    @Transactional(readOnly = true)
     public List<Notification> findByMember(Member member) {
         return findByMember(member, 0, 100);
     }
 
+    @Transactional(readOnly = true)
     public List<Notification> findByMember(Member member, int page, int size) {
         return notificationRepository.findRecentByMember(member, PageRequest.of(page, Math.min(Math.max(size, 1), 100)));
     }
 
+    @Transactional(readOnly = true)
     public List<Notification> findByMemberAndGroup(Member member, Group group) {
         return notificationRepository.findRecentByMemberAndGroup(member, group, PageRequest.of(0, 100));
     }
 
+    @Transactional(readOnly = true)
     public long countByMember(Member member) {
         return notificationRepository.countByMember(member);
     }
 
+    @Transactional(readOnly = true)
     public long countByMemberAndGroup(Member member, Group group) {
         return notificationRepository.countByMemberAndNotiGroup(member, group);
     }
 
+    @Transactional(readOnly = true)
     public List<Notification> findUnReadNotification(Member member) {
         return notificationRepository.findByMemberAndReadStatus(member, Status.UNREAD);
     }

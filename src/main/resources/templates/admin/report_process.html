@@ -11,15 +11,16 @@
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
 <main class="container admin-report-page">
+  <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
   <div class="admin-report-header">
     <div>
       <h1>신고 처리</h1>
       <p>접수되어 검토 중인 신고를 처리합니다.</p>
     </div>
     <div class="admin-report-header-actions">
-      <button type="button" class="btn btn-outline-primary" onclick="location.href='/admin/report'">접수 대기</button>
-      <button type="button" class="btn btn-outline-secondary" onclick="location.href='/admin/report/history'">처리 내역</button>
-      <button type="button" class="btn btn-secondary" onclick="location.href='/admin/administrator'">관리자 홈</button>
+      <button type="button" class="btn btn-outline-primary" onclick="location.replace('/admin/report')">접수 대기</button>
+      <button type="button" class="btn btn-outline-secondary" onclick="location.replace('/admin/report/history')">처리 내역</button>
+      <button type="button" class="btn btn-secondary" onclick="location.replace('/admin/administrator')">관리자 홈</button>
     </div>
   </div>
 

@@ -1,5 +1,6 @@
 package spring.study.admin.repository;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,9 +18,12 @@ public interface SystemIncidentRepository extends JpaRepository<SystemIncident, 
             "where incident.acknowledged = false")
     int acknowledgeAll(@Param("acknowledgedAt") LocalDateTime acknowledgedAt);
 
+    @Transactional(readOnly = true)
     List<SystemIncident> findTop50ByOrderByOccurredAtDesc();
 
+    @Transactional(readOnly = true)
     long countByAcknowledgedFalse();
 
+    @Transactional(readOnly = true)
     Optional<SystemIncident> findFirstByRequestMethodAndRequestPathAndRequestIpAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(String requestMethod, String requestPath, String requestIp, String exceptionType, String errorMessage);
 }

@@ -1,7 +1,7 @@
 package spring.study.member.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,7 +46,7 @@ public class MemberService implements UserDetailsService {
     @Transactional
     public Member save(Member member) { return memberRepository.save(member); }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> member = new HashMap<>();
 
@@ -60,15 +60,18 @@ public class MemberService implements UserDetailsService {
         return member;
     }
 
+    @Transactional(readOnly = true)
     public Member findById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
     }
 
+    @Transactional(readOnly = true)
     public List<MemberResponseDto> findName(String name) {
         return memberRepository.findByNameContaining(name).stream().map(MemberResponseDto::new).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<MemberResponseDto> findName(String name, Member viewer) {
         return memberRepository.findByNameContaining(name).stream()
                 .filter(member -> visibilityAccessPolicy.canViewMember(member, viewer))
@@ -76,27 +79,33 @@ public class MemberService implements UserDetailsService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<Member> findMember(List<Long> list) {
         return memberRepository.findByIdIn(list);
     }
 
+    @Transactional(readOnly = true)
     public Member findMember(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
     }
 
+    @Transactional(readOnly = true)
     public Member findMember(String phone, String birth) {
         return memberRepository.findByPhoneAndBirth(phone, birth);
     }
 
+    @Transactional(readOnly = true)
     public Member findAdministrator() {
         return memberRepository.findByRole(Role.ADMIN);
     }
 
+    @Transactional(readOnly = true)
     public Boolean existEmail(String email) {
         return memberRepository.existsByEmail(email);
     }
 
+    @Transactional(readOnly = true)
     public List<Member> findNewUser(LocalDateTime start, LocalDateTime end) {
         return memberRepository.findByRegisterTimeBetween(start, end);
     }
@@ -198,6 +207,7 @@ public class MemberService implements UserDetailsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException(

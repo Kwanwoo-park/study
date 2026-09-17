@@ -336,7 +336,7 @@ function fnRecentReportDraw(reports) {
         const card = document.createElement('article');
         card.className = 'admin-report-card';
         card.onclick = function() {
-            location.href = '/admin/report';
+            location.replace('/admin/report');
         };
         card.innerHTML = `
             <div class="admin-report-card-title">

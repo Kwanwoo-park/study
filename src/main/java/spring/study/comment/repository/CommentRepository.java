@@ -1,6 +1,6 @@
 package spring.study.comment.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,10 +15,13 @@ import java.util.Collection;
 
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+    @Transactional(readOnly = true)
     List<Comment> findByBoard(Board board, Pageable pageable);
 
+    @Transactional(readOnly = true)
     Boolean existsByMemberAndBoard(Member member, Board board);
 
+    @Transactional(readOnly = true)
     long countByBoard(Board board);
 
     @Transactional
@@ -28,5 +31,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     void deleteByMember(Member member);
 
     @Query("select c.board.id, count(c.id) from comment c where c.board.id in :boardIds group by c.board.id")
+    @Transactional(readOnly = true)
     List<Object[]> countByBoardIds(@Param("boardIds") Collection<Long> boardIds);
 }

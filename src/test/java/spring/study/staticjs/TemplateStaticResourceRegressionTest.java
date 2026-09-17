@@ -390,9 +390,9 @@ class TemplateStaticResourceRegressionTest {
                 "bottom navigation should render the settings icon");
         assertTrue(commonFragment.contains("class=\"nav-settings-menu\""),
                 "bottom navigation should contain the personal settings menu");
-        assertTrue(commonFragment.contains("location.href='/admin/administrator'"),
+        assertTrue(commonFragment.contains("location.replace('/admin/administrator')"),
                 "admin settings should be available from bottom navigation");
-        assertTrue(commonFragment.contains("location.href='/member/updatePassword'"),
+        assertTrue(commonFragment.contains("location.replace('/member/updatePassword')"),
                 "password settings should be available from bottom navigation");
         assertTrue(commonFragment.contains("fnSetMemberVisibility('PUBLIC')"),
                 "public profile setting should be available from bottom navigation");
@@ -400,18 +400,18 @@ class TemplateStaticResourceRegressionTest {
                 "private profile setting should be available from bottom navigation");
         assertTrue(commonFragment.contains("fnNavigationLogout()"),
                 "logout should be available from bottom navigation");
-        assertTrue(commonFragment.contains("location.href='/member/withdrawal'"),
+        assertTrue(commonFragment.contains("location.replace('/member/withdrawal')"),
                 "withdrawal should be available from bottom navigation");
 
-        assertFalse(memberDetail.contains("location.href='/admin/administrator'"),
+        assertFalse(memberDetail.contains("location.replace('/admin/administrator')"),
                 "admin settings should not remain in the member detail hamburger menu");
-        assertFalse(memberDetail.contains("location.href='/member/updatePassword'"),
+        assertFalse(memberDetail.contains("location.replace('/member/updatePassword')"),
                 "password settings should not remain in the member detail hamburger menu");
         assertFalse(memberDetail.contains("fnSaveVisibility()"),
                 "profile visibility settings should not remain in the member detail hamburger menu");
         assertFalse(memberDetail.contains("onclick=\"fnLogout()\""),
                 "logout should not remain in the member detail hamburger menu");
-        assertFalse(memberDetail.contains("location.href='/member/withdrawal'"),
+        assertFalse(memberDetail.contains("location.replace('/member/withdrawal')"),
                 "withdrawal should not remain in the member detail hamburger menu");
     }
 
@@ -427,7 +427,7 @@ class TemplateStaticResourceRegressionTest {
                         "fragments/common :: notificationBanner"),
                 "admin report apply should include the notification banner used by common navigation");
         assertTrue(reportApplyTemplate.contains(
-                        "<script src=\"/js/common/common.js?v=20260824-1\"></script>"),
+                        "<script src=\"/js/common/common.js?v=20260916-replace\"></script>"),
                 "admin report apply should load common navigation actions");
     }
 
@@ -437,7 +437,7 @@ class TemplateStaticResourceRegressionTest {
 
         assertTrue(administratorTemplate.contains("fragments/common :: notificationBanner"),
                 "administrator dashboard should render realtime notification banners");
-        assertTrue(administratorTemplate.contains("/js/common/common.js?v=20260824-1"),
+        assertTrue(administratorTemplate.contains("/js/common/common.js?v=20260916-replace"),
                 "administrator dashboard should connect to the shared notification stream");
     }
 

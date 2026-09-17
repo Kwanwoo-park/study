@@ -67,7 +67,7 @@
         }
 
         if (action === 'transactions') {
-            window.location.href = `/account/transactions?account=${encodeURIComponent(account)}`;
+            window.location.replace(`/account/transactions?account=${encodeURIComponent(account)}`);
             return;
         }
 

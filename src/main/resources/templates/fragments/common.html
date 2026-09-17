@@ -25,10 +25,10 @@
         <button type="button"
                 class="nav-settings-item"
                 sec:authorize="hasAuthority('ROLE_ADMIN')"
-                onclick="location.href='/admin/administrator'">관리자 페이지</button>
+                onclick="location.replace('/admin/administrator')">관리자 페이지</button>
         <button type="button"
                 class="nav-settings-item"
-                onclick="location.href='/member/updatePassword'">비밀번호 변경</button>
+                onclick="location.replace('/member/updatePassword')">비밀번호 변경</button>
         <div class="nav-settings-section">
           <span class="nav-settings-label">통화 알림 설정</span>
           <div class="nav-settings-choices">
@@ -61,11 +61,21 @@
         <button type="button" class="nav-settings-item" onclick="fnNavigationLogout()">로그아웃</button>
         <button type="button"
                 class="nav-settings-item nav-settings-danger"
-                onclick="location.href='/member/withdrawal'">회원 탈퇴</button>
+                onclick="location.replace('/member/withdrawal')">회원 탈퇴</button>
       </div>
     </div>
     <div th:onclick="fnDetail([[${email}]])"><img th:src="${profile}" class="profile-icon"></div>
   </nav>
+</th:block>
+
+<th:block th:fragment="pageBack(fallback)">
+  <link rel="stylesheet" href="/css/common/page-back.css?v=20260916">
+  <nav class="page-back-nav" aria-label="이전 화면으로 이동">
+    <a class="page-back-link" th:href="${fallback}" data-page-back>
+      <span aria-hidden="true">←</span> 뒤로 가기
+    </a>
+  </nav>
+  <script src="/js/common/page-back.js?v=20260916-replace" defer></script>
 </th:block>
 
 <th:block th:fragment="notificationBanner">

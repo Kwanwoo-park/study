@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 throw new Error(body.message || '일기를 저장하지 못했습니다');
             }
-            window.location.href = '/diary/list';
+            window.location.replace('/diary/list');
         } catch (error) {
             showMessage(error.message);
         } finally {
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) {
                     throw new Error(body.message || '일기를 삭제하지 못했습니다');
                 }
-                window.location.href = '/diary/list';
+                window.location.replace('/diary/list');
             } catch (error) {
                 showMessage(error.message);
             } finally {

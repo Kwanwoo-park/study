@@ -1,6 +1,6 @@
 package spring.study.follow.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -38,14 +38,17 @@ public class FollowService {
         return followRepository.save(follow);
     }
 
+    @Transactional(readOnly = true)
     public Follow findFollow(Member follower, Member following) {
         return followRepository.findByFollowerAndFollowing(follower, following);
     }
 
+    @Transactional(readOnly = true)
     public Boolean existFollow(Member follower, Member following) {
         return followRepository.existsByFollowerAndFollowing(follower, following);
     }
 
+    @Transactional(readOnly = true)
     public List<Member> getMemberList(Member member) {
         List<Follow> list = followRepository.findByFollower(member);
         List<Member> memberList = new ArrayList<>();
@@ -59,10 +62,12 @@ public class FollowService {
         return memberList;
     }
 
+    @Transactional(readOnly = true)
     public List<Follow> findByFollower(Member member) {
         return followRepository.findByFollower(member);
     }
 
+    @Transactional(readOnly = true)
     public List<Follow> getFollowers(Member member, int cursor, int limit) {
         return followRepository.findByFollowing(
                 member,
@@ -70,12 +75,14 @@ public class FollowService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<Follow> getVisibleFollowers(Member target, Member viewer, int cursor, int limit) {
         return followRepository.findVisibleFollowers(
                 target, viewer, PageRequest.of(cursor, limit, Sort.by("id").descending())
         );
     }
 
+    @Transactional(readOnly = true)
     public List<Follow> getFollowing(Member member, int cursor, int limit) {
         return followRepository.findByFollower(
                 member,
@@ -83,24 +90,29 @@ public class FollowService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<Follow> getVisibleFollowing(Member target, Member viewer, int cursor, int limit) {
         return followRepository.findVisibleFollowing(
                 target, viewer, PageRequest.of(cursor, limit, Sort.by("id").descending())
         );
     }
 
+    @Transactional(readOnly = true)
     public long countVisibleFollowers(Member target, Member viewer) {
         return followRepository.countVisibleFollowers(target, viewer);
     }
 
+    @Transactional(readOnly = true)
     public long countVisibleFollowing(Member target, Member viewer) {
         return followRepository.countVisibleFollowing(target, viewer);
     }
 
+    @Transactional(readOnly = true)
     public long countFollowers(Member member) {
         return followRepository.countByFollowing(member);
     }
 
+    @Transactional(readOnly = true)
     public long countFollowing(Member member) {
         return followRepository.countByFollower(member);
     }
@@ -123,6 +135,7 @@ public class FollowService {
         followRepository.deleteByFollowing(following);
     }
 
+    @Transactional(readOnly = true)
     public List<Follow> findAll() {
         return followRepository.findAll();
     }

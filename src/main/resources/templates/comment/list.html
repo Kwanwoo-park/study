@@ -10,6 +10,7 @@
 </head>
 <body class="comment-list-page" th:classappend="${isMobile} ? ' mobile-view' : ''">
 <div>
+  <th:block th:replace="~{fragments/common :: pageBack(@{/board/view(id=${boardId})})}"></th:block>
   <h4>댓글</h4>
   <div class="container" th:attr="data-board-id=${boardId},data-member-email=${member}">
     <ul class="list-group-flush" id="commentList"></ul>
@@ -22,7 +23,7 @@
 </div>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/comment/list.js"></script>
+<script src="/js/comment/list.js?v=20260916-replace"></script>
 </body>
 <footer>
   <div class="card">

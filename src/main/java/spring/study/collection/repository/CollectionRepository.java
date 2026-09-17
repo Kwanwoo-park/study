@@ -1,6 +1,6 @@
 package spring.study.collection.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,10 +11,13 @@ import java.util.List;
 
 @Repository
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
+    @Transactional(readOnly = true)
     List<Collection> findByMember(Member member, Pageable pageable);
 
+    @Transactional(readOnly = true)
     List<Collection> findByMember(Member member);
 
+    @Transactional(readOnly = true)
     long countByMember(Member member);
 
     @Transactional

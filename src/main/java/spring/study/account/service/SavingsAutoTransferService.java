@@ -1,6 +1,6 @@
 package spring.study.account.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.account.entity.Account;
@@ -30,6 +30,7 @@ public class SavingsAutoTransferService {
     private final AccountService accountService;
     private final NotificationService notificationService;
 
+    @Transactional(readOnly = true)
     public List<String> findDueSavingsAccountNumbers(LocalDate processingDate) {
         return accountRepository.findDueSavingsAccountNumbers(AccountType.INSTALLMENT_SAVINGS, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED), processingDate);
     }

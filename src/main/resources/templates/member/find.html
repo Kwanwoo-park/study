@@ -10,14 +10,15 @@
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <div class="container">
+  <th:block th:replace="~{fragments/common :: pageBack('/member/login')}"></th:block>
   <h1>Select</h1>
   <div class="mb-3">
     <label>Do you know your email?</label>&nbsp;&nbsp;
-    <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/findByEmail'">find to email</button>
+    <button type="button" class="btn btn-primary" onclick="location.replace('/member/findByEmail')">find to email</button>
   </div>
   <div class="mb-3">
     <label>You don't know your email?</label>&nbsp;&nbsp;
-    <button type="button" class="btn btn-primary" onclick="javascript:location.href='/member/findByInfo'">find to info</button>
+    <button type="button" class="btn btn-primary" onclick="location.replace('/member/findByInfo')">find to info</button>
   </div>
 </div>
 

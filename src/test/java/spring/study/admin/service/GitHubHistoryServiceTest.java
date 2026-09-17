@@ -32,6 +32,7 @@ class GitHubHistoryServiceTest {
     private static final String OTHER_SHA = "b".repeat(40);
     private static final String COMMITS = "https://api.github.com/repos/Kwanwoo-park/study/commits?per_page=20&sha=main&page=1";
     private static final String ACTIVITY = "https://api.github.com/repos/Kwanwoo-park/study/activity?per_page=20&ref=main&direction=desc";
+    private static final String CANONICAL_REPOSITORY = "https://api.github.com/repositories/918901021";
     private final TestClock clock = new TestClock();
     private MockRestServiceServer server;
     private GitHubHistoryService service;
@@ -92,6 +93,44 @@ class GitHubHistoryServiceTest {
         assertThat(entry.committedAt()).isEqualTo("2026-09-11T01:00:00Z");
         assertThat(entry.url()).isEqualTo("https://github.com/Kwanwoo-park/study/commit/" + SHA);
         assertThat(entry.toString()).doesNotContain("private@example.test", "javascript:", "test-token");
+        server.verify();
+    }
+
+    @Test
+    void commitsAcceptCanonicalRepositoryLinksAndNavigateForwardAndBack() {
+        String secondPage = COMMITS.replace("page=1", "page=2");
+        server.expect(requestTo(COMMITS)).andRespond(withSuccess(commitJson(), MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.LINK,
+                        "<" + CANONICAL_REPOSITORY + "/commits?per_page=20&sha=main&page=16>; rel=\"last\", "
+                                + "<" + CANONICAL_REPOSITORY + "/commits?per_page=20&sha=main&page=2>; rel=\"next\""));
+        // Only the page value is taken from the link; requests still use the configured repository.
+        server.expect(requestTo(secondPage)).andRespond(withSuccess(commitJson().replace(SHA, OTHER_SHA), MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.LINK, "<" + CANONICAL_REPOSITORY + "/commits?page=1>; rel=\"prev\""));
+
+        var first = service.commits(1);
+        assertThat(first.nextCursor()).isEqualTo("2");
+        var second = service.commits(Integer.parseInt(first.nextCursor()));
+        assertThat(second.entries().get(0).sha()).isEqualTo(OTHER_SHA);
+        assertThat(second.nextCursor()).isNull();
+        assertThat(service.commits(1)).isEqualTo(first);
+        server.verify();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"before", "after"})
+    void activityAcceptsCanonicalRepositoryLinksAndPreservesOpaqueCursors(String direction) {
+        server.expect(requestTo(ACTIVITY)).andRespond(withSuccess(activityJson(), MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.LINK, "<" + CANONICAL_REPOSITORY
+                        + "/activity?per_page=20&ref=main&direction=desc&" + direction + "=opaque%2B%2F%3D>; rel=\"next\""));
+        server.expect(requestTo(ACTIVITY + "&" + direction + "=opaque%2B%2F%3D"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        var first = service.activity("");
+        assertThat(first.nextCursor()).isEqualTo(direction + ":opaque+/=");
+        var second = service.activity(first.nextCursor());
+        assertThat(second.entries()).isEmpty();
+        assertThat(second.nextCursor()).isNull();
+        assertThat(service.activity("")).isEqualTo(first);
         server.verify();
     }
 
@@ -203,6 +242,25 @@ class GitHubHistoryServiceTest {
     void doesNotFollowExternalPaginationLinks() {
         server.expect(requestTo(COMMITS)).andRespond(withSuccess(commitJson(), MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.LINK, "<https://attacker.test/repos/Kwanwoo-park/study/commits?page=2>; rel=\"next\""));
+        assertThat(service.commits(1).nextCursor()).isNull();
+        server.verify();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "https://api.github.com/repos/another-owner/another-repo/commits?page=2",
+            "https://api.github.com/repositories/918901021/activity?page=2",
+            "https://api.github.com/repositories/not-an-id/commits?page=2",
+            "https://api.github.com/repositories/918901021/commits/extra?page=2",
+            "https://api.github.com.attacker.test/repositories/918901021/commits?page=2",
+            "https://user@api.github.com/repositories/918901021/commits?page=2",
+            "https://api.github.com:8443/repositories/918901021/commits?page=2",
+            "http://api.github.com/repositories/918901021/commits?page=2",
+            "https://api.github.com/repositories/918901021/commits?page=2#fragment"
+    })
+    void rejectsUnrelatedOrInvalidCanonicalPaginationLinks(String link) {
+        server.expect(requestTo(COMMITS)).andRespond(withSuccess(commitJson(), MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.LINK, "<" + link + ">; rel=\"next\""));
         assertThat(service.commits(1).nextCursor()).isNull();
         server.verify();
     }

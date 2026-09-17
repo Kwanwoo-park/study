@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Backend Project Portfolio</title>
     <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="/css/common/page-back.css?v=20260916">
 </head>
 <body>
 <main class="deck" aria-live="polite">
     <aside class="sidebar" aria-label="슬라이드 목차">
+        <nav class="page-back-nav" aria-label="이전 화면으로 이동">
+            <a class="page-back-link" href="/member/login" data-page-back>
+                <span aria-hidden="true">←</span> 뒤로 가기
+            </a>
+        </nav>
         <div class="brand">
             <span class="brand-mark">S</span>
             <div>
@@ -271,5 +277,6 @@
     </section>
 </main>
 <script src="./app.js"></script>
+<script src="/js/common/page-back.js?v=20260916-replace" defer></script>
 </body>
 </html>

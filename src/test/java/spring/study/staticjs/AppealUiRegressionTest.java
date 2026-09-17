@@ -16,7 +16,7 @@ class AppealUiRegressionTest {
         String detail = read("src/main/resources/templates/member/detail.html");
 
         assertTrue(login.contains("id=\"appealLink\" href=\"/appeal\""));
-        assertTrue(detail.contains("onclick=\"location.href='/appeal'\">상소문 작성</button>"));
+        assertTrue(detail.contains("onclick=\"location.replace('/appeal')\">상소문 작성</button>"));
     }
 
     @Test
@@ -56,8 +56,8 @@ class AppealUiRegressionTest {
         String adminAppeal = read("src/main/resources/templates/admin/appeal_list.html");
         String adminScript = read("src/main/resources/static/js/admin/appeal.js");
 
-        assertTrue(administrator.contains("onclick=\"location.href='/admin/appeal'\">상소문 확인</button>"));
-        assertTrue(reportApply.contains("onclick=\"location.href='/admin/appeal'\">상소문</button>"));
+        assertTrue(administrator.contains("onclick=\"location.replace('/admin/appeal')\">상소문 확인</button>"));
+        assertTrue(reportApply.contains("onclick=\"location.replace('/admin/appeal')\">상소문</button>"));
         assertTrue(adminAppeal.contains("id=\"adminAppealList\""));
         assertTrue(adminScript.contains("/api/admin/appeal?status=PENDING"));
         assertTrue(adminScript.contains("이메일: ${escapeHtml(item.memberEmail)}"));

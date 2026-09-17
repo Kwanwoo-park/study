@@ -1,6 +1,6 @@
 package spring.study.follow.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -22,16 +22,23 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     @Transactional
     void deleteByFollowing(Member following);
 
+    @Transactional(readOnly = true)
     Follow findByFollowerAndFollowing(Member follower, Member following);
 
+    @Transactional(readOnly = true)
     List<Follow> findByFollower(Member member);
 
+    @Transactional(readOnly = true)
     List<Follow> findByFollower(Member follower, Pageable pageable);
+    @Transactional(readOnly = true)
     List<Follow> findByFollowing(Member following, Pageable pageable);
 
+    @Transactional(readOnly = true)
     long countByFollower(Member follower);
+    @Transactional(readOnly = true)
     long countByFollowing(Member following);
 
+    @Transactional(readOnly = true)
     boolean existsByFollowerAndFollowing(Member follower, Member following);
 
     @Query("""
@@ -42,6 +49,7 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
                    or exists (select visibleFollow.id from follow visibleFollow
                               where visibleFollow.follower = :viewer and visibleFollow.following = f.follower))
             """)
+    @Transactional(readOnly = true)
     List<Follow> findVisibleFollowers(@Param("target") Member target, @Param("viewer") Member viewer, Pageable pageable);
 
     @Query("""
@@ -52,6 +60,7 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
                    or exists (select visibleFollow.id from follow visibleFollow
                               where visibleFollow.follower = :viewer and visibleFollow.following = f.follower))
             """)
+    @Transactional(readOnly = true)
     long countVisibleFollowers(@Param("target") Member target, @Param("viewer") Member viewer);
 
     @Query("""
@@ -62,6 +71,7 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
                    or exists (select visibleFollow.id from follow visibleFollow
                               where visibleFollow.follower = :viewer and visibleFollow.following = f.following))
             """)
+    @Transactional(readOnly = true)
     List<Follow> findVisibleFollowing(@Param("target") Member target, @Param("viewer") Member viewer, Pageable pageable);
 
     @Query("""
@@ -72,5 +82,6 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
                    or exists (select visibleFollow.id from follow visibleFollow
                               where visibleFollow.follower = :viewer and visibleFollow.following = f.following))
             """)
+    @Transactional(readOnly = true)
     long countVisibleFollowing(@Param("target") Member target, @Param("viewer") Member viewer);
 }

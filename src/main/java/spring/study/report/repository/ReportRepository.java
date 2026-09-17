@@ -1,6 +1,6 @@
 package spring.study.report.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,29 +22,36 @@ import java.util.Optional;
 @Repository
 public interface ReportRepository extends JpaRepository<Report, Long> {
     @EntityGraph(attributePaths = "reporter")
+    @Transactional(readOnly = true)
     Page<Report> findByReporter(Member reporter, Pageable pageable);
 
     @EntityGraph(attributePaths = "reporter")
+    @Transactional(readOnly = true)
     Page<Report> findByStatus(ReportStatus status, Pageable pageable);
 
     @EntityGraph(attributePaths = "reporter")
+    @Transactional(readOnly = true)
     Page<Report> findByStatusIn(List<ReportStatus> statuses, Pageable pageable);
 
     @EntityGraph(attributePaths = "reporter")
+    @Transactional(readOnly = true)
     List<Report> findByStatus(ReportStatus status, Sort sort);
 
     @Override
     @EntityGraph(attributePaths = "reporter")
+    @Transactional(readOnly = true)
     Page<Report> findAll(Pageable pageable);
 
     @Override
     @EntityGraph(attributePaths = "reporter")
+    @Transactional(readOnly = true)
     Optional<Report> findById(Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from report r join fetch r.reporter where r.id = :id")
     Optional<Report> findByIdForUpdate(@Param("id") Long id);
 
+    @Transactional(readOnly = true)
     boolean existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
             Member reporter,
             ReportTargetType targetType,

@@ -40,7 +40,7 @@ class TodoSeparationRegressionTest {
         assertThat(template).contains("image-upload.js");
         assertThat(script).contains("images:");
         assertThat(resource("templates/diary/list.html")).contains("href=\"/todo\"");
-        assertThat(resource("templates/member/detail.html")).contains("location.href='/todo'");
+        assertThat(resource("templates/member/detail.html")).contains("location.replace('/todo')");
     }
 
     @Test

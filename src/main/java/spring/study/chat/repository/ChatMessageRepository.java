@@ -1,6 +1,6 @@
 package spring.study.chat.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,8 +17,10 @@ import java.util.Optional;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, String> {
+    @Transactional(readOnly = true)
     List<ChatMessage> findByRoom(ChatRoom room);
 
+    @Transactional(readOnly = true)
     List<ChatMessage> findByRoom(ChatRoom room, Pageable pageable);
 
     @Query("""
@@ -31,6 +33,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
                   where h.message = m and h.member = :member
               )
             """)
+    @Transactional(readOnly = true)
     List<ChatMessage> findVisibleByRoom(@Param("room") ChatRoom room,
                                         @Param("member") Member member,
                                         Pageable pageable);
@@ -47,6 +50,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
                   where h.message = m and h.member = :member
               )
             """)
+    @Transactional(readOnly = true)
     long countVisibleUnread(@Param("room") ChatRoom room,
                             @Param("member") Member member,
                             @Param("activeStatus") ChatMessageStatus activeStatus);
@@ -64,14 +68,17 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
                   where h.message = m and h.member = :member
               )
             """)
+    @Transactional(readOnly = true)
     long countVisibleUnreadAfter(@Param("room") ChatRoom room,
                                  @Param("member") Member member,
                                  @Param("registerTime") LocalDateTime registerTime,
                                  @Param("activeStatus") ChatMessageStatus activeStatus);
 
+    @Transactional(readOnly = true)
     Optional<ChatMessage> findFirstByRoomAndStatusOrderByRegisterTimeDesc(ChatRoom room,
                                                                          ChatMessageStatus status);
 
+    @Transactional(readOnly = true)
     List<ChatMessage> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
     @Transactional

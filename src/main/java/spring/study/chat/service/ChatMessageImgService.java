@@ -1,6 +1,6 @@
 package spring.study.chat.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.chat.dto.ChatMessageResponseDto;
@@ -27,10 +27,12 @@ public class ChatMessageImgService {
         messageImgRepository.saveAll(list);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatMessageImg> findMessage(String messageId) {
         return messageImgRepository.findByMessageId(messageId);
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Object> findMessageImg(List<ChatMessageResponseDto> list) {
         Map<String, Object> map = new HashMap<>();
 

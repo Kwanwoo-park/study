@@ -1,5 +1,6 @@
 package spring.study.favorite.repository;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,22 +15,30 @@ import java.util.Collection;
 
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
+    @Transactional(readOnly = true)
     Favorite findByMemberAndBoard(Member member, Board board);
+    @Transactional(readOnly = true)
     List<Favorite> findByBoard(Board board, Pageable pageable);
 
+    @Transactional(readOnly = true)
     List<Favorite> findByBoard(Board board);
+    @Transactional(readOnly = true)
     List<Favorite> findByMember(Member member);
 
+    @Transactional(readOnly = true)
     long countByBoard(Board board);
 
     void deleteByMember(Member member);
     void deleteByBoard(Board board);
 
+    @Transactional(readOnly = true)
     Boolean existsByMemberAndBoard(Member member, Board board);
 
     @Query("select f.board.id, count(f.id) from favorite f where f.board.id in :boardIds group by f.board.id")
+    @Transactional(readOnly = true)
     List<Object[]> countByBoardIds(@Param("boardIds") Collection<Long> boardIds);
 
     @Query("select f.board.id from favorite f where f.member = :member and f.board.id in :boardIds")
+    @Transactional(readOnly = true)
     List<Long> findLikedBoardIds(@Param("member") Member member, @Param("boardIds") Collection<Long> boardIds);
 }

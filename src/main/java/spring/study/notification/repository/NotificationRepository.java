@@ -1,6 +1,6 @@
 package spring.study.notification.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -32,16 +32,21 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("status") Status status
     );
 
+    @Transactional(readOnly = true)
     List<Notification> findByMember(Member member);
 
     @Query("select n from Notification n where n.member = :member order by coalesce(n.updateTime, n.registerTime) desc")
+    @Transactional(readOnly = true)
     List<Notification> findRecentByMember(@Param("member") Member member, Pageable pageable);
 
     @Query("select n from Notification n where n.member = :member and n.notiGroup = :group order by coalesce(n.updateTime, n.registerTime) desc")
+    @Transactional(readOnly = true)
     List<Notification> findRecentByMemberAndGroup(@Param("member") Member member, @Param("group") Group group, Pageable pageable);
 
+    @Transactional(readOnly = true)
     List<Notification> findByMemberAndReadStatus(Member member, Status readStatus);
 
+    @Transactional(readOnly = true)
     Optional<Notification> findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(
             Member member,
             Group notiGroup,
@@ -49,10 +54,14 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             Status readStatus
     );
 
+    @Transactional(readOnly = true)
     List<Notification> findByReadStatusAndRegisterTimeBefore(Status readStatus, LocalDateTime registerTime);
 
+    @Transactional(readOnly = true)
     long countByMemberAndReadStatus(Member member, Status readStatus);
+    @Transactional(readOnly = true)
     long countByMember(Member member);
+    @Transactional(readOnly = true)
     long countByMemberAndNotiGroup(Member member, Group group);
 
     @Transactional

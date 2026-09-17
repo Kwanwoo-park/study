@@ -1,6 +1,7 @@
 package spring.study.admin.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -30,23 +31,19 @@ public class AdminFileService {
     private final AdminFileS3Storage storage;
     private final long maxFileSize;
 
-    public AdminFileService(AdminFileRepository adminFileRepository, PlatformTransactionManager transactionManager, MultipartProperties multipartProperties, AdminFileS3Storage storage, @Value("${admin.files.max-file-size}") long adminFileLimit) {
+    public AdminFileService(AdminFileRepository adminFileRepository, PlatformTransactionManager transactionManager, MultipartProperties multipartProperties, AdminFileS3Storage storage) {
         this.adminFileRepository = adminFileRepository;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.storage = storage;
-        long requestLimit = multipartProperties.getMaxRequestSize().toBytes();
-        // Even if servlet limits are disabled, this endpoint retains a finite streaming limit.
-        this.maxFileSize = Math.min(adminFileLimit < 0 ? Long.MAX_VALUE : adminFileLimit, requestLimit < 0 ? Long.MAX_VALUE : requestLimit);
-        if (maxFileSize == Long.MAX_VALUE || maxFileSize <= 0) {
-            throw new IllegalArgumentException("관리자 파일 업로드에는 양수의 multipart 용량 제한이 필요합니다");
-        }
+        this.maxFileSize = multipartProperties.getMaxRequestSize().toBytes();
     }
 
     public long maxFileSize() {
         return maxFileSize;
     }
 
+    @Transactional(readOnly = true)
     public Page<AdminFileResponseDto> list(int page) {
         if (page < 0 || page > 1000000) throw new IllegalArgumentException("올바른 페이지 번호를 입력해 주세요");
         return adminFileRepository.findAll(PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt", "id"))).map(AdminFileResponseDto::from);

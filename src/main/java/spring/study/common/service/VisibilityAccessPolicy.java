@@ -1,5 +1,6 @@
 package spring.study.common.service;
 
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.board.entity.Board;
@@ -12,6 +13,7 @@ import spring.study.member.entity.Member;
 public class VisibilityAccessPolicy {
     private final FollowRepository followRepository;
 
+    @Transactional(readOnly = true)
     public boolean canViewMember(Member target, Member viewer) {
         if (target == null || viewer == null) {
             return false;
@@ -30,6 +32,7 @@ public class VisibilityAccessPolicy {
                 || followsAuthor;
     }
 
+    @Transactional(readOnly = true)
     public boolean canViewBoard(Board board, Member viewer) {
         if (board == null || viewer == null) {
             return false;

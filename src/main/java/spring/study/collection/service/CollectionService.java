@@ -1,6 +1,6 @@
 package spring.study.collection.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -28,23 +28,28 @@ public class CollectionService {
         return collectionRepository.save(dto.toEntity());
     }
 
+    @Transactional(readOnly = true)
     public List<CollectionResponseDto> getCollections(int cursor, int limit, Member member) {
         return collectionRepository.findByMember(member, PageRequest.of(cursor, limit, Sort.by("registerTime").descending()))
                 .stream().map(CollectionResponseDto::new).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<CollectionResponseDto> findAll() {
         return collectionRepository.findAll().stream().map(CollectionResponseDto::new).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<Collection> findByMember(Member member) {
         return collectionRepository.findByMember(member);
     }
 
+    @Transactional(readOnly = true)
     public Collection findById(Long id) {
         return collectionRepository.findById(id).orElseThrow();
     }
 
+    @Transactional(readOnly = true)
     public Long countByMember(Member member) {
         return collectionRepository.countByMember(member);
     }

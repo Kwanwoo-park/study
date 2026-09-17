@@ -100,7 +100,7 @@ if (chatting) {
         })
         .then((response) => response.json())
         .then((json) => {
-            location.href = '/chat/chatRoom?roomId=' + json['room'].roomId;
+            location.replace('/chat/chatRoom?roomId=' + json['room'].roomId);
         })
         .catch(() => {
             alert("다시 시도하여주십시오");

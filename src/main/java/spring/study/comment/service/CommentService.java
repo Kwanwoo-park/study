@@ -1,6 +1,6 @@
 package spring.study.comment.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +29,7 @@ public class CommentService {
         return commentRepository.save(comment);
     }
 
+    @Transactional(readOnly = true)
     public HashMap<String, Object> findAll(Integer page, Integer size) {
         HashMap<String, Object> resultMap = new HashMap<>();
 
@@ -42,6 +43,7 @@ public class CommentService {
         return resultMap;
     }
 
+    @Transactional(readOnly = true)
     public Comment findById(Long id) {
         return commentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다"));
     }
@@ -56,10 +58,12 @@ public class CommentService {
         return comment;
     }
 
+    @Transactional(readOnly = true)
     public List<Comment> findAll() {
         return commentRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public List<Comment> getComments(Board board, int cursor, int limit) {
         return commentRepository.findByBoard(
                 board,
@@ -67,14 +71,17 @@ public class CommentService {
         );
     }
 
+    @Transactional(readOnly = true)
     public Boolean existComment(Member member, Board board) {
         return commentRepository.existsByMemberAndBoard(member, board);
     }
 
+    @Transactional(readOnly = true)
     public long countComments(Board board) {
         return commentRepository.countByBoard(board);
     }
 
+    @Transactional(readOnly = true)
     public HashMap<Long, Long> countComments(List<Board> boardList) {
         HashMap<Long, Long> map = new HashMap<>();
         boardList.forEach(board -> map.put(board.getId(), 0L));

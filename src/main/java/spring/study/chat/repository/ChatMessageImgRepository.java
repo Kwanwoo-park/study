@@ -1,6 +1,6 @@
 package spring.study.chat.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +17,7 @@ import java.util.List;
 
 @Repository
 public interface ChatMessageImgRepository extends JpaRepository<ChatMessageImg, Long> {
+    @Transactional(readOnly = true)
     List<ChatMessageImg> findByMessageId(String messageId);
 
     @Query("""
@@ -34,6 +35,7 @@ public interface ChatMessageImgRepository extends JpaRepository<ChatMessageImg, 
               )
             order by i.id desc
             """)
+    @Transactional(readOnly = true)
     List<ChatRoomImageResponse> findVisibleRoomImages(@Param("room") ChatRoom room,
             @Param("viewer") Member viewer, @Param("cursor") Long cursor,
             @Param("imageType") MessageType imageType, @Param("activeStatus") ChatMessageStatus activeStatus,

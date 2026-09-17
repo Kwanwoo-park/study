@@ -15,28 +15,41 @@ import java.util.Optional;
 
 @Repository
 public interface BoardRepository extends JpaRepository<Board, Long> {
+    @Transactional(readOnly = true)
     List<Board> findByMemberIn(List<Member> list, Pageable pageable);
 
+    @Transactional(readOnly = true)
     List<Board> findByMember(Member member, Pageable pageable);
 
+    @Transactional(readOnly = true)
     List<Board> findByMemberAndVisibility(Member member, CommonVisibility visibility, Pageable pageable);
 
+    @Transactional(readOnly = true)
     List<Board> findByMember(Member member, Sort sort);
 
+    @Transactional(readOnly = true)
     List<Board> findByMember(Member members);
 
+    @Transactional(readOnly = true)
     List<Board> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
+    @Transactional(readOnly = true)
     long countByMember(Member member);
 
+    @Transactional(readOnly = true)
     long countByMemberAndVisibility(Member member, CommonVisibility visibility);
+    @Transactional(readOnly = true)
     long countByMemberIn(List<Member> members);
 
     @Transactional
     void deleteByMember(Member member);
 
+    @Transactional(readOnly = true)
     Optional<Board> findFirstByMemberAndIdGreaterThanOrderByIdAsc(Member member, Long id);
+    @Transactional(readOnly = true)
     Optional<Board> findFirstByMemberAndIdLessThanOrderByIdDesc(Member member, Long id);
+    @Transactional(readOnly = true)
     Optional<Board> findFirstByMemberAndVisibilityAndIdGreaterThanOrderByIdAsc(Member member, CommonVisibility visibility, Long id);
+    @Transactional(readOnly = true)
     Optional<Board> findFirstByMemberAndVisibilityAndIdLessThanOrderByIdDesc(Member member, CommonVisibility visibility, Long id);
 }

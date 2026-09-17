@@ -1,6 +1,6 @@
 package spring.study.reply.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,8 +12,11 @@ import java.util.List;
 
 @Repository
 public interface ReplyRepository extends JpaRepository<Reply, Long> {
+    @Transactional(readOnly = true)
     List<Reply> findByComment(Comment comment);
+    @Transactional(readOnly = true)
     List<Reply> findByComment(Comment comment, Pageable pageable);
+    @Transactional(readOnly = true)
     long countByComment(Comment comment);
 
     @Transactional

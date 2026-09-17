@@ -1,6 +1,6 @@
 package spring.study.chat.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -37,18 +37,22 @@ public class ChatMessageService {
         return chatMessageRepository.save(message);
     }
 
+    @Transactional(readOnly = true)
     public ChatMessage findById(String id) {
         return findRequired(id);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatMessage> find(ChatRoom room) {
         return chatMessageRepository.findByRoom(room);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatMessage> findActiveChatting(LocalDateTime start, LocalDateTime end) {
         return chatMessageRepository.findByRegisterTimeBetween(start, end);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatMessageResponseDto> loadChatting(int cursor, int limit, ChatRoom room, Member member) {
         return chatMessageRepository.findVisibleByRoom(
                         room,
@@ -60,6 +64,7 @@ public class ChatMessageService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public long countUnread(ChatRoom room, Member member, LocalDateTime lastReadAt) {
         if (lastReadAt == null) {
             return chatMessageRepository.countVisibleUnread(room, member, ChatMessageStatus.ACTIVE);
@@ -131,6 +136,7 @@ public class ChatMessageService {
         return message;
     }
 
+    @Transactional(readOnly = true)
     public java.util.Optional<ChatMessage> findLatestVisible(ChatRoom room) {
         return chatMessageRepository.findFirstByRoomAndStatusOrderByRegisterTimeDesc(
                 room,

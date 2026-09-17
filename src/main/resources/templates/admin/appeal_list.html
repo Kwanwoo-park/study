@@ -21,15 +21,15 @@
       <p>회원의 이메일과 상소 내용을 확인하고 계정 차단을 해제할 수 있습니다.</p>
     </div>
     <div>
-      <button type="button" class="btn btn-outline-primary" onclick="location.href='/admin/report'">신고 접수</button>
-      <button type="button" class="btn btn-secondary" onclick="location.href='/admin/administrator'">관리자 홈</button>
+      <button type="button" class="btn btn-outline-primary" onclick="location.replace('/admin/report')">신고 접수</button>
+      <button type="button" class="btn btn-secondary" onclick="location.replace('/admin/administrator')">관리자 홈</button>
     </div>
   </header>
   <div id="adminAppealList" class="admin-appeal-list">상소문을 불러오는 중입니다.</div>
   <nav id="adminAppealPagination" class="admin-appeal-pagination" aria-label="상소문 페이지"></nav>
 </main>
 <script src="/js/admin/appeal.js?v=20260830"></script>
-<script src="/js/common/common.js?v=20260824-1"></script>
+<script src="/js/common/common.js?v=20260916-replace"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

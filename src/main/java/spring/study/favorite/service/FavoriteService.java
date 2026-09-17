@@ -1,6 +1,6 @@
 package spring.study.favorite.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -28,22 +28,27 @@ public class FavoriteService {
         return favoriteRepository.save(favorite);
     }
 
+    @Transactional(readOnly = true)
     public List<Favorite> findByBoard(Board board) {
         return favoriteRepository.findByBoard(board);
     }
 
+    @Transactional(readOnly = true)
     public List<Favorite> findByMember(Member member) {
         return favoriteRepository.findByMember(member);
     }
 
+    @Transactional(readOnly = true)
     public Favorite findByMemberAndBoard(Member member, Board board) {
         return favoriteRepository.findByMemberAndBoard(member, board);
     }
 
+    @Transactional(readOnly = true)
     public Boolean existFavorite(Member member, Board board) {
         return favoriteRepository.existsByMemberAndBoard(member, board);
     }
 
+    @Transactional(readOnly = true)
     public List<Favorite> getFavorites(Board board, int cursor, int limit) {
         return favoriteRepository.findByBoard(
                 board,
@@ -51,10 +56,12 @@ public class FavoriteService {
         );
     }
 
+    @Transactional(readOnly = true)
     public long countFavorites(Board board) {
         return favoriteRepository.countByBoard(board);
     }
 
+    @Transactional(readOnly = true)
     public HashMap<Long, Long> countFavorites(List<Board> boardList) {
         HashMap<Long, Long> map = new HashMap<>();
         boardList.forEach(board -> map.put(board.getId(), 0L));
@@ -65,6 +72,7 @@ public class FavoriteService {
         return map;
     }
 
+    @Transactional(readOnly = true)
     public List<Long> findLikedBoardIds(Member member, List<Board> boards) {
         if (boards.isEmpty()) return List.of();
         return favoriteRepository.findLikedBoardIds(member, boards.stream().map(Board::getId).toList());

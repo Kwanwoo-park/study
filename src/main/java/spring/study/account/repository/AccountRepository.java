@@ -1,6 +1,6 @@
 package spring.study.account.repository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -24,12 +24,14 @@ public interface AccountRepository extends JpaRepository<Account, String> {
             "where a.accountType = :accountType and " +
             "a.accountStatus in :statuses and " +
             "transfer.nextPaymentDate <= :processingDate")
+    @Transactional(readOnly = true)
     List<String> findDueSavingsAccountNumbers(@Param("accountType") AccountType accountType, @Param("statuses") Collection<AccountStatus> statuses, @Param("processingDate") LocalDate processingDate);
 
     @Query("select case when count(a) > 0 then true else false end from account a " +
             "join a.savingsAutoTransfer transfer " +
             "where transfer.sourceAccount = :sourceAccount and " +
             "a.accountStatus in :statuses")
+    @Transactional(readOnly = true)
     boolean existsBySavingsSourceAccountAndAccountStatusIn(@Param("sourceAccount") Account savingsSourceAccount, @Param("statuses") Collection<AccountStatus> accountStatuses);
 
     @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
@@ -40,14 +42,19 @@ public interface AccountRepository extends JpaRepository<Account, String> {
             "join a.interestDetail interest " +
             "where a.accountStatus = :accountStatus and " +
             "interest.maturityAt <= :maturityAt")
+    @Transactional(readOnly = true)
     List<Account> findByAccountStatusAndMaturityAtLessThanEqual(@Param("accountStatus") AccountStatus accountStatus, @Param("maturityAt") LocalDateTime maturityAt);
 
+    @Transactional(readOnly = true)
     List<Account> findByMember(Member member);
 
+    @Transactional(readOnly = true)
     List<Account> findByMemberAndAccountStatus(Member member, AccountStatus accountStatus);
 
+    @Transactional(readOnly = true)
     boolean existsByMemberAndAccountTypeAndAccountStatus(Member member, AccountType accountType, AccountStatus accountStatus);
 
+    @Transactional(readOnly = true)
     List<Account> findByMemberAndAccountTypeAndAccountStatus(Member member, AccountType accountType, AccountStatus accountStatus);
 
     @Transactional

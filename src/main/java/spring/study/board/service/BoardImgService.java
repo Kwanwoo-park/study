@@ -1,6 +1,6 @@
 package spring.study.board.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.board.entity.Board;
@@ -24,6 +24,7 @@ public class BoardImgService {
         return boardImgRepository.saveAll(boardImgs);
     }
 
+    @Transactional(readOnly = true)
     public List<BoardImg> findBoard(Board board) {
         return boardImgRepository.findByBoard(board);
     }

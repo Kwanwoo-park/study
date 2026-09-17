@@ -10,6 +10,7 @@
 </head>
 <body class="favorite-list-page" th:classappend="${isMobile} ? ' mobile-view' : ''">
 <div>
+  <th:block th:replace="~{fragments/common :: pageBack(@{/board/view(id=${boardId})})}"></th:block>
   <h4>좋아요 누른 사람들</h4>
     <div class="container" th:attr="data-board-id=${boardId},data-member-email=${email}">
       <ul class="list-group-flush" id="favoriteList"></ul>

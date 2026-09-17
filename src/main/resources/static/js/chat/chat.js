@@ -744,7 +744,7 @@ function appendMessageActions(messageArea, data) {
 
     if (!isMyMessage(data)) {
         menu.append(createMessageActionButton('신고', () => {
-            location.href = `/report?targetType=CHAT_MESSAGE&targetId=${encodeURIComponent(data.id)}`;
+            location.replace(`/report?targetType=CHAT_MESSAGE&targetId=${encodeURIComponent(data.id)}`);
         }));
     }
 

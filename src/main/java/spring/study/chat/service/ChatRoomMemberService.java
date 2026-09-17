@@ -1,6 +1,6 @@
 package spring.study.chat.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,10 +27,12 @@ public class ChatRoomMemberService {
         );
     }
 
+    @Transactional(readOnly = true)
     public Boolean exist(Member member, ChatRoom room) {
         return chatRoomMemberRepository.existsByMemberAndRoom(member, room);
     }
 
+    @Transactional(readOnly = true)
     public ChatRoomMember find(Member member, ChatRoom room) {
         return chatRoomMemberRepository.findByMemberAndRoom(member, room);
     }
@@ -44,10 +46,12 @@ public class ChatRoomMemberService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<ChatRoomMember> find(Member member) {
         return chatRoomMemberRepository.findByMember(member);
     }
 
+    @Transactional(readOnly = true)
     public HashMap<String, List<Member>> findMember(List<ChatRoom> rooms, Member member) {
         HashMap<String, List<Member>> map = new HashMap<>();
 
@@ -58,6 +62,7 @@ public class ChatRoomMemberService {
         return map;
     }
 
+    @Transactional(readOnly = true)
     public List<ChatRoomMember> findMember(ChatRoom room, Member member) {
         return chatRoomMemberRepository.findByRoomAndMemberNot(room, member);
     }
@@ -69,6 +74,7 @@ public class ChatRoomMemberService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<ChatRoomMember> find(ChatRoom room) {
         return chatRoomMemberRepository.findByRoom(room);
     }

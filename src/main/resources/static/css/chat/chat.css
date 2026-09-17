@@ -132,9 +132,12 @@ html {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .chat-room-participants {
+    flex: 1 1 120px;
+    min-width: 0;
     max-width: 100%;
     color: var(--text-primary);
     font-size: 14px;

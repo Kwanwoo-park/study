@@ -1,6 +1,6 @@
 package spring.study.reply.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,14 +32,17 @@ public class ReplyService {
         return replyRepository.save(replyRequestDto.toEntity());
     }
 
+    @Transactional(readOnly = true)
     public Reply findById(Long id) {
         return replyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 답글입니다"));
     }
 
+    @Transactional(readOnly = true)
     public List<Reply> findReply(Comment comment) {
         return replyRepository.findByComment(comment);
     }
 
+    @Transactional(readOnly = true)
     public List<Reply> getReplies(Comment comment, int cursor, int limit) {
         return replyRepository.findByComment(
                 comment,
@@ -47,6 +50,7 @@ public class ReplyService {
         );
     }
 
+    @Transactional(readOnly = true)
     public long countReplies(Comment comment) {
         return replyRepository.countByComment(comment);
     }

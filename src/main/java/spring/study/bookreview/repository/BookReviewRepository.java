@@ -1,5 +1,6 @@
 package spring.study.bookreview.repository;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,7 @@ public interface BookReviewRepository extends JpaRepository<BookReview, Long> {
                or lower(review.bookTitle) like lower(concat('%', :keyword, '%'))
                or lower(review.bookAuthor) like lower(concat('%', :keyword, '%'))
             """)
+    @Transactional(readOnly = true)
     Page<BookReview> search(@Param("keyword") String keyword, Pageable pageable);
 
     @Modifying

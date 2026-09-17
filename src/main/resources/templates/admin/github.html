@@ -11,6 +11,7 @@
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
 <main class="container github-history-page">
+  <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
   <header class="github-history-header">
     <div>
       <small>ADMIN ONLY · READ ONLY</small>

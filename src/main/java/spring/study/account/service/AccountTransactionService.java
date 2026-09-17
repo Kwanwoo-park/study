@@ -1,6 +1,6 @@
 package spring.study.account.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,18 +28,21 @@ public class AccountTransactionService {
         return accountTransactionRepository.save(accountTransaction);
     }
 
+    @Transactional(readOnly = true)
     public Page<AccountTransaction> findByAccount(String accountNumber, int page) {
         Account account = accountService.findByAccount(accountNumber);
 
         return accountTransactionRepository.findByWithdrawalAccountOrDepositAccount(account, account, createPageRequest(page));
     }
 
+    @Transactional(readOnly = true)
     public Page<AccountTransaction> findByWithdrawalAccount(String accountNumber, int page) {
         Account account = accountService.findByAccount(accountNumber);
 
         return accountTransactionRepository.findByWithdrawalAccount(account, createPageRequest(page));
     }
 
+    @Transactional(readOnly = true)
     public Page<AccountTransaction> findByDepositAccount(String accountNumber, int page) {
         Account account = accountService.findByAccount(accountNumber);
 

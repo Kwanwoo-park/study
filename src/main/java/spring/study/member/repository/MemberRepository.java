@@ -1,5 +1,6 @@
 package spring.study.member.repository;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,14 +17,19 @@ import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
+    @Transactional(readOnly = true)
     List<Member> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
+    @Transactional(readOnly = true)
     Optional<Member> findByEmail(String email);
 
+    @Transactional(readOnly = true)
     List<Member> findByEmailIn(Collection<String> emails);
 
+    @Transactional(readOnly = true)
     List<Member> findByNameContaining(String name);
 
+    @Transactional(readOnly = true)
     List<Member> findByIdIn(List<Long> idList);
 
     @Query("""
@@ -32,6 +38,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             where m.id in :memberIds
               and (m.lastLoginTime is null or m.lastLoginTime <= :cutoff)
             """)
+    @Transactional(readOnly = true)
     List<Long> findInactiveMemberIds(@Param("memberIds") Collection<Long> memberIds,
                                      @Param("cutoff") LocalDateTime cutoff);
 
@@ -40,16 +47,22 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     int updateLastLoginTime(@Param("memberId") Long memberId,
                             @Param("accessedAt") LocalDateTime accessedAt);
 
+    @Transactional(readOnly = true)
     Member findByPhoneAndBirth(String phone, String birth);
 
+    @Transactional(readOnly = true)
     Member findByRole(Role role);
 
+    @Transactional(readOnly = true)
     List<Member> findAllByRole(Role role);
 
+    @Transactional(readOnly = true)
     Boolean existsByEmail(String email);
 
+    @Transactional(readOnly = true)
     Boolean existsByPhone(String phone);
 
+    @Transactional(readOnly = true)
     List<Member> findByAccountStatusAndSuspendedUntilLessThanEqual(
             MemberStatus accountStatus,
             LocalDateTime suspendedUntil

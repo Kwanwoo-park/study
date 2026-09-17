@@ -285,7 +285,7 @@ function buildCommentItem(item, memberEmail) {
 }
 
 function fnReportComment(commentId) {
-    location.href = `/report?targetType=COMMENT&targetId=${encodeURIComponent(commentId)}`;
+    location.replace(`/report?targetType=COMMENT&targetId=${encodeURIComponent(commentId)}`);
 }
 
 const replyStateMap = new Map();

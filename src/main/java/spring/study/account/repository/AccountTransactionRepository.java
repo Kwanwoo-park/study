@@ -1,5 +1,6 @@
 package spring.study.account.repository;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.domain.Page;
@@ -21,11 +22,14 @@ public interface AccountTransactionRepository extends JpaRepository<AccountTrans
     Optional<AccountTransaction> findByIdForUpdate(@Param("id") Long id);
 
     @EntityGraph(attributePaths = {"withdrawalAccount", "depositAccount"})
+    @Transactional(readOnly = true)
     Page<AccountTransaction> findByWithdrawalAccountOrDepositAccount(Account withdrawalAccount, Account depositAccount, Pageable pageable);
 
     @EntityGraph(attributePaths = {"withdrawalAccount", "depositAccount"})
+    @Transactional(readOnly = true)
     Page<AccountTransaction> findByWithdrawalAccount(Account withdrawalAccount, Pageable pageable);
 
     @EntityGraph(attributePaths = {"withdrawalAccount", "depositAccount"})
+    @Transactional(readOnly = true)
     Page<AccountTransaction> findByDepositAccount(Account depositAccount, Pageable pageable);
 }

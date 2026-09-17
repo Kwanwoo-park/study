@@ -97,6 +97,32 @@ test('refresh returns to the latest page instead of keeping an old cursor', asyn
     assert.equal(page.element('prev').disabled, true);
 });
 
+test('commit pagination enables the right buttons and renders each page when moving back and forth', async () => {
+    const page = await loadPage(async url => {
+        const number = Number(new URL(url, 'https://www.kwanwoo.site').searchParams.get('page'));
+        return {body: response([{...commit, message: `Commit page ${number}`}], number < 3 ? String(number + 1) : null)};
+    });
+    const checkPage = (number, previousDisabled, nextDisabled) => {
+        assert.equal(page.element('page').textContent, `${number} 페이지`);
+        assert.equal(page.element('prev').disabled, previousDisabled);
+        assert.equal(page.element('next').disabled, nextDisabled);
+        assert.ok(descendants(page.element('list')).some(node => node.tag === 'h3' && node.textContent === `Commit page ${number}`));
+    };
+
+    checkPage(1, true, false);
+    await page.element('next').emit('click');
+    checkPage(2, false, false);
+    await page.element('next').emit('click');
+    checkPage(3, false, true);
+    await page.element('prev').emit('click');
+    checkPage(2, false, false);
+    await page.element('prev').emit('click');
+    checkPage(1, true, false);
+    await page.element('next').emit('click');
+    checkPage(2, false, false);
+    assert.deepEqual(page.calls.map(call => call.url), [1, 2, 3, 2, 1, 2].map(number => `/api/admin/github/commits?page=${number}`));
+});
+
 test('expired login clears previously displayed data and allows retry', async () => {
     let expired = false;
     const page = await loadPage(async () => expired ? {status: 401} : {body: response([commit])});

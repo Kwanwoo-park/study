@@ -340,7 +340,7 @@
                 return;
             }
 
-            location.href = "/favorites?id=" + listId;
+            location.replace("/favorites?id=" + listId);
         }
 
         function fnComment(listId) {
@@ -349,11 +349,11 @@
                 return;
             }
 
-            location.href = "/comment?id=" + listId;
+            location.replace("/comment?id=" + listId);
         }
 
         function fnProfile(email) {
-            location.href = "/member/search/detail?email=" + email;
+            location.replace("/member/search/detail?email=" + email);
         }
 
         function fnEditModal() {

@@ -104,7 +104,7 @@ class AdminNewBoardRegressionTest {
         assertTrue(adminCss.contains(".admin-activity-item-image"));
         assertTrue(adminTemplate.contains("id=\"system-incident-list\""));
         assertTrue(adminTemplate.contains("id=\"incident-acknowledge-all\""));
-        assertTrue(adminTemplate.contains("/js/admin/main.js?v=20260830"));
+        assertTrue(adminTemplate.contains("/js/admin/main.js?v=20260916-replace"));
         assertTrue(adminJs.contains("/api/admin/system/incidents"));
         assertTrue(adminJs.contains("acknowledgeSystemIncident"));
         assertTrue(adminJs.contains("acknowledgeAllSystemIncidents"));
