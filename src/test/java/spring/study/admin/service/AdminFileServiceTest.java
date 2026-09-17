@@ -107,7 +107,7 @@ class AdminFileServiceTest {
         MockMultipartFile file = mock(MockMultipartFile.class);
         when(file.getOriginalFilename()).thenReturn("big.zip");
         when(file.getSize()).thenReturn(1L);
-        when(file.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[101]));
+        when(file.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[8192]));
         assertThatThrownBy(() -> service.upload(file, 7L)).isInstanceOf(ResponseStatusException.class);
         verifyNoInteractions(repository, storage);
     }
@@ -188,7 +188,7 @@ class AdminFileServiceTest {
         service.list(2);
         verify(repository).findAll(argThat((PageRequest request) -> request.getPageSize() == 20 && request.getPageNumber() == 2));
         assertThatThrownBy(() -> service.list(-1)).isInstanceOf(IllegalArgumentException.class);
-        assertThat(service.maxFileSize()).isEqualTo(100);
+        assertThat(service.maxFileSize()).isEqualTo(200);
     }
 
     private void prepareSave() {
