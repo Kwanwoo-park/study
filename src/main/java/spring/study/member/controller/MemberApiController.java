@@ -30,7 +30,7 @@ public class MemberApiController {
 
     @PatchMapping("/login")
     public ResponseEntity<?> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request, HttpServletResponse response) {
-        return memberFacade.login(dto, response, ClientIpResolver.resolve(request));
+        return memberFacade.login(dto, request, response, ClientIpResolver.resolve(request));
     }
 
     @GetMapping("/logout")

@@ -24,7 +24,16 @@ public class JwtAuthenticationService {
     }
 
     public void login(Member member, HttpServletResponse response, String ipAddress) {
+        login(member, null, response, ipAddress);
+    }
+
+    public void login(Member member, HttpServletRequest request, HttpServletResponse response, String ipAddress) {
         AuthenticationTokens tokens = issue(member, ipAddress);
+        if (request != null) {
+            // Replace only this browser's session; other devices keep their own refresh tokens.
+            revoke(cookieService.readCurrentRefreshToken(request));
+            cookieService.rememberRefreshToken(request, tokens.refreshToken());
+        }
         cookieService.writeAccessToken(response, tokens.accessToken(), tokenProvider.accessTokenDuration());
         cookieService.writeRefreshToken(response, tokens.refreshToken(), tokenProvider.refreshTokenDuration());
     }
@@ -85,7 +94,7 @@ public class JwtAuthenticationService {
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = cookieService.read(request, JwtCookieService.REFRESH_COOKIE);
+        String refreshToken = cookieService.readCurrentRefreshToken(request);
         if (refreshToken != null) {
             try {
                 refreshTokenService.revoke(tokenProvider.parse(refreshToken, JwtTokenProvider.REFRESH).jti());

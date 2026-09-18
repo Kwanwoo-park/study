@@ -9,6 +9,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.aws.service.ImageCleanupService;
 import spring.study.member.dto.MemberRequestDto;
@@ -28,9 +32,39 @@ class MemberFacadeRegressionTest {
     @Mock private MemberService memberService;
     @Mock private ImageS3Service imageS3Service;
     @Mock private ImageCleanupService imageCleanupService;
+    @Mock private BCryptPasswordEncoder encoder;
+    @Mock private JwtAuthenticationService jwtAuthenticationService;
 
     @InjectMocks
     private MemberFacade memberFacade;
+
+    @Test
+    void successfulLoginPassesTheBrowserRequestForTokenReplacement() {
+        Member member = Member.builder().id(1L).email("login@example.test").pwd("encoded").role(Role.USER).build();
+        MemberRequestDto dto = MemberRequestDto.builder().email(member.getEmail()).password("password").build();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        when(memberService.loadUserByUsername(member.getEmail())).thenReturn(member);
+        when(encoder.matches("password", "encoded")).thenReturn(true);
+        when(memberService.updateLastLoginTime(member.getId())).thenReturn(member);
+
+        assertEquals(HttpStatus.OK, memberFacade.login(dto, request, response, "203.0.113.10").getStatusCode());
+
+        verify(jwtAuthenticationService).login(member, request, response, "203.0.113.10");
+    }
+
+    @Test
+    void failedLoginCannotReplaceAnExistingBrowserToken() {
+        Member member = Member.builder().id(1L).email("login@example.test").pwd("encoded").role(Role.USER).build();
+        MemberRequestDto dto = MemberRequestDto.builder().email(member.getEmail()).password("wrong").build();
+        when(memberService.loadUserByUsername(member.getEmail())).thenReturn(member);
+
+        assertEquals(HttpStatus.BAD_REQUEST, memberFacade.login(dto, new MockHttpServletRequest(),
+                new MockHttpServletResponse(), "203.0.113.10").getStatusCode());
+
+        verifyNoInteractions(jwtAuthenticationService);
+        verify(memberService, never()).updateLastLoginTime(anyLong());
+    }
 
     @Test
     void changeProfileImageShouldDeleteOldImageOnlyAfterSuccessfulUpload() throws Exception {

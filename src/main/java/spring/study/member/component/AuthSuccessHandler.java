@@ -42,7 +42,7 @@ public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
             return;
         }
-        jwtAuthenticationService.login(member, response, ClientIpResolver.resolve(request));
+        jwtAuthenticationService.login(member, request, response, ClientIpResolver.resolve(request));
         setDefaultTargetUrl("/board/main");
         super.onAuthenticationSuccess(request, response, authentication);
     }

@@ -17,10 +17,16 @@ import spring.study.common.service.ClientIpResolver;
 import spring.study.member.entity.Member;
 
 import java.io.IOException;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final Set<String> TOKEN_MANAGEMENT_PATHS = Set.of(
+            "/api/member/login", "/api/member/logout",
+            "/api/mobile/auth/login", "/api/mobile/auth/refresh", "/api/mobile/auth/logout",
+            "/api/mobile/auth/oauth/exchange"
+    );
     private final JwtTokenProvider tokenProvider;
     private final JwtCookieService cookieService;
     private final RefreshTokenService refreshTokenService;
@@ -68,6 +74,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return null;
             }
 
+            // These endpoints issue or revoke tokens themselves. Do not rotate immediately before them.
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            if (TOKEN_MANAGEMENT_PATHS.contains(path) || path.startsWith("/login/oauth2/code/")) return member;
+
             JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
             JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
             if (!refreshTokenService.rotate(
@@ -78,6 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             cookieService.writeAccessToken(response, accessToken.value(), tokenProvider.accessTokenDuration());
             cookieService.writeRefreshToken(response, refreshToken.value(), tokenProvider.refreshTokenDuration());
+            cookieService.rememberRefreshToken(request, refreshToken.value());
             return member;
         } catch (JwtTokenProvider.JwtValidationException ignored) {
             cookieService.clearAuthenticationCookies(response);

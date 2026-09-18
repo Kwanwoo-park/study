@@ -19,6 +19,26 @@ import static org.mockito.Mockito.when;
 
 class AuthSuccessHandlerTest {
     @Test
+    void webOAuthPassesTheCurrentBrowserToTokenReplacement() throws Exception {
+        MemberService memberService = mock(MemberService.class);
+        JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
+        AuthSuccessHandler handler = new AuthSuccessHandler(memberService, authenticationService,
+                mock(JwtCookieService.class), mock(MobileOAuthCodeService.class));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRemoteAddr("203.0.113.10");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        Authentication authentication = mock(Authentication.class);
+        Member member = Member.builder().id(7L).email("oauth@test.com").build();
+        when(authentication.getName()).thenReturn(member.getEmail());
+        when(memberService.findMember(member.getEmail())).thenReturn(member);
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        verify(authenticationService).login(member, request, response, "203.0.113.10");
+        assertThat(response.getRedirectedUrl()).isEqualTo("/board/main");
+    }
+
+    @Test
     void mobileOAuthRedirectsWithExchangeCodeWithoutPuttingJwtInUrl() throws Exception {
         MemberService memberService = mock(MemberService.class);
         JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);

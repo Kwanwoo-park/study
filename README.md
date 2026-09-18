@@ -220,6 +220,8 @@ Caller / Receiver
 | Web | `HttpOnly` Cookie | `HttpOnly` Cookie + MySQL jti | `/api/member/**`, OAuth2 redirect |
 | Mobile | `Authorization: Bearer ...` | 응답 body + MySQL jti | `/api/mobile/auth/login`, `/refresh`, `/logout` |
 
+웹 재로그인(일반 로그인·OAuth2)은 현재 브라우저가 보낸 Refresh Token만 새 토큰으로 교체하며 다른 기기의 토큰은 유지합니다. 로그인·로그아웃 요청 직전에는 filter가 별도로 토큰을 재발급하지 않습니다. 일반 요청에서 Access Token이 만료되었을 때의 Refresh Token rotation은 유지합니다.
+
 모바일 OAuth는 `/api/mobile/auth/oauth/{provider}`로 시작하고 성공 후 일회용 code를 `/api/mobile/auth/oauth/exchange`에서 앱 token으로 교환합니다. WebSocket도 별도 모바일 서버가 필요하지 않으며 인증된 연결에서 동일한 `/ws/chat` endpoint와 STOMP destination을 사용할 수 있습니다.
 
 ## 기술 스택
