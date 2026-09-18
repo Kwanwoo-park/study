@@ -1,0 +1,45 @@
+.admin-chat-list {
+    align-items: stretch;
+    min-width: 0;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
+.admin-chat-table-scroll {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-chat-table-scroll:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.admin-chat-table-scroll .table {
+    width: 100%;
+    min-width: 520px;
+    table-layout: fixed;
+    margin-bottom: 0;
+}
+
+.admin-chat-table-scroll th,
+.admin-chat-table-scroll td {
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+}
+
+.admin-chat-scroll-hint {
+    display: none;
+    margin: 0 0 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+@media (max-width: 576px) {
+    .admin-chat-scroll-hint {
+        display: block;
+    }
+}

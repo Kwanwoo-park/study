@@ -5,40 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css?v=20260830">
-  <link rel="stylesheet" href="/css/chat/chat.css?v=20260830">
+  <link rel="stylesheet" href="/css/chat/admin-list.css?v=20260918">
   <title>Chat List</title>
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
-<div class="container">
+<div class="container admin-chat-list">
   <div id="notification-banner" class="alert alert-info d-none position-fixed top-0 end-0 m-3" role="alert">
     <span id="notification-message">새 알림</span>
     <button type="button" class="btn-close" aria-label="Close">닫기</button>
   </div>
-  <h1 class="simple-page-title">채팅방 목록</h1>
-  <table class="table table-striped table-horizontal table-bordered mt-3">
-    <thead class="thead-strong">
-    <tr>
-      <th width="20%">방 번호</th>
-      <th width="50%">방 이름</th>
-      <th width="">참여 인원</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="room,index : ${roomList}">
-      <td>
-        <span th:text="${index.index+1}"></span>
-      </td>
-      <td>
-        <a th:href="@{chatRoom(roomId=${room.roomId})}"
-           th:text="${room.name}"></a>
-      </td>
-      <td>
-        <span th:text="${room.count}"></span>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+  <h1 id="admin-chat-list-title" class="simple-page-title">채팅방 목록</h1>
+  <p class="admin-chat-scroll-hint">표를 좌우로 밀어 전체 내용을 확인할 수 있어요.</p>
+  <div class="admin-chat-table-scroll" role="region" aria-labelledby="admin-chat-list-title" tabindex="0">
+    <table class="table table-striped table-horizontal table-bordered">
+      <thead class="thead-strong">
+      <tr>
+        <th scope="col" width="20%">방 번호</th>
+        <th scope="col" width="50%">방 이름</th>
+        <th scope="col" width="30%">참여 인원</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="room,index : ${roomList}">
+        <td>
+          <span th:text="${index.index+1}"></span>
+        </td>
+        <td>
+          <a th:href="@{chatRoom(roomId=${room.roomId})}"
+             th:text="${room.name}"></a>
+        </td>
+        <td>
+          <span th:text="${room.count}"></span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
