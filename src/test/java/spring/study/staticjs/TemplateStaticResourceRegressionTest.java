@@ -49,8 +49,8 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void notFoundPageShouldExplainTheMissingPageAndLinkHome() throws IOException {
-        String template = Files.readString(NOT_FOUND_TEMPLATE);
-        String css = Files.readString(NOT_FOUND_CSS);
+        String template = readSource(NOT_FOUND_TEMPLATE);
+        String css = readSource(NOT_FOUND_CSS);
 
         assertTrue(template.contains("페이지를 찾을 수 없습니다"));
         assertTrue(template.contains("PAGE NOT FOUND"));
@@ -82,7 +82,7 @@ class TemplateStaticResourceRegressionTest {
     @Test
     void themeOnlyPagesShouldLoadThemeScript() throws IOException {
         for (Path templatePath : THEME_ONLY_TEMPLATES) {
-            String template = Files.readString(templatePath);
+            String template = readSource(templatePath);
 
             assertTrue(template.contains("<script src=\"/js/common/theme.js\"></script>"),
                     templatePath + ": should load shared theme script");
@@ -91,7 +91,7 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void administratorTopNavigationShouldOnlyShowPrimaryDestinations() throws IOException {
-        String template = Files.readString(ADMIN_TEMPLATE);
+        String template = readSource(ADMIN_TEMPLATE);
         int navigationStart = template.indexOf("<div class=\"float-left\">");
         int navigationEnd = template.indexOf("</div>", navigationStart);
         String navigation = template.substring(navigationStart, navigationEnd);
@@ -108,10 +108,10 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void boardImageCssShouldKeepHeightBoundedAndStable() throws IOException {
-        String boardMainCss = Files.readString(BOARD_MAIN_CSS);
-        String boardViewCss = Files.readString(BOARD_VIEW_CSS);
-        String memberDetailCss = Files.readString(MEMBER_DETAIL_CSS);
-        String commonCss = Files.readString(COMMON_CSS);
+        String boardMainCss = readSource(BOARD_MAIN_CSS);
+        String boardViewCss = readSource(BOARD_VIEW_CSS);
+        String memberDetailCss = readSource(MEMBER_DETAIL_CSS);
+        String commonCss = readSource(COMMON_CSS);
 
         assertTrue(boardMainCss.contains("height: auto;"), "feed board images should keep their intrinsic ratio");
         assertTrue(boardMainCss.contains("max-height: 375px;"), "feed board images should be capped at 375px");
@@ -129,10 +129,10 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void boardImageNavigationShouldUseClassBasedVisibility() throws IOException {
-        String commonActions = Files.readString(COMMON_ACTIONS_JS);
-        String imageSwipe = Files.readString(IMAGE_SWIPE_JS);
-        String boardMain = Files.readString(BOARD_MAIN_JS);
-        String boardView = Files.readString(BOARD_VIEW_TEMPLATE);
+        String commonActions = readSource(COMMON_ACTIONS_JS);
+        String imageSwipe = readSource(IMAGE_SWIPE_JS);
+        String boardMain = readSource(BOARD_MAIN_JS);
+        String boardView = readSource(BOARD_VIEW_TEMPLATE);
 
         assertTrue(boardMain.contains("arrow is-invisible"), "initial hidden image arrow should use CSS class");
         assertTrue(commonActions.contains("classList.add('is-invisible')"), "image navigation should hide with CSS class");
@@ -162,9 +162,9 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void chatMessagesShouldRenderTimeAndDateSeparators() throws IOException {
-        String chatJs = Files.readString(CHAT_JS);
-        String chatCss = Files.readString(CHAT_CSS);
-        String chatRoom = Files.readString(CHAT_ROOM_TEMPLATE);
+        String chatJs = readSource(CHAT_JS);
+        String chatCss = readSource(CHAT_CSS);
+        String chatRoom = readSource(CHAT_ROOM_TEMPLATE);
 
         assertTrue(chatJs.contains("appendMessageTime(newMsgArea, data);"),
                 "chat messages should append a visible send time");
@@ -278,7 +278,7 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void notificationPopupCloseShouldMarkNotificationAsRead() throws IOException {
-        String commonJs = Files.readString(COMMON_JS);
+        String commonJs = readSource(COMMON_JS);
 
         assertTrue(commonJs.contains("const notificationId = json['id'];"),
                 "SSE notification id should be captured for read updates");
@@ -294,8 +294,8 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void boardMainHeaderShouldRemainVisibleWhileFeedScrolls() throws IOException {
-        String boardMain = Files.readString(TEMPLATE_ROOT.resolve("board/main.html"));
-        String boardCss = Files.readString(BOARD_MAIN_CSS);
+        String boardMain = readSource(TEMPLATE_ROOT.resolve("board/main.html"));
+        String boardCss = readSource(BOARD_MAIN_CSS);
 
         assertTrue(boardMain.contains("class=\"board-page-header-content\""),
                 "board title and book-review link should share a fixed header content row");
@@ -307,7 +307,7 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void commonContainerShouldUseTheVisibleViewportHeight() throws IOException {
-        String commonCss = Files.readString(COMMON_CSS);
+        String commonCss = readSource(COMMON_CSS);
 
         assertTrue(commonCss.contains("height: 100vh;\n    height: 100dvh;"),
                 "container height should follow the visible viewport instead of its content height");
@@ -325,7 +325,7 @@ class TemplateStaticResourceRegressionTest {
                 List.of("member/detail", "member/detail")
         );
         for (List<String> page : pages) {
-            String template = Files.readString(TEMPLATE_ROOT.resolve(page.get(0) + ".html"));
+            String template = readSource(TEMPLATE_ROOT.resolve(page.get(0) + ".html"));
             int helperIndex = template.indexOf("src=\"/js/common/image-upload.js?");
             int pageIndex = template.indexOf("src=\"/js/" + page.get(1) + ".js?");
             assertTrue(helperIndex >= 0 && pageIndex > helperIndex,
@@ -337,9 +337,9 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void chatParticipantProfileShouldOpenDetailWithBackOnlyNavigation() throws IOException {
-        String chatJs = Files.readString(CHAT_JS);
-        String memberDetail = Files.readString(MEMBER_SEARCH_DETAIL_TEMPLATE);
-        String memberDetailJs = Files.readString(MEMBER_SEARCH_DETAIL_JS);
+        String chatJs = readSource(CHAT_JS);
+        String memberDetail = readSource(MEMBER_SEARCH_DETAIL_TEMPLATE);
+        String memberDetailJs = readSource(MEMBER_SEARCH_DETAIL_JS);
 
         assertTrue(chatJs.contains("!isMyMessage(data) && data.member && data.member.email"),
                 "only another participant's chat profile should be linked");
@@ -361,9 +361,9 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void reportNavigationShouldBeInsideMemberDetailMenu() throws IOException {
-        String commonFragment = Files.readString(COMMON_FRAGMENT).replace("\r\n", "\n");
-        String memberDetail = Files.readString(MEMBER_DETAIL_TEMPLATE).replace("\r\n", "\n");
-        String commonJs = Files.readString(COMMON_JS).replace("\r\n", "\n");
+        String commonFragment = readSource(COMMON_FRAGMENT);
+        String memberDetail = readSource(MEMBER_DETAIL_TEMPLATE);
+        String commonJs = readSource(COMMON_JS);
 
         assertFalse(commonFragment.contains("fnMyReports()"),
                 "personal report history should not remain in the bottom navigation");
@@ -381,8 +381,8 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void personalSettingsShouldBeInBottomNavigationMenu() throws IOException {
-        String commonFragment = Files.readString(COMMON_FRAGMENT);
-        String memberDetail = Files.readString(MEMBER_DETAIL_TEMPLATE);
+        String commonFragment = readSource(COMMON_FRAGMENT);
+        String memberDetail = readSource(MEMBER_DETAIL_TEMPLATE);
 
         assertTrue(Files.exists(SETTINGS_ICON),
                 "bottom navigation should have a project-local settings icon");
@@ -417,7 +417,7 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void adminReportApplyShouldIncludeBottomNavigation() throws IOException {
-        String reportApplyTemplate = Files.readString(
+        String reportApplyTemplate = readSource(
                 Path.of("src/main/resources/templates/admin/report_apply.html"));
 
         assertTrue(reportApplyTemplate.contains(
@@ -433,7 +433,7 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void administratorDashboardShouldReceiveRealtimeNotifications() throws IOException {
-        String administratorTemplate = Files.readString(ADMIN_TEMPLATE);
+        String administratorTemplate = readSource(ADMIN_TEMPLATE);
 
         assertTrue(administratorTemplate.contains("fragments/common :: notificationBanner"),
                 "administrator dashboard should render realtime notification banners");
@@ -443,7 +443,7 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void diarySearchShouldRunWhileUserTypes() throws IOException {
-        String diaryListJs = Files.readString(DIARY_LIST_JS).replace("\r\n", "\n");
+        String diaryListJs = readSource(DIARY_LIST_JS);
 
         assertTrue(diaryListJs.contains("searchInput.addEventListener('input', function()"),
                 "diary search should react whenever the search input changes");
@@ -458,7 +458,7 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void notificationListClickShouldMarkNotificationAsReadBeforeMoving() throws IOException {
-        String notificationListJs = Files.readString(NOTIFICATION_LIST_JS);
+        String notificationListJs = readSource(NOTIFICATION_LIST_JS);
 
         assertTrue(notificationListJs.contains("clickDiv.onclick = async function()"),
                 "notification item clicks should wait for read handling");
@@ -470,8 +470,8 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void notificationListGroupButtonsShouldRenderUnreadCounts() throws IOException {
-        String notificationListJs = Files.readString(NOTIFICATION_LIST_JS);
-        String commonJs = Files.readString(COMMON_JS);
+        String notificationListJs = readSource(NOTIFICATION_LIST_JS);
+        String commonJs = readSource(COMMON_JS);
 
         assertTrue(notificationListJs.contains("notificationGroupButtons"),
                 "notification list should define group button labels");
@@ -491,9 +491,9 @@ class TemplateStaticResourceRegressionTest {
 
     @Test
     void notificationNavShouldRenderUnreadCountBadge() throws IOException {
-        String commonFragment = Files.readString(COMMON_FRAGMENT);
-        String commonCss = Files.readString(COMMON_CSS);
-        String commonJs = Files.readString(COMMON_JS);
+        String commonFragment = readSource(COMMON_FRAGMENT);
+        String commonCss = readSource(COMMON_CSS);
+        String commonJs = readSource(COMMON_JS);
 
         assertTrue(commonFragment.contains("id=\"notification-unread-count\""),
                 "notification nav should include a badge element for unread count");
@@ -509,9 +509,13 @@ class TemplateStaticResourceRegressionTest {
                 "notification unread count should use the API count value");
     }
 
+    private String readSource(Path path) throws IOException {
+        return Files.readString(path).replace("\r\n", "\n");
+    }
+
     private void assertTemplateHasNoInlineCss(Path templatePath) {
         try {
-            String template = Files.readString(templatePath);
+            String template = readSource(templatePath);
 
             assertFalse(template.contains("<style"), templatePath + ": should not contain <style> blocks");
             assertFalse(template.contains("style=\""), templatePath + ": should not contain inline style attributes");
@@ -522,7 +526,7 @@ class TemplateStaticResourceRegressionTest {
 
     private void assertTemplateHasNoInlineThemeScript(Path templatePath) {
         try {
-            String template = Files.readString(templatePath);
+            String template = readSource(templatePath);
 
             assertFalse(template.contains("localStorage.getItem('theme')"),
                     templatePath + ": should use /js/common/theme.js instead of inline theme script");

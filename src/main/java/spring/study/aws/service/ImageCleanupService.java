@@ -36,6 +36,12 @@ public class ImageCleanupService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void enqueueFailedUploads(Collection<String> imageUrls) {
+        // Compensation must survive the failed business transaction, including afterCompletion.
+        enqueueAll(imageUrls);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processNextBatch() {
         for (ImageCleanupTask task : repository.findNextBatchForUpdate(PageRequest.of(0, 100))) {
             try {

@@ -7,9 +7,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.aws.service.ImageUploadCleanupService;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.dto.ChatMessageResponseDto;
 import spring.study.chat.dto.ChatMessageEventDto;
@@ -43,6 +47,7 @@ public class ChatFacade {
     private final MemberService memberService;
     private final ModerationService moderationService;
     private final ImageS3Service imageS3Service;
+    private final ImageUploadCleanupService imageUploadCleanupService;
     private final SimpMessagingTemplate messagingTemplate;
 
     public ResponseEntity<?> loadChatting(String roomId, Member member, int cursor, int limit) {
@@ -161,6 +166,7 @@ public class ChatFacade {
         ));
     }
 
+    @Transactional
     public ResponseEntity<?> sendImage(List<MultipartFile> files) {
         int check = imageS3Service.fileSizeCheck(files);
 
@@ -184,12 +190,16 @@ public class ChatFacade {
         }
 
         List<ChatMessageImg> list = new ArrayList<>();
+        List<String> uploadedUrls = new ArrayList<>();
+        boolean rollbackCleanupRegistered = imageUploadCleanupService.registerRollbackCleanup(uploadedUrls);
         String messageId = UUID.randomUUID().toString();
 
         try {
             for (MultipartFile file : files) {
+                String imageUrl = imageS3Service.uploadImageToS3(file);
+                uploadedUrls.add(imageUrl);
                 list.add(ChatMessageImg.builder()
-                        .imgSrc(imageS3Service.uploadImageToS3(file))
+                        .imgSrc(imageUrl)
                         .messageId(messageId)
                         .build());
             }
@@ -202,7 +212,11 @@ public class ChatFacade {
                     "list", list.stream().map(ChatMessageImg::getImgSrc).toList()
             ));
         } catch (Exception e) {
-            log.error(e.getMessage());
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            }
+            if (!rollbackCleanupRegistered) imageUploadCleanupService.cleanupFailedUploads(uploadedUrls);
+            log.error("Chat image upload failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -1,
                     "message", "오류가 발생하였습니다"

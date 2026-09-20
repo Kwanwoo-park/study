@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.aws.service.ImageCleanupService;
 import spring.study.diary.dto.DiaryImageRequestDto;
 import spring.study.diary.dto.DiaryListResponseDto;
 import spring.study.diary.dto.DiaryRequestDto;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 public class DiaryFacade {
     private final DiaryService diaryService;
     private final ImageS3Service imageS3Service;
+    private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<?> uploadImages(List<MultipartFile> files) {
         int fileCount = imageS3Service.fileSizeCheck(files);
@@ -147,7 +149,7 @@ public class DiaryFacade {
 
         DiaryResponseDto responseDto = new DiaryResponseDto(diaryService.save(diary));
         if (!removedImageUrls.isEmpty()) {
-            imageS3Service.deleteImgSrc(removedImageUrls);
+            imageCleanupService.enqueueAll(removedImageUrls);
         }
         return ResponseEntity.ok(Map.of(
                 "result", responseDto.getId(),
@@ -163,7 +165,7 @@ public class DiaryFacade {
                 .toList();
         diaryService.delete(diary);
         if (!imageUrls.isEmpty()) {
-            imageS3Service.deleteImgSrc(imageUrls);
+            imageCleanupService.enqueueAll(imageUrls);
         }
         return ResponseEntity.ok(Map.of(
                 "result", id

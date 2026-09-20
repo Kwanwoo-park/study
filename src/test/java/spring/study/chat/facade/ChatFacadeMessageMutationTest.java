@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.aws.service.ImageUploadCleanupService;
 import spring.study.chat.dto.ChatMessageEventDto;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.*;
@@ -29,16 +30,7 @@ class ChatFacadeMessageMutationTest {
     private final ModerationService moderationService = mock(ModerationService.class);
     private final ImageS3Service imageS3Service = mock(ImageS3Service.class);
     private final SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
-    private final ChatFacade chatFacade = new ChatFacade(
-            roomService,
-            roomMemberService,
-            messageService,
-            messageImgService,
-            memberService,
-            moderationService,
-            imageS3Service,
-            messagingTemplate
-    );
+    private final ChatFacade chatFacade = new ChatFacade(roomService, roomMemberService, messageService, messageImgService, memberService, moderationService, imageS3Service, mock(ImageUploadCleanupService.class), messagingTemplate);
 
     @Test
     void updateShouldBroadcastChangedMessageWithoutReplacingOriginal() {

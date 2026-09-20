@@ -2,6 +2,7 @@ package spring.study.diary.facade;
 
 import org.junit.jupiter.api.Test;
 import spring.study.aws.service.ImageS3Service;
+import spring.study.aws.service.ImageCleanupService;
 import spring.study.diary.dto.DiaryListResponseDto;
 import spring.study.diary.service.DiaryService;
 import spring.study.member.entity.Member;
@@ -14,7 +15,7 @@ import static org.mockito.Mockito.*;
 
 class DiaryFacadeTest {
     private final DiaryService service = mock(DiaryService.class);
-    private final DiaryFacade facade = new DiaryFacade(service, mock(ImageS3Service.class));
+    private final DiaryFacade facade = new DiaryFacade(service, mock(ImageS3Service.class), mock(ImageCleanupService.class));
     private final Member member = Member.builder().id(1L).build();
 
     @Test

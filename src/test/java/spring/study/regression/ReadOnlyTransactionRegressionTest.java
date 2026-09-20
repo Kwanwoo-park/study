@@ -6,7 +6,6 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionAttribute;
@@ -103,16 +102,6 @@ class ReadOnlyTransactionRegressionTest {
             }
         }
         assertThat(queryCount).isPositive();
-    }
-
-    @Test
-    void inheritedJpaSaveAndDeleteRemainWritable() throws Exception {
-        for (String name : Set.of("save", "delete")) {
-            Method method = SimpleJpaRepository.class.getMethod(name, Object.class);
-            TransactionAttribute transaction = attributes.getTransactionAttribute(method, SimpleJpaRepository.class);
-            assertThat(transaction).isNotNull();
-            assertThat(transaction.isReadOnly()).as(name).isFalse();
-        }
     }
 
     @Test

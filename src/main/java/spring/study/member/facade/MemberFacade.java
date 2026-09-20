@@ -8,14 +8,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.account.service.AccountService;
 import spring.study.appeal.service.AppealService;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.aws.service.ImageCleanupService;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+import spring.study.aws.service.ImageUploadCleanupService;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardImgService;
@@ -43,6 +44,7 @@ import spring.study.report.service.ReportService;
 import spring.study.reply.service.ReplyService;
 import spring.study.todo.service.TodoService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -71,6 +73,7 @@ public class MemberFacade {
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationService jwtAuthenticationService;
     private final ImageCleanupService imageCleanupService;
+    private final ImageUploadCleanupService imageUploadCleanupService;
     private final TodoService todoService;
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
@@ -227,9 +230,11 @@ public class MemberFacade {
             ));
         }
 
-        String imageUrl = null;
+        List<String> uploadedUrls = new ArrayList<>();
+        boolean rollbackCleanupRegistered = imageUploadCleanupService.registerRollbackCleanup(uploadedUrls);
         try {
-            imageUrl = imageS3Service.uploadImageToS3(file);
+            String imageUrl = imageS3Service.uploadImageToS3(file);
+            uploadedUrls.add(imageUrl);
             String oldProfile = member.getProfile();
 
             member.setProfile(imageUrl);
@@ -246,13 +251,7 @@ public class MemberFacade {
             if (TransactionSynchronizationManager.isActualTransactionActive()) {
                 TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             }
-            if (imageUrl != null) {
-                try {
-                    imageS3Service.deleteImage(imageUrl);
-                } catch (Exception cleanupException) {
-                    log.error("new profile image cleanup failed: {}", imageUrl, cleanupException);
-                }
-            }
+            if (!rollbackCleanupRegistered) imageUploadCleanupService.cleanupFailedUploads(uploadedUrls);
             log.error("profile image change failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -10L,

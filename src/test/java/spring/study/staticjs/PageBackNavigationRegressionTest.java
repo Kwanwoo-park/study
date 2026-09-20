@@ -80,7 +80,7 @@ class PageBackNavigationRegressionTest {
         // The root template redirects immediately; layouts and modal fragments are not standalone pages.
         try (var paths = Files.walk(TEMPLATES)) {
             for (Path path : paths.filter(p -> p.toString().endsWith(".html")).toList()) {
-                String relative = TEMPLATES.relativize(path).toString();
+                String relative = TEMPLATES.relativize(path).toString().replace('\\', '/');
                 if (relative.startsWith("fragments/") || relative.startsWith("layout/") || relative.equals("index.html")) continue;
                 String template = Files.readString(path);
                 boolean navigable = template.contains("memberNavi(") || template.contains("pageBack(")
