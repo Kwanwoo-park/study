@@ -47,3 +47,8 @@ application-real.properties
 .vscode/
 .DS_Store
 /src/test/resources/application.properties
+
+# Portfolio PDF renderer dependencies and local QA outputs.
+/tools/portfolio-pdf/node_modules/
+/tmp/pdfs/
+/output/pdf/

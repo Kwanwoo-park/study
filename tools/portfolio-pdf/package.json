@@ -1,0 +1,12 @@
+{
+  "name": "study-portfolio-pdf",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": { "node": ">=22.13.0" },
+  "dependencies": {
+    "@fontsource/noto-sans-kr": "5.3.0",
+    "pdfjs-dist": "6.3.289",
+    "playwright": "1.63.0"
+  }
+}

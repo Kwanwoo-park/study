@@ -357,6 +357,41 @@ java -jar build/libs/study-0.0.1-SNAPSHOT.jar
 
 Windows PowerShell에서는 `./gradlew` 대신 `.\gradlew.bat`를 사용할 수 있습니다.
 
+### 포트폴리오 PDF 저장
+
+`/portfolio`의 `[저장]`은 인쇄 창 없이 `GET /api/portfolio/pdf`에서 PDF를 내려받습니다.
+
+- 첫 저장 요청에서만 현재 **서버 classpath에 배포된** HTML·CSS·JS로 PDF를 생성합니다. 생성 중에는 버튼에 준비 상태가 표시됩니다.
+- HTML·CSS·JS와 PDF 생성 스크립트·의존성 잠금 파일의 SHA-256으로 변경을 감지합니다. 같은 내용은 서버의 임시 PDF 파일을 재사용하며, 바뀌면 다음 요청에서 새로 만듭니다.
+- 서버 인스턴스당 생성은 한 번에 하나만 실행합니다. 동시 요청은 생성 결과를 재사용하며, Chromium은 생성 완료 시 종료됩니다. 캐시 파일만 유지하고 브라우저를 상주시켜 두지 않습니다.
+- 생성 제한 시간은 45초, 동시 요청의 대기 제한은 50초입니다. 실패 시 503을 반환하고 30초간 재생성을 쉬며, 실패한 결과나 변경 전 PDF를 대신 내려주지 않습니다.
+- 캐시는 서버 재시작 시 초기화됩니다. 여러 서버를 운영하면 각 인스턴스가 별도 캐시를 가집니다. DB·S3·영구 볼륨은 사용하지 않습니다.
+- **Gradle 빌드·일반 테스트에서는 PDF를 생성하지 않습니다.** Docker 이미지 빌드에서는 실행 도구만 설치하며 PDF는 첫 저장 요청 시 생성합니다.
+
+Docker Compose 배포는 Dockerfile에 Node·Chromium·한글 폰트 설치가 포함되어 있습니다. Playwright 실행을 위해 런타임 이미지는 Alpine에서 Debian 기반으로 변경했습니다. 별도의 PDF 포트나 공개 URL 설정은 필요 없습니다.
+
+Docker를 사용하지 않는다면 Node.js 22.13 이상(권장 24 LTS)을 설치한 뒤, 프로젝트 루트에서 최초 한 번 실행합니다. 도구 버전 변경 시에도 다시 실행하세요.
+
+```bash
+npm ci --prefix tools/portfolio-pdf --ignore-scripts --no-audit --no-fund
+node tools/portfolio-pdf/node_modules/playwright/cli.js install chromium
+```
+
+Linux에서는 두 번째 명령에 `--with-deps`를 추가해 필요한 OS 라이브러리도 설치합니다. 브라우저는 **앱 실행 계정**이 읽을 수 있는 경로에 설치해야 하며, 설치·실행 계정이 다르면 동일한 `PLAYWRIGHT_BROWSERS_PATH`를 지정하세요. 요청 처리 도중에는 도구를 자동 다운로드하지 않습니다.
+
+JAR 외에 `tools/portfolio-pdf` 디렉터리와 설치된 `node_modules`도 서버에 필요합니다. 프로젝트 루트가 아닌 위치에서 JAR를 실행한다면 `PORTFOLIO_PDF_RENDERER_DIRECTORY`를 해당 도구 디렉터리의 절대 경로로 지정합니다. 필요하면 `PORTFOLIO_PDF_NODE`로 Node 실행 파일의 경로를 지정할 수 있습니다. 기존 `application.properties` 수정은 필요하지 않습니다.
+
+PDF에는 로컬 Noto Sans KR 폰트를 포함합니다. 렌더러는 외부 사이트나 사용자가 지정한 URL에 접근하지 않고 배포된 포트폴리오 파일만 처리하며, 페이지 수와 본문 누락을 검증한 PDF만 캐시에 반영합니다.
+
+수동 PDF 확인 및 실제 Chromium 통합 테스트(도구 설치 후):
+
+```bash
+node tools/portfolio-pdf/generate.mjs
+PORTFOLIO_PDF_INTEGRATION=true ./gradlew test --tests 'spring.study.portfolio.*' --rerun-tasks
+```
+
+수동 생성 결과는 `output/pdf/portfolio.pdf`입니다. PowerShell의 통합 테스트 환경 변수는 `$env:PORTFOLIO_PDF_INTEGRATION = 'true'`로 설정합니다. 프록시를 사용한다면 첫 생성 요청을 위해 읽기 제한 시간을 60초 이상으로 두세요.
+
 ## TURN 배포 설정
 
 STUN만으로는 대칭 NAT, 회사/통신사 방화벽 등 일부 네트워크에서 직접 연결할 수 없습니다. 서로 다른 네트워크 간 통화를 안정적으로 제공하려면 공인 IP가 있는 Coturn과 relay port가 필요합니다.
@@ -418,6 +453,7 @@ STUN만으로는 대칭 NAT, 회사/통신사 방화벽 등 일부 네트워크�
 
 ### REST API
 
+- `/api/portfolio/pdf` : 현재 포트폴리오 PDF 생성·캐시·다운로드
 - `/api/mobile/auth/**` : 모바일 로그인·token 회전·OAuth 교환
 - `/api/member/**` : 회원·비밀번호 인증
 - `/api/board/**`, `/api/boardImg/**` : 게시글·이미지

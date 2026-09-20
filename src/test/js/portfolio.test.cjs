@@ -25,13 +25,15 @@ function element() {
             if (!listeners.has(name)) listeners.set(name, []);
             listeners.get(name).push(callback);
         },
-        dispatch(name, event = {}) { (listeners.get(name) || []).forEach(callback => callback(event)); },
+        dispatch(name, event = {}) { return Promise.all((listeners.get(name) || []).map(callback => callback(event))); },
+        click() { this.clicked = true; },
+        remove() { this.removed = true; },
         listeners,
     };
 }
 
-function setup(userAgent = 'Desktop Browser', printMode = 'supported') {
-    let printCalls = 0;
+function setup(userAgent = 'Desktop Browser', fetchResponse = async () => ({ok: true, headers: {get: () => 'application/pdf'}, blob: async () => 'pdf-bytes'})) {
+    const requests = [], downloads = [], revoked = [], timers = [];
     const slides = titles.map(title => Object.assign(element(), {dataset: {title}}));
     const controls = Object.fromEntries(['toc', 'progressBar', 'slideCounter', 'prevBtn', 'nextBtn', 'savePdfBtn', 'pdfSaveStatus'].map(id => [id, element()]));
     controls.pdfSaveStatus.hidden = true;
@@ -39,21 +41,26 @@ function setup(userAgent = 'Desktop Browser', printMode = 'supported') {
         body: element(),
         querySelectorAll(selector) { assert.equal(selector, '.slide'); return slides; },
         getElementById(id) { assert.ok(html.includes(`id="${id}"`)); return controls[id]; },
-        createElement(tag) { assert.equal(tag, 'button'); return element(); },
-    });
-    const window = printMode === 'unsupported' ? {} : {
-        print() {
-            printCalls++;
-            if (printMode === 'throws') throw new Error('Printing unavailable');
+        createElement(tag) {
+            assert.ok(['button', 'a'].includes(tag));
+            const created = element();
+            if (tag === 'a') downloads.push(created);
+            return created;
         },
+    });
+    const window = {
+        print() { assert.fail('Saving must not open a print dialog'); },
+        setTimeout(callback) { timers.push(callback); },
     };
-    vm.runInNewContext(script, {document, navigator: {userAgent}, window});
+    const URL = {createObjectURL(blob) { assert.equal(blob, 'pdf-bytes'); return 'blob:portfolio'; }, revokeObjectURL(url) { revoked.push(url); }};
+    const fetch = async (url, options) => { requests.push({url, options}); return fetchResponse(); };
+    vm.runInNewContext(script, {document, navigator: {userAgent}, window, fetch, URL});
     function key(key) {
         const event = {key, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }};
         document.dispatch('keydown', event);
         return event;
     }
-    return {slides, document, key, printCalls: () => printCalls, ...controls};
+    return {slides, document, key, requests, downloads, revoked, timers, ...controls};
 }
 
 function assertPosition(ui, index) {
@@ -139,31 +146,44 @@ test('iOS and Android retain mobile mode while desktop keeps its existing layout
     assert.equal(setup().document.body.classList.contains('mobile-view'), false);
 });
 
-test('save button prints the current document only when clicked and preserves the selected slide', () => {
+test('save downloads the server PDF only on click, prevents duplicate requests, and preserves navigation', async () => {
     const ui = setup();
-    assert.equal(ui.printCalls(), 0);
+    assert.equal(ui.requests.length, 0);
     assert.equal(ui.pdfSaveStatus.hidden, true);
     ui.toc.children[6].dispatch('click');
-    ui.savePdfBtn.dispatch('click');
-    assert.equal(ui.printCalls(), 1);
+    const saving = ui.savePdfBtn.dispatch('click');
+    assert.equal(ui.savePdfBtn.disabled, true);
+    await ui.savePdfBtn.dispatch('click');
+    await saving;
+    assert.equal(ui.requests.length, 1);
+    assert.equal(ui.requests[0].url, '/api/portfolio/pdf');
+    assert.equal(ui.requests[0].options.cache, 'no-store');
+    assert.equal(ui.downloads[0].href, 'blob:portfolio');
+    assert.equal(ui.downloads[0].download, 'study-portfolio.pdf');
+    assert.equal(ui.downloads[0].clicked, true);
+    assert.equal(ui.downloads[0].removed, true);
+    ui.timers.forEach(callback => callback());
+    assert.deepEqual(ui.revoked, ['blob:portfolio']);
     assert.equal(ui.pdfSaveStatus.hidden, false);
-    assert.match(ui.pdfSaveStatus.textContent, /PDF로 저장/);
+    assert.match(ui.pdfSaveStatus.textContent, /PDF 다운로드를 요청/);
     assertPosition(ui, 6);
-    // Printing or cancelling does not leave a disabled button or change navigation.
     assert.equal(ui.savePdfBtn.disabled, false);
-    ui.savePdfBtn.dispatch('click');
-    assert.equal(ui.printCalls(), 2);
+    await ui.savePdfBtn.dispatch('click');
+    assert.equal(ui.requests.length, 2);
     ui.nextBtn.dispatch('click');
     assertPosition(ui, 7);
 });
 
-test('missing or failing print support gives instructions without breaking slide navigation', () => {
-    for (const mode of ['unsupported', 'throws']) {
-        const ui = setup('Mozilla/5.0 (Linux; Android 15)', mode);
-        ui.savePdfBtn.dispatch('click');
+test('HTTP errors, non-PDF responses, and network failures allow retry without downloading an error page', async () => {
+    for (const fetchResponse of [async () => ({ok: false}), async () => ({ok: true, headers: {get: () => 'text/html'}}), async () => { throw new Error('Offline'); }]) {
+        const ui = setup('Mozilla/5.0 (Linux; Android 15)', fetchResponse);
+        await ui.savePdfBtn.dispatch('click');
         assert.equal(ui.pdfSaveStatus.hidden, false);
-        assert.match(ui.pdfSaveStatus.textContent, /Chrome 또는 Safari/);
-        assert.equal(ui.printCalls(), mode === 'throws' ? 1 : 0);
+        assert.match(ui.pdfSaveStatus.textContent, /다운로드하지 못했습니다/);
+        assert.equal(ui.downloads.length, 0);
+        assert.equal(ui.savePdfBtn.disabled, false);
+        await ui.savePdfBtn.dispatch('click');
+        assert.equal(ui.requests.length, 2);
         ui.key('ArrowRight');
         assertPosition(ui, 1);
     }

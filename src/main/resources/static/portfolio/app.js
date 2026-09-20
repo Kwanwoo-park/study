@@ -60,20 +60,34 @@ function prevSlide() {
     goToSlide(currentIndex - 1);
 }
 
-function savePortfolioPdf() {
+async function savePortfolioPdf() {
+    if (savePdfBtn.disabled) return;
+    savePdfBtn.disabled = true;
     pdfSaveStatus.hidden = false;
-    pdfSaveStatus.textContent = "인쇄 창에서 'PDF로 저장'을 선택해 주세요. 창이 열리지 않으면 브라우저의 인쇄·공유 메뉴를 이용해 주세요.";
-
-    if (typeof window.print !== "function") {
-        pdfSaveStatus.textContent = "이 환경에서는 인쇄를 지원하지 않습니다. Chrome 또는 Safari에서 이 페이지를 열어 PDF로 저장해 주세요.";
-        return;
-    }
+    pdfSaveStatus.textContent = "PDF를 준비하고 있습니다. 처음 저장할 때는 잠시 걸릴 수 있습니다.";
 
     try {
-        // Print CSS exposes every slide without changing the current screen position.
-        window.print();
+        const response = await fetch('/api/portfolio/pdf', {credentials: 'same-origin', cache: 'no-store'});
+        if (!response.ok || !response.headers.get('Content-Type')?.toLowerCase().startsWith('application/pdf')) {
+            throw new Error('PDF download failed');
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'study-portfolio.pdf';
+        document.body.appendChild(link);
+        try {
+            link.click();
+        } finally {
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+        pdfSaveStatus.textContent = "PDF 다운로드를 요청했습니다. 브라우저의 다운로드 목록을 확인해 주세요.";
     } catch (error) {
-        pdfSaveStatus.textContent = "인쇄 창을 열지 못했습니다. 브라우저의 인쇄·공유 메뉴를 이용하거나 Chrome 또는 Safari에서 다시 시도해 주세요.";
+        pdfSaveStatus.textContent = "PDF를 다운로드하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+    } finally {
+        savePdfBtn.disabled = false;
     }
 }
 

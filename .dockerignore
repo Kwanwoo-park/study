@@ -1,0 +1,9 @@
+.git
+.gradle
+.gradle-cache
+build
+**/node_modules
+tmp
+output
+.idea
+.env
