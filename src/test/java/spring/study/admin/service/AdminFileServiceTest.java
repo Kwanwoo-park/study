@@ -7,7 +7,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +14,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.SimpleTransactionStatus;
-import org.springframework.util.unit.DataSize;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.dto.AdminFileResponseDto;
 import spring.study.admin.entity.AdminFile;
@@ -44,10 +42,7 @@ class AdminFileServiceTest {
 
     @BeforeEach
     void setUp() {
-        MultipartProperties properties = new MultipartProperties();
-        properties.setMaxFileSize(DataSize.ofBytes(100));
-        properties.setMaxRequestSize(DataSize.ofBytes(200));
-        service = new AdminFileService(repository, transactionManager, properties, storage);
+        service = new AdminFileService(repository, transactionManager, storage);
     }
 
     @ParameterizedTest
@@ -96,20 +91,25 @@ class AdminFileServiceTest {
     }
 
     @Test
-    void rejectsOversizedFileBeforeOpeningStorage() throws IOException {
-        assertThatThrownBy(() -> service.upload(new MockMultipartFile("file", "big.exe", null, new byte[8192]), 7L))
-                .isInstanceOfSatisfying(ResponseStatusException.class, error -> assertThat(error.getStatusCode().value()).isEqualTo(413));
-        verifyNoInteractions(repository, storage);
+    void usesMultipartSizeForS3AndDatabaseWithoutRepeatingServletValidation() throws IOException {
+        prepareSave();
+        byte[] bytes = new byte[8192];
+        // HTTP size rejection is tested separately with real Tomcat multipart parsing.
+        AdminFileResponseDto result = service.upload(new MockMultipartFile("file", "setup.exe", null, bytes), 7L);
+        assertThat(result.size()).isEqualTo(bytes.length);
+        assertThat(uploadedBytes.get(result.id())).isEqualTo(bytes);
+        verify(storage).upload(eq(result.id()), eq("setup.exe"), eq((long) bytes.length), any());
+        verify(repository).saveAndFlush(argThat(metadata -> metadata.getSize() == bytes.length));
     }
 
     @Test
-    void enforcesLimitOnActualStreamBeforeCallingS3() throws IOException {
+    void unreadableMultipartStreamNeverStartsAnS3Upload() throws IOException {
         MockMultipartFile file = mock(MockMultipartFile.class);
-        when(file.getOriginalFilename()).thenReturn("big.zip");
-        when(file.getSize()).thenReturn(1L);
-        when(file.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[8192]));
-        assertThatThrownBy(() -> service.upload(file, 7L)).isInstanceOf(ResponseStatusException.class);
-        verifyNoInteractions(repository, storage);
+        when(file.getOriginalFilename()).thenReturn("setup.exe");
+        when(file.getSize()).thenReturn(4L);
+        when(file.getInputStream()).thenThrow(new IOException("temporary file unavailable"));
+        assertThatThrownBy(() -> service.upload(file, 7L)).isInstanceOf(IllegalStateException.class).hasCauseInstanceOf(IOException.class);
+        verifyNoInteractions(repository, storage, transactionManager);
     }
 
     @Test
@@ -118,6 +118,18 @@ class AdminFileServiceTest {
         doThrow(new IllegalStateException("commit failed")).when(transactionManager).commit(any());
         assertThatThrownBy(() -> service.upload(new MockMultipartFile("file", "setup.exe", null, new byte[10]), 7L)).isInstanceOf(IllegalStateException.class);
         verify(storage).removeFailedUpload(argThat(uploadedBytes::containsKey));
+    }
+
+    @Test
+    void startsANewDatabaseTransactionAfterS3UploadAndCommitsBeforeReturning() throws IOException {
+        prepareSave();
+        service.upload(new MockMultipartFile("file", "setup.exe", null, new byte[4]), 7L);
+
+        var order = inOrder(storage, transactionManager, repository);
+        order.verify(storage).upload(anyString(), eq("setup.exe"), eq(4L), any());
+        order.verify(transactionManager).getTransaction(argThat(definition -> definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW));
+        order.verify(repository).saveAndFlush(any(AdminFile.class));
+        order.verify(transactionManager).commit(any());
     }
 
     @Test
@@ -153,22 +165,32 @@ class AdminFileServiceTest {
     }
 
     @Test
-    void rejectsDeclaredLengthMismatchBeforeS3Upload() throws IOException {
-        MockMultipartFile file = mock(MockMultipartFile.class);
-        when(file.getOriginalFilename()).thenReturn("test.exe");
-        when(file.getSize()).thenReturn(10L);
-        when(file.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[4]));
-        assertThatThrownBy(() -> service.upload(file, 7L)).isInstanceOf(IllegalArgumentException.class);
-        verifyNoInteractions(repository, storage, transactionManager);
+    void streamCloseFailureRemovesTheUploadedObjectWithoutSavingMetadata() {
+        MockMultipartFile file = new MockMultipartFile("file", "test.exe", null, new byte[4]) {
+            @Override
+            public java.io.InputStream getInputStream() {
+                return new ByteArrayInputStream(new byte[4]) {
+                    @Override
+                    public void close() throws IOException {
+                        throw new IOException("stream close failed");
+                    }
+                };
+            }
+        };
+        assertThatThrownBy(() -> service.upload(file, 7L)).isInstanceOf(IllegalStateException.class).hasCauseInstanceOf(IOException.class);
+        verify(storage).removeFailedUpload(anyString());
+        verifyNoInteractions(repository, transactionManager);
     }
 
     @Test
-    void closesBothValidationAndUploadStreams() {
+    void opensAndClosesOnlyOneUploadStream() {
         prepareSave();
+        AtomicInteger opened = new AtomicInteger();
         AtomicInteger closed = new AtomicInteger();
         MockMultipartFile file = new MockMultipartFile("file", "test.exe", null, new byte[4]) {
             @Override
             public java.io.InputStream getInputStream() {
+                opened.incrementAndGet();
                 return new ByteArrayInputStream(new byte[4]) {
                     @Override
                     public void close() throws IOException {
@@ -179,7 +201,8 @@ class AdminFileServiceTest {
             }
         };
         service.upload(file, 7L);
-        assertThat(closed).hasValue(2);
+        assertThat(opened).hasValue(1);
+        assertThat(closed).hasValue(1);
     }
 
     @Test
@@ -188,7 +211,6 @@ class AdminFileServiceTest {
         service.list(2);
         verify(repository).findAll(argThat((PageRequest request) -> request.getPageSize() == 20 && request.getPageNumber() == 2));
         assertThatThrownBy(() -> service.list(-1)).isInstanceOf(IllegalArgumentException.class);
-        assertThat(service.maxFileSize()).isEqualTo(200);
     }
 
     private void prepareSave() {

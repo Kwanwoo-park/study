@@ -323,7 +323,7 @@ AWS S3, Google/Naver OAuth2와 mail 계정도 각 환경의 property 또는 secr
 - S3 공개 URL이나 presigned URL을 클라이언트에 제공하지 않습니다. 서버가 관리자 권한을 확인한 뒤 S3 스트림을 `attachment`/`application/octet-stream`으로 전달합니다. 실행·압축 해제·악성코드 검사는 하지 않습니다.
 - 관리자 S3 버킷 설정이 없거나 버킷의 퍼블릭 액세스 차단 4개 항목을 확인할 수 없으면 업로드/다운로드를 거부합니다. 공개 이미지 버킷이나 로컬 디스크로 대체 저장하지 않습니다. 버킷·IAM 권한을 자동 생성하거나 변경하지 않습니다.
 - 프로젝트 내부 영구 파일 저장과 전용 Docker 파일 볼륨은 사용하지 않습니다. 요청 처리 중에는 서블릿 컨테이너의 multipart 임시 파일이 사용될 수 있습니다. DB와 S3 데이터를 함께 보존하세요.
-- 용량은 기존 `spring.servlet.multipart.max-file-size`와 `max-request-size`를 따르며 화면에 실제 상한을 표시합니다. 큰 실행 파일을 올리려면 배포 설정에서 아래처럼 조정하세요. 요청 전체 제한에는 multipart 부가 데이터도 포함됩니다. 이 두 설정은 기존 업로드 API에도 적용되며, Nginx 사용 시 `client_max_body_size`도 맞춰야 합니다. 무제한 용량 설정은 지원하지 않습니다.
+- 관리자 파일과 일반 이미지 모두 Spring 공통 설정으로 **파일당 20MB, 요청 전체 210MB**를 적용합니다. 관리자 화면도 공통 파일당 상한을 표시하며 별도 관리자 용량 설정은 사용하지 않습니다. 요청 전체 상한에는 multipart 부가 데이터도 포함됩니다. 이미지 최대 10장 정책은 유지하며, Nginx 사용 시 `client_max_body_size`도 맞추세요. 무제한 용량 설정은 지원하지 않습니다.
 
 Docker Compose 실행 전 `.env`에 실제 생성한 관리자 전용 버킷 이름을 넣습니다.
 
@@ -335,9 +335,9 @@ ADMIN_FILES_S3_BUCKET=your-private-admin-file-bucket
 
 ```properties
 admin.files.s3.bucket=your-private-admin-file-bucket
-# 필요한 경우에만 용량 변경 (기존 설정은 자동으로 변경하지 않음)
-spring.servlet.multipart.max-file-size=100MB
-spring.servlet.multipart.max-request-size=110MB
+# 모든 업로드에 공통 적용, 요청 상한은 부가 데이터까지 포함
+spring.servlet.multipart.max-file-size=20MB
+spring.servlet.multipart.max-request-size=210MB
 ```
 
 버킷 준비, IAM 정책 예시, 오류별 확인 사항과 DB 변경은 [관리자 파일 S3 배포 안내](docs/admin-file-storage.md)를 확인하세요. 신규 테이블은 `ddl-auto=update`로 생성하거나 엔티티에 맞춰 직접 준비합니다. 기존 `s3_bucket`, `s3_key`, `s3_version_id` 컬럼은 `ddl-auto=update`로 삭제되지 않으므로 백업 및 사전 확인 후 DB에서 직접 제거해야 합니다. 별도 SQL 스크립트는 제공하지 않으며 실제 DB에 자동 적용하거나 기존 S3/로컬 파일을 삭제하지 않습니다.

@@ -62,14 +62,16 @@ admin.files.s3.bucket=your-private-admin-file-bucket
 
 `cloud.aws.s3.bucketName`은 **기존 이미지 버킷 이름 그대로** 둡니다. Access Key/Secret Key를 프론트엔드나 저장소에 추가하지 마세요. 이 기능에 관리자 파일용 로컬 경로·볼륨 설정은 필요하지 않습니다.
 
-용량은 기존 `spring.servlet.multipart.max-file-size`, `spring.servlet.multipart.max-request-size`를 따릅니다. 실행 파일 때문에 상한을 늘려야 할 때만 배포 설정을 수정합니다. 요청 전체 제한에는 multipart 부가 데이터도 포함됩니다.
+관리자 파일과 일반 이미지(게시글·채팅·다이어리·프로필·컬렉션)는 모두 Spring 공통 설정으로 **파일당 20MB, 요청 전체 210MB**를 적용합니다. 용량 제한은 서블릿의 multipart 파싱 단계에서 검사하며, 관리자 서비스는 `MultipartFile.getSize()`를 S3와 DB의 파일 크기로 사용하고 업로드 스트림을 한 번만 엽니다. 관리자 화면의 상한 표시에는 `spring.servlet.multipart.max-file-size`를 사용합니다. 별도의 `admin.files.max-file-size` 설정과 서비스의 중복 용량·스트림 길이 검사는 사용하지 않습니다.
 
 ```properties
-spring.servlet.multipart.max-file-size=100MB
-spring.servlet.multipart.max-request-size=110MB
+spring.servlet.multipart.max-file-size=20MB
+spring.servlet.multipart.max-request-size=210MB
 ```
 
-이 설정은 다른 업로드 API에도 적용됩니다. Nginx 등 프록시가 있으면 요청 용량과 전송 시간 제한도 함께 확인하세요. 영구 파일은 S3에만 저장하지만, multipart 요청을 처리하는 동안 서블릿 임시 파일이 사용될 수 있습니다.
+Spring의 `MB` 단위는 1,048,576바이트이므로 파일당 20,971,520바이트, 요청 전체 220,200,960바이트입니다. 이미지 최대 10장 정책은 유지되므로 20MB 이미지 10장의 200MB에 multipart 부가 데이터 여유를 더한 요청 상한입니다. 요청 전체 제한에는 multipart 경계·파일 이름·폼 필드도 포함됩니다.
+
+배포 서버의 설정을 변경한 뒤 재시작하세요. `application.properties`는 Git 제외 파일이므로 코드 업데이트만으로 서버의 설정이 바뀌지 않습니다. 기존 `admin.files.max-file-size`는 제거하고, 환경 변수 `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE` / `SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE`가 이전 값으로 공통 설정을 덮어쓰지 않는지도 확인하세요. Nginx 등 프록시가 있으면 `client_max_body_size`와 전송 시간 제한도 함께 확인하세요. 영구 파일은 S3에만 저장하지만, multipart 요청을 처리하는 동안 서블릿 임시 파일이 사용될 수 있습니다.
 
 ## 4. DB 적용 및 중복 컬럼 제거
 

@@ -2,7 +2,6 @@ package spring.study.admin.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,24 +23,12 @@ import java.io.InputStream;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminFileService {
     private final AdminFileRepository adminFileRepository;
-    private final TransactionTemplate transactionTemplate;
+    private final PlatformTransactionManager transactionManager;
     private final AdminFileS3Storage storage;
-    private final long maxFileSize;
-
-    public AdminFileService(AdminFileRepository adminFileRepository, PlatformTransactionManager transactionManager, MultipartProperties multipartProperties, AdminFileS3Storage storage) {
-        this.adminFileRepository = adminFileRepository;
-        this.transactionTemplate = new TransactionTemplate(transactionManager);
-        this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        this.storage = storage;
-        this.maxFileSize = multipartProperties.getMaxRequestSize().toBytes();
-    }
-
-    public long maxFileSize() {
-        return maxFileSize;
-    }
 
     @Transactional(readOnly = true)
     public Page<AdminFileResponseDto> list(int page) {
@@ -52,18 +39,19 @@ public class AdminFileService {
     public AdminFileResponseDto upload(MultipartFile file, Long uploadedBy) {
         if (file == null) throw new IllegalArgumentException("업로드할 파일을 선택해 주세요");
         String originalFilename = safeFilename(file.getOriginalFilename());
-        if (file.getSize() > maxFileSize) throw tooLarge();
+        // The servlet has already applied multipart limits before this service is called.
+        long size = file.getSize();
         String id = UUID.randomUUID().toString();
         boolean uploaded = false;
         try {
-            // Validate the actual length before S3 PUT without retaining the file in memory or local storage.
-            long size = validateStream(file);
             try (InputStream input = file.getInputStream()) {
                 storage.upload(id, originalFilename, size, input);
                 uploaded = true;
             }
             AdminFile metadata = new AdminFile(id, originalFilename, size, uploadedBy);
             // Complete the commit here so commit failures also remove the S3 object.
+            TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+            transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
             return transactionTemplate.execute(status -> AdminFileResponseDto.from(adminFileRepository.saveAndFlush(metadata)));
         } catch (IOException error) {
             if (uploaded) storage.removeFailedUpload(id);
@@ -80,20 +68,6 @@ public class AdminFileService {
         return new Download(AdminFileResponseDto.from(metadata), storage.download(id));
     }
 
-    private long validateStream(MultipartFile file) throws IOException {
-        long size = 0;
-        try (InputStream input = file.getInputStream()) {
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = input.read(buffer)) != -1) {
-                size += read;
-                if (size > maxFileSize) throw tooLarge();
-            }
-        }
-        if (size != file.getSize()) throw new IllegalArgumentException("파일 크기가 일치하지 않습니다. 파일을 다시 선택해 주세요");
-        return size;
-    }
-
     private void validateId(String id) {
         if (id == null || !id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) throw notFound();
     }
@@ -106,10 +80,6 @@ public class AdminFileService {
             throw new IllegalArgumentException("파일 이름은 1~255자로 지정해 주세요");
         }
         return name;
-    }
-
-    private ResponseStatusException tooLarge() {
-        return new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "업로드 가능한 파일 용량을 초과하였습니다");
     }
 
     private ResponseStatusException notFound() {

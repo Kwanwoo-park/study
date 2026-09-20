@@ -1,6 +1,7 @@
 package spring.study.admin.facade;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.http.*;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AdminFileFacade {
     private final AdminFileService adminFileService;
+    private final MultipartProperties multipartProperties;
 
     public ResponseEntity<?> csrf(CsrfToken token) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(Map.of(
                 "headerName", token.getHeaderName(),
                 "token", token.getToken(),
-                "maxFileSize", adminFileService.maxFileSize()
+                "maxFileSize", multipartProperties.getMaxFileSize().toBytes()
         ));
     }
 

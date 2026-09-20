@@ -25,10 +25,7 @@ public class AccountViewController {
     private final MemberService memberService;
 
     @GetMapping
-    public String account(Model model,
-                          HttpServletRequest request,
-                          @RequestParam(value = "tranAccount") String tranAccount,
-                          @RequestParam(value = "tranName") String tranName) {
+    public String account(Model model, HttpServletRequest request, @RequestParam(value = "tranAccount", required = false) String tranAccount, @RequestParam(value = "tranName", required = false) String tranName) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) {
             return "redirect:/member/login?error=true&exception=Not Found&url=/account";

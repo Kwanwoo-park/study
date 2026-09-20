@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -20,6 +21,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.AopTestUtils;
+import org.springframework.util.unit.DataSize;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -100,11 +102,11 @@ class AdminFileSecurityTest {
 
     @Test
     void administratorCanUploadUsingActualCsrfCookieAndResponseHeaderToken() throws Exception {
-        when(service.maxFileSize()).thenReturn(10485760L);
         when(service.upload(any(), eq(7L))).thenReturn(metadata());
         var tokenResponse = mvc.perform(get("/api/admin/files/csrf").with(user(member(Role.ADMIN))))
-                .andExpect(status().isOk()).andExpect(jsonPath("maxFileSize").value(10485760)).andReturn().getResponse();
+                .andExpect(status().isOk()).andExpect(jsonPath("maxFileSize").value(20971520)).andReturn().getResponse();
         var token = new ObjectMapper().readTree(tokenResponse.getContentAsString());
+        verifyNoInteractions(service);
         mvc.perform(multipart("/api/admin/files").file(executable()).with(user(member(Role.ADMIN)))
                         .cookie(tokenResponse.getCookie("ADMIN-FILES-CSRF"))
                         .header(token.get("headerName").asText(), token.get("token").asText()))
@@ -188,6 +190,14 @@ class AdminFileSecurityTest {
 
         @Bean
         AdminFileService service() { return mock(AdminFileService.class, withSettings().withoutAnnotations()); }
+
+        @Bean
+        MultipartProperties multipartProperties() {
+            MultipartProperties properties = new MultipartProperties();
+            properties.setMaxFileSize(DataSize.ofMegabytes(20));
+            properties.setMaxRequestSize(DataSize.ofMegabytes(210));
+            return properties;
+        }
 
         @Bean
         JwtAuthenticationFilter jwtFilter() {
