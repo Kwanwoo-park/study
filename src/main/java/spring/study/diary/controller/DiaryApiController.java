@@ -31,6 +31,14 @@ public class DiaryApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> detail(@PathVariable Long id, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return diaryFacade.findById(id, member);
+    }
+
     @GetMapping("/list")
     public ResponseEntity<?> list(@RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);

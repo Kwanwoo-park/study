@@ -77,8 +77,12 @@ public class DiaryFacade {
     }
 
     @Transactional(readOnly = true)
-    public DiaryResponseDto findById(Long id, Member member) {
-        return new DiaryResponseDto(getOwnedDiary(id, member));
+    public ResponseEntity<?> findById(Long id, Member member) {
+        Diary diary = getOwnedDiary(id, member);
+        return ResponseEntity.ok(Map.of(
+                "result", diary.getId(),
+                "diary", new DiaryResponseDto(diary)
+        ));
     }
 
     @Transactional(readOnly = true)
