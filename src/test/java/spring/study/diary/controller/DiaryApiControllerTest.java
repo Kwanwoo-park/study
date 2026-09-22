@@ -10,6 +10,8 @@ import spring.study.diary.dto.DiaryResponseDto;
 import spring.study.diary.facade.DiaryFacade;
 import spring.study.member.entity.Member;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -25,8 +27,11 @@ class DiaryApiControllerTest {
         Member member = Member.builder().id(7L).build();
         DiaryResponseDto diary = mock(DiaryResponseDto.class);
         when(jwtManager.getLoginMember(request)).thenReturn(member);
-        when(facade.findById(12L, member)).thenReturn(diary);
-        assertThat(controller.detail(12L, request).getBody()).isSameAs(diary);
+        Map<String, Object> body = Map.of("result", 12L, "diary", diary);
+        doReturn(ResponseEntity.ok(body)).when(facade).findById(12L, member);
+        ResponseEntity<?> response = controller.detail(12L, request);
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isSameAs(body);
         verify(facade).findById(12L, member);
     }
 

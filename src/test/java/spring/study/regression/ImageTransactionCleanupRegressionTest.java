@@ -149,7 +149,7 @@ class ImageTransactionCleanupRegressionTest {
             status.setRollbackOnly();
         });
 
-        assertThat(diaryFacade.findById(diary.getId(), member).getImages()).hasSize(1);
+        assertThat(diaryFacade.findDetail(diary.getId(), member).getImages()).hasSize(1);
         assertCleanupUrls();
         cleanupService.processNextBatch();
         verifyNoInteractions(imageS3Service);
@@ -161,7 +161,7 @@ class ImageTransactionCleanupRegressionTest {
 
         diaryFacade.update(diaryUpdate(diary.getId()), member);
 
-        assertThat(diaryFacade.findById(diary.getId(), member).getImages()).extracting("imageUrl").containsExactly(NEW_IMAGE);
+        assertThat(diaryFacade.findDetail(diary.getId(), member).getImages()).extracting("imageUrl").containsExactly(NEW_IMAGE);
         assertCleanupUrls(OLD_IMAGE);
         verifyNoInteractions(imageS3Service);
     }
@@ -175,7 +175,7 @@ class ImageTransactionCleanupRegressionTest {
             status.setRollbackOnly();
         });
 
-        assertThat(diaryFacade.findById(diary.getId(), member).getImages()).hasSize(2);
+        assertThat(diaryFacade.findDetail(diary.getId(), member).getImages()).hasSize(2);
         assertCleanupUrls();
         verifyNoInteractions(imageS3Service);
     }

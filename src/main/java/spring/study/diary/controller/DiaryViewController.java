@@ -29,7 +29,7 @@ public class DiaryViewController {
 
         addMemberModel(model, member);
         if (id != null) {
-            model.addAttribute("diary", diaryFacade.findById(id, member));
+            model.addAttribute("diary", diaryFacade.findDetail(id, member));
         }
 
         return "diary/write";
