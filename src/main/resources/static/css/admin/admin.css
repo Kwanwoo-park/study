@@ -49,6 +49,76 @@
     text-align: center;
 }
 
+.admin-system-card-action {
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.admin-system-card-action:hover,
+.admin-system-card-action:focus-visible {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.16);
+}
+
+.admin-diagnostics-overlay:not([hidden]) {
+    position: fixed;
+    z-index: 2000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(12, 20, 33, 0.65);
+}
+
+.admin-diagnostics-dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(850px, 100%);
+    max-height: min(85dvh, 900px);
+    min-height: 260px;
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--surface-bg);
+    color: var(--text-primary);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.admin-diagnostics-header,
+.admin-diagnostics-controls,
+.admin-diagnostics-paging {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.admin-diagnostics-header h2 { margin: 0; font-size: 21px; }
+.admin-diagnostics-header p { margin: 5px 0 0; color: var(--text-muted); font-size: 13px; }
+.admin-diagnostics-close { border: 0; background: none; color: inherit; font-size: 30px; line-height: 1; }
+.admin-diagnostics-controls { flex-wrap: wrap; margin: 16px 0 10px; font-size: 13px; }
+.admin-diagnostics-root { width: auto; max-width: 100%; }
+.admin-diagnostics-path { flex: 1; min-width: 80px; overflow-wrap: anywhere; }
+.admin-diagnostics-content { min-height: 0; overflow: auto; }
+.admin-diagnostics-list { min-width: 520px; }
+.admin-diagnostics-row { display: grid; grid-template-columns: 90px minmax(190px, 1fr) 110px; gap: 12px; padding: 9px 10px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+.admin-diagnostics-row span { overflow-wrap: anywhere; }
+.admin-diagnostics-row.is-heading { position: sticky; top: 0; background: var(--surface-bg); color: var(--text-muted); font-weight: 700; }
+.admin-diagnostics-files .admin-diagnostics-row { grid-template-columns: minmax(200px, 1fr) 85px 170px; }
+.admin-diagnostics-row.is-directory { cursor: pointer; }
+.admin-diagnostics-row.is-directory:hover,
+.admin-diagnostics-row.is-directory:focus-visible { background: var(--surface-muted); outline: none; }
+.admin-diagnostics-paging { justify-content: center; padding: 14px 0 2px; font-size: 13px; }
+.admin-diagnostics-error { color: #dc3545; }
+
+@media (max-width: 600px) {
+    .admin-diagnostics-dialog { max-height: 92dvh; padding: 14px; }
+    .admin-diagnostics-controls { justify-content: flex-start; }
+    .admin-diagnostics-row { min-width: 520px; }
+}
+
 .admin-system-title {
     color: var(--text-muted);
     font-size: 13px;

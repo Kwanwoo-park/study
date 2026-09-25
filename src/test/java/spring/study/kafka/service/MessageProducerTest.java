@@ -7,6 +7,7 @@ import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.kafka.entity.KafkaOutboxEvent;
 import spring.study.kafka.event.KafkaOutboxDispatchRequestedEvent;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
+import spring.study.admin.service.IntegrationEventLogService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -19,7 +20,7 @@ class MessageProducerTest {
     void chatMessagesShouldBeStoredInOutboxWithRoomIdAsKey() {
         KafkaOutboxEventRepository repository = mock(KafkaOutboxEventRepository.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        MessageProducer producer = new MessageProducer(repository, new ObjectMapper(), eventPublisher);
+        MessageProducer producer = new MessageProducer(repository, new ObjectMapper(), eventPublisher, mock(IntegrationEventLogService.class));
         ChatMessageRequestDto message = ChatMessageRequestDto.builder()
                 .id("message-1")
                 .roomId("room-1")

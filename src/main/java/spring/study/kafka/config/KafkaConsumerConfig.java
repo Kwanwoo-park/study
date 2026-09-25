@@ -11,6 +11,8 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import spring.study.kafka.component.KafkaEventLogRetryListener;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
@@ -82,23 +84,32 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(KafkaEventLogRetryListener eventLogs) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
 
         factory.getContainerProperties().setMissingTopicsFatal(false);
+        factory.setCommonErrorHandler(observedErrorHandler(eventLogs));
 
         return factory;
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> chatBatchKafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, Object> chatBatchKafkaListenerContainerFactory(KafkaEventLogRetryListener eventLogs) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(chatBatchConsumerFactory());
         factory.setBatchListener(true);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.BATCH);
         factory.getContainerProperties().setMissingTopicsFatal(false);
+        factory.setCommonErrorHandler(observedErrorHandler(eventLogs));
 
         return factory;
+    }
+
+    private DefaultErrorHandler observedErrorHandler(KafkaEventLogRetryListener eventLogs) {
+        // Keep Spring Kafka's existing default recovery/backoff semantics; observe only.
+        DefaultErrorHandler handler = new DefaultErrorHandler();
+        handler.setRetryListeners(eventLogs);
+        return handler;
     }
 }

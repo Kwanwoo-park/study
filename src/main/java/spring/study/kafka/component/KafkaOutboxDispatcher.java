@@ -12,6 +12,8 @@ import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.kafka.entity.KafkaOutboxEvent;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.notification.repository.NotificationRepository;
+import spring.study.admin.service.IntegrationEventLogService;
+import static spring.study.admin.entity.IntegrationEventLog.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -27,6 +29,7 @@ public class KafkaOutboxDispatcher {
     private final NotificationRepository notificationRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final IntegrationEventLogService eventLogs;
     @Value("${kafka.outbox.retry-base-delay-ms:5000}")
     private long retryBaseDelayMs = 5000L;
     @Value("${kafka.outbox.retry-max-delay-ms:1800000}")
@@ -44,17 +47,22 @@ public class KafkaOutboxDispatcher {
                 Object payload = resolvePayload(event);
                 if (payload == null) {
                     outboxRepository.delete(event);
+                    eventLogs.afterCommit(Route.kafka(event.getTopic()), Operation.PUBLISH, Outcome.SKIPPED, event.getId(), 1, event.getAttemptCount() + 1, null);
                     processedCount++;
                     continue;
                 }
                 kafkaTemplate.send(event.getTopic(), event.getEventKey(), payload)
                         .get(Duration.ofSeconds(10).toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+                eventLogs.record(Route.kafka(event.getTopic()), Operation.PUBLISH, Outcome.SUCCESS, event.getId(), 1, event.getAttemptCount() + 1, null, null);
                 outboxRepository.delete(event);
                 processedCount++;
             } catch (Exception exception) {
                 LocalDateTime retryAt = LocalDateTime.now().plusNanos(calculateRetryDelayMillis(event) * 1_000_000L);
                 event.recordFailure(exception.getMessage(), retryAt);
                 LocalDateTime nextRetryAt = event.isDeadLettered() ? null : retryAt;
+                eventLogs.afterCommit(Route.kafka(event.getTopic()), Operation.PUBLISH,
+                        event.isDeadLettered() ? Outcome.DEAD_LETTER : Outcome.RETRY_SCHEDULED,
+                        event.getId(), 1, event.getAttemptCount(), exception);
                 log.warn("Kafka outbox publish failed. eventId={}, attempt={}, retryAt={}", event.getId(), event.getAttemptCount(), nextRetryAt, exception);
                 return DispatchResult.failed(processedCount, nextRetryAt);
             }

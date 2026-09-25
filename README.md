@@ -479,6 +479,8 @@ STUN만으로는 대칭 NAT, 회사/통신사 방화벽 등 일부 네트워크�
 
 ## 운영 및 장애 대응
 
+- [Kafka · Redis 이벤트 로그](docs/integration-event-logs.md): 관리자 전용 발행·수신 결과 조회, 실패·재시도 추적, 최근 7일 보관.
+
 ### 관리자 시스템 상태
 
 `GET /api/admin/system/status`는 다음 항목을 제공합니다.

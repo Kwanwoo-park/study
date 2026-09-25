@@ -51,4 +51,5 @@ application-real.properties
 # Portfolio PDF renderer dependencies and local QA outputs.
 /tools/portfolio-pdf/node_modules/
 /tmp/pdfs/
+/tmp/event-logs/
 /output/pdf/

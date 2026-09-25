@@ -531,10 +531,10 @@ function fnSystemStatusDraw(data) {
         ], data.cpu.systemPercent),
         createMetricCard('RAM', data.memory.usedPercent + '%', [
             formatBytes(data.memory.usedBytes) + ' / ' + formatBytes(data.memory.totalBytes)
-        ], data.memory.usedPercent),
+        ], data.memory.usedPercent, () => openSystemDetails('processes')),
         createMetricCard('Disk', data.disk.usedPercent + '%', [
             formatBytes(data.disk.usedBytes) + ' / ' + formatBytes(data.disk.totalBytes)
-        ], data.disk.usedPercent),
+        ], data.disk.usedPercent, () => openSystemDetails('disk')),
         createMetricCard('JVM Heap', data.jvm.heapUsedPercent + '%', [
             formatBytes(data.jvm.heapUsedBytes) + ' / ' + formatBytes(data.jvm.heapMaxBytes)
         ], data.jvm.heapUsedPercent),
@@ -551,13 +551,19 @@ function fnSystemStatusDraw(data) {
     );
 }
 
-function createMetricCard(title, value, details, percent) {
-    const card = document.createElement('article');
+function createMetricCard(title, value, details, percent, onClick) {
+    const card = document.createElement(onClick ? 'button' : 'article');
     const titleEl = document.createElement('span');
     const valueEl = document.createElement('strong');
     const detailList = document.createElement('div');
 
     card.className = 'admin-system-card';
+    if (onClick) {
+        card.type = 'button';
+        card.classList.add('admin-system-card-action');
+        card.setAttribute('aria-label', `${title} 상세 보기`);
+        card.addEventListener('click', onClick);
+    }
     titleEl.className = 'admin-system-title';
     valueEl.className = 'admin-system-value';
     detailList.className = 'admin-system-details';
