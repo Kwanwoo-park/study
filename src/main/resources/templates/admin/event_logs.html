@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Kafka · Redis 이벤트 로그 · 관리자</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/admin/event-logs.css?v=20260925">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<main class="container event-log-page">
+  <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
+  <header class="event-log-heading">
+    <div><small>ADMIN · EVENT HISTORY</small><h1>Kafka · Redis 이벤트 로그</h1><p>채팅·알림의 발행과 처리 결과를 기록순으로 확인합니다.</p></div>
+    <button type="button" class="btn btn-outline-primary" onclick="location.replace('/admin/administrator')">관리자 홈</button>
+  </header>
+  <section class="event-log-panel" aria-label="이벤트 조회">
+    <div class="event-log-filters">
+      <label>시스템<select id="event-broker"><option value="">전체</option><option>KAFKA</option><option>REDIS</option></select></label>
+      <label>처리 단계<select id="event-operation"><option value="">전체</option><option value="QUEUE">발행 대기열</option><option value="PUBLISH">발행</option><option value="CONSUME">수신 처리</option><option value="CONSUMER_RETRY">소비자 오류 처리</option></select></label>
+      <label>결과<select id="event-outcome"><option value="">전체</option><option value="SUCCESS">성공</option><option value="FAILED">실패</option><option value="RETRY_SCHEDULED">재시도 예정</option><option value="DEAD_LETTER">Outbox 최종 실패</option><option value="DISCARDED">소비자 처리 포기</option><option value="NO_SUBSCRIBERS">Redis 구독자 없음</option><option value="QUEUED">발행 대기</option><option value="SKIPPED">건너뜀</option></select></label>
+      <label>기간<select id="event-hours"><option value="1">최근 1시간</option><option value="24" selected>최근 24시간</option><option value="72">최근 3일</option><option value="168">최근 7일</option><option value="720">보관 기간 전체</option></select></label>
+    </div>
+    <div class="event-log-tools">
+      <label><input id="event-auto" type="checkbox"> 10초마다 최신 기록 갱신</label>
+      <button id="event-refresh" type="button" class="btn btn-primary">새로고침</button>
+    </div>
+    <p class="event-log-note">메시지 본문·토큰·이메일·예외 원문은 저장하지 않습니다. 성공은 해당 단계의 처리 완료이며, 사용자의 실제 수신·읽음을 보장하지 않습니다.</p>
+    <p id="event-diagnostics" class="event-log-note"></p>
+    <p id="event-status" role="status" aria-live="polite">불러오는 중…</p>
+    <div id="event-list" aria-busy="true"></div>
+    <nav class="event-log-pagination" aria-label="이벤트 로그 페이지">
+      <button id="event-prev" type="button" class="btn btn-outline-primary" disabled>이전</button>
+      <span id="event-page">1 페이지</span>
+      <button id="event-next" type="button" class="btn btn-outline-primary" disabled>다음</button>
+    </nav>
+  </section>
+</main>
+<script src="/js/admin/event-logs.js?v=20260925"></script>
+</body>
+</html>
