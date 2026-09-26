@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.entity.ChatMessageStatus;
 import spring.study.chat.repository.ChatMessageRepository;
 import spring.study.chat.repository.ChatRoomRepository;
 import spring.study.member.entity.Member;
@@ -36,6 +37,11 @@ public class ChatMessageBatchService {
         if (messages == null || messages.isEmpty()) {
             return List.of();
         }
+        for (ChatMessageRequestDto message : messages) {
+            if (message == null || message.getId() == null || message.getId().isBlank()
+                    || message.getRoomId() == null || message.getEmail() == null || message.getType() == null)
+                throw new IllegalArgumentException("Invalid chat event");
+        }
 
         Map<String, ChatRoom> rooms = chatRoomRepository.findByRoomIdIn(
                         messages.stream()
@@ -52,19 +58,25 @@ public class ChatMessageBatchService {
                 ).stream()
                 .collect(Collectors.toMap(Member::getEmail, Function.identity()));
 
-        Set<String> existingIds = new HashSet<>();
+        Map<String, ChatMessage> existing = new HashMap<>();
         chatMessageRepository.findAllById(
                         messages.stream()
                                 .map(ChatMessageRequestDto::getId)
                                 .filter(Objects::nonNull)
                                 .toList()
-                ).forEach(message -> existingIds.add(message.getId()));
+                ).forEach(message -> existing.put(message.getId(), message));
 
         List<ChatMessageRequestDto> validMessages = new ArrayList<>();
         List<ChatMessage> newMessages = new ArrayList<>();
-        Set<String> scheduledIds = new HashSet<>(existingIds);
+        Set<String> scheduledIds = new HashSet<>(existing.keySet());
+        Set<String> deliveredIds = new HashSet<>();
 
         for (ChatMessageRequestDto message : messages) {
+            if (!deliveredIds.add(message.getId())) continue;
+            ChatMessage saved = existing.get(message.getId());
+            // Old/replayed creation events must not reveal a subsequently deleted or edited message.
+            if (saved != null && (saved.isEdited() || saved.getStatus() == ChatMessageStatus.DELETED_FOR_ALL)) continue;
+            if (saved != null) message.setMessage(saved.getMessage());
             ChatRoom room = rooms.get(message.getRoomId());
             Member member = members.get(message.getEmail());
 

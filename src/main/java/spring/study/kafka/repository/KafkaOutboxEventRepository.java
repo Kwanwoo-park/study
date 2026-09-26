@@ -21,4 +21,8 @@ public interface KafkaOutboxEventRepository extends JpaRepository<KafkaOutboxEve
     long countByDeadLetteredTrue();
     @Transactional(readOnly = true)
     long countByDeadLetteredFalse();
+
+    @Transactional(readOnly = true)
+    @Query("select min(event.createdAt) from KafkaOutboxEvent event where event.deadLettered = false")
+    LocalDateTime findOldestPendingTime();
 }

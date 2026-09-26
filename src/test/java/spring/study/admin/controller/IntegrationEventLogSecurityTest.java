@@ -25,6 +25,10 @@ import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
 import java.util.List;
+import java.time.LocalDateTime;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import static spring.study.admin.entity.IntegrationEventLog.*;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -49,6 +53,8 @@ class IntegrationEventLogSecurityTest {
     void directApiRequiresAdminRegardlessOfReferer() throws Exception {
         mvc.perform(get("/api/admin/event-logs").header("Referer", "/admin/administrator")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/admin/event-logs").with(user(member(Role.USER)))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/admin/event-logs/12").header("Referer", "/admin/event-logs")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/admin/event-logs/12").with(user(member(Role.USER)))).andExpect(status().isForbidden());
         verifyNoInteractions(service);
     }
     @Test
@@ -69,6 +75,27 @@ class IntegrationEventLogSecurityTest {
     void invalidEnumNeverReachesQueryService() throws Exception {
         mvc.perform(get("/api/admin/event-logs?broker=bad").with(user(member(Role.ADMIN)))).andExpect(status().isBadRequest());
         verifyNoInteractions(service);
+    }
+
+    @Test
+    void adminCanReadDetailWithoutCachingOrPayload() throws Exception {
+        when(service.findById(12L)).thenReturn(new IntegrationEventLogResponse.Item(12L, LocalDateTime.now(), "node-1",
+                Broker.KAFKA, "topic", Route.CHAT, Operation.PUBLISH, Outcome.FAILED, 55L, 1, 2, null, "java.lang.IllegalStateException"));
+        mvc.perform(get("/api/admin/event-logs/12").with(user(member(Role.ADMIN))))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("id").value(12)).andExpect(jsonPath("referenceId").value(55))
+                .andExpect(jsonPath("errorType").value("java.lang.IllegalStateException"))
+                .andExpect(jsonPath("payload").doesNotExist()).andExpect(jsonPath("stackTrace").doesNotExist());
+    }
+
+    @Test
+    void missingDetailPreservesNotFoundStatusAndInvalidIdIsRejected() throws Exception {
+        when(service.findById(12L)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "기록이 없습니다."));
+        mvc.perform(get("/api/admin/event-logs/12").with(user(member(Role.ADMIN))))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("message").value("기록이 없습니다."))
+                .andExpect(header().string("Cache-Control", "no-store"));
+        mvc.perform(get("/api/admin/event-logs/not-a-number").with(user(member(Role.ADMIN)))).andExpect(status().isBadRequest());
+        verify(service).findById(12L); verifyNoMoreInteractions(service);
     }
 
     @Configuration

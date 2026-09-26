@@ -23,6 +23,16 @@ public class IntegrationEventLogQueryService {
     private final IntegrationEventLogService recorder;
 
     @Transactional(readOnly = true)
+    public Item findById(long id) {
+        if (id < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "로그 ID를 확인해 주세요");
+        LocalDateTime since = LocalDateTime.now().minusDays(recorder.retentionDays());
+        return repository.findById(id)
+                .filter(log -> !log.getOccurredAt().isBefore(since))
+                .map(Item::new)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "기록이 없거나 보관 기간이 지나 삭제되었습니다."));
+    }
+
+    @Transactional(readOnly = true)
     public IntegrationEventLogResponse find(Broker broker, Operation operation, Outcome outcome, Long beforeId, int hours) {
         if ((beforeId != null && beforeId < 1) || hours < 1 || hours > 720) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "조회 기간과 페이지를 확인해 주세요");

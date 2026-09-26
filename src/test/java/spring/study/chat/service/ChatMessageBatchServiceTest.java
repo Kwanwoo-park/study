@@ -109,6 +109,21 @@ class ChatMessageBatchServiceTest {
                 .build();
     }
 
+    @Test
+    void replayedCreationCannotExposeDeletedOrEditedContent() {
+        ChatRoom room = ChatRoom.builder().id(1L).roomId("room-1").build();
+        Member member = createMember();
+        ChatMessage deleted = ChatMessage.builder().id("deleted").message("old secret").room(room).member(member).type(MessageType.TALK).build();
+        deleted.deleteForAll();
+        ChatMessage edited = ChatMessage.builder().id("edited").message("edited value").room(room).member(member).type(MessageType.TALK).build();
+        edited.edit("new value");
+        when(chatRoomRepository.findByRoomIdIn(any())).thenReturn(List.of(room));
+        when(memberRepository.findByEmailIn(any())).thenReturn(List.of(member));
+        when(chatMessageRepository.findAllById(any())).thenReturn(List.of(deleted, edited));
+        assertThat(service.saveBatch(List.of(createMessage("deleted", "old secret", LocalDateTime.now()),
+                createMessage("edited", "old value", LocalDateTime.now())))).isEmpty();
+    }
+
     private Member createMember() {
         return Member.builder()
                 .id(1L)

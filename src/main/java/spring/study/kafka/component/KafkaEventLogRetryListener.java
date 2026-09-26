@@ -19,7 +19,7 @@ public class KafkaEventLogRetryListener implements RetryListener {
     }
     @Override
     public void recovered(ConsumerRecord<?, ?> record, Exception exception) {
-        record(record, exception, null, Outcome.DISCARDED);
+        record(record, exception, null, Outcome.DLT_PUBLISHED);
     }
     @Override
     public void recoveryFailed(ConsumerRecord<?, ?> record, Exception original, Exception failure) {
@@ -34,7 +34,7 @@ public class KafkaEventLogRetryListener implements RetryListener {
     }
     @Override
     public void recovered(ConsumerRecords<?, ?> records, Exception exception) {
-        batch(records, exception, null, Outcome.DISCARDED);
+        batch(records, exception, null, Outcome.DLT_PUBLISHED);
     }
     @Override
     public void recoveryFailed(ConsumerRecords<?, ?> records, Exception original, Exception failure) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import spring.study.kafka.entity.KafkaOutboxEvent;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.notification.repository.NotificationRepository;
@@ -32,10 +33,10 @@ class KafkaOutboxDispatcherTest {
         KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(repository, mock(NotificationRepository.class), kafka, new ObjectMapper(), logs);
         KafkaOutboxEvent event = new KafkaOutboxEvent("topic", "room", KafkaOutboxEvent.PayloadType.CHAT_MESSAGE, "{}");
         when(repository.findNextBatchForUpdate(any(), any())).thenReturn(List.of(event));
-        when(kafka.send(anyString(), anyString(), any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(kafka.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.completedFuture(null));
         assertFalse(dispatcher.publishPendingEvents().failed());
         var order = org.mockito.Mockito.inOrder(kafka, logs, repository);
-        order.verify(kafka).send(anyString(), anyString(), any());
+        order.verify(kafka).send(any(ProducerRecord.class));
         order.verify(logs).record(Route.CHAT, Operation.PUBLISH, Outcome.SUCCESS, null, 1, 1, null, null);
         order.verify(repository).delete(event);
     }
@@ -50,7 +51,7 @@ class KafkaOutboxDispatcherTest {
         for (int i = 0; i < 9; i++) event.recordFailure("failed", LocalDateTime.now());
         when(repository.findNextBatchForUpdate(any(), any())).thenReturn(List.of(event));
         RuntimeException failure = new IllegalStateException("Kafka down");
-        when(kafka.send(anyString(), anyString(), any())).thenThrow(failure);
+        when(kafka.send(any(ProducerRecord.class))).thenThrow(failure);
         assertTrue(dispatcher.publishPendingEvents().failed());
         verify(logs).afterCommit(Route.CHAT, Operation.PUBLISH, Outcome.DEAD_LETTER, null, 1, 10, failure);
     }
@@ -66,7 +67,7 @@ class KafkaOutboxDispatcherTest {
         LocalDateTime beforeDispatch = LocalDateTime.now();
         when(repository.findNextBatchForUpdate(any(LocalDateTime.class), any(Pageable.class))).thenReturn(List.of(event));
         IllegalStateException failure = new IllegalStateException("Kafka unavailable");
-        when(kafkaTemplate.send(anyString(), anyString(), any())).thenThrow(failure);
+        when(kafkaTemplate.send(any(ProducerRecord.class))).thenThrow(failure);
 
         KafkaOutboxDispatcher.DispatchResult result = dispatcher.publishPendingEvents();
 

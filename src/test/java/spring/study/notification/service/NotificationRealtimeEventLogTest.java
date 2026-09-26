@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.connection.DefaultMessage;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
+import spring.study.kafka.config.KafkaOperationsProperties;
 import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.common.service.EmitterService;
 import spring.study.member.entity.Member;
@@ -24,7 +26,7 @@ class NotificationRealtimeEventLogTest {
     private final RedisTemplate<String, String> redis = mock(RedisTemplate.class);
     private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
     private final IntegrationEventLogService logs = mock(IntegrationEventLogService.class);
-    private final NotificationRealtimePublisher publisher = new NotificationRealtimePublisher(redis, mapper, logs);
+    private final NotificationRealtimePublisher publisher = new NotificationRealtimePublisher(redis, mapper, logs, new KafkaOperationsProperties());
 
     private Notification notification() {
         Notification notification = new Notification();
@@ -35,7 +37,7 @@ class NotificationRealtimeEventLogTest {
 
     @Test
     void recordsRedisSubscriberCountAndZeroSubscribersSeparately() {
-        when(redis.convertAndSend(eq(NotificationRealtimePublisher.CHANNEL), anyString())).thenReturn(0L, 2L);
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenReturn(0L, 2L);
         publisher.publish(notification()); publisher.publish(notification());
         verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.NO_SUBSCRIBERS, 9L, 1, null, 0L, null);
         verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.SUCCESS, 9L, 1, null, 2L, null);
@@ -44,9 +46,16 @@ class NotificationRealtimeEventLogTest {
     @Test
     void publishFailureStillPropagatesSoKafkaCanRetry() {
         RuntimeException failure = new IllegalStateException("Redis unavailable");
-        when(redis.convertAndSend(anyString(), anyString())).thenThrow(failure);
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenThrow(failure);
         assertThatThrownBy(() -> publisher.publish(notification())).isSameAs(failure);
         verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.FAILED, 9L, 1, failure);
+    }
+
+    @Test
+    void duplicateRedisDeliveryIsLoggedWithoutAnotherSuccessfulPublish() {
+        when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenReturn(-1L);
+        publisher.publish(notification(), "outbox-10");
+        verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.DUPLICATE, 9L, 1, null, null, null);
     }
 
     @Test

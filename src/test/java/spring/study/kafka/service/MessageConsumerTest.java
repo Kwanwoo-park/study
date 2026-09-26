@@ -2,7 +2,8 @@ package spring.study.kafka.service;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import spring.study.chat.service.ChatRealtimePublisher;
+import spring.study.notification.repository.NotificationRepository;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageBatchService;
@@ -16,14 +17,14 @@ import java.util.List;
 
 
 class MessageConsumerTest {
-    private final SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
+    private final ChatRealtimePublisher messagingTemplate = mock(ChatRealtimePublisher.class);
     private final NotificationRealtimePublisher notificationRealtimePublisher = mock(NotificationRealtimePublisher.class);
     private final ChatMessageBatchService batchService = mock(ChatMessageBatchService.class);
     private final IntegrationEventLogService logs = mock(IntegrationEventLogService.class);
     private final MessageConsumer consumer = new MessageConsumer(
             messagingTemplate,
             notificationRealtimePublisher,
-            batchService, logs
+            batchService, logs, mock(NotificationRepository.class)
     );
 
     @Test
@@ -42,7 +43,7 @@ class MessageConsumerTest {
 
         InOrder inOrder = inOrder(batchService, messagingTemplate);
         inOrder.verify(batchService).saveBatch(batch);
-        inOrder.verify(messagingTemplate).convertAndSend("/sub/chat/room/room-1", message);
+        inOrder.verify(messagingTemplate).publish(message);
         verify(logs).record(Route.CHAT, Operation.CONSUME, Outcome.SUCCESS, null, 1, null);
     }
 

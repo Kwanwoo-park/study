@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
-  <link rel="stylesheet" href="/css/admin/event-logs.css?v=20260925">
+  <link rel="stylesheet" href="/css/admin/event-logs.css?v=20260926-detail">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
@@ -15,12 +15,13 @@
   <header class="event-log-heading">
     <div><small>ADMIN · EVENT HISTORY</small><h1>Kafka · Redis 이벤트 로그</h1><p>채팅·알림의 발행과 처리 결과를 기록순으로 확인합니다.</p></div>
     <button type="button" class="btn btn-outline-primary" onclick="location.replace('/admin/administrator')">관리자 홈</button>
+    <button type="button" class="btn btn-outline-primary" onclick="location.replace('/admin/kafka')">Kafka 운영 · 실패 재처리</button>
   </header>
   <section class="event-log-panel" aria-label="이벤트 조회">
     <div class="event-log-filters">
       <label>시스템<select id="event-broker"><option value="">전체</option><option>KAFKA</option><option>REDIS</option></select></label>
-      <label>처리 단계<select id="event-operation"><option value="">전체</option><option value="QUEUE">발행 대기열</option><option value="PUBLISH">발행</option><option value="CONSUME">수신 처리</option><option value="CONSUMER_RETRY">소비자 오류 처리</option></select></label>
-      <label>결과<select id="event-outcome"><option value="">전체</option><option value="SUCCESS">성공</option><option value="FAILED">실패</option><option value="RETRY_SCHEDULED">재시도 예정</option><option value="DEAD_LETTER">Outbox 최종 실패</option><option value="DISCARDED">소비자 처리 포기</option><option value="NO_SUBSCRIBERS">Redis 구독자 없음</option><option value="QUEUED">발행 대기</option><option value="SKIPPED">건너뜀</option></select></label>
+      <label>처리 단계<select id="event-operation"><option value="">전체</option><option value="QUEUE">발행 대기열</option><option value="PUBLISH">발행</option><option value="CONSUME">수신 처리</option><option value="CONSUMER_RETRY">소비자 오류 처리</option><option value="REPLAY">실패 이벤트 재발행</option></select></label>
+      <label>결과<select id="event-outcome"><option value="">전체</option><option value="SUCCESS">성공</option><option value="FAILED">실패</option><option value="RETRY_SCHEDULED">재시도 예정</option><option value="DEAD_LETTER">Outbox 최종 실패</option><option value="DLT_PUBLISHED">소비 실패 토픽 보관</option><option value="DUPLICATE">중복 전달 방지</option><option value="DISCARDED">소비자 처리 포기 (이전 정책)</option><option value="NO_SUBSCRIBERS">Redis 구독자 없음</option><option value="QUEUED">발행 대기</option><option value="SKIPPED">건너뜀</option></select></label>
       <label>기간<select id="event-hours"><option value="1">최근 1시간</option><option value="24" selected>최근 24시간</option><option value="72">최근 3일</option><option value="168">최근 7일</option><option value="720">보관 기간 전체</option></select></label>
     </div>
     <div class="event-log-tools">
@@ -30,6 +31,7 @@
     <p class="event-log-note">메시지 본문·토큰·이메일·예외 원문은 저장하지 않습니다. 성공은 해당 단계의 처리 완료이며, 사용자의 실제 수신·읽음을 보장하지 않습니다.</p>
     <p id="event-diagnostics" class="event-log-note"></p>
     <p id="event-status" role="status" aria-live="polite">불러오는 중…</p>
+    <p class="event-log-note">각 기록을 선택하면 저장된 상세 정보와 처리 결과의 의미를 확인할 수 있습니다.</p>
     <div id="event-list" aria-busy="true"></div>
     <nav class="event-log-pagination" aria-label="이벤트 로그 페이지">
       <button id="event-prev" type="button" class="btn btn-outline-primary" disabled>이전</button>
@@ -38,6 +40,18 @@
     </nav>
   </section>
 </main>
-<script src="/js/admin/event-logs.js?v=20260925"></script>
+<dialog id="event-detail" class="event-log-detail" aria-labelledby="event-detail-title" aria-describedby="event-detail-note">
+  <header class="event-log-detail-heading">
+    <h2 id="event-detail-title">이벤트 로그 상세</h2>
+    <button id="event-detail-close" type="button" class="btn btn-outline-secondary" autofocus>닫기</button>
+  </header>
+  <div class="event-log-detail-body">
+    <p id="event-detail-status" role="status" aria-live="polite"></p>
+    <button id="event-detail-retry" type="button" class="btn btn-outline-primary" hidden>다시 불러오기</button>
+    <div id="event-detail-content" aria-busy="false"></div>
+    <p id="event-detail-note" class="event-log-note">저장된 메타데이터만 표시합니다. 메시지 본문·토큰·이메일·Kafka key/header·예외 원문과 스택 추적은 저장하지 않습니다. 성공은 해당 단계의 완료이며 실제 사용자 수신·읽음을 보장하지 않습니다.</p>
+  </div>
+</dialog>
+<script src="/js/admin/event-logs.js?v=20260926-detail"></script>
 </body>
 </html>

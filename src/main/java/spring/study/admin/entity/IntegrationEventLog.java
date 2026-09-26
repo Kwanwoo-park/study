@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 })
 public class IntegrationEventLog {
     public enum Broker { KAFKA, REDIS }
-    public enum Operation { QUEUE, PUBLISH, CONSUME, CONSUMER_RETRY }
-    public enum Outcome { QUEUED, SUCCESS, FAILED, RETRY_SCHEDULED, DEAD_LETTER, SKIPPED, NO_SUBSCRIBERS, DISCARDED }
+    public enum Operation { QUEUE, PUBLISH, CONSUME, CONSUMER_RETRY, REPLAY }
+    public enum Outcome { QUEUED, SUCCESS, FAILED, RETRY_SCHEDULED, DEAD_LETTER, DLT_PUBLISHED, DUPLICATE, SKIPPED, NO_SUBSCRIBERS, DISCARDED }
     public enum Route {
         CHAT(Broker.KAFKA, "topic"), NOTIFICATION(Broker.KAFKA, "topic2"),
         REALTIME_NOTIFICATION(Broker.REDIS, "notification-events"), UNKNOWN_KAFKA(Broker.KAFKA, "unknown");

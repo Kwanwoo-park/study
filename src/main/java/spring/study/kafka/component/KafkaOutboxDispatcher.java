@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import spring.study.kafka.config.KafkaTopics;
+import java.nio.charset.StandardCharsets;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.chat.dto.ChatMessageRequestDto;
@@ -51,7 +54,9 @@ public class KafkaOutboxDispatcher {
                     processedCount++;
                     continue;
                 }
-                kafkaTemplate.send(event.getTopic(), event.getEventKey(), payload)
+                ProducerRecord<String, Object> record = new ProducerRecord<>(event.getTopic(), event.getEventKey(), payload);
+                record.headers().add(KafkaTopics.EVENT_ID_HEADER, ("outbox-" + event.getId()).getBytes(StandardCharsets.UTF_8));
+                kafkaTemplate.send(record)
                         .get(Duration.ofSeconds(10).toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
                 eventLogs.record(Route.kafka(event.getTopic()), Operation.PUBLISH, Outcome.SUCCESS, event.getId(), 1, event.getAttemptCount() + 1, null, null);
                 outboxRepository.delete(event);

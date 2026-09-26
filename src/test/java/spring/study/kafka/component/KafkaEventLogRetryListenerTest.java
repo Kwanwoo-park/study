@@ -22,7 +22,7 @@ class KafkaEventLogRetryListenerTest {
         listener.failedDelivery(record, error, 3);
         listener.recovered(record, error);
         verify(logs).record(Route.NOTIFICATION, Operation.CONSUMER_RETRY, Outcome.FAILED, null, 1, 3, null, error);
-        verify(logs).record(Route.NOTIFICATION, Operation.CONSUMER_RETRY, Outcome.DISCARDED, null, 1, null, null, error);
+        verify(logs).record(Route.NOTIFICATION, Operation.CONSUMER_RETRY, Outcome.DLT_PUBLISHED, null, 1, null, null, error);
     }
     @Test
     void batchErrorIsOneMetadataRecordWithBatchSize() {

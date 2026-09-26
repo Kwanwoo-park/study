@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kafka 운영 · 관리자</title>
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/admin/event-logs.css?v=20260925">
+  <link rel="stylesheet" href="/css/admin/kafka-operations.css?v=20260925">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<main class="container event-log-page">
+  <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
+  <header class="event-log-heading">
+    <div><small>ADMIN · KAFKA</small><h1>Kafka 운영</h1><p>처리 지연을 확인하고 실패한 이벤트를 재발행합니다.</p></div>
+    <button type="button" class="btn btn-outline-primary" onclick="location.replace('/admin/event-logs')">이벤트 로그</button>
+  </header>
+  <section class="event-log-panel">
+    <div class="event-log-tools"><h2>처리 현황</h2><button id="kafka-refresh" type="button" class="btn btn-primary">새로고침</button></div>
+    <p id="kafka-status" role="status" aria-live="polite">불러오는 중…</p>
+    <div id="kafka-summary" class="kafka-summary"></div>
+    <ul id="kafka-warnings" class="kafka-warnings"></ul>
+    <details open><summary>토픽과 보관 정책</summary><div id="kafka-topics" class="kafka-table-scroll"></div></details>
+    <details><summary>파티션별 소비 위치</summary><div id="kafka-lags" class="kafka-table-scroll"></div></details>
+  </section>
+  <section class="event-log-panel">
+    <div class="event-log-tools"><h2>소비 실패 기록</h2><label>상태 <select id="kafka-filter"><option value="">전체</option><option value="NEW">미처리</option><option value="REPLAY_PENDING">재발행 대기</option><option value="REPLAYED">재발행됨</option><option value="REPLAY_FAILED">재발행 실패</option></select></label></div>
+    <p class="event-log-note">재발행은 원래 발생 순서와 다르게 처리될 수 있습니다. ‘재발행됨’은 Kafka 발행 완료를 뜻하며, 이후 소비가 실패하면 새 실패 기록이 생성됩니다.</p>
+    <p id="kafka-list-status" role="status" aria-live="polite"></p>
+    <div id="kafka-dead-letters"></div>
+    <nav class="event-log-pagination" aria-label="실패 기록 페이지">
+      <button id="kafka-prev" type="button" class="btn btn-outline-primary" disabled>이전</button>
+      <span id="kafka-page">1 페이지</span>
+      <button id="kafka-next" type="button" class="btn btn-outline-primary" disabled>다음</button>
+    </nav>
+  </section>
+</main>
+<script src="/js/admin/kafka-operations.js?v=20260925"></script>
+</body>
+</html>

@@ -36,7 +36,20 @@ public class IntegrationEventLogController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.find(broker, operation, outcome, beforeId, hours));
     }
 
-    @ExceptionHandler({MethodArgumentTypeMismatchException.class, ResponseStatusException.class})
+    @GetMapping("/api/admin/event-logs/{id}")
+    @ResponseBody
+    public ResponseEntity<IntegrationEventLogResponse.Item> detail(@PathVariable long id) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.findById(id));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    @ResponseBody
+    public ResponseEntity<?> requestError(ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode()).cacheControl(CacheControl.noStore())
+                .body(Map.of("message", error.getReason() == null ? "조회 조건을 확인해 주세요" : error.getReason()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseBody
     public ResponseEntity<?> invalidFilter() {
         return ResponseEntity.badRequest().cacheControl(CacheControl.noStore()).body(Map.of("message", "조회 조건을 확인해 주세요"));

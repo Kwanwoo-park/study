@@ -93,6 +93,10 @@ Web STOMP / Mobile REST
 - Hibernate JDBC batch와 insert 순서 정렬을 사용해 메시지 저장 비용을 줄입니다.
 - 이미 저장된 메시지 ID와 같은 poll 안의 중복 ID는 다시 insert하지 않습니다.
 - MySQL 저장 트랜잭션을 마친 결과만 WebSocket 방 구독자에게 전달합니다.
+- Consumer 실패는 재시도 후 Kafka DLT에 보관하며 관리자 `/admin/kafka`에서 지연 확인·실패 재발행을 지원합니다.
+- 채팅 ID와 알림 이벤트 ID로 실시간 중복 전달을 줄이고, 재발행 시 삭제·수정된 채팅이나 오래된 알림 상태를 다시 노출하지 않습니다.
+
+토픽 생성 정책, 재발행 상태, 중복 방지의 범위와 배포 설정은 [Kafka 운영 문서](docs/kafka-operations.md)를 참고하세요.
 
 모바일은 `POST /api/chat/send`, 웹은 STOMP `/api/chat/message/send`를 사용하지만 이후 outbox/Kafka 처리 흐름은 같습니다.
 
