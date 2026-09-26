@@ -5,14 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import spring.study.account.dto.AccountResponseDto;
-import spring.study.account.dto.AccountTranDto;
 import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountStatus;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
-import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.entity.AccountType;
 import spring.study.account.repository.AccountRepository;
 import spring.study.account.repository.AccountTransactionRepository;
@@ -26,7 +24,6 @@ import java.time.LocalDate;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -37,31 +34,13 @@ public class AccountService {
     private final NotificationService notificationService;
 
     @Transactional
-    public Account createAccount(Member member) {
-        AccountCreateRequestDto requestDto = new AccountCreateRequestDto();
-        requestDto.setAccountType(AccountType.DEPOSIT_WITHDRAWAL);
-
-        return createAccount(member, requestDto);
-    }
-
-    @Transactional
-    public Account createAccount(Member member, AccountType accountType) {
-        AccountCreateRequestDto requestDto = new AccountCreateRequestDto();
-        requestDto.setAccountType(accountType);
-
-        return createAccount(member, requestDto);
-    }
-
-    @Transactional
-    public Account createAccount(Member member, AccountCreateRequestDto requestDto) {
+    public Account createAccount(Member member, AccountCreateRequestDto requestDto, Account source) {
         AccountType resolvedType = requestDto.getAccountType() == null ? AccountType.DEPOSIT_WITHDRAWAL : requestDto.getAccountType();
 
         if (resolvedType.isInterestBearing() && !accountRepository.existsByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE)) {
             throw new IllegalArgumentException("예적금 계좌를 만들려면 먼저 활성 상태의 입출금 계좌가 필요합니다");
         }
 
-        Account savingsSourceAccount = resolvedType == AccountType.INSTALLMENT_SAVINGS ? resolveSavingsSourceAccount(member, requestDto) : null;
-        Account timeDepositSourceAccount = resolvedType == AccountType.TIME_DEPOSIT ? resolveTimeDepositSourceAccount(member, requestDto) : null;
         String accountFirst = "919";
         String accountLast = createAccountLast();
         String accountNumber = accountFirst + accountLast;
@@ -80,16 +59,16 @@ public class AccountService {
                 .build();
 
         if (resolvedType == AccountType.INSTALLMENT_SAVINGS)
-            account.configureSavingsAutoTransfer(savingsSourceAccount, requestDto.getMonthlySavingsAmount(), requestDto.getMonthlySavingsDay(), LocalDate.now());
+            account.configureSavingsAutoTransfer(source, requestDto.getMonthlySavingsAmount(), requestDto.getMonthlySavingsDay(), LocalDate.now());
         else if (resolvedType == AccountType.TIME_DEPOSIT)
             account.configureTimeDepositTerm(requestDto.getMaturityMonths());
 
         Account savedAccount = accountRepository.save(account);
 
         if (resolvedType == AccountType.INSTALLMENT_SAVINGS)
-            openSavingsAccount(savingsSourceAccount, savedAccount, requestDto.getMonthlySavingsAmount());
+            openSavingsAccount(source, savedAccount, requestDto.getMonthlySavingsAmount());
         else if (resolvedType == AccountType.TIME_DEPOSIT)
-            openTimeDeposit(timeDepositSourceAccount, savedAccount, requestDto.getTimeDepositAmount());
+            openTimeDeposit(source, savedAccount, requestDto.getTimeDepositAmount());
 
         return savedAccount;
     }
@@ -105,6 +84,11 @@ public class AccountService {
         return accountRepository.findByAccountForUpdate(accountNum).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 계좌입니다"
         ));
+    }
+
+    private Account findForUpdate(String accountNumber) {
+        return accountRepository.findByAccountForUpdate(accountNumber)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
     }
 
     @Transactional(readOnly = true)
@@ -167,67 +151,18 @@ public class AccountService {
     }
 
     @Transactional
-    public void subAmount(String accountNum, Long amount) {
-        Account account = findByAccount(accountNum);
-
-        validateOutgoingTransaction(account);
-        prepareBalanceChange(account, LocalDateTime.now());
-        account.subAmount(amount);
-    }
-
-    @Transactional
-    public AccountSettlementResult terminateInterestAccount(String accountNumber, String settlementAccountNumber, Member member) {
-        if (settlementAccountNumber == null || settlementAccountNumber.isBlank()) {
-            throw new IllegalArgumentException("정산받을 입출금 계좌를 선택해주세요");
-        }
-
-        Account source = findForUpdate(accountNumber);
-        Account settlementAccount = findForUpdate(settlementAccountNumber);
+    public AccountSettlementResult terminateInterestAccount(Account source, Account settlementAccount, Member member,
+                                                            boolean matured, long principal, long interest) {
         validateSettlement(source, settlementAccount, member);
 
-        LocalDateTime terminationTime = LocalDateTime.now();
-        boolean matured = source.getMaturityAt() != null && !terminationTime.isBefore(source.getMaturityAt());
-        long principal = source.getAmount();
-        long interest = source.terminateAndGetInterest(terminationTime);
         long settlementAmount = Math.addExact(principal, interest);
 
         source.clearAmount();
         settlementAccount.addAmount(principal);
-        AccountTransaction principalTransaction = accountTransactionRepository.save(AccountTransaction.builder()
-                .transactionType(AccountTransactionType.TERMINATION)
-                .transactionStatus(AccountTransactionStatus.COMPLETED)
-                .amount(principal)
-                .fee(0L)
-                .withdrawalAccount(source)
-                .depositAccount(settlementAccount)
-                .balanceAfterTransaction(settlementAccount.getAmount())
-                .memo(matured ? "만기 원금 정산" : "중도 해지 원금 정산")
-                .counterpartyName(source.getName())
-                .bankName("Kwanwoo site account")
-                .transactionTime(terminationTime)
-                .build());
-
-        AccountTransaction interestTransaction = null;
 
         if (interest > 0L) {
             settlementAccount.addAmount(interest);
-            interestTransaction = accountTransactionRepository.save(AccountTransaction.builder()
-                    .transactionType(AccountTransactionType.INTEREST)
-                    .transactionStatus(AccountTransactionStatus.COMPLETED)
-                    .amount(interest)
-                    .fee(0L)
-                    .depositAccount(settlementAccount)
-                    .balanceAfterTransaction(settlementAccount.getAmount())
-                    .memo(matured ? "만기 이자" : "중도 해지 이자")
-                    .counterpartyName(source.getName())
-                    .bankName("Kwanwoo site account")
-                    .transactionTime(terminationTime)
-                    .build());
         }
-
-        notifyTransaction(principalTransaction);
-
-        if (interestTransaction != null) notifyTransaction(interestTransaction);
 
         return new AccountSettlementResult(source.getAccount(), settlementAccount.getAccount(), principal, interest, settlementAmount, matured);
     }
@@ -308,11 +243,6 @@ public class AccountService {
         return account.getName() + " 계좌에서 " + amount + "원 " + transactionType + " 거래가 " + status + "되었습니다.";
     }
 
-    private Account findForUpdate(String accountNumber) {
-        return accountRepository.findByAccountForUpdate(accountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
-    }
-
     private void validateActive(Account account) {
         if (account.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("만기 또는 해지된 계좌는 거래할 수 없습니다");
@@ -354,7 +284,7 @@ public class AccountService {
         }
     }
 
-    private Account resolveSavingsSourceAccount(Member member, AccountCreateRequestDto requestDto) {
+    public Account resolveSavingsSourceAccount(Member member, AccountCreateRequestDto requestDto) {
         if (requestDto == null || requestDto.getMonthlySavingsAmount() == null || requestDto.getMonthlySavingsAmount() < 10_000L) {
             throw new IllegalArgumentException("적금 월 납입액은 1만원 이상이어야 합니다");
         } else if (requestDto.getMonthlySavingsDay() == null || requestDto.getMonthlySavingsDay() < 1 || requestDto.getMonthlySavingsDay() > 31) {
@@ -395,7 +325,7 @@ public class AccountService {
         return lockedSource;
     }
 
-    private Account resolveTimeDepositSourceAccount(Member member, AccountCreateRequestDto requestDto) {
+    public Account resolveTimeDepositSourceAccount(Member member, AccountCreateRequestDto requestDto) {
         if (requestDto == null || requestDto.getTimeDepositAmount() == null || requestDto.getTimeDepositAmount() < 10_000L) {
             throw new IllegalArgumentException("예금 금액은 1만원 이상이어야 합니다");
         } else if (requestDto.getMaturityMonths() == null || requestDto.getMaturityMonths() < 1 || requestDto.getMaturityMonths() > 24) {
@@ -433,49 +363,14 @@ public class AccountService {
     }
 
     private void openTimeDeposit(Account source, Account timeDeposit, long amount) {
-        LocalDateTime openingTime = LocalDateTime.now();
-
         source.subAmount(amount);
         timeDeposit.addAmount(amount);
-
-        AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
-                .transactionType(AccountTransactionType.TIME_DEPOSIT_OPENING)
-                .transactionStatus(AccountTransactionStatus.COMPLETED)
-                .amount(amount)
-                .fee(0L)
-                .withdrawalAccount(source)
-                .depositAccount(timeDeposit)
-                .balanceAfterTransaction(source.getAmount())
-                .memo(timeDeposit.getMaturityMonths() + "개월 예금 개설")
-                .counterpartyName(timeDeposit.getName())
-                .bankName("Kwanwoo site account")
-                .transactionTime(openingTime)
-                .build());
-
-        notifyTransaction(transaction);
     }
 
     private void openSavingsAccount(Account source, Account savings, long amount) {
-        LocalDateTime openingTime = LocalDateTime.now();
-
         source.subAmount(amount);
         savings.addAmount(amount);
 
-        AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
-                .transactionType(AccountTransactionType.SAVINGS_PAYMENT)
-                .transactionStatus(AccountTransactionStatus.COMPLETED)
-                .amount(amount)
-                .fee(0L)
-                .withdrawalAccount(source)
-                .depositAccount(savings)
-                .balanceAfterTransaction(source.getAmount())
-                .memo("적금 개설 첫 납입")
-                .counterpartyName(savings.getName())
-                .bankName("Kwanwoo site account")
-                .transactionTime(openingTime)
-                .build());
-
-        savings.completeInitialSavingsPayment(openingTime.toLocalDate());
-        notifyTransaction(transaction);
+        savings.completeInitialSavingsPayment(LocalDateTime.now().toLocalDate());
     }
 }

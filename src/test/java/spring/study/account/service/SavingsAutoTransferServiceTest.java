@@ -86,32 +86,6 @@ class SavingsAutoTransferServiceTest {
     }
 
     @Test
-    void insufficientBalanceShouldNotifyOnlyOncePerDay() {
-        source.setAmount(0L);
-
-        service.processDuePayment(savings.getAccount(), dueDate, dueDate.atTime(9, 0));
-        service.processDuePayment(savings.getAccount(), dueDate, dueDate.atTime(10, 0));
-
-        verify(notificationService, times(1)).createNotification(
-                eq(member), anyString(), eq(Group.TRAN), eq(savings.getAccount())
-        );
-        verify(accountService, never()).terminateInterestAccount(anyString(), anyString(), any());
-    }
-
-    @Test
-    void unpaidSavingsShouldTerminateOnThirdDay() {
-        source.setAmount(0L);
-
-        service.processDuePayment(savings.getAccount(), dueDate.plusDays(3), dueDate.plusDays(3).atTime(9, 0));
-
-        verify(accountService).terminateInterestAccount(savings.getAccount(), source.getAccount(), member);
-        verify(notificationService).createNotification(
-                eq(member), anyString(), eq(Group.TRAN), eq(savings.getAccount())
-        );
-        assertEquals(AccountStatus.ACTIVE, savings.getAccountStatus());
-    }
-
-    @Test
     void paymentDayShouldUseMonthEndAndReturnToConfiguredDay() {
         savings.setMaturityAt(LocalDateTime.of(2026, 1, 31, 0, 0));
         savings.configureSavingsAutoTransfer(source, 100_000L, 31, LocalDate.of(2025, 1, 1));

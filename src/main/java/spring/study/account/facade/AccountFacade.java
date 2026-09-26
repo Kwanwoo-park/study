@@ -38,7 +38,7 @@ public class AccountFacade {
     }
 
     public ResponseEntity<?> create(Member member, AccountCreateRequestDto requestDto) {
-        Account account;
+        Account account, source;
 
         if (requestDto == null) {
             requestDto = new AccountCreateRequestDto();
@@ -46,13 +46,20 @@ public class AccountFacade {
         }
 
         try {
-            account = accountService.createAccount(member, requestDto);
+            source = requestDto.getAccountType() == AccountType.INSTALLMENT_SAVINGS ? accountService.resolveSavingsSourceAccount(member, requestDto) : accountService.resolveTimeDepositSourceAccount(member, requestDto);
+
+            account = accountService.createAccount(member, requestDto, source);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
                     "message", e.getMessage()
             ));
         }
+
+        if (account.getAccountType() == AccountType.INSTALLMENT_SAVINGS)
+            createOpenTransaction(account.getAccountType(), source, account, requestDto.getMonthlySavingsAmount());
+        else if (account.getAccountType() == AccountType.TIME_DEPOSIT)
+            createOpenTransaction(account.getAccountType(), source, account, requestDto.getTimeDepositAmount());
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
@@ -77,7 +84,7 @@ public class AccountFacade {
         validation = validateOwner(dto.getAccount(), member);
         if (validation != null) return validation;
 
-        validation = checkAmount(dto);
+        validation = checkTran(dto);
         if (validation != null) return validation;
 
         String firstAccountNumber = dto.getAccount().compareTo(dto.getTranAccount()) <= 0 ? dto.getAccount() : dto.getTranAccount();
@@ -112,7 +119,7 @@ public class AccountFacade {
         ResponseEntity<?> validation = validateOwner(dto.getAccount(), member);
         if (validation != null) return validation;
 
-        validation = checkAmount(dto);
+        validation = checkTran(dto);
         if (validation != null) return validation;
 
         Account account = accountService.findByAccount(dto.getAccount());
@@ -167,8 +174,25 @@ public class AccountFacade {
     }
 
     public ResponseEntity<?> terminate(String accountNumber, String settlementAccountNumber, Member member) {
+        ResponseEntity<?> validation = checkAccount(settlementAccountNumber);
+        if (validation != null) return validation;
+
+        Account source = accountService.findByAccountForUpdate(accountNumber);
+        Account settlementAccount = accountService.findByAccountForUpdate(settlementAccountNumber);
+
+        LocalDateTime time = LocalDateTime.now();
+
+        boolean matured = source.getMaturityAt() != null && !time.isBefore(source.getMaturityAt());
+        long principal = source.getAmount();
+        long interest = source.terminateAndGetInterest(time);
+
         try {
-            AccountSettlementResult settlement = accountService.terminateInterestAccount(accountNumber, settlementAccountNumber, member);
+            AccountSettlementResult settlement = accountService.terminateInterestAccount(source, settlementAccount, member, matured, principal, interest);
+
+            createTransaction(AccountTransactionType.TERMINATION, source, settlementAccount, principal, time, matured);
+
+            if (interest > 0L)
+                createTransaction(AccountTransactionType.INTEREST, source, settlementAccount, interest, time, matured);
 
             return ResponseEntity.ok(Map.of(
                     "result", 10L,
@@ -221,6 +245,16 @@ public class AccountFacade {
         return null;
     }
 
+    private ResponseEntity<?> checkAccount(String accountNumber) {
+        if (accountNumber == null || accountNumber.isBlank())
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", "정산받을 입출금 계좌를 선택해주세요"
+            ));
+
+        return null;
+    }
+
     private ResponseEntity<?> accountNotFound() {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                 "result", -10L,
@@ -228,7 +262,7 @@ public class AccountFacade {
         ));
     }
 
-    private ResponseEntity<?> checkAmount(AccountTranDto dto) {
+    private ResponseEntity<?> checkTran(AccountTranDto dto) {
         String message = "";
 
         if (dto.getAmount() < 10000)
@@ -256,6 +290,44 @@ public class AccountFacade {
                 .counterpartyName(type == AccountTransactionType.DEPOSIT ? account.getName() : tranAccount.getName())
                 .bankName("Kwanwoo site account")
                 .transactionTime(time)
+                .build());
+
+        notifyTransaction(transaction);
+    }
+
+    private void createTransaction(AccountTransactionType type, Account source, Account settlementAccount, Long amount, LocalDateTime time, boolean matured) {
+        AccountTransaction transaction = accountTransactionService.save(AccountTransaction.builder()
+                .transactionType(type)
+                .transactionStatus(AccountTransactionStatus.COMPLETED)
+                .amount(amount)
+                .fee(0L)
+                .withdrawalAccount(type == AccountTransactionType.INTEREST ? null : source)
+                .depositAccount(settlementAccount)
+                .balanceAfterTransaction(settlementAccount.getAmount())
+                .memo(matured ? "만기 이자" : "중도 해지 이자")
+                .counterpartyName(source.getName())
+                .bankName("Kwanwoo site account")
+                .transactionTime(time)
+                .build());
+
+        notifyTransaction(transaction);
+    }
+
+    private void createOpenTransaction(AccountType type, Account source, Account account, long amount) {
+        LocalDateTime openingTime = LocalDateTime.now();
+
+        AccountTransaction transaction = accountTransactionService.save(AccountTransaction.builder()
+                .transactionType(type == AccountType.TIME_DEPOSIT ? AccountTransactionType.TIME_DEPOSIT_OPENING : AccountTransactionType.SAVINGS_PAYMENT)
+                .transactionStatus(AccountTransactionStatus.COMPLETED)
+                .amount(amount)
+                .fee(0L)
+                .withdrawalAccount(source)
+                .depositAccount(account)
+                .balanceAfterTransaction(source.getAmount())
+                .memo(type == AccountType.TIME_DEPOSIT ? account.getMaturityMonths() + "개월 예금 개설" : "적금 개설 첫 납입")
+                .counterpartyName(account.getName())
+                .bankName("Kwanwoo site account")
+                .transactionTime(openingTime)
                 .build());
 
         notifyTransaction(transaction);

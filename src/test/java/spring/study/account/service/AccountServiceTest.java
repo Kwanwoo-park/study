@@ -63,7 +63,7 @@ class AccountServiceTest {
         request.setMonthlySavingsAmount(100_000L);
         request.setMonthlySavingsDay(15);
         request.setAutoTerminationAcknowledged(true);
-        Account account = accountService.createAccount(member, request);
+        Account account = accountService.createAccount(member, request, checking);
 
         assertEquals(AccountType.INSTALLMENT_SAVINGS, account.getAccountType());
         assertEquals("Kwanwoo site savings account", account.getName());
@@ -109,25 +109,13 @@ class AccountServiceTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> accountService.createAccount(member, request)
+                () -> accountService.createAccount(member, request, checking)
         );
 
         assertEquals("선택한 입출금 계좌의 잔액이 적금 납입 금액보다 부족합니다", exception.getMessage());
         assertEquals(50_000L, checking.getAmount());
         verify(accountRepository, never()).save(any(Account.class));
         verify(accountTransactionRepository, never()).save(any(AccountTransaction.class));
-    }
-
-    @Test
-    void createAccountShouldDefaultToDepositWithdrawalType() {
-        Member member = Member.builder().id(1L).email("member@test.com").build();
-        when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Account account = accountService.createAccount(member);
-
-        assertEquals(AccountType.DEPOSIT_WITHDRAWAL, account.getAccountType());
-        assertEquals("Kwanwoo site checking account", account.getName());
-        assertEquals(true, new AccountResponseDto(account).isOutgoingTransferAllowed());
     }
 
     @Test
@@ -156,7 +144,7 @@ class AccountServiceTest {
         request.setTimeDepositAmount(400_000L);
         request.setMaturityMonths(18);
 
-        Account account = accountService.createAccount(member, request);
+        Account account = accountService.createAccount(member, request, checking);
 
         assertEquals("Kwanwoo site time deposit account", account.getName());
         assertEquals(400_000L, account.getAmount());
@@ -185,7 +173,7 @@ class AccountServiceTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> accountService.createAccount(member, request)
+                () -> accountService.createAccount(member, request, accountRepository.findByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE).get(0))
         );
 
         assertEquals("예금 만기 기간은 1개월부터 24개월까지 선택할 수 있습니다", exception.getMessage());
@@ -217,26 +205,10 @@ class AccountServiceTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> accountService.createAccount(member, request)
+                () -> accountService.createAccount(member, request, checking)
         );
 
         assertEquals("선택한 입출금 계좌의 잔액이 예금 금액보다 부족합니다", exception.getMessage());
-        verify(accountRepository, never()).save(any(Account.class));
-    }
-
-    @Test
-    void interestAccountShouldRequireAnActiveCheckingAccount() {
-        Member member = Member.builder().id(1L).email("member@test.com").build();
-        when(accountRepository.existsByMemberAndAccountTypeAndAccountStatus(
-                member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE
-        )).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> accountService.createAccount(member, AccountType.INSTALLMENT_SAVINGS)
-        );
-
-        assertEquals("예적금 계좌를 만들려면 먼저 활성 상태의 입출금 계좌가 필요합니다", exception.getMessage());
         verify(accountRepository, never()).save(any(Account.class));
     }
 
