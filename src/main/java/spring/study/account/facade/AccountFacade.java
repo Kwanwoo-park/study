@@ -5,17 +5,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.account.dto.AccountRequestDto;
-import spring.study.account.dto.AccountResponseDto;
 import spring.study.account.dto.AccountTranDto;
 import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.dto.AccountCreateRequestDto;
-import spring.study.account.entity.Account;
-import spring.study.account.entity.AccountType;
-import spring.study.account.entity.AccountStatus;
+import spring.study.account.entity.*;
 import spring.study.account.service.AccountService;
+import spring.study.account.service.AccountTransactionService;
 import spring.study.member.entity.Member;
+import spring.study.notification.entity.Group;
+import spring.study.notification.service.NotificationService;
 
+import java.text.NumberFormat;
+import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -23,6 +27,8 @@ import java.util.Map;
 @Slf4j
 public class AccountFacade {
     private final AccountService accountService;
+    private final AccountTransactionService accountTransactionService;
+    private final NotificationService notificationService;
 
     public ResponseEntity<?> create(Member member, AccountType accountType) {
         AccountCreateRequestDto requestDto = new AccountCreateRequestDto();
@@ -57,12 +63,13 @@ public class AccountFacade {
 
     public ResponseEntity<?> getList(Member member) {
         return ResponseEntity.ok(Map.of(
-                "list", accountService.findByMember(member).stream().map(AccountResponseDto::new).toList(),
+                "list", accountService.findByMember(member),
                 "name", member.getName(),
                 "result", 10L
         ));
     }
 
+    @Transactional
     public ResponseEntity<?> tranAccount(AccountTranDto dto, Member member) {
         ResponseEntity<?> validation = validateOwner(dto.getTranAccount());
         if (validation != null) return validation;
@@ -70,10 +77,22 @@ public class AccountFacade {
         validation = validateOwner(dto.getAccount(), member);
         if (validation != null) return validation;
 
-        Account account;
+        validation = checkAmount(dto);
+        if (validation != null) return validation;
+
+        String firstAccountNumber = dto.getAccount().compareTo(dto.getTranAccount()) <= 0 ? dto.getAccount() : dto.getTranAccount();
+        String secondAccountNumber = firstAccountNumber.equals(dto.getAccount()) ? dto.getTranAccount() : dto.getAccount();
+
+        Account firstLockedAccount = accountService.findByAccountForUpdate(firstAccountNumber);
+        Account secondLockedAccount = accountService.findByAccountForUpdate(secondAccountNumber);
+
+        Account account = dto.getAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
+        Account tranAccount = dto.getTranAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
+
+        LocalDateTime time = LocalDateTime.now();
 
         try {
-            account = accountService.tranAccount(dto);
+            accountService.tranAccount(account, tranAccount, dto.getAmount(), time);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
@@ -81,27 +100,28 @@ public class AccountFacade {
             ));
         }
 
+        createTransaction(AccountTransactionType.TRANSFER, account, tranAccount, dto.getAmount(), time);
+
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "amount", account.getAmount(),
                 "message", "정상적으로 이체되었습니다"
         ));
     }
 
-    public ResponseEntity<?> deposit(AccountRequestDto dto, Member member) {
+    public ResponseEntity<?> deposit(AccountTranDto dto, Member member) {
         ResponseEntity<?> validation = validateOwner(dto.getAccount(), member);
         if (validation != null) return validation;
 
-        Account account;
+        validation = checkAmount(dto);
+        if (validation != null) return validation;
 
-        try {
-            account = accountService.deposit(dto.getAccount(), dto.getAmount());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", e.getMessage()
-            ));
-        }
+        Account account = accountService.findByAccount(dto.getAccount());
+
+        LocalDateTime time = LocalDateTime.now();
+
+        accountService.deposit(account, dto.getAmount(), time);
+
+        createTransaction(AccountTransactionType.DEPOSIT, account, null, dto.getAmount(), time);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
@@ -206,5 +226,77 @@ public class AccountFacade {
                 "result", -10L,
                 "message", "존재하지 않는 계좌입니다"
         ));
+    }
+
+    private ResponseEntity<?> checkAmount(AccountTranDto dto) {
+        String message = "";
+
+        if (dto.getAmount() < 10000)
+            message = "거래 금액은 1만원 이상이어야 합니다";
+        else if (dto.getAccount().equals(dto.getTranAccount()))
+            message = "같은 계좌로 이체할 수 없습니다";
+
+        if (!message.isBlank())
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "result", -10L,
+                    "message", message
+            ));
+        else return null;
+    }
+
+    private void createTransaction(AccountTransactionType type, Account account, Account tranAccount, Long amount, LocalDateTime time) {
+        AccountTransaction transaction = accountTransactionService.save(AccountTransaction.builder()
+                .transactionType(type)
+                .transactionStatus(AccountTransactionStatus.COMPLETED)
+                .amount(amount)
+                .fee(0L)
+                .withdrawalAccount(type == AccountTransactionType.DEPOSIT ? null : account)
+                .depositAccount(type == AccountTransactionType.DEPOSIT ? account : tranAccount)
+                .balanceAfterTransaction(account.getAmount())
+                .counterpartyName(type == AccountTransactionType.DEPOSIT ? account.getName() : tranAccount.getName())
+                .bankName("Kwanwoo site account")
+                .transactionTime(time)
+                .build());
+
+        notifyTransaction(transaction);
+    }
+
+    private void notifyTransaction(AccountTransaction transaction) {
+        if (transaction.getWithdrawalAccount() != null) {
+            notifyAccountMember(transaction.getWithdrawalAccount(), createTransactionMessage(transaction, transaction.getWithdrawalAccount()));
+        }
+
+        if (transaction.getDepositAccount() != null) {
+            notifyAccountMember(transaction.getDepositAccount(), createTransactionMessage(transaction, transaction.getDepositAccount()));
+        }
+    }
+
+    private void notifyAccountMember(Account account, String message) {
+        Member member = account.getMember();
+        if (member == null) {
+            return;
+        }
+
+        notificationService.createNotification(member, message, Group.TRAN, account.getAccount());
+    }
+
+    private String createTransactionMessage(AccountTransaction transaction, Account account) {
+        String amount = NumberFormat.getNumberInstance(Locale.KOREA).format(transaction.getAmount());
+        String status = transaction.getTransactionStatus() == AccountTransactionStatus.CANCELED ? "취소" : "완료";
+        String transactionType = switch (transaction.getTransactionType()) {
+            case TRANSFER -> "이체";
+            case DEPOSIT -> "입금";
+            case WITHDRAWAL -> "출금";
+            case PAYMENT -> "결제";
+            case REFUND -> "환불";
+            case FEE -> "수수료";
+            case CANCEL -> "취소";
+            case INTEREST -> "이자";
+            case TERMINATION -> "해지 정산";
+            case SAVINGS_PAYMENT -> "적금 자동이체";
+            case TIME_DEPOSIT_OPENING -> "예금 개설 입금";
+        };
+
+        return account.getName() + " 계좌에서 " + amount + "원 " + transactionType + " 거래가 " + status + "되었습니다.";
     }
 }

@@ -108,8 +108,8 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    public List<Account> findByMember(Member member) {
-        return accountRepository.findByMember(member);
+    public List<AccountResponseDto> findByMember(Member member) {
+        return accountRepository.findByMember(member).stream().map(AccountResponseDto::new).toList();
     }
 
     @Transactional(readOnly = true)
@@ -134,11 +134,10 @@ public class AccountService {
 
     @Transactional
     public void changeAccountName(String accountNum, String name) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isBlank())
             throw new IllegalArgumentException("계좌명을 입력해주세요");
-        } else if (name.trim().length() > 100) {
+        else if (name.trim().length() > 100)
             throw new IllegalArgumentException("계좌명은 100자 이하여야 합니다");
-        }
 
         Account account = findByAccount(accountNum);
 
@@ -146,79 +145,25 @@ public class AccountService {
     }
 
     @Transactional
-    public Account tranAccount(AccountTranDto dto) {
-        if (dto.getAmount() < 10000) {
-            throw new IllegalArgumentException("이체 금액은 1만원 이상이어야 합니다");
-        } else if (Objects.equals(dto.getAccount(), dto.getTranAccount())) {
-            throw new IllegalArgumentException("같은 계좌로 이체할 수 없습니다");
-        }
-
-        String firstAccountNumber = dto.getAccount().compareTo(dto.getTranAccount()) <= 0 ? dto.getAccount() : dto.getTranAccount();
-        String secondAccountNumber = firstAccountNumber.equals(dto.getAccount()) ? dto.getTranAccount() : dto.getAccount();
-        Account firstLockedAccount = findByAccountForUpdate(firstAccountNumber);
-        Account secondLockedAccount = findByAccountForUpdate(secondAccountNumber);
-        Account account = dto.getAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
-        Account tranAccount = dto.getTranAccount().equals(firstAccountNumber) ? firstLockedAccount : secondLockedAccount;
-        LocalDateTime transactionTime = LocalDateTime.now();
-
+    public void tranAccount (Account account, Account tranAccount, Long amount, LocalDateTime transactionTime) {
         validateOutgoingTransaction(account);
         validateIncomingTransaction(tranAccount);
+
         prepareBalanceChange(account, transactionTime);
         prepareBalanceChange(tranAccount, transactionTime);
 
-        if (account.getAmount() - dto.getAmount() < 0) {
+        if (account.getAmount() - amount < 0)
             throw new IllegalArgumentException("이체 금액이 계좌 잔액보다 큽니다");
-        }
 
-        account.subAmount(dto.getAmount());
-        tranAccount.addAmount(dto.getAmount());
-
-        AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
-                .transactionType(AccountTransactionType.TRANSFER)
-                .transactionStatus(AccountTransactionStatus.COMPLETED)
-                .amount(dto.getAmount())
-                .fee(0L)
-                .withdrawalAccount(account)
-                .depositAccount(tranAccount)
-                .balanceAfterTransaction(account.getAmount())
-                .counterpartyName(tranAccount.getName())
-                .bankName("Kwanwoo site account")
-                .transactionTime(transactionTime)
-                .build());
-
-        notifyTransaction(transaction);
-
-        return account;
+        account.subAmount(amount);
+        tranAccount.addAmount(amount);
     }
 
     @Transactional
-    public Account deposit(String accountNum, Long amount) {
-        if (amount == null || amount < 10000) {
-            throw new IllegalArgumentException("입금 금액은 1만원 이상이어야 합니다");
-        }
-
-        Account account = findByAccount(accountNum);
-        LocalDateTime transactionTime = LocalDateTime.now();
-
+    public void deposit(Account account, Long amount, LocalDateTime transactionTime) {
         validateIncomingTransaction(account);
         prepareBalanceChange(account, transactionTime);
         account.addAmount(amount);
-
-        AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
-                .transactionType(AccountTransactionType.DEPOSIT)
-                .transactionStatus(AccountTransactionStatus.COMPLETED)
-                .amount(amount)
-                .fee(0L)
-                .depositAccount(account)
-                .balanceAfterTransaction(account.getAmount())
-                .counterpartyName(account.getName())
-                .bankName("Kwanwoo site account")
-                .transactionTime(transactionTime)
-                .build());
-
-        notifyTransaction(transaction);
-
-        return account;
     }
 
     @Transactional

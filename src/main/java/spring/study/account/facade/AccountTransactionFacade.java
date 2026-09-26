@@ -44,11 +44,11 @@ public class AccountTransactionFacade {
 
     public ResponseEntity<?> cancel(Long transactionId, Member member) {
         try {
-            AccountTransaction cancelTransaction = accountTransactionService.cancelTransaction(transactionId, member);
+            AccountTransactionResponseDto cancelTransaction = accountTransactionService.cancelTransaction(transactionId, member);
 
             return ResponseEntity.ok(Map.of(
                     "result", 10L,
-                    "transaction", new AccountTransactionResponseDto(cancelTransaction),
+                    "transaction", cancelTransaction,
                     "message", "거래가 취소되었습니다"
             ));
         } catch (SecurityException e) {
@@ -65,15 +65,12 @@ public class AccountTransactionFacade {
     }
 
     private ResponseEntity<?> validateOwner(String accountNumber, Member member) {
-        if (accountNumber == null || accountNumber.isBlank()) {
-            return accountNotFound();
-        }
+        if (accountNumber == null || accountNumber.isBlank()) return accountNotFound();
 
-        if (accountService.existsByAccount(accountNumber)) {
-            return accountNotFound();
-        }
+        if (accountService.existsByAccount(accountNumber)) return accountNotFound();
 
         Account account = accountService.findByAccount(accountNumber);
+        
         if (!account.getMember().getId().equals(member.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "result", -10L,

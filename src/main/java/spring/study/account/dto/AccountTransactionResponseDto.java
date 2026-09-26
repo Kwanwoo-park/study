@@ -71,8 +71,6 @@ public class AccountTransactionResponseDto {
     }
 
     private boolean isAccountOwner(Account account, Member member) {
-        return account != null
-                && account.getMember() != null
-                && Objects.equals(account.getMember().getId(), member.getId());
+        return account != null && account.getMember() != null && Objects.equals(account.getMember().getId(), member.getId());
     }
 }

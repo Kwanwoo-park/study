@@ -130,13 +130,17 @@ public class Account implements Serializable {
     }
 
     public void configureSavingsAutoTransfer(Account sourceAccount, long monthlyAmount, int paymentDay, LocalDate configuredDate) {
-        savingsAutoTransfer = SavingsAutoTransfer.create(this, sourceAccount, monthlyAmount, paymentDay, configuredDate);
+        savingsAutoTransfer = SavingsAutoTransfer.builder()
+                .savingsAccount(this)
+                .sourceAccount(sourceAccount)
+                .monthlyAmount(monthlyAmount)
+                .paymentDay(paymentDay)
+                .configuredDate(configuredDate)
+                .build();
     }
 
     public void configureTimeDepositTerm(int maturityMonths) {
-        if (accountType != AccountType.TIME_DEPOSIT) {
-            throw new IllegalStateException("예금 계좌에만 만기 기간을 설정할 수 있습니다");
-        }
+        if (accountType != AccountType.TIME_DEPOSIT) throw new IllegalStateException("예금 계좌에만 만기 기간을 설정할 수 있습니다");
 
         initializeInterestDetail();
 
@@ -245,6 +249,10 @@ public class Account implements Serializable {
 
     private void initializeInterestDetail() {
         if (isInterestBearing() && interestDetail == null && openedAt != null)
-            interestDetail = AccountInterest.create(this, accountType.getAnnualInterestRate(), openedAt);
+            interestDetail = AccountInterest.builder()
+                    .account(this)
+                    .annualInterestRate(accountType.getAnnualInterestRate())
+                    .openedAt(openedAt)
+                    .build();
     }
 }

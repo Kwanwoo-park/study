@@ -10,6 +10,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -54,20 +55,17 @@ public class SavingsAutoTransfer implements Serializable {
     @Column(name = "last_failure_notification_date")
     private LocalDate lastFailureNotificationDate;
 
-    static SavingsAutoTransfer create(Account savingsAccount, Account sourceAccount, long monthlyAmount, int paymentDay, LocalDate configuredDate) {
-        SavingsAutoTransfer transfer = new SavingsAutoTransfer();
-        transfer.savingsAccount = savingsAccount;
-        transfer.sourceAccount = sourceAccount;
-        transfer.monthlyAmount = monthlyAmount;
-        transfer.paymentDay = paymentDay;
-        transfer.nextPaymentDate = calculateNextPaymentDate(configuredDate, paymentDay);
-        return transfer;
+    @Builder
+    public SavingsAutoTransfer(Account savingsAccount, Account sourceAccount, long monthlyAmount, int paymentDay, LocalDate configuredDate) {
+        this.savingsAccount = savingsAccount;
+        this.sourceAccount = sourceAccount;
+        this.monthlyAmount = monthlyAmount;
+        this.paymentDay = paymentDay;
+        this.nextPaymentDate = calculateNextPaymentDate(configuredDate, paymentDay);
     }
 
     void completePayment(LocalDateTime maturityAt) {
-        if (nextPaymentDate == null) {
-            return;
-        }
+        if (nextPaymentDate == null) return;
 
         YearMonth nextMonth = YearMonth.from(nextPaymentDate).plusMonths(1L);
         LocalDate nextDate = nextMonth.atDay(Math.min(paymentDay, nextMonth.lengthOfMonth()));

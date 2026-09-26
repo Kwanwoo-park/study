@@ -18,7 +18,9 @@ import java.util.Optional;
 @Repository
 public interface AccountTransactionRepository extends JpaRepository<AccountTransaction, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select t from AccountTransaction t left join fetch t.withdrawalAccount left join fetch t.depositAccount where t.id = :id")
+    @Query("select t from AccountTransaction t " +
+            "left join fetch t.withdrawalAccount " +
+            "left join fetch t.depositAccount where t.id = :id")
     Optional<AccountTransaction> findByIdForUpdate(@Param("id") Long id);
 
     @EntityGraph(attributePaths = {"withdrawalAccount", "depositAccount"})

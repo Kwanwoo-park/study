@@ -50,7 +50,7 @@ public class AccountApiController {
     }
 
     @PatchMapping("/deposit")
-    public ResponseEntity<?> deposit(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
+    public ResponseEntity<?> deposit(@RequestBody AccountTranDto dto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 

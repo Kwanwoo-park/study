@@ -19,17 +19,13 @@ public class SavingsAutoTransferScheduler {
     public void processSavingsPayments() {
         LocalDateTime processingTime = LocalDateTime.now();
         LocalDate processingDate = processingTime.toLocalDate();
-        savingsAutoTransferService.findDueSavingsAccountNumbers(processingDate)
-                .forEach(accountNumber -> {
-                    try {
-                        savingsAutoTransferService.processDuePayment(
-                                accountNumber,
-                                processingDate,
-                                processingTime
-                        );
-                    } catch (RuntimeException e) {
-                        log.error("적금 자동이체 처리 실패: account={}", accountNumber, e);
-                    }
-                });
+
+        savingsAutoTransferService.findDueSavingsAccountNumbers(processingDate).forEach(accountNumber -> {
+            try {
+                savingsAutoTransferService.processDuePayment(accountNumber, processingDate, processingTime);
+            } catch (RuntimeException e) {
+                log.error("적금 자동이체 처리 실패: account={}", accountNumber, e);
+            }
+        });
     }
 }

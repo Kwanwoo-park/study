@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import spring.study.account.dto.AccountTransactionResponseDto;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
@@ -50,7 +51,7 @@ public class AccountTransactionService {
     }
 
     @Transactional
-    public AccountTransaction cancelTransaction(Long transactionId, Member member) {
+    public AccountTransactionResponseDto cancelTransaction(Long transactionId, Member member) {
         AccountTransaction transaction = accountTransactionRepository.findByIdForUpdate(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 거래입니다"));
 
@@ -96,7 +97,7 @@ public class AccountTransactionService {
                 .build());
 
         accountService.notifyTransaction(transaction);
-        return cancelTransaction;
+        return new AccountTransactionResponseDto(cancelTransaction);
     }
 
     private void validateCancelable(AccountTransaction transaction, Member member) {

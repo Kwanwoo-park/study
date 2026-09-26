@@ -1,6 +1,7 @@
 package spring.study.account.service;
 
 import org.junit.jupiter.api.Test;
+import spring.study.account.dto.AccountTransactionResponseDto;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
@@ -51,7 +52,7 @@ class AccountTransactionServiceTest {
         when(accountService.findByAccountForUpdate(depositAccount.getAccount())).thenReturn(depositAccount);
         when(accountTransactionRepository.save(any(AccountTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AccountTransaction cancelTransaction = accountTransactionService.cancelTransaction(transaction.getId(), sender);
+        AccountTransactionResponseDto cancelTransaction = accountTransactionService.cancelTransaction(transaction.getId(), sender);
 
         assertThat(transaction.getTransactionStatus()).isEqualTo(AccountTransactionStatus.CANCELED);
         assertThat(withdrawalAccount.getAmount()).isEqualTo(20_000L);

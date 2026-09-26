@@ -9,6 +9,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -64,15 +65,13 @@ public class AccountInterest implements Serializable {
     @Column(name = "paid_amount", nullable = false)
     private long paidAmount;
 
-    static AccountInterest create(Account account, BigDecimal annualInterestRate, LocalDateTime openedAt) {
-        AccountInterest interest = new AccountInterest();
-        interest.account = account;
-        interest.annualInterestRate = annualInterestRate;
-        interest.maturityAt = openedAt.plusYears(1L);
-        interest.termMonths = 12;
-        interest.lastCalculatedAt = openedAt;
-        interest.accruedInterest = BigDecimal.ZERO;
-        return interest;
+    @Builder
+    public AccountInterest(Account account, BigDecimal annualInterestRate, LocalDateTime openedAt) {
+        this.account = account;
+        this.annualInterestRate = annualInterestRate;
+        this.maturityAt = openedAt.plusYears(1L);
+        this.termMonths = 12;
+        this.lastCalculatedAt = openedAt;
     }
 
     BigDecimal calculateAccruedInterestAt(long principal, AccountStatus accountStatus, LocalDateTime calculationTime) {
@@ -85,10 +84,7 @@ public class AccountInterest implements Serializable {
         if (!end.isAfter(lastCalculatedAt) || principal <= 0L) return accumulated;
 
         long seconds = Duration.between(lastCalculatedAt, end).getSeconds();
-        BigDecimal pending = BigDecimal.valueOf(principal)
-                .multiply(annualInterestRate)
-                .multiply(BigDecimal.valueOf(seconds))
-                .divide(BigDecimal.valueOf(365L * 24L * 60L * 60L), 10, RoundingMode.HALF_UP);
+        BigDecimal pending = BigDecimal.valueOf(principal).multiply(annualInterestRate).multiply(BigDecimal.valueOf(seconds)).divide(BigDecimal.valueOf(365L * 24L * 60L * 60L), 10, RoundingMode.HALF_UP);
 
         return accumulated.add(pending);
     }
@@ -97,9 +93,8 @@ public class AccountInterest implements Serializable {
         LocalDateTime end = calculationTime.isAfter(maturityAt) ? maturityAt : calculationTime;
         accruedInterest = calculateAccruedInterestAt(principal, accountStatus, calculationTime);
 
-        if (end.isAfter(lastCalculatedAt)) {
+        if (end.isAfter(lastCalculatedAt))
             lastCalculatedAt = end;
-        }
     }
 
     long settle(LocalDateTime settlementTime) {

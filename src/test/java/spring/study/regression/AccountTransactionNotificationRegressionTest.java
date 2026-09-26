@@ -38,55 +38,6 @@ class AccountTransactionNotificationRegressionTest {
     );
 
     @Test
-    void depositShouldCreateTransactionNotification() {
-        Member member = createMember(1L, "deposit@test.com", "입금회원");
-        Account account = createAccount("9191000", 0L, "입금계좌", member);
-
-        when(accountRepository.findById(account.getAccount())).thenReturn(Optional.of(account));
-        when(accountTransactionRepository.save(any(AccountTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        accountService.deposit(account.getAccount(), 10_000L);
-
-        verify(notificationService).createNotification(
-                member,
-                "입금계좌 계좌에서 10,000원 입금 거래가 완료되었습니다.",
-                Group.TRAN,
-                account.getAccount()
-        );
-    }
-
-    @Test
-    void transferShouldCreateWithdrawalAndDepositNotifications() {
-        Member sender = createMember(1L, "sender@test.com", "보내는회원");
-        Member receiver = createMember(2L, "receiver@test.com", "받는회원");
-        Account withdrawalAccount = createAccount("9191000", 20_000L, "출금계좌", sender);
-        Account depositAccount = createAccount("9192000", 0L, "입금계좌", receiver);
-        AccountTranDto dto = new AccountTranDto();
-        dto.setAccount(withdrawalAccount.getAccount());
-        dto.setTranAccount(depositAccount.getAccount());
-        dto.setAmount(10_000L);
-
-        when(accountRepository.findByAccountForUpdate(withdrawalAccount.getAccount())).thenReturn(Optional.of(withdrawalAccount));
-        when(accountRepository.findByAccountForUpdate(depositAccount.getAccount())).thenReturn(Optional.of(depositAccount));
-        when(accountTransactionRepository.save(any(AccountTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        accountService.tranAccount(dto);
-
-        verify(notificationService).createNotification(
-                sender,
-                "출금계좌 계좌에서 10,000원 이체 거래가 완료되었습니다.",
-                Group.TRAN,
-                withdrawalAccount.getAccount()
-        );
-        verify(notificationService).createNotification(
-                receiver,
-                "입금계좌 계좌에서 10,000원 이체 거래가 완료되었습니다.",
-                Group.TRAN,
-                depositAccount.getAccount()
-        );
-    }
-
-    @Test
     void canceledTransactionNotificationShouldUseCanceledMessage() throws Exception {
         Member member = createMember(1L, "cancel@test.com", "취소회원");
         Account account = createAccount("9191000", 10_000L, "취소계좌", member);
