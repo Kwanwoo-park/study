@@ -1,0 +1,86 @@
+package spring.study.board.facade;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import spring.study.board.dto.BoardRequestDto;
+import spring.study.board.entity.Board;
+import spring.study.board.facade.BoardFacade;
+import spring.study.common.service.JwtManager;
+import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
+import spring.study.board.service.BoardService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class BoardViewFacade {
+    private final BoardService boardService;
+    private final BoardFacade boardFacade;
+    private final JwtManager jwtManager;
+
+    public String getBoardListPage(Model model, Integer page, Integer size, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/all";
+
+        if (member.getRole() != Role.ADMIN) {
+            jwtManager.logout(request);
+            return "redirect:/member/login?error=true&exception=Wrong Accept";
+        }
+
+        model.addAttribute("resultMap", boardService.findAll(page, size));
+        model.addAttribute("member", member);
+
+        return "board/list";
+    }
+
+    public String mainPage(Model model, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/main";
+
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
+
+        return "board/main";
+    }
+
+    public String getBoardWritePage(Model model, HttpServletRequest request){
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/write";
+
+        model.addAttribute("name", member.getName());
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
+
+        return "board/write";
+    }
+
+    public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/view?id=" + boardRequestDto.getId();
+
+        if (boardService.existBoard(boardRequestDto.getId())) {
+            Board board = boardService.findById(boardRequestDto.getId());
+            if (!boardFacade.canView(board, member)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비공개 게시물입니다.");
+            }
+            boolean includePrivate = boardFacade.canViewPrivateBoards(member, board.getMember());
+            long[] ids = boardService.getBoardIdList(boardRequestDto.getId(), board.getMember(), includePrivate);
+
+            model.addAttribute("board", board);
+            model.addAttribute("like", boardFacade.checkFavorite(board, member));
+            model.addAttribute("member", member.getEmail());
+            model.addAttribute("previous", ids[0]);
+            model.addAttribute("next", ids[1]);
+        } else {
+            return "redirect:/member/detail?email="+member.getEmail();
+        }
+
+        return "board/view";
+    }
+}

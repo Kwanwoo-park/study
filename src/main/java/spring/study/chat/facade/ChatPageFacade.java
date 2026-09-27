@@ -1,0 +1,81 @@
+package spring.study.chat.facade;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.facade.ChatViewFacade;
+import spring.study.common.service.JwtManager;
+import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
+import spring.study.chat.service.ChatRoomMemberService;
+import spring.study.chat.service.ChatRoomService;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class ChatPageFacade {
+    private final JwtManager jwtManager;
+    private final ChatRoomService roomService;
+    private final ChatRoomMemberService roomMemberService;
+    private final ChatViewFacade viewFacade;
+
+    public String chatList(Model model, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/chat/chatList";
+
+        model.addAttribute("profile", member.getProfile());
+        model.addAttribute("email", member.getEmail());
+
+        if (member.getRole().equals(Role.ADMIN)) {
+            model.addAttribute("roomList", roomService.findAll());
+            return "chat/adminChatList";
+        }
+        else {
+            List<ChatRoom> list = viewFacade.chatList(member);
+
+            model.addAttribute("roomList", list);
+            model.addAttribute("member", roomMemberService.findMember(list, member));
+            model.addAttribute("unreadCount", viewFacade.unreadCount(member, list));
+
+            return "chat/chatList";
+        }
+    }
+
+    public String chatRoom(String roomId, Model model, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/chat/chatRoom?roomId=" + roomId;
+
+        ChatRoom room = roomService.find(roomId);
+
+        if (room == null)
+            return "redirect:/chat/chatList";
+
+        model.addAttribute("room", room.getRoomId());
+        model.addAttribute("member", member.getEmail());
+        model.addAttribute("isAdmin", member.getRole() == Role.ADMIN);
+        model.addAttribute("flag", !roomMemberService.exist(member, room));
+        model.addAttribute("participantNames", getParticipantNames(room, member));
+        model.addAttribute("audioCallAvailable",
+                roomMemberService.exist(member, room) && roomMemberService.find(room).size() >= 2);
+
+        return "chat/chatRoom";
+    }
+
+    private List<String> getParticipantNames(ChatRoom room, Member currentMember) {
+        List<String> names = new ArrayList<>(roomMemberService.find(room).stream()
+                .map(roomMember -> roomMember.getMember().getName())
+                .toList());
+
+        if (!names.contains(currentMember.getName())) {
+            names.add(currentMember.getName());
+        }
+
+        return names;
+    }
+}
