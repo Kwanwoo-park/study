@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import spring.study.account.dto.AccountTransactionResponseDto;
+import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
@@ -15,6 +16,8 @@ import spring.study.account.repository.AccountTransactionRepository;
 import spring.study.member.entity.Member;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +54,7 @@ public class AccountTransactionService {
     }
 
     @Transactional
-    public AccountTransactionResponseDto cancelTransaction(Long transactionId, Member member) {
+    public Cancellation cancelTransaction(Long transactionId, Member member) {
         AccountTransaction transaction = accountTransactionRepository.findByIdForUpdate(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 거래입니다"));
 
@@ -96,8 +99,47 @@ public class AccountTransactionService {
                 .transactionTime(cancellationTime)
                 .build());
 
-        accountService.notifyTransaction(transaction);
-        return new AccountTransactionResponseDto(cancelTransaction);
+        return new Cancellation(transaction, cancelTransaction);
+    }
+
+    public record Cancellation(AccountTransaction original, AccountTransaction cancellation) {}
+
+    @Transactional
+    public AccountTransaction recordOpening(Account source, Account account, long amount) {
+        boolean deposit = account.getAccountType() == spring.study.account.entity.AccountType.TIME_DEPOSIT;
+        return record(deposit ? AccountTransactionType.TIME_DEPOSIT_OPENING : AccountTransactionType.SAVINGS_PAYMENT,
+                source, account, amount, source.getAmount(),
+                deposit ? account.getMaturityMonths() + "개월 예금 개설" : "적금 개설 첫 납입", LocalDateTime.now());
+    }
+
+    @Transactional
+    public AccountTransaction recordTransfer(Account source, Account target, long amount, LocalDateTime time) {
+        return record(AccountTransactionType.TRANSFER, source, target, amount, source.getAmount(), null, time);
+    }
+
+    @Transactional
+    public AccountTransaction recordDeposit(Account target, long amount, LocalDateTime time) {
+        return record(AccountTransactionType.DEPOSIT, null, target, amount, target.getAmount(), null, time);
+    }
+
+    @Transactional
+    public List<AccountTransaction> recordSettlement(Account source, Account target, AccountSettlementResult result, LocalDateTime time) {
+        List<AccountTransaction> records = new ArrayList<>();
+        String memo = result.matured() ? "만기 해지" : "중도 해지";
+        records.add(record(AccountTransactionType.TERMINATION, source, target, result.principal(),
+                target.getAmount() - result.interest(), memo + " 정산", time));
+        if (result.interest() > 0L) records.add(record(AccountTransactionType.INTEREST, null, target, result.interest(),
+                target.getAmount(), memo + " 이자", time));
+        return records;
+    }
+
+    private AccountTransaction record(AccountTransactionType type, Account source, Account target, long amount,
+                                      long balance, String memo, LocalDateTime time) {
+        return accountTransactionRepository.save(AccountTransaction.builder()
+                .transactionType(type).transactionStatus(AccountTransactionStatus.COMPLETED)
+                .amount(amount).fee(0L).withdrawalAccount(source).depositAccount(target)
+                .balanceAfterTransaction(balance).memo(memo).counterpartyName(target.getName())
+                .bankName("Kwanwoo site account").transactionTime(time).build());
     }
 
     private void validateCancelable(AccountTransaction transaction, Member member) {

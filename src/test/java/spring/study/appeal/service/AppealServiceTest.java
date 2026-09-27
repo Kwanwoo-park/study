@@ -54,8 +54,16 @@ class AppealServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
-    @InjectMocks
-    private AppealService appealService;
+    private spring.study.appeal.facade.AppealFacade appealService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUpLayers() {
+        appealService = new spring.study.appeal.facade.AppealFacade(new AppealService(appealRepository), appealVerificationService,
+                new spring.study.member.service.MemberService(memberRepository, null, eventPublisher),
+                new spring.study.member.sanction.service.MemberSanctionService(memberSanctionRepository, eventPublisher),
+                notificationService, new spring.study.common.component.TransactionRunner(
+                        org.mockito.Mockito.mock(org.springframework.transaction.PlatformTransactionManager.class)));
+    }
 
     @Test
     void authenticatedMemberCanCreateAppealWithoutEmailVerificationAndNotifyEveryAdministrator() {
@@ -68,7 +76,7 @@ class AppealServiceTest {
         when(appealRepository.save(any(Appeal.class))).thenAnswer(invocation -> persisted(invocation.getArgument(0), 20L));
         when(memberRepository.findAllByRole(Role.ADMIN)).thenReturn(List.of(firstAdmin, secondAdmin));
 
-        AppealResponseDto response = appealService.create(request, member);
+        AppealResponseDto response = appealService.submit(request, member);
 
         assertThat(response.getId()).isEqualTo(20L);
         assertThat(response.getTitle()).isEqualTo("처리 재검토 요청");
@@ -96,7 +104,7 @@ class AppealServiceTest {
         when(appealRepository.save(any(Appeal.class))).thenAnswer(invocation -> persisted(invocation.getArgument(0), 21L));
         when(memberRepository.findAllByRole(Role.ADMIN)).thenReturn(List.of());
 
-        AppealResponseDto response = appealService.create(request, null);
+        AppealResponseDto response = appealService.submit(request, null);
 
         assertThat(response.getId()).isEqualTo(21L);
         assertThat(response.getMemberEmail()).isEqualTo("member@example.com");
@@ -112,7 +120,7 @@ class AppealServiceTest {
         when(appealVerificationService.consumeVerification("member@example.com", "expired-token"))
                 .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "이메일 인증이 필요합니다"));
 
-        assertThatThrownBy(() -> appealService.create(request, null))
+        assertThatThrownBy(() -> appealService.submit(request, null))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
                         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
         verifyNoInteractions(notificationService);
@@ -125,10 +133,9 @@ class AppealServiceTest {
         AppealRequestDto request = request("재검토", "상소 내용");
         request.setSanctionId(99L);
 
-        when(appealRepository.existsByMemberAndStatus(member, AppealStatus.PENDING)).thenReturn(false);
         when(memberSanctionRepository.findByIdAndMember(99L, member)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> appealService.create(request, member))
+        assertThatThrownBy(() -> appealService.submit(request, member))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
                         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
         verify(appealRepository, never()).save(any());
@@ -141,7 +148,7 @@ class AppealServiceTest {
         AppealRequestDto request = request("재검토", "상소 내용");
         when(appealRepository.existsByMemberAndStatus(member, AppealStatus.PENDING)).thenReturn(true);
 
-        assertThatThrownBy(() -> appealService.create(request, member))
+        assertThatThrownBy(() -> appealService.submit(request, member))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
                         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
         verify(appealRepository, never()).save(any());
@@ -164,7 +171,7 @@ class AppealServiceTest {
         when(appealRepository.save(any(Appeal.class))).thenAnswer(invocation -> persisted(invocation.getArgument(0), 22L));
         when(memberRepository.findAllByRole(Role.ADMIN)).thenReturn(List.of());
 
-        appealService.create(request, member);
+        appealService.submit(request, member);
 
         ArgumentCaptor<Appeal> captor = ArgumentCaptor.forClass(Appeal.class);
         verify(appealRepository).save(captor.capture());

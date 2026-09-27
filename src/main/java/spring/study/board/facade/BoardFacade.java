@@ -15,7 +15,7 @@ import spring.study.board.entity.Board;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
-import spring.study.common.service.ModerationService;
+import spring.study.common.facade.ModerationFacade;
 import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.favorite.entity.Favorite;
 import spring.study.favorite.service.FavoriteService;
@@ -42,7 +42,7 @@ public class BoardFacade {
     private final BoardImgService boardImgService;
     private final FavoriteService favoriteService;
     private final ImageS3Service imageS3Service;
-    private final ModerationService moderationService;
+    private final ModerationFacade moderationService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
     private final ImageCleanupService imageCleanupService;
 

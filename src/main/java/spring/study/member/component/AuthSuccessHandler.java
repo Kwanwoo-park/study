@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import spring.study.member.entity.Member;
-import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.facade.JwtAuthenticationFacade;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MobileOAuthCodeService;
 import spring.study.member.service.MemberService;
@@ -21,7 +21,7 @@ import java.io.IOException;
 @Component
 public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final MemberService memberService;
-    private final JwtAuthenticationService jwtAuthenticationService;
+    private final JwtAuthenticationFacade jwtAuthenticationService;
     private final JwtCookieService cookieService;
     private final MobileOAuthCodeService mobileOAuthCodeService;
 

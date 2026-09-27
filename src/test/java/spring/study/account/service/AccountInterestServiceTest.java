@@ -27,11 +27,7 @@ class AccountInterestServiceTest {
     private final AccountRepository accountRepository = mock(AccountRepository.class);
     private final AccountTransactionRepository transactionRepository = mock(AccountTransactionRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
-    private final AccountService accountService = new AccountService(
-            accountRepository,
-            transactionRepository,
-            notificationService
-    );
+    private final AccountService accountService = new AccountService(accountRepository);
 
     @Test
     void installmentSavingsShouldAccrueFivePercentForOneYear() {

@@ -9,14 +9,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
-import spring.study.member.service.MemberService;
 
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/follow")
 public class FollowViewController {
     private final JwtManager jwtManager;
-    private final MemberService memberService;
 
     @GetMapping("/follower")
     public String follower(Model model, MemberRequestDto memberRequestDto, HttpServletRequest request) {

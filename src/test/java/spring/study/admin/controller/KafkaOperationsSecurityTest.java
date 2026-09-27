@@ -55,7 +55,7 @@ class KafkaOperationsSecurityTest {
         mvc.perform(get("/api/admin/kafka/dead-letters").with(user(member(Role.ADMIN)))).andExpect(status().isOk()).andExpect(jsonPath("entries").isArray());
     }
     @Configuration @EnableWebMvc @EnableWebSecurity @EnableMethodSecurity
-    @Import({KafkaOperationsSecurityConfig.class, KafkaOperationsController.class})
+    @Import({KafkaOperationsSecurityConfig.class, KafkaOperationsController.class, spring.study.kafka.facade.KafkaOperationsFacade.class})
     static class Config {
         @Bean KafkaMonitoringService monitoring() { return mock(KafkaMonitoringService.class); }
         @Bean KafkaDeadLetterService deadLetters() { return mock(KafkaDeadLetterService.class); }

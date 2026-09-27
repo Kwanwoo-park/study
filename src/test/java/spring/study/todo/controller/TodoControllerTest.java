@@ -10,7 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import spring.study.admin.service.SystemIncidentService;
+import spring.study.admin.facade.SystemIncidentFacade;
 import spring.study.common.component.GlobalExceptionHandler;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
@@ -41,7 +41,7 @@ class TodoControllerTest {
         mvc = MockMvcBuilders.standaloneSetup(
                         new TodoApiController(new TodoFacade(new TodoService(repository)), jwtManager, new CommonFacade()),
                         new TodoViewController(jwtManager))
-                .setControllerAdvice(new GlobalExceptionHandler(mock(SystemIncidentService.class))).build();
+                .setControllerAdvice(new GlobalExceptionHandler(mock(SystemIncidentFacade.class))).build();
     }
 
     @Test

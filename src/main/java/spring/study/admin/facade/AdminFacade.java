@@ -1,14 +1,14 @@
 package spring.study.admin.facade;
 
-import com.sun.management.OperatingSystemMXBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.admin.dto.AdminNewBoardResponseDto;
 import spring.study.admin.service.SystemIncidentService;
+import spring.study.admin.service.AdminSystemStatusService;
+import spring.study.admin.service.SystemDiagnosticsService;
 import spring.study.appeal.dto.AppealResponseDto;
 import spring.study.appeal.entity.AppealStatus;
 import spring.study.appeal.service.AppealService;
@@ -17,8 +17,6 @@ import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.AudioCallSignalingService;
-import spring.study.kafka.repository.KafkaOutboxEventRepository;
-import spring.study.aws.repository.ImageCleanupTaskRepository;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -26,15 +24,9 @@ import spring.study.member.service.MemberService;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.service.RefreshTokenService;
 
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -43,14 +35,14 @@ public class AdminFacade {
     private final MemberService memberService;
     private final BoardService boardService;
     private final AppealService appealService;
+    private final spring.study.appeal.facade.AppealFacade appealFacade;
     private final ChatMessageService chatMessageService;
-    private final RedisTemplate<String, String> redisTemplate;
     private final SystemIncidentService systemIncidentService;
     private final AudioCallSignalingService audioCallSignalingService;
-    private final KafkaOutboxEventRepository kafkaOutboxEventRepository;
-    private final ImageCleanupTaskRepository imageCleanupTaskRepository;
     private final OnlineUserService onlineUserService;
     private final RefreshTokenService refreshTokenService;
+    private final AdminSystemStatusService adminSystemStatusService;
+    private final SystemDiagnosticsService systemDiagnosticsService;
 
     public ResponseEntity<?> memberOnline() {
         List<Long> userIds = onlineUserService.findOnlineMemberIds().stream().toList();
@@ -111,57 +103,16 @@ public class AdminFacade {
     }
 
     public ResponseEntity<?> systemStatus() {
-        OperatingSystemMXBean osBean =
-                (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-        Runtime runtime = Runtime.getRuntime();
-        RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
-        File root = new File("/");
+        return ResponseEntity.ok(adminSystemStatusService.snapshot());
+    }
 
-        long totalMemory = osBean.getTotalMemorySize();
-        long freeMemory = osBean.getFreeMemorySize();
-        long usedMemory = Math.max(0L, totalMemory - freeMemory);
-        long maxHeap = runtime.maxMemory();
-        long usedHeap = runtime.totalMemory() - runtime.freeMemory();
-        long totalDisk = root.getTotalSpace();
-        long freeDisk = root.getFreeSpace();
-        long usedDisk = Math.max(0L, totalDisk - freeDisk);
+    public ResponseEntity<?> systemProcesses() {
+        return ResponseEntity.ok(systemDiagnosticsService.processes());
+    }
 
-        Map<String, Object> status = new HashMap<>();
-        status.put("result", 1L);
-        status.put("cpu", Map.of(
-                "systemPercent", percent(osBean.getCpuLoad()),
-                "processPercent", percent(osBean.getProcessCpuLoad()),
-                "cores", osBean.getAvailableProcessors()
-        ));
-        status.put("memory", Map.of(
-                "usedBytes", usedMemory,
-                "totalBytes", totalMemory,
-                "usedPercent", percent(usedMemory, totalMemory)
-        ));
-        status.put("disk", Map.of(
-                "usedBytes", usedDisk,
-                "totalBytes", totalDisk,
-                "usedPercent", percent(usedDisk, totalDisk)
-        ));
-        status.put("jvm", Map.of(
-                "heapUsedBytes", usedHeap,
-                "heapMaxBytes", maxHeap,
-                "heapUsedPercent", percent(usedHeap, maxHeap),
-                "uptimeMillis", runtimeMxBean.getUptime(),
-                "uptime", formatDuration(Duration.ofMillis(runtimeMxBean.getUptime())),
-                "startedAt", LocalDateTime.now().minus(Duration.ofMillis(runtimeMxBean.getUptime())).toString()
-        ));
-        status.put("traffic", Map.of(
-                "activeSessions", onlineUserService.countOnlineMembers(),
-                "activeWebSockets", countKeys("chat:room:*:active:*")
-        ));
-        status.put("queues", Map.of(
-                "kafkaPending", kafkaOutboxEventRepository.countByDeadLetteredFalse(),
-                "kafkaDeadLetters", kafkaOutboxEventRepository.countByDeadLetteredTrue(),
-                "imageCleanupPending", imageCleanupTaskRepository.count()
-        ));
-
-        return ResponseEntity.ok(status);
+    public ResponseEntity<?> systemDisk(String root, String path, int page) {
+        try { return ResponseEntity.ok(systemDiagnosticsService.disk(root, path, page)); }
+        catch (IllegalArgumentException error) { return ResponseEntity.badRequest().body(Map.of("message", error.getMessage())); }
     }
 
     public ResponseEntity<?> systemIncidents() {
@@ -249,7 +200,7 @@ public class AdminFacade {
     }
 
     public ResponseEntity<?> acceptAppeal(Long appealId) {
-        AppealResponseDto appeal = appealService.acceptAndUnblock(appealId);
+        AppealResponseDto appeal = appealFacade.acceptAndUnblock(appealId);
 
         return ResponseEntity.ok(Map.of(
                 "result", appeal.getId(),
@@ -258,40 +209,4 @@ public class AdminFacade {
         ));
     }
 
-    private long countKeys(String pattern) {
-        Set<String> keys = redisTemplate.keys(pattern);
-        return keys == null ? 0L : keys.size();
-    }
-
-    private double percent(double ratio) {
-        if (Double.isNaN(ratio) || ratio < 0) {
-            return 0D;
-        }
-
-        return Math.round(ratio * 1000D) / 10D;
-    }
-
-    private double percent(long used, long total) {
-        if (total <= 0) {
-            return 0D;
-        }
-
-        return Math.round((used * 1000D) / total) / 10D;
-    }
-
-    private String formatDuration(Duration duration) {
-        long days = duration.toDays();
-        long hours = duration.toHoursPart();
-        long minutes = duration.toMinutesPart();
-
-        if (days > 0) {
-            return days + "일 " + hours + "시간 " + minutes + "분";
-        }
-
-        if (hours > 0) {
-            return hours + "시간 " + minutes + "분";
-        }
-
-        return minutes + "분";
-    }
 }

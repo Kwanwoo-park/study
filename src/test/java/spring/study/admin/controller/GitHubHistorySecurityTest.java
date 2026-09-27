@@ -113,7 +113,7 @@ class GitHubHistorySecurityTest {
     @EnableWebMvc
     @EnableWebSecurity
     @EnableMethodSecurity
-    @Import({GitHubHistoryConfig.class, AdminFileSecurityConfig.class, GitHubHistoryController.class})
+    @Import({GitHubHistoryConfig.class, AdminFileSecurityConfig.class, GitHubHistoryController.class, spring.study.admin.facade.GitHubHistoryFacade.class})
     static class Config {
         @Bean
         GitHubHistoryService service() { return mock(GitHubHistoryService.class, withSettings().withoutAnnotations()); }

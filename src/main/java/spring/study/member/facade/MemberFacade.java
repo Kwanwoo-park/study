@@ -35,7 +35,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.facade.JwtAuthenticationFacade;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
@@ -71,7 +71,7 @@ public class MemberFacade {
     private final BookReviewService bookReviewService;
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
-    private final JwtAuthenticationService jwtAuthenticationService;
+    private final JwtAuthenticationFacade jwtAuthenticationService;
     private final ImageCleanupService imageCleanupService;
     private final ImageUploadCleanupService imageUploadCleanupService;
     private final TodoService todoService;

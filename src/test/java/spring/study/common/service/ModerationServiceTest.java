@@ -43,8 +43,14 @@ class ModerationServiceTest {
     @Mock
     private JwtCookieService jwtCookieService;
 
-    @InjectMocks
-    private ModerationService moderationService;
+    private spring.study.common.facade.ModerationFacade moderationService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        moderationService = new spring.study.common.facade.ModerationFacade(
+                new ModerationService(forbiddenService, stringRedisTemplate), notificationService, memberService,
+                refreshTokenService, jwtCookieService);
+    }
 
     @AfterEach
     void clearSecurityContext() {

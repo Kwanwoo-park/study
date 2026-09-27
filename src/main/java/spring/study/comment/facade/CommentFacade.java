@@ -13,7 +13,7 @@ import spring.study.comment.dto.CommentListResponseDto;
 import spring.study.comment.dto.CommentRequestDto;
 import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
-import spring.study.common.service.ModerationService;
+import spring.study.common.facade.ModerationFacade;
 import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -31,7 +31,7 @@ public class CommentFacade {
     private final CommentService commentService;
     private final BoardService boardService;
     private final NotificationService notificationService;
-    private final ModerationService moderationService;
+    private final ModerationFacade moderationService;
     private final ReplyService replyService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
 

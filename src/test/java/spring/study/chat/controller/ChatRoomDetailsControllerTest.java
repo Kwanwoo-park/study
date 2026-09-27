@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.server.ResponseStatusException;
-import spring.study.admin.service.SystemIncidentService;
+import spring.study.admin.facade.SystemIncidentFacade;
 import spring.study.chat.dto.ChatRoomDetailsResponse;
 import spring.study.chat.dto.ChatRoomImagesResponse;
 import spring.study.chat.service.ChatRoomDetailsService;
@@ -38,7 +38,7 @@ class ChatRoomDetailsControllerTest {
         ChatRoomFacade facade = new ChatRoomFacade(mock(ChatViewFacade.class), mock(ChatRoomService.class),
                 mock(ChatRoomMemberService.class), mock(ChatPresenceService.class), mock(NotificationService.class), service);
         mvc = MockMvcBuilders.standaloneSetup(new ChatRoomDetailsController(jwt, facade))
-                .setControllerAdvice(new GlobalExceptionHandler(mock(SystemIncidentService.class))).build();
+                .setControllerAdvice(new GlobalExceptionHandler(mock(SystemIncidentFacade.class))).build();
         when(jwt.getLoginMember(any())).thenReturn(viewer);
     }
 

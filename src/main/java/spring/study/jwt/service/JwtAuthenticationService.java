@@ -1,9 +1,6 @@
 package spring.study.jwt.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.member.entity.Member;
@@ -15,28 +12,8 @@ import java.util.OptionalLong;
 @RequiredArgsConstructor
 public class JwtAuthenticationService {
     private final JwtTokenProvider tokenProvider;
-    private final JwtCookieService cookieService;
     private final RefreshTokenService refreshTokenService;
     private final MemberTokenCacheService memberTokenCacheService;
-
-    public void login(Member member, HttpServletResponse response) {
-        login(member, response, null);
-    }
-
-    public void login(Member member, HttpServletResponse response, String ipAddress) {
-        login(member, null, response, ipAddress);
-    }
-
-    public void login(Member member, HttpServletRequest request, HttpServletResponse response, String ipAddress) {
-        AuthenticationTokens tokens = issue(member, ipAddress);
-        if (request != null) {
-            // Replace only this browser's session; other devices keep their own refresh tokens.
-            revoke(cookieService.readCurrentRefreshToken(request));
-            cookieService.rememberRefreshToken(request, tokens.refreshToken());
-        }
-        cookieService.writeAccessToken(response, tokens.accessToken(), tokenProvider.accessTokenDuration());
-        cookieService.writeRefreshToken(response, tokens.refreshToken(), tokenProvider.refreshTokenDuration());
-    }
 
     public AuthenticationTokens issue(Member member) {
         return issue(member, null);
@@ -91,19 +68,6 @@ public class JwtAuthenticationService {
             // Logout remains idempotent for expired or malformed client tokens.
             return OptionalLong.empty();
         }
-    }
-
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = cookieService.readCurrentRefreshToken(request);
-        if (refreshToken != null) {
-            try {
-                refreshTokenService.revoke(tokenProvider.parse(refreshToken, JwtTokenProvider.REFRESH).jti());
-            } catch (JwtTokenProvider.JwtValidationException ignored) {
-                // Invalid client tokens still result in cookie cleanup.
-            }
-        }
-        cookieService.clearAuthenticationCookies(response);
-        SecurityContextHolder.clearContext();
     }
 
     private AuthenticationTokens toAuthenticationTokens(JwtTokenProvider.IssuedToken accessToken, JwtTokenProvider.IssuedToken refreshToken) {

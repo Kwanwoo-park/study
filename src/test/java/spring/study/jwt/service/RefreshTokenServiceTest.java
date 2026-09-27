@@ -168,8 +168,8 @@ class RefreshTokenServiceTest {
         when(memberTokenCacheService.findOrLoad(eq(member.getId()), any(Duration.class)))
                 .thenReturn(Optional.of(member));
         JwtCookieService cookies = new JwtCookieService();
-        JwtAuthenticationService authentication = new JwtAuthenticationService(
-                provider, cookies, refreshTokenService, memberTokenCacheService);
+        var authentication = new spring.study.jwt.facade.JwtAuthenticationFacade(
+                new JwtAuthenticationService(provider, refreshTokenService, memberTokenCacheService), cookies, provider);
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(
                 provider, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/member/logout");
@@ -195,8 +195,8 @@ class RefreshTokenServiceTest {
         refreshTokenService.save(browser.jti(), member, provider.refreshTokenDuration());
         refreshTokenService.save(otherDevice.jti(), member, provider.refreshTokenDuration());
         JwtCookieService cookies = new JwtCookieService();
-        JwtAuthenticationService authentication = new JwtAuthenticationService(
-                provider, cookies, refreshTokenService, memberTokenCacheService);
+        var authentication = new spring.study.jwt.facade.JwtAuthenticationFacade(
+                new JwtAuthenticationService(provider, refreshTokenService, memberTokenCacheService), cookies, provider);
         String previousToken = browser.value();
 
         for (int attempt = 0; attempt < 3; attempt++) {
@@ -226,8 +226,8 @@ class RefreshTokenServiceTest {
         when(memberTokenCacheService.findOrLoad(eq(member.getId()), any(Duration.class)))
                 .thenReturn(Optional.of(member));
         JwtCookieService cookies = new JwtCookieService();
-        JwtAuthenticationService authentication = new JwtAuthenticationService(
-                provider, cookies, refreshTokenService, memberTokenCacheService);
+        var authentication = new spring.study.jwt.facade.JwtAuthenticationFacade(
+                new JwtAuthenticationService(provider, refreshTokenService, memberTokenCacheService), cookies, provider);
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(
                 provider, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
         MockHttpServletRequest request = new MockHttpServletRequest("PATCH", "/api/member/updatePassword/authenticated");

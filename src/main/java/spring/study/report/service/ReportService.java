@@ -37,19 +37,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportService {
     private static final int MAX_PAGE_SIZE = 100;
-    private static final DateTimeFormatter SANCTION_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final ReportRepository reportRepository;
-    private final MemberRepository memberRepository;
-    private final BoardRepository boardRepository;
-    private final CommentRepository commentRepository;
-    private final ChatMessageRepository chatMessageRepository;
-    private final MemberSanctionRepository memberSanctionRepository;
-    private final NotificationService notificationService;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public ReportResponseDto create(ReportRequestDto requestDto, Member reporter) {
+    public Report create(ReportRequestDto requestDto, Member reporter) {
         validateReasonDetail(requestDto);
 
         boolean alreadyReported = reportRepository.existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
@@ -64,28 +56,10 @@ public class ReportService {
         }
 
         Report report = reportRepository.save(requestDto.toEntity(reporter));
-        notifyAdministrators(report);
-        return new ReportResponseDto(report);
+        return report;
     }
 
-    private void notifyAdministrators(Report report) {
-        String targetName = switch (report.getTargetType()) {
-            case MEMBER -> "회원";
-            case BOARD -> "게시글";
-            case COMMENT -> "댓글";
-            case CHAT_MESSAGE -> "채팅 메시지";
-        };
-        String reporterName = report.getReporter().getName() == null
-                || report.getReporter().getName().isBlank()
-                ? report.getReporter().getEmail()
-                : report.getReporter().getName();
-        String message = "새 " + targetName + " 신고가 접수되었습니다. 신고자: " + reporterName;
-        String url = "/admin/report?reportId=" + report.getId();
 
-        memberRepository.findAllByRole(Role.ADMIN).forEach(admin ->
-                notificationService.createNotification(admin, message, Group.ADMIN, url)
-        );
-    }
 
     private void validateReasonDetail(ReportRequestDto requestDto) {
         if (requestDto.getReason() == ReportReason.ETC && requestDto.getNormalizedReasonDetail() == null) {
@@ -142,14 +116,11 @@ public class ReportService {
     }
 
     @Transactional
-    public ReportResponseDto process(Long id, ReportProcessRequestDto requestDto, Member admin) {
+    public Report process(Long id, ReportProcessRequestDto requestDto) {
         Report report = reportRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 신고입니다"));
 
         validateProcess(report, requestDto);
-        if (requestDto.getStatus() == ReportStatus.RESOLVED && isMemberSanction(requestDto.getAction())) {
-            applySanction(report, requestDto, admin);
-        }
 
         report.updateProcess(
                 requestDto.getStatus(),
@@ -157,7 +128,7 @@ public class ReportService {
                 requestDto.getReportMemo()
         );
 
-        return new ReportResponseDto(report);
+        return report;
     }
 
     private void validateProcess(Report report, ReportProcessRequestDto requestDto) {
@@ -174,81 +145,15 @@ public class ReportService {
         }
     }
 
-    private boolean isMemberSanction(ReportAction action) {
-        return action == ReportAction.WARNING
-                || action == ReportAction.TEMPORARY_SUSPEND
-                || action == ReportAction.PERMANENT_BAN;
-    }
 
-    private void applySanction(Report report, ReportProcessRequestDto requestDto, Member admin) {
-        if (memberSanctionRepository.existsByReportId(report.getId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 제재가 적용된 신고입니다");
-        }
 
-        Member target = resolveTargetMember(report);
-        switch (requestDto.getAction()) {
-            case WARNING -> target.addWarning();
-            case TEMPORARY_SUSPEND -> target.suspendUntil(requestDto.getSuspendedUntil());
-            case PERMANENT_BAN -> target.ban();
-            default -> throw new IllegalStateException("지원하지 않는 회원 제재입니다");
-        }
-        eventPublisher.publishEvent(new MemberChangedEvent(target.getId()));
 
-        memberSanctionRepository.save(MemberSanction.builder()
-                .member(target)
-                .report(report)
-                .issuedBy(admin)
-                .type(requestDto.getAction())
-                .reason(requestDto.getReportMemo())
-                .startedAt(LocalDateTime.now())
-                .expiredAt(requestDto.getSuspendedUntil())
-                .build());
 
-        if (requestDto.getAction() == ReportAction.TEMPORARY_SUSPEND
-                || requestDto.getAction() == ReportAction.PERMANENT_BAN) {
-            notificationService.createNotification(
-                    target,
-                    createSanctionNotificationMessage(requestDto),
-                    Group.ADMIN
-            );
-        }
-    }
 
-    private String createSanctionNotificationMessage(ReportProcessRequestDto requestDto) {
-        String startedAt = LocalDateTime.now().format(SANCTION_DATE_FORMAT);
-        String sanctionPeriod = requestDto.getAction() == ReportAction.TEMPORARY_SUSPEND
-                ? startedAt + " ~ " + requestDto.getSuspendedUntil().format(SANCTION_DATE_FORMAT)
-                : startedAt + " (영구)";
-        String reason = requestDto.getReportMemo() == null || requestDto.getReportMemo().isBlank()
-                ? "신고 처리에 따른 제재"
-                : requestDto.getReportMemo().trim();
 
-        return "금지일자: " + sanctionPeriod + " / 사유: " + reason;
-    }
 
-    private Member resolveTargetMember(Report report) {
-        try {
-            return switch (report.getTargetType()) {
-                case MEMBER -> memberRepository.findByEmail(report.getTargetId())
-                        .orElseThrow(() -> targetNotFound("회원"));
-                case BOARD -> boardRepository.findById(Long.valueOf(report.getTargetId()))
-                        .map(board -> board.getMember())
-                        .orElseThrow(() -> targetNotFound("게시글"));
-                case COMMENT -> commentRepository.findById(Long.valueOf(report.getTargetId()))
-                        .map(comment -> comment.getMember())
-                        .orElseThrow(() -> targetNotFound("댓글"));
-                case CHAT_MESSAGE -> chatMessageRepository.findById(report.getTargetId())
-                        .map(message -> message.getMember())
-                        .orElseThrow(() -> targetNotFound("채팅 메시지"));
-            };
-        } catch (NumberFormatException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "신고 대상 식별자가 올바르지 않습니다");
-        }
-    }
 
-    private ResponseStatusException targetNotFound(String type) {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, type + " 신고 대상을 찾을 수 없습니다");
-    }
+
 
     @Transactional
     public ReportResponseDto cancel(Long id, Member reporter) {

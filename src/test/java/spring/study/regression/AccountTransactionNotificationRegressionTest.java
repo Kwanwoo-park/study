@@ -31,11 +31,7 @@ class AccountTransactionNotificationRegressionTest {
     private final AccountRepository accountRepository = mock(AccountRepository.class);
     private final AccountTransactionRepository accountTransactionRepository = mock(AccountTransactionRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
-    private final AccountService accountService = new AccountService(
-            accountRepository,
-            accountTransactionRepository,
-            notificationService
-    );
+    private final spring.study.account.service.AccountNotificationService accountNotificationService = new spring.study.account.service.AccountNotificationService(notificationService);
 
     @Test
     void canceledTransactionNotificationShouldUseCanceledMessage() throws Exception {
@@ -52,9 +48,7 @@ class AccountTransactionNotificationRegressionTest {
                 .transactionTime(LocalDateTime.now())
                 .build();
 
-        Method method = AccountService.class.getDeclaredMethod("notifyTransaction", AccountTransaction.class);
-        method.setAccessible(true);
-        method.invoke(accountService, transaction);
+        accountNotificationService.notifyTransaction(transaction);
 
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
         verify(notificationService, times(1)).createNotification(

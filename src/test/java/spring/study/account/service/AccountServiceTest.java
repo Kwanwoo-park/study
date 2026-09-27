@@ -28,13 +28,7 @@ import java.util.List;
 
 class AccountServiceTest {
     private final AccountRepository accountRepository = mock(AccountRepository.class);
-    private final AccountTransactionRepository accountTransactionRepository = mock(AccountTransactionRepository.class);
-    private final NotificationService notificationService = mock(NotificationService.class);
-    private final AccountService accountService = new AccountService(
-            accountRepository,
-            accountTransactionRepository,
-            notificationService
-    );
+    private final AccountService accountService = new AccountService(accountRepository);
 
     @Test
     void createAccountShouldPersistSelectedAccountType() {
@@ -55,8 +49,6 @@ class AccountServiceTest {
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(accountRepository.findByAccountForUpdate(checking.getAccount()))
                 .thenReturn(java.util.Optional.of(checking));
-        when(accountTransactionRepository.save(any(AccountTransaction.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         AccountCreateRequestDto request = new AccountCreateRequestDto();
         request.setAccountType(AccountType.INSTALLMENT_SAVINGS);
@@ -76,11 +68,6 @@ class AccountServiceTest {
         YearMonth nextMonth = YearMonth.from(LocalDate.now()).plusMonths(1L);
         assertEquals(nextMonth.atDay(Math.min(15, nextMonth.lengthOfMonth())),
                 account.getNextSavingsPaymentDate());
-        ArgumentCaptor<AccountTransaction> transactionCaptor = ArgumentCaptor.forClass(AccountTransaction.class);
-        verify(accountTransactionRepository).save(transactionCaptor.capture());
-        assertEquals(AccountTransactionType.SAVINGS_PAYMENT,
-                transactionCaptor.getValue().getTransactionType());
-        assertEquals("적금 개설 첫 납입", transactionCaptor.getValue().getMemo());
     }
 
     @Test
@@ -115,7 +102,6 @@ class AccountServiceTest {
         assertEquals("선택한 입출금 계좌의 잔액이 적금 납입 금액보다 부족합니다", exception.getMessage());
         assertEquals(50_000L, checking.getAmount());
         verify(accountRepository, never()).save(any(Account.class));
-        verify(accountTransactionRepository, never()).save(any(AccountTransaction.class));
     }
 
     @Test
@@ -136,8 +122,6 @@ class AccountServiceTest {
         )).thenReturn(List.of(checking));
         when(accountRepository.findByAccountForUpdate(checking.getAccount())).thenReturn(java.util.Optional.of(checking));
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(accountTransactionRepository.save(any(AccountTransaction.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         AccountCreateRequestDto request = new AccountCreateRequestDto();
         request.setAccountType(AccountType.TIME_DEPOSIT);
@@ -154,10 +138,6 @@ class AccountServiceTest {
         AccountResponseDto response = new AccountResponseDto(account);
         assertEquals(false, response.isOutgoingTransferAllowed());
         assertEquals(false, response.isDepositAllowed());
-        ArgumentCaptor<AccountTransaction> transactionCaptor = ArgumentCaptor.forClass(AccountTransaction.class);
-        verify(accountTransactionRepository).save(transactionCaptor.capture());
-        assertEquals(AccountTransactionType.TIME_DEPOSIT_OPENING,
-                transactionCaptor.getValue().getTransactionType());
     }
 
     @Test
@@ -173,7 +153,7 @@ class AccountServiceTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> accountService.createAccount(member, request, accountRepository.findByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE).get(0))
+                () -> accountService.createAccount(member, request, null)
         );
 
         assertEquals("예금 만기 기간은 1개월부터 24개월까지 선택할 수 있습니다", exception.getMessage());

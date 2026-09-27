@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
-import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.facade.JwtAuthenticationFacade;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
@@ -30,7 +30,7 @@ class MemberPasswordChangeControllerTest {
     private final CommonFacade commonFacade = mock(CommonFacade.class);
     private final MemberFacade memberFacade = mock(MemberFacade.class);
     private final MemberService memberService = mock(MemberService.class);
-    private final JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
+    private final JwtAuthenticationFacade authenticationService = mock(JwtAuthenticationFacade.class);
     private final PasswordChangeVerificationService verificationService = mock(PasswordChangeVerificationService.class);
     private final HttpServletRequest httpRequest = mock(HttpServletRequest.class);
     private final HttpServletResponse httpResponse = mock(HttpServletResponse.class);

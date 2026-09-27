@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
-import spring.study.admin.service.SystemIncidentService;
+import spring.study.admin.facade.SystemIncidentFacade;
 import spring.study.common.exception.BusinessStateException;
 import spring.study.common.exception.ResourceNotFoundException;
 
@@ -23,7 +23,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
-    private final SystemIncidentService systemIncidentService;
+    private final SystemIncidentFacade systemIncidentService;
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleBadRequest(IllegalArgumentException e) {

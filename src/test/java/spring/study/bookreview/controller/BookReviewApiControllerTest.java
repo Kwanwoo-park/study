@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import spring.study.admin.service.SystemIncidentService;
+import spring.study.admin.facade.SystemIncidentFacade;
 import spring.study.bookreview.entity.BookReview;
 import spring.study.bookreview.facade.BookReviewFacade;
 import spring.study.bookreview.repository.BookReviewRepository;
@@ -42,7 +42,7 @@ class BookReviewApiControllerTest {
     void setUp() {
         mvc = MockMvcBuilders.standaloneSetup(new BookReviewApiController(
                         new BookReviewFacade(new BookReviewService(repository)), jwtManager, new CommonFacade()))
-                .setControllerAdvice(new GlobalExceptionHandler(mock(SystemIncidentService.class))).build();
+                .setControllerAdvice(new GlobalExceptionHandler(mock(SystemIncidentFacade.class))).build();
     }
 
     @Test

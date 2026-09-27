@@ -1,5 +1,7 @@
 package spring.study.admin.controller;
 
+import spring.study.admin.facade.IntegrationEventLogFacade;
+
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
@@ -12,7 +14,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.dto.IntegrationEventLogResponse;
 import spring.study.admin.entity.IntegrationEventLog.*;
-import spring.study.admin.service.IntegrationEventLogQueryService;
 
 import java.util.Map;
 
@@ -20,7 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class IntegrationEventLogController {
-    private final IntegrationEventLogQueryService service;
+    private final IntegrationEventLogFacade facade;
 
     @GetMapping("/admin/event-logs")
     public String page(HttpServletResponse response) {
@@ -33,13 +34,13 @@ public class IntegrationEventLogController {
     public ResponseEntity<IntegrationEventLogResponse> list(@RequestParam(required = false) Broker broker,
             @RequestParam(required = false) Operation operation, @RequestParam(required = false) Outcome outcome,
             @RequestParam(required = false) Long beforeId, @RequestParam(defaultValue = "24") int hours) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.find(broker, operation, outcome, beforeId, hours));
+        return facade.list(broker, operation, outcome, beforeId, hours);
     }
 
     @GetMapping("/api/admin/event-logs/{id}")
     @ResponseBody
     public ResponseEntity<IntegrationEventLogResponse.Item> detail(@PathVariable long id) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.findById(id));
+        return facade.detail(id);
     }
 
     @ExceptionHandler(ResponseStatusException.class)

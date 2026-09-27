@@ -1,5 +1,7 @@
 package spring.study.admin.controller;
 
+import spring.study.kafka.facade.KafkaOperationsFacade;
+
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
@@ -12,24 +14,23 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.kafka.entity.KafkaDeadLetter.Status;
-import spring.study.kafka.service.KafkaDeadLetterService;
-import spring.study.kafka.service.KafkaMonitoringService;
 import spring.study.member.entity.Member;
 import java.util.Map;
 
 @Controller @RequiredArgsConstructor @PreAuthorize("hasRole('ADMIN')")
 public class KafkaOperationsController {
-    private final KafkaMonitoringService monitoring;
-    private final KafkaDeadLetterService deadLetters;
+    private final KafkaOperationsFacade facade;
     @GetMapping("/admin/kafka")
     public String page(HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store"); return "admin/kafka_operations";
     }
     @GetMapping("/api/admin/kafka/overview") @ResponseBody
-    public ResponseEntity<?> overview() { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(monitoring.overview()); }
+    public ResponseEntity<?> overview() {
+        return facade.overview();
+    }
     @GetMapping("/api/admin/kafka/dead-letters") @ResponseBody
     public ResponseEntity<?> list(@RequestParam(required = false) Status status, @RequestParam(required = false) Long beforeId) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(deadLetters.list(status, beforeId));
+        return facade.list(status, beforeId);
     }
     @GetMapping("/api/admin/kafka/csrf") @ResponseBody
     public ResponseEntity<?> csrf(CsrfToken token) {
@@ -37,8 +38,7 @@ public class KafkaOperationsController {
     }
     @PostMapping("/api/admin/kafka/dead-letters/{id}/replay") @ResponseBody
     public ResponseEntity<?> replay(@PathVariable long id, @AuthenticationPrincipal Member administrator) {
-        deadLetters.requestReplay(id, administrator.getId());
-        return ResponseEntity.accepted().cacheControl(CacheControl.noStore()).body(Map.of("message", "재발행 요청을 저장했습니다. 처리 상태를 확인해 주세요."));
+        return facade.replay(id, administrator);
     }
     @ExceptionHandler(ResponseStatusException.class) @ResponseBody
     public ResponseEntity<?> requestError(ResponseStatusException error) {

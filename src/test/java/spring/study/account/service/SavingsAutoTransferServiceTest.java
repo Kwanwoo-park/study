@@ -34,11 +34,13 @@ class SavingsAutoTransferServiceTest {
     private final AccountTransactionRepository transactionRepository = mock(AccountTransactionRepository.class);
     private final AccountService accountService = mock(AccountService.class);
     private final NotificationService notificationService = mock(NotificationService.class);
+    private final AccountTransactionService accountTransactionService = mock(AccountTransactionService.class);
+    private final AccountNotificationService accountNotificationService = mock(AccountNotificationService.class);
     private final SavingsAutoTransferService service = new SavingsAutoTransferService(
             accountRepository,
             transactionRepository,
             accountService,
-            notificationService
+            notificationService, accountTransactionService, accountNotificationService
     );
 
     private Member member;
@@ -82,7 +84,7 @@ class SavingsAutoTransferServiceTest {
         ArgumentCaptor<AccountTransaction> captor = ArgumentCaptor.forClass(AccountTransaction.class);
         verify(transactionRepository).save(captor.capture());
         assertEquals(AccountTransactionType.SAVINGS_PAYMENT, captor.getValue().getTransactionType());
-        verify(accountService).notifyTransaction(captor.getValue());
+        verify(accountNotificationService).notifyTransaction(captor.getValue());
     }
 
     @Test

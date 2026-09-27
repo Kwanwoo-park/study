@@ -27,13 +27,18 @@ class AppealApiControllerTest {
     private final JwtManager jwtManager = mock(JwtManager.class);
     private final AppealService service = mock(AppealService.class);
     private final AppealVerificationService verificationService = mock(AppealVerificationService.class);
+    private final spring.study.member.service.MemberService memberService = mock(spring.study.member.service.MemberService.class);
+    private final spring.study.member.sanction.service.MemberSanctionService sanctions = mock(spring.study.member.sanction.service.MemberSanctionService.class);
     private final Member member = Member.builder().id(7L).email("appeal@example.test").build();
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
         mvc = MockMvcBuilders.standaloneSetup(new AppealApiController(
-                new AppealFacade(service, verificationService), jwtManager, new CommonFacade())).build();
+                new AppealFacade(service, verificationService, memberService, sanctions,
+                        mock(spring.study.notification.service.NotificationService.class),
+                        new spring.study.common.component.TransactionRunner(mock(org.springframework.transaction.PlatformTransactionManager.class))),
+                jwtManager, new CommonFacade())).build();
     }
 
     @Test
@@ -42,7 +47,7 @@ class AppealApiControllerTest {
         verifyNoInteractions(service);
 
         when(jwtManager.getLoginMember(any())).thenReturn(member);
-        when(service.findSanctions(member)).thenReturn(List.of());
+        when(sanctions.findByMember(member)).thenReturn(List.of());
         when(service.findByMember(member)).thenReturn(List.of());
         mvc.perform(get("/api/appeal/context?email=someone-else@example.test"))
                 .andExpect(status().isOk()).andExpect(jsonPath("result").value(10))
@@ -77,15 +82,17 @@ class AppealApiControllerTest {
 
     @Test
     void guestSubmissionPassesVerificationProofToTheServiceWithoutInventingALogin() throws Exception {
-        when(service.create(any(), isNull())).thenReturn(new AppealResponseDto(Appeal.builder()
-                .id(19L).member(member).title("상소").content("상소 내용").build()));
+        when(verificationService.consumeVerification("appeal@example.test", "proof")).thenReturn(member);
+        when(service.create(any(), eq(member), isNull())).thenReturn(Appeal.builder()
+                .id(19L).member(member).title("상소").content("상소 내용").build());
 
         mvc.perform(post("/api/appeal").contentType(MediaType.APPLICATION_JSON).content("""
                 {"email":"appeal@example.test","verificationToken":"proof","title":"상소","content":"상소 내용"}
                 """))
                 .andExpect(status().isOk()).andExpect(jsonPath("result").value(19))
                 .andExpect(jsonPath("appeal.memberEmail").value(member.getEmail()));
-        verify(service).create(argThat(dto -> "proof".equals(dto.getVerificationToken())), isNull());
+        verify(verificationService).consumeVerification("appeal@example.test", "proof");
+        verify(service).create(argThat(dto -> "proof".equals(dto.getVerificationToken())), eq(member), isNull());
     }
 
     @Test

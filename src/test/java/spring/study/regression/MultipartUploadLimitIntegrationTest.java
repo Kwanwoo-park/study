@@ -32,7 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.admin.repository.AdminFileRepository;
 import spring.study.admin.service.AdminFileS3Storage;
 import spring.study.admin.service.AdminFileService;
-import spring.study.admin.service.SystemIncidentService;
+import spring.study.admin.facade.SystemIncidentFacade;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.common.component.GlobalExceptionHandler;
 
@@ -216,8 +216,8 @@ class MultipartUploadLimitIntegrationTest {
         }
 
         @Bean
-        SystemIncidentService systemIncidentService() {
-            return mock(SystemIncidentService.class);
+        SystemIncidentFacade systemIncidentService() {
+            return mock(SystemIncidentFacade.class);
         }
     }
 

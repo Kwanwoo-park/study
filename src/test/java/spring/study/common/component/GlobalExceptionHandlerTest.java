@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
-import spring.study.admin.service.SystemIncidentService;
+import spring.study.admin.facade.SystemIncidentFacade;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
@@ -18,7 +18,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void missingUploadPartShouldReturnBadRequestWithoutRecordingAnIncident() {
-        SystemIncidentService incidentService = mock(SystemIncidentService.class);
+        SystemIncidentFacade incidentService = mock(SystemIncidentFacade.class);
         GlobalExceptionHandler handler = new GlobalExceptionHandler(incidentService);
 
         ResponseEntity<?> response = handler.handleMissingRequestPart(
@@ -30,7 +30,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void oversizedUploadShouldReturnPayloadTooLargeWithoutRecordingAnIncident() {
-        SystemIncidentService incidentService = mock(SystemIncidentService.class);
+        SystemIncidentFacade incidentService = mock(SystemIncidentFacade.class);
         GlobalExceptionHandler handler = new GlobalExceptionHandler(incidentService);
 
         ResponseEntity<?> response = handler.handleMaxUploadSizeExceeded(
@@ -42,7 +42,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void unexpectedExceptionShouldBeRecordedAndReturnInternalServerError() {
-        SystemIncidentService incidentService = mock(SystemIncidentService.class);
+        SystemIncidentFacade incidentService = mock(SystemIncidentFacade.class);
         HttpServletRequest request = mock(HttpServletRequest.class);
         RuntimeException exception = new RuntimeException("failure");
         GlobalExceptionHandler handler = new GlobalExceptionHandler(incidentService);
@@ -55,7 +55,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void recordingFailureShouldNotReplaceOriginalErrorResponse() {
-        SystemIncidentService incidentService = mock(SystemIncidentService.class);
+        SystemIncidentFacade incidentService = mock(SystemIncidentFacade.class);
         HttpServletRequest request = mock(HttpServletRequest.class);
         RuntimeException exception = new RuntimeException("failure");
         doThrow(new RuntimeException("recording failed")).when(incidentService).record(request, exception);
@@ -68,7 +68,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void illegalStateShouldBeRecordedInsteadOfBeingReportedAsUnauthorized() {
-        SystemIncidentService incidentService = mock(SystemIncidentService.class);
+        SystemIncidentFacade incidentService = mock(SystemIncidentFacade.class);
         HttpServletRequest request = mock(HttpServletRequest.class);
         IllegalStateException exception = new IllegalStateException("redis unavailable");
         GlobalExceptionHandler handler = new GlobalExceptionHandler(incidentService);

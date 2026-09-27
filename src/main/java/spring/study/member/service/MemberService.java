@@ -1,6 +1,5 @@
 package spring.study.member.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -98,6 +97,11 @@ public class MemberService implements UserDetailsService {
     @Transactional(readOnly = true)
     public Member findAdministrator() {
         return memberRepository.findByRole(Role.ADMIN);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Member> findAdministrators() {
+        return memberRepository.findAllByRole(Role.ADMIN);
     }
 
     @Transactional(readOnly = true)

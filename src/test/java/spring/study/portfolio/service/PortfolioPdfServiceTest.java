@@ -111,7 +111,7 @@ class PortfolioPdfServiceTest {
         PortfolioPdfRenderer realRenderer = spy(new PortfolioPdfRenderer());
         PortfolioPdfService realService = new PortfolioPdfService(realRenderer);
         try {
-            var mvc = MockMvcBuilders.standaloneSetup(new PortfolioPdfController(realService)).build();
+            var mvc = MockMvcBuilders.standaloneSetup(new PortfolioPdfController(new spring.study.portfolio.facade.PortfolioPdfFacade(realService))).build();
             byte[] first = mvc.perform(get("/api/portfolio/pdf")).andExpect(status().isOk()).andExpect(content().contentType("application/pdf")).andReturn().getResponse().getContentAsByteArray();
             assertThat(first).startsWith("%PDF-".getBytes(StandardCharsets.US_ASCII));
             assertThat(first.length).isGreaterThan(10000);

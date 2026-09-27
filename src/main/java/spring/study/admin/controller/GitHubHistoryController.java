@@ -1,5 +1,7 @@
 package spring.study.admin.controller;
 
+import spring.study.admin.facade.GitHubHistoryFacade;
+
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
@@ -13,7 +15,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.dto.GitHubHistoryResponse;
-import spring.study.admin.service.GitHubHistoryService;
 
 import java.util.Map;
 
@@ -21,7 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class GitHubHistoryController {
-    private final GitHubHistoryService service;
+    private final GitHubHistoryFacade facade;
 
     @GetMapping("/admin/github")
     public String page(HttpServletResponse response) {
@@ -33,14 +34,14 @@ public class GitHubHistoryController {
     @ResponseBody
     public ResponseEntity<GitHubHistoryResponse<GitHubHistoryResponse.Commit>> commits(
             @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.commits(page));
+        return facade.commits(page);
     }
 
     @GetMapping("/api/admin/github/activity")
     @ResponseBody
     public ResponseEntity<GitHubHistoryResponse<GitHubHistoryResponse.Activity>> activity(
             @RequestParam(defaultValue = "") String cursor) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.activity(cursor));
+        return facade.activity(cursor);
     }
 
     @ExceptionHandler(ResponseStatusException.class)

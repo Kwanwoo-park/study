@@ -9,36 +9,36 @@ import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountStatus;
-import spring.study.account.entity.AccountTransaction;
-import spring.study.account.entity.AccountTransactionStatus;
 import spring.study.account.entity.AccountType;
 import spring.study.account.repository.AccountRepository;
-import spring.study.account.repository.AccountTransactionRepository;
 import spring.study.member.entity.Member;
-import spring.study.notification.entity.Group;
-import spring.study.notification.service.NotificationService;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
-import java.text.NumberFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
 public class AccountService {
     private final AccountRepository accountRepository;
-    private final AccountTransactionRepository accountTransactionRepository;
-    private final NotificationService notificationService;
 
     @Transactional
     public Account createAccount(Member member, AccountCreateRequestDto requestDto, Account source) {
+        if (requestDto == null) requestDto = new AccountCreateRequestDto();
         AccountType resolvedType = requestDto.getAccountType() == null ? AccountType.DEPOSIT_WITHDRAWAL : requestDto.getAccountType();
 
         if (resolvedType.isInterestBearing() && !accountRepository.existsByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE)) {
             throw new IllegalArgumentException("예적금 계좌를 만들려면 먼저 활성 상태의 입출금 계좌가 필요합니다");
+        }
+
+        if (resolvedType == AccountType.INSTALLMENT_SAVINGS) {
+            validateSavingsRequest(requestDto);
+            validateOpeningSource(source, member, requestDto.getMonthlySavingsAmount(), "적금 납입");
+        } else if (resolvedType == AccountType.TIME_DEPOSIT) {
+            validateTimeDepositRequest(requestDto);
+            validateOpeningSource(source, member, requestDto.getTimeDepositAmount(), "예금");
         }
 
         String accountFirst = "919";
@@ -80,8 +80,9 @@ public class AccountService {
         ));
     }
 
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public Account findByAccountForUpdate(String accountNum) {
-        return accountRepository.findByAccountForUpdate(accountNum).orElseThrow(() -> new BadCredentialsException(
+        return accountRepository.findByAccountForUpdate(accountNum).orElseThrow(() -> new IllegalArgumentException(
                 "존재하지 않는 계좌입니다"
         ));
     }
@@ -108,7 +109,7 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public boolean existsByAccount(String accountNum) {
-        return !accountRepository.existsById(accountNum);
+        return accountRepository.existsById(accountNum);
     }
 
     @Transactional(readOnly = true)
@@ -130,6 +131,7 @@ public class AccountService {
 
     @Transactional
     public void tranAccount (Account account, Account tranAccount, Long amount, LocalDateTime transactionTime) {
+        validateAmount(amount);
         validateOutgoingTransaction(account);
         validateIncomingTransaction(tranAccount);
 
@@ -145,6 +147,7 @@ public class AccountService {
 
     @Transactional
     public void deposit(Account account, Long amount, LocalDateTime transactionTime) {
+        validateAmount(amount);
         validateIncomingTransaction(account);
         prepareBalanceChange(account, transactionTime);
         account.addAmount(amount);
@@ -152,9 +155,11 @@ public class AccountService {
 
     @Transactional
     public AccountSettlementResult terminateInterestAccount(Account source, Account settlementAccount, Member member,
-                                                            boolean matured, long principal, long interest) {
+                                                            LocalDateTime time) {
         validateSettlement(source, settlementAccount, member);
-
+        boolean matured = source.getMaturityAt() != null && !time.isBefore(source.getMaturityAt());
+        long principal = source.getAmount();
+        long interest = source.terminateAndGetInterest(time);
         long settlementAmount = Math.addExact(principal, interest);
 
         source.clearAmount();
@@ -204,45 +209,6 @@ public class AccountService {
         return resolvedType.getDefaultAccountName();
     }
 
-    void notifyTransaction(AccountTransaction transaction) {
-        if (transaction.getWithdrawalAccount() != null) {
-            notifyAccountMember(transaction.getWithdrawalAccount(), createTransactionMessage(transaction, transaction.getWithdrawalAccount()));
-        }
-
-        if (transaction.getDepositAccount() != null) {
-            notifyAccountMember(transaction.getDepositAccount(), createTransactionMessage(transaction, transaction.getDepositAccount()));
-        }
-    }
-
-    private void notifyAccountMember(Account account, String message) {
-        Member member = account.getMember();
-        if (member == null) {
-            return;
-        }
-
-        notificationService.createNotification(member, message, Group.TRAN, account.getAccount());
-    }
-
-    private String createTransactionMessage(AccountTransaction transaction, Account account) {
-        String amount = NumberFormat.getNumberInstance(Locale.KOREA).format(transaction.getAmount());
-        String status = transaction.getTransactionStatus() == AccountTransactionStatus.CANCELED ? "취소" : "완료";
-        String transactionType = switch (transaction.getTransactionType()) {
-            case TRANSFER -> "이체";
-            case DEPOSIT -> "입금";
-            case WITHDRAWAL -> "출금";
-            case PAYMENT -> "결제";
-            case REFUND -> "환불";
-            case FEE -> "수수료";
-            case CANCEL -> "취소";
-            case INTEREST -> "이자";
-            case TERMINATION -> "해지 정산";
-            case SAVINGS_PAYMENT -> "적금 자동이체";
-            case TIME_DEPOSIT_OPENING -> "예금 개설 입금";
-        };
-
-        return account.getName() + " 계좌에서 " + amount + "원 " + transactionType + " 거래가 " + status + "되었습니다.";
-    }
-
     private void validateActive(Account account) {
         if (account.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("만기 또는 해지된 계좌는 거래할 수 없습니다");
@@ -284,14 +250,9 @@ public class AccountService {
         }
     }
 
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public Account resolveSavingsSourceAccount(Member member, AccountCreateRequestDto requestDto) {
-        if (requestDto == null || requestDto.getMonthlySavingsAmount() == null || requestDto.getMonthlySavingsAmount() < 10_000L) {
-            throw new IllegalArgumentException("적금 월 납입액은 1만원 이상이어야 합니다");
-        } else if (requestDto.getMonthlySavingsDay() == null || requestDto.getMonthlySavingsDay() < 1 || requestDto.getMonthlySavingsDay() > 31) {
-            throw new IllegalArgumentException("적금 자동이체일은 1일부터 31일 사이로 선택해주세요");
-        } else if (!Boolean.TRUE.equals(requestDto.getAutoTerminationAcknowledged())) {
-            throw new IllegalArgumentException("3일 내 미납 시 적금 계좌가 자동 해지된다는 내용에 동의해주세요");
-        }
+        validateSavingsRequest(requestDto);
 
         List<Account> checkingAccounts = accountRepository.findByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE);
         String requestedSource = requestDto.getSavingsSourceAccount();
@@ -325,12 +286,9 @@ public class AccountService {
         return lockedSource;
     }
 
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public Account resolveTimeDepositSourceAccount(Member member, AccountCreateRequestDto requestDto) {
-        if (requestDto == null || requestDto.getTimeDepositAmount() == null || requestDto.getTimeDepositAmount() < 10_000L) {
-            throw new IllegalArgumentException("예금 금액은 1만원 이상이어야 합니다");
-        } else if (requestDto.getMaturityMonths() == null || requestDto.getMaturityMonths() < 1 || requestDto.getMaturityMonths() > 24) {
-            throw new IllegalArgumentException("예금 만기 기간은 1개월부터 24개월까지 선택할 수 있습니다");
-        }
+        validateTimeDepositRequest(requestDto);
 
         List<Account> checkingAccounts = accountRepository.findByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE);
         String requestedSource = requestDto.getTimeDepositSourceAccount();
@@ -372,5 +330,36 @@ public class AccountService {
         savings.addAmount(amount);
 
         savings.completeInitialSavingsPayment(LocalDateTime.now().toLocalDate());
+    }
+    private void validateSavingsRequest(AccountCreateRequestDto requestDto) {
+        if (requestDto == null || requestDto.getMonthlySavingsAmount() == null || requestDto.getMonthlySavingsAmount() < 10_000L) {
+            throw new IllegalArgumentException("적금 월 납입액은 1만원 이상이어야 합니다");
+        } else if (requestDto.getMonthlySavingsDay() == null || requestDto.getMonthlySavingsDay() < 1 || requestDto.getMonthlySavingsDay() > 31) {
+            throw new IllegalArgumentException("적금 자동이체일은 1일부터 31일 사이로 선택해주세요");
+        } else if (!Boolean.TRUE.equals(requestDto.getAutoTerminationAcknowledged())) {
+            throw new IllegalArgumentException("3일 내 미납 시 적금 계좌가 자동 해지된다는 내용에 동의해주세요");
+        }
+
+    }
+
+    private void validateTimeDepositRequest(AccountCreateRequestDto requestDto) {
+        if (requestDto == null || requestDto.getTimeDepositAmount() == null || requestDto.getTimeDepositAmount() < 10_000L) {
+            throw new IllegalArgumentException("예금 금액은 1만원 이상이어야 합니다");
+        } else if (requestDto.getMaturityMonths() == null || requestDto.getMaturityMonths() < 1 || requestDto.getMaturityMonths() > 24) {
+            throw new IllegalArgumentException("예금 만기 기간은 1개월부터 24개월까지 선택할 수 있습니다");
+        }
+
+    }
+
+    private void validateOpeningSource(Account source, Member member, long amount, String product) {
+        if (source == null || source.getMember() == null || member == null || !source.getMember().getId().equals(member.getId())
+                || source.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || source.getAccountStatus() != AccountStatus.ACTIVE)
+            throw new IllegalArgumentException("본인의 활성 입출금 계좌만 출금 계좌로 선택할 수 있습니다");
+        if (source.getAmount() < amount)
+            throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 " + product + " 금액보다 부족합니다");
+    }
+
+    private void validateAmount(Long amount) {
+        if (amount == null || amount < 10_000L) throw new IllegalArgumentException("거래 금액은 1만원 이상이어야 합니다");
     }
 }

@@ -14,6 +14,11 @@ public class ChatPresenceService {
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    public long countActiveConnections() {
+        var keys = redisTemplate.keys("chat:room:*:active:*");
+        return keys == null ? 0L : keys.size();
+    }
+
     public void active(String roomId, Member member) {
         redisTemplate.opsForValue().set(createKey(roomId, member), "1", ACTIVE_TTL);
     }

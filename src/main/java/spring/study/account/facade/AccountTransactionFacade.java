@@ -11,6 +11,9 @@ import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.service.AccountService;
 import spring.study.account.service.AccountTransactionService;
+import spring.study.account.service.AccountNotificationService;
+import spring.study.common.component.TransactionRunner;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.member.entity.Member;
 
 import java.util.Map;
@@ -21,7 +24,10 @@ import java.util.Map;
 public class AccountTransactionFacade {
     private final AccountService accountService;
     private final AccountTransactionService accountTransactionService;
+    private final AccountNotificationService accountNotificationService;
+    private final TransactionRunner transactions;
 
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getListByAccount(String accountNumber, int page, Member member) {
         ResponseEntity<?> validation = validateOwner(accountNumber, member);
         if (validation != null) return validation;
@@ -44,7 +50,11 @@ public class AccountTransactionFacade {
 
     public ResponseEntity<?> cancel(Long transactionId, Member member) {
         try {
-            AccountTransactionResponseDto cancelTransaction = accountTransactionService.cancelTransaction(transactionId, member);
+            AccountTransactionResponseDto cancelTransaction = transactions.write(() -> {
+                var canceled = accountTransactionService.cancelTransaction(transactionId, member);
+                accountNotificationService.notifyTransaction(canceled.original());
+                return new AccountTransactionResponseDto(canceled.cancellation());
+            });
 
             return ResponseEntity.ok(Map.of(
                     "result", 10L,
@@ -67,7 +77,7 @@ public class AccountTransactionFacade {
     private ResponseEntity<?> validateOwner(String accountNumber, Member member) {
         if (accountNumber == null || accountNumber.isBlank()) return accountNotFound();
 
-        if (accountService.existsByAccount(accountNumber)) return accountNotFound();
+        if (!accountService.existsByAccount(accountNumber)) return accountNotFound();
 
         Account account = accountService.findByAccount(accountNumber);
         

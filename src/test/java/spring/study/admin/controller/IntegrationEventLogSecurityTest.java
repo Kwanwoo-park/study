@@ -100,7 +100,7 @@ class IntegrationEventLogSecurityTest {
 
     @Configuration
     @EnableWebMvc @EnableWebSecurity @EnableMethodSecurity
-    @Import({IntegrationEventLogSecurityConfig.class, IntegrationEventLogController.class})
+    @Import({IntegrationEventLogSecurityConfig.class, IntegrationEventLogController.class, spring.study.admin.facade.IntegrationEventLogFacade.class})
     static class Config {
         @Bean IntegrationEventLogQueryService service() { return mock(IntegrationEventLogQueryService.class); }
         @Bean JwtAuthenticationFilter jwtFilter() {

@@ -27,7 +27,7 @@ class ReadOnlyTransactionRegressionTest {
             Map.entry("account.service.AccountTransactionService", Set.of("findByAccount", "findByWithdrawalAccount", "findByDepositAccount")),
             Map.entry("account.service.SavingsAutoTransferService", Set.of("findDueSavingsAccountNumbers")),
             Map.entry("admin.service.AdminFileService", Set.of("list")),
-            Map.entry("appeal.service.AppealService", Set.of("findSanctions", "findByMember", "findAll")),
+            Map.entry("appeal.service.AppealService", Set.of("findByMember", "findAll")),
             Map.entry("board.service.BoardService", Set.of("findNewBoard", "getBoard", "getBoardByMember", "findAll", "findByMember", "findById", "existBoard", "countByMember", "countByMembers", "getBoardIdList")),
             Map.entry("board.service.BoardImgService", Set.of("findBoard")),
             Map.entry("chat.service.ChatMessageService", Set.of("findById", "find", "findActiveChatting", "loadChatting", "countUnread", "findLatestVisible")),
@@ -40,7 +40,7 @@ class ReadOnlyTransactionRegressionTest {
             Map.entry("favorite.service.FavoriteService", Set.of("findByBoard", "findByMember", "findByMemberAndBoard", "existFavorite", "getFavorites", "countFavorites", "findLikedBoardIds")),
             Map.entry("follow.service.FollowService", Set.of("findFollow", "existFollow", "getMemberList", "findByFollower", "getFollowers", "getVisibleFollowers", "getFollowing", "getVisibleFollowing", "countVisibleFollowers", "countVisibleFollowing", "countFollowers", "countFollowing", "findAll")),
             Map.entry("forbidden.service.ForbiddenService", Set.of("findAll", "findByWord", "findByRisk", "findWordList", "findByStatus", "findByStatusNot", "existWord")),
-            Map.entry("member.service.MemberService", Set.of("findAll", "findById", "findName", "findMember", "findAdministrator", "existEmail", "findNewUser", "loadUserByUsername")),
+            Map.entry("member.service.MemberService", Set.of("findAll", "findById", "findName", "findMember", "findAdministrator", "findAdministrators", "existEmail", "findNewUser", "loadUserByUsername")),
             Map.entry("notification.service.NotificationService", Set.of("countUnReadNotification", "findById", "findByMember", "findByMemberAndGroup", "countByMember", "countByMemberAndGroup", "findUnReadNotification")),
             Map.entry("reply.service.ReplyService", Set.of("findById", "findReply", "getReplies", "countReplies")),
             Map.entry("report.service.ReportService", Set.of("findById", "findByReporter", "findAll", "findHistory", "findAllByStatus"))
@@ -113,4 +113,3 @@ class ReadOnlyTransactionRegressionTest {
         assertThat(transaction.getPropagationBehavior()).isEqualTo(TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
     }
 }
-

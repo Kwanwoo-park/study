@@ -28,7 +28,7 @@ import spring.study.chat.service.ChatMessageImgService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
-import spring.study.common.service.ModerationService;
+import spring.study.common.facade.ModerationFacade;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -45,7 +45,7 @@ public class ChatFacade {
     private final ChatMessageService messageService;
     private final ChatMessageImgService messageImgService;
     private final MemberService memberService;
-    private final ModerationService moderationService;
+    private final ModerationFacade moderationService;
     private final ImageS3Service imageS3Service;
     private final ImageUploadCleanupService imageUploadCleanupService;
     private final SimpMessagingTemplate messagingTemplate;

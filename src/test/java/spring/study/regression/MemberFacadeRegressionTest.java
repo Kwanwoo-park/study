@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.facade.JwtAuthenticationFacade;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 class MemberFacadeRegressionTest {
     @Mock private MemberService memberService;
     @Mock private BCryptPasswordEncoder encoder;
-    @Mock private JwtAuthenticationService jwtAuthenticationService;
+    @Mock private JwtAuthenticationFacade jwtAuthenticationService;
 
     @InjectMocks
     private MemberFacade memberFacade;

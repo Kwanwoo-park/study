@@ -32,7 +32,7 @@ class PasswordChangeUiRegressionTest {
     void passwordRecoveryShouldKeepItsSeparateUpdateFlow() throws IOException {
         String script = Files.readString(Path.of("src/main/resources/static/js/member/updatePassword.js"));
         String viewController = Files.readString(Path.of(
-                "src/main/java/spring/study/member/controller/MemberViewController.java"));
+                "src/main/java/spring/study/member/facade/MemberViewFacade.java"));
 
         assertTrue(script.contains(": '/api/member/updatePassword';"));
         assertTrue(viewController.contains("model.addAttribute(\"emailVerificationRequired\", false);"));

@@ -177,7 +177,7 @@ class AdminFileSecurityTest {
     @EnableWebMvc
     @EnableWebSecurity
     @EnableMethodSecurity
-    @Import({AdminFileSecurityConfig.class, AdminFileController.class, AdminFileFacade.class, AdminViewController.class})
+    @Import({AdminFileSecurityConfig.class, AdminFileController.class, AdminFileFacade.class, AdminViewController.class, spring.study.admin.facade.AdminViewFacade.class})
     static class Config {
         @Bean
         MemberService memberService() { return mock(MemberService.class); }

@@ -41,7 +41,7 @@ class SystemIncidentServiceTest {
         when(request.getRemoteAddr()).thenReturn("10.0.0.10");
         when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.7, 10.0.0.10");
 
-        service.record(request, exception);
+        new spring.study.admin.facade.SystemIncidentFacade(service).record(request, exception);
 
         ArgumentCaptor<SystemIncident> captor = ArgumentCaptor.forClass(SystemIncident.class);
         verify(systemIncidentRepository).save(captor.capture());

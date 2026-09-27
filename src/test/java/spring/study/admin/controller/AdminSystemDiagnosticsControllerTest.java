@@ -37,8 +37,8 @@ class AdminSystemDiagnosticsControllerTest {
         when(jwtManager.getLoginMember(request)).thenReturn(Member.builder().role(Role.ADMIN).build());
         var processes = new SystemDiagnosticsService.ProcessSnapshot(0, java.util.List.of());
         var disk = new SystemDiagnosticsService.DiskSnapshot(java.util.List.of(), "project", "", 0, 100, 0, java.util.List.of());
-        when(systemDiagnosticsService.processes()).thenReturn(processes);
-        when(systemDiagnosticsService.disk("project", "", 0)).thenReturn(disk);
+        doReturn(ResponseEntity.ok(processes)).when(adminFacade).systemProcesses();
+        doReturn(ResponseEntity.ok(disk)).when(adminFacade).systemDisk("project", "", 0);
         assertSame(processes, controller.systemProcesses(request).getBody());
         assertSame(disk, controller.systemDisk("project", "", 0, request).getBody());
     }
@@ -51,7 +51,7 @@ class AdminSystemDiagnosticsControllerTest {
         when(commonFacade.wrongAccess()).thenReturn(denied);
         assertSame(denied, controller.systemProcesses(request));
         assertSame(denied, controller.systemDisk("project", "", 0, request));
-        verifyNoInteractions(systemDiagnosticsService);
+        verifyNoInteractions(adminFacade);
     }
 
     @Test
@@ -61,6 +61,6 @@ class AdminSystemDiagnosticsControllerTest {
         when(commonFacade.unauthorized()).thenReturn(denied);
         assertSame(denied, controller.systemProcesses(request));
         assertSame(denied, controller.systemDisk("project", "", 0, request));
-        verifyNoInteractions(systemDiagnosticsService);
+        verifyNoInteractions(adminFacade);
     }
 }

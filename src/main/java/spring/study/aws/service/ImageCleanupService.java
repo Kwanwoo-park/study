@@ -19,6 +19,11 @@ public class ImageCleanupService {
     private final ImageCleanupTaskRepository repository;
     private final ImageS3Service imageS3Service;
 
+    @Transactional(readOnly = true)
+    public long countPending() {
+        return repository.count();
+    }
+
     @Transactional
     public void enqueue(String imageUrl) {
         if (imageUrl != null && !imageUrl.isBlank()) repository.save(new ImageCleanupTask(imageUrl));

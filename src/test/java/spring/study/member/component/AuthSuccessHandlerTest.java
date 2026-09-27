@@ -5,7 +5,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.facade.JwtAuthenticationFacade;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MobileOAuthCodeService;
 import spring.study.member.entity.Member;
@@ -21,7 +21,7 @@ class AuthSuccessHandlerTest {
     @Test
     void webOAuthPassesTheCurrentBrowserToTokenReplacement() throws Exception {
         MemberService memberService = mock(MemberService.class);
-        JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
+        JwtAuthenticationFacade authenticationService = mock(JwtAuthenticationFacade.class);
         AuthSuccessHandler handler = new AuthSuccessHandler(memberService, authenticationService,
                 mock(JwtCookieService.class), mock(MobileOAuthCodeService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -41,7 +41,7 @@ class AuthSuccessHandlerTest {
     @Test
     void mobileOAuthRedirectsWithExchangeCodeWithoutPuttingJwtInUrl() throws Exception {
         MemberService memberService = mock(MemberService.class);
-        JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
+        JwtAuthenticationFacade authenticationService = mock(JwtAuthenticationFacade.class);
         JwtCookieService cookieService = mock(JwtCookieService.class);
         MobileOAuthCodeService codeService = mock(MobileOAuthCodeService.class);
         AuthSuccessHandler handler = new AuthSuccessHandler(

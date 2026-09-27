@@ -27,7 +27,7 @@ class BookReviewViewControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new BookReviewViewController(bookReviewService, jwtManager);
+        controller = new BookReviewViewController(new spring.study.bookreview.facade.BookReviewViewFacade(bookReviewService, jwtManager));
     }
 
     @Test

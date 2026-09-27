@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.facade.JwtAuthenticationFacade;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
@@ -19,7 +19,7 @@ import java.util.Map;
 public class MemberAuthFacade {
     private final MemberFacade memberFacade;
     private final MemberService memberService;
-    private final JwtAuthenticationService jwtAuthenticationService;
+    private final JwtAuthenticationFacade jwtAuthenticationService;
     private final PasswordChangeVerificationService passwordChangeVerificationService;
 
     public ResponseEntity<?> logout(Member member, HttpServletRequest request, HttpServletResponse response) {

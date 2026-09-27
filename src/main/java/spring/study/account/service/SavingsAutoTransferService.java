@@ -29,6 +29,8 @@ public class SavingsAutoTransferService {
     private final AccountTransactionRepository accountTransactionRepository;
     private final AccountService accountService;
     private final NotificationService notificationService;
+    private final AccountTransactionService accountTransactionService;
+    private final AccountNotificationService accountNotificationService;
 
     @Transactional(readOnly = true)
     public List<String> findDueSavingsAccountNumbers(LocalDate processingDate) {
@@ -61,7 +63,9 @@ public class SavingsAutoTransferService {
         LocalDate terminationDate = dueDate.plusDays(PAYMENT_GRACE_DAYS);
 
         if (!processingDate.isBefore(terminationDate)) {
-            //accountService.terminateInterestAccount(savings, source, savings.getMember());
+            var settlement = accountService.terminateInterestAccount(savings, source, savings.getMember(), processingTime);
+            accountTransactionService.recordSettlement(savings, source, settlement, processingTime)
+                    .forEach(accountNotificationService::notifyTransaction);
             notificationService.createNotification(savings.getMember(),
                     savings.getName() + " 계좌가 자동이체일로부터 3일 동안 미납되어 자동 해지되었습니다.",
                     Group.TRAN,
@@ -109,6 +113,6 @@ public class SavingsAutoTransferService {
                 .build());
 
         savings.completeSavingsPayment();
-        accountService.notifyTransaction(transaction);
+        accountNotificationService.notifyTransaction(transaction);
     }
 }

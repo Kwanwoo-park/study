@@ -52,15 +52,16 @@ class AccountTransactionServiceTest {
         when(accountService.findByAccountForUpdate(depositAccount.getAccount())).thenReturn(depositAccount);
         when(accountTransactionRepository.save(any(AccountTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AccountTransactionResponseDto cancelTransaction = accountTransactionService.cancelTransaction(transaction.getId(), sender);
+        var canceled = accountTransactionService.cancelTransaction(transaction.getId(), sender);
+        AccountTransactionResponseDto cancelTransaction = new AccountTransactionResponseDto(canceled.cancellation());
 
         assertThat(transaction.getTransactionStatus()).isEqualTo(AccountTransactionStatus.CANCELED);
         assertThat(withdrawalAccount.getAmount()).isEqualTo(20_000L);
         assertThat(depositAccount.getAmount()).isZero();
         assertThat(cancelTransaction.getTransactionType()).isEqualTo(AccountTransactionType.CANCEL);
-        assertThat(cancelTransaction.getWithdrawalAccount()).isEqualTo(depositAccount);
-        assertThat(cancelTransaction.getDepositAccount()).isEqualTo(withdrawalAccount);
-        verify(accountService).notifyTransaction(transaction);
+        assertThat(cancelTransaction.getWithdrawalAccount()).isEqualTo(depositAccount.getAccount());
+        assertThat(cancelTransaction.getDepositAccount()).isEqualTo(withdrawalAccount.getAccount());
+        assertThat(canceled.original()).isSameAs(transaction);
     }
 
     @Test

@@ -64,8 +64,23 @@ class ReportServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
-    @InjectMocks
     private ReportService reportService;
+    private spring.study.report.facade.ReportFacade reportFacade;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUpLayers() {
+        reportService = new ReportService(reportRepository);
+        reportFacade = new spring.study.report.facade.ReportFacade(reportService,
+                new spring.study.member.service.MemberService(memberRepository, null, eventPublisher),
+                org.mockito.Mockito.mock(spring.study.board.service.BoardService.class),
+                org.mockito.Mockito.mock(spring.study.comment.service.CommentService.class),
+                org.mockito.Mockito.mock(spring.study.chat.service.ChatMessageService.class),
+                new spring.study.member.sanction.service.MemberSanctionService(memberSanctionRepository, eventPublisher), notificationService);
+    }
+
+    private ReportResponseDto response(org.springframework.http.ResponseEntity<?> response) {
+        return (ReportResponseDto) ((java.util.Map<?, ?>) response.getBody()).get("report");
+    }
 
     @Test
     void cancelShouldMarkPendingReportCanceledWhenReporterOwnsIt() {
@@ -128,7 +143,7 @@ class ReportServiceTest {
             return report;
         });
 
-        ReportResponseDto response = reportService.create(requestDto, reporter);
+        ReportResponseDto response = response(reportFacade.create(requestDto, reporter));
 
         assertThat(response.getId()).isEqualTo(20L);
         verify(reportRepository).existsByReporterAndTargetTypeAndTargetIdAndStatusNot(
@@ -166,7 +181,7 @@ class ReportServiceTest {
         });
         when(memberRepository.findAllByRole(Role.ADMIN)).thenReturn(List.of(firstAdmin, secondAdmin));
 
-        reportService.create(requestDto, reporter);
+        reportFacade.create(requestDto, reporter);
 
         verify(notificationService).createNotification(
                 eq(firstAdmin),
@@ -197,7 +212,7 @@ class ReportServiceTest {
                 ReportStatus.CANCELED
         )).thenReturn(true);
 
-        assertThatThrownBy(() -> reportService.create(requestDto, reporter))
+        assertThatThrownBy(() -> reportFacade.create(requestDto, reporter))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
                         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
 
@@ -226,7 +241,7 @@ class ReportServiceTest {
             return report;
         });
 
-        ReportResponseDto response = reportService.create(requestDto, reporter);
+        ReportResponseDto response = response(reportFacade.create(requestDto, reporter));
 
         assertThat(response.getReason()).isEqualTo(ReportReason.ETC);
         assertThat(response.getReasonDetail()).isEqualTo("other reason");
@@ -242,7 +257,7 @@ class ReportServiceTest {
         requestDto.setReasonDetail(" ");
         requestDto.setDescription("description");
 
-        assertThatThrownBy(() -> reportService.create(requestDto, reporter))
+        assertThatThrownBy(() -> reportFacade.create(requestDto, reporter))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
                         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
@@ -262,7 +277,7 @@ class ReportServiceTest {
         when(memberRepository.findByEmail(target.getEmail())).thenReturn(Optional.of(target));
         when(memberSanctionRepository.existsByReportId(10L)).thenReturn(false);
 
-        reportService.process(10L, request, admin);
+        reportFacade.process(10L, request, admin);
 
         assertThat(target.getWarningCount()).isEqualTo(1);
         assertThat(report.getStatus()).isEqualTo(ReportStatus.RESOLVED);
@@ -282,7 +297,7 @@ class ReportServiceTest {
         when(reportRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(report));
         when(memberRepository.findByEmail(target.getEmail())).thenReturn(Optional.of(target));
 
-        reportService.process(10L, processRequest(ReportAction.TEMPORARY_SUSPEND, until), admin);
+        reportFacade.process(10L, processRequest(ReportAction.TEMPORARY_SUSPEND, until), admin);
 
         assertThat(target.getAccountStatus()).isEqualTo(MemberStatus.SUSPENDED);
         assertThat(target.getSuspendedUntil()).isEqualTo(until);
@@ -301,7 +316,7 @@ class ReportServiceTest {
         Report report = createReport(10L, reporter, ReportStatus.REVIEWING);
         when(reportRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(report));
 
-        assertThatThrownBy(() -> reportService.process(
+        assertThatThrownBy(() -> reportFacade.process(
                 10L,
                 processRequest(ReportAction.TEMPORARY_SUSPEND, LocalDateTime.now().minusMinutes(1)),
                 createMember(3L, "admin@test.com")))

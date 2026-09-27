@@ -6,10 +6,6 @@ import com.amazonaws.util.IOUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +13,6 @@ import spring.study.board.entity.BoardImg;
 import spring.study.chat.entity.ChatMessageImg;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -106,24 +101,11 @@ public class ImageS3Service {
         return amazonS3.getUrl(bucketName, changedName).toString();
     }
 
-    public ResponseEntity<byte[]> getImage(String name, String ext) throws IOException{
-        S3Object object = amazonS3.getObject(new GetObjectRequest(bucketName, name));
-        S3ObjectInputStream objectInputStream = object.getObjectContent();
-        byte[] bytes = IOUtils.toByteArray(objectInputStream);
-
-        String fileName = URLEncoder.encode(name, "UTF-8").replaceAll("\\+", "%20");
-        ext = ext.toLowerCase();
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        switch (ext) {
-            case "jpg", "jpeg" -> httpHeaders.setContentType(MediaType.IMAGE_JPEG);
-            case "gif" -> httpHeaders.setContentType(MediaType.IMAGE_GIF);
-            case "png" -> httpHeaders.setContentType(MediaType.IMAGE_PNG);
+    public byte[] readImage(String name) throws IOException {
+        try (S3Object object = amazonS3.getObject(new GetObjectRequest(bucketName, name));
+             S3ObjectInputStream stream = object.getObjectContent()) {
+            return IOUtils.toByteArray(stream);
         }
-        httpHeaders.setContentLength(bytes.length);
-        httpHeaders.setContentDispositionFormData("attachment", fileName);
-
-        return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.OK);
     }
 
     public void deleteImg(List<ChatMessageImg> list) {

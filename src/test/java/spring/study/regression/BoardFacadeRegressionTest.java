@@ -17,7 +17,7 @@ import spring.study.favorite.service.FavoriteService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.reply.service.ReplyService;
-import spring.study.common.service.ModerationService;
+import spring.study.common.facade.ModerationFacade;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -30,7 +30,7 @@ class BoardFacadeRegressionTest {
     @Mock private CommentService commentService;
     @Mock private BoardImgService boardImgService;
     @Mock private FavoriteService favoriteService;
-    @Mock private ModerationService moderationService;
+    @Mock private ModerationFacade moderationService;
 
     @InjectMocks
     private BoardFacade boardFacade;

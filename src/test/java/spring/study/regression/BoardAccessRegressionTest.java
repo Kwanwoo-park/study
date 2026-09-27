@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BoardAccessRegressionTest {
-    private static final Path BOARD_VIEW_CONTROLLER = Path.of("src/main/java/spring/study/board/controller/BoardViewController.java");
+    private static final Path BOARD_VIEW_CONTROLLER = Path.of("src/main/java/spring/study/board/facade/BoardViewFacade.java");
 
     @Test
     void boardAllShouldUseJwtRoleCheckInsteadOfPreAuthorize() throws IOException {

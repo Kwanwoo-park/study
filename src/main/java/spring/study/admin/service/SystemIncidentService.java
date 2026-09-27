@@ -1,6 +1,6 @@
 package spring.study.admin.service;
 
-import jakarta.servlet.http.HttpServletRequest;
+import spring.study.admin.dto.IncidentRequestContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.HttpStatus;
@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.admin.dto.SystemIncidentResponseDto;
 import spring.study.admin.entity.SystemIncident;
 import spring.study.admin.repository.SystemIncidentRepository;
-import spring.study.common.service.ClientIpResolver;
 import spring.study.common.service.IpLocationService;
 
 import java.time.LocalDateTime;
@@ -27,12 +26,12 @@ public class SystemIncidentService {
     private final IpLocationService ipLocationService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void record(HttpServletRequest request, Exception exception) {
+    public void record(IncidentRequestContext request, Exception exception) {
         Throwable cause = NestedExceptionUtils.getMostSpecificCause(exception);
         LocalDateTime occurredAt = LocalDateTime.now();
-        String requestMethod = limit(valueOrDefault(request.getMethod(), "UNKNOWN"), 10);
-        String requestPath = limit(valueOrDefault(request.getRequestURI(), "UNKNOWN"), MAX_PATH_LENGTH);
-        String requestIp = ClientIpResolver.resolve(request);
+        String requestMethod = limit(valueOrDefault(request.method(), "UNKNOWN"), 10);
+        String requestPath = limit(valueOrDefault(request.path(), "UNKNOWN"), MAX_PATH_LENGTH);
+        String requestIp = request.ipAddress();
         String exceptionType = limit(cause.getClass().getName(), MAX_TYPE_LENGTH);
         String errorMessage = limit(sanitize(valueOrDefault(cause.getMessage(), "메시지 없는 서버 오류")), MAX_MESSAGE_LENGTH);
 

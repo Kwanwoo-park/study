@@ -1,5 +1,7 @@
 package spring.study.admin.controller;
 
+import spring.study.admin.facade.AdminViewFacade;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -7,160 +9,66 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
-import spring.study.forbidden.entity.Status;
-import spring.study.member.entity.Member;
-import spring.study.member.entity.Role;
-import spring.study.forbidden.service.ForbiddenService;
-import spring.study.member.service.MemberService;
 
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/admin")
 public class AdminViewController {
-    private final MemberService memberService;
-    private final JwtManager jwtManager;
-    private final ForbiddenService forbiddenService;
+    private final AdminViewFacade facade;
 
     @GetMapping("/access-denied")
     public String accessDenied() {
-        return "error/404";
+        return facade.accessDenied();
     }
 
     @GetMapping("/administrator")
     public String admin(HttpServletRequest request){
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/administrator";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        return "admin/administrator";
+        return facade.admin(request);
     }
 
     @GetMapping("/memberCheck")
     public String member_check(Model model, HttpServletRequest request, @RequestParam(required = false, defaultValue = "0") Integer page, @RequestParam(required = false, defaultValue = "5") Integer size){
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/memberCheck";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        model.addAttribute("member", memberService.findAll(page, size));
-
-        return "admin/member_check";
+        return facade.member_check(model, request, page, size);
     }
 
     @GetMapping("/member/detail")
     public String memberDetail(Model model, MemberRequestDto requestDto, HttpServletRequest request) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/member/detail";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        model.addAttribute("member", memberService.findMember(requestDto.getEmail()));
-
-        return "admin/update_member";
+        return facade.memberDetail(model, requestDto, request);
     }
 
     @GetMapping("/forbidden/word/list")
     public String forbiddenWordList(Model model, HttpServletRequest request) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/forbidden/word/list";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        model.addAttribute("list", forbiddenService.findAll());
-
-        return "admin/forbidden_word_list";
+        return facade.forbiddenWordList(model, request);
     }
 
     @GetMapping("/forbidden/word/apply")
     public String forbiddenWordAppplyList(Model model, HttpServletRequest request) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/forbidden/word/apply";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        model.addAttribute("list", forbiddenService.findByStatusNot(Status.APPROVAL));
-
-        return "admin/forbidden_word_apply";
+        return facade.forbiddenWordAppplyList(model, request);
     }
 
     @GetMapping("/report")
     public String reportList(Model model, HttpServletRequest request) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        model.addAttribute("email", member.getEmail());
-        model.addAttribute("profile", member.getProfile());
-
-        return "admin/report_apply";
+        return facade.reportList(model, request);
     }
 
     @GetMapping("/report/process")
     public String reportProcessList(HttpServletRequest request) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report/process";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        return "admin/report_process";
+        return facade.reportProcessList(request);
     }
 
     @GetMapping("/report/history")
     public String reportHistory(HttpServletRequest request) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/report/history";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        return "admin/report_history";
+        return facade.reportHistory(request);
     }
 
     @GetMapping("/appeal")
     public String appealList(Model model, HttpServletRequest request) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/admin/appeal";
-
-        if (member.getRole() != Role.ADMIN) {
-            jwtManager.logout(request);
-            return "redirect:/member/login?error=true&exception=Wrong Accept";
-        }
-
-        model.addAttribute("email", member.getEmail());
-        model.addAttribute("profile", member.getProfile());
-
-        return "admin/appeal_list";
+        return facade.appealList(model, request);
     }
 
     @GetMapping("/files")
     public String page() {
-        return "admin/files";
+        return facade.page();
     }
 }

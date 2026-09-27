@@ -18,7 +18,7 @@ class PortfolioPdfControllerTest {
         PortfolioPdfService service = mock(PortfolioPdfService.class);
         byte[] pdf = "%PDF-1.7 test".getBytes(StandardCharsets.US_ASCII);
         when(service.download()).thenReturn(pdf).thenThrow(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE));
-        var mvc = MockMvcBuilders.standaloneSetup(new PortfolioPdfController(service)).build();
+        var mvc = MockMvcBuilders.standaloneSetup(new PortfolioPdfController(new spring.study.portfolio.facade.PortfolioPdfFacade(service))).build();
         mvc.perform(get("/api/portfolio/pdf"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/pdf"))

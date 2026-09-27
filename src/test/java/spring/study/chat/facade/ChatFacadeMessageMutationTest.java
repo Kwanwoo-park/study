@@ -9,7 +9,7 @@ import spring.study.chat.dto.ChatMessageEventDto;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.*;
 import spring.study.chat.service.*;
-import spring.study.common.service.ModerationService;
+import spring.study.common.facade.ModerationFacade;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -27,7 +27,7 @@ class ChatFacadeMessageMutationTest {
     private final ChatMessageService messageService = mock(ChatMessageService.class);
     private final ChatMessageImgService messageImgService = mock(ChatMessageImgService.class);
     private final MemberService memberService = mock(MemberService.class);
-    private final ModerationService moderationService = mock(ModerationService.class);
+    private final ModerationFacade moderationService = mock(ModerationFacade.class);
     private final ImageS3Service imageS3Service = mock(ImageS3Service.class);
     private final SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
     private final ChatFacade chatFacade = new ChatFacade(roomService, roomMemberService, messageService, messageImgService, memberService, moderationService, imageS3Service, mock(ImageUploadCleanupService.class), messagingTemplate);

@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.admin.facade.AdminFacade;
-import spring.study.admin.service.SystemDiagnosticsService;
 import spring.study.appeal.entity.AppealStatus;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
@@ -31,7 +30,6 @@ public class AdminApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final AdminFacade adminFacade;
-    private final SystemDiagnosticsService systemDiagnosticsService;
     private final MemberFacade memberFacade;
     private final ForbiddenFacade forbiddenFacade;
     private final ReportFacade reportFacade;
@@ -293,7 +291,7 @@ public class AdminApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
         if (member.getRole() != Role.ADMIN) return commonFacade.wrongAccess();
-        return ResponseEntity.ok(systemDiagnosticsService.processes());
+        return adminFacade.systemProcesses();
     }
 
     @GetMapping("/system/disk")
@@ -304,11 +302,7 @@ public class AdminApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
         if (member.getRole() != Role.ADMIN) return commonFacade.wrongAccess();
-        try {
-            return ResponseEntity.ok(systemDiagnosticsService.disk(root, path, page));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
-        }
+        return adminFacade.systemDisk(root, path, page);
     }
 
     @GetMapping("/system/incidents")

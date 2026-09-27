@@ -12,7 +12,7 @@ import spring.study.board.service.BoardService;
 import spring.study.comment.dto.CommentRequestDto;
 import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
-import spring.study.common.service.ModerationService;
+import spring.study.common.facade.ModerationFacade;
 import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -30,7 +30,7 @@ class CommentFacadeAuthorizationTest {
     @Mock CommentService commentService;
     @Mock BoardService boardService;
     @Mock NotificationService notificationService;
-    @Mock ModerationService moderationService;
+    @Mock ModerationFacade moderationService;
     @Mock ReplyService replyService;
     @Mock VisibilityAccessPolicy visibilityAccessPolicy;
     @InjectMocks CommentFacade commentFacade;
