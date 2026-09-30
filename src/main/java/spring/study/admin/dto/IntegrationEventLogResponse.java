@@ -12,9 +12,20 @@ public record IntegrationEventLogResponse(List<Item> entries, Long nextBeforeId,
                        Route route, Operation operation, Outcome outcome, Long referenceId, int itemCount,
                        Integer attempt, Long subscriberCount, String errorType) {
         public Item(IntegrationEventLog log) {
-            this(log.getId(), log.getOccurredAt(), log.getInstanceId(), log.getBroker(), log.getRoute().destination,
-                    log.getRoute(), log.getOperation(), log.getOutcome(), log.getReferenceId(), log.getItemCount(),
-                    log.getAttempt(), log.getSubscriberCount(), log.getErrorType());
+            this(
+                    log.getId(),
+                    log.getOccurredAt(),
+                    log.getInstanceId(),
+                    log.getBroker(),
+                    log.getRoute().destination,
+                    log.getRoute(),
+                    log.getOperation(),
+                    log.getOutcome(),
+                    log.getReferenceId(),
+                    log.getItemCount(),
+                    log.getAttempt(),
+                    log.getSubscriberCount(),
+                    log.getErrorType());
         }
     }
 }

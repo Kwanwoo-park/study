@@ -1,5 +1,6 @@
 package spring.study.admin.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import spring.study.admin.facade.AdminViewFacade;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -70,5 +71,23 @@ public class AdminViewController {
     @GetMapping("/files")
     public String page() {
         return facade.page();
+    }
+
+    @GetMapping("/github")
+    public String pageGithub(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return "admin/github";
+    }
+
+    @GetMapping("/event-logs")
+    public String pageEventLog(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return "admin/event_logs";
+    }
+
+    @GetMapping("/kafka")
+    public String pageKafka(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return "admin/kafka_operations";
     }
 }

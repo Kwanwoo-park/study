@@ -1,4 +1,4 @@
-package spring.study.account.service;
+package spring.study.account.facade;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +9,8 @@ import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
 import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.entity.AccountType;
-import spring.study.account.repository.AccountRepository;
-import spring.study.account.repository.AccountTransactionRepository;
+import spring.study.account.service.AccountService;
+import spring.study.account.service.AccountTransactionService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 

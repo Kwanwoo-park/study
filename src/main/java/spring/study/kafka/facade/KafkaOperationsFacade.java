@@ -3,6 +3,7 @@ package spring.study.kafka.facade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 import spring.study.kafka.entity.KafkaDeadLetter.Status;
 import spring.study.kafka.service.KafkaDeadLetterService;
@@ -16,6 +17,13 @@ import org.springframework.stereotype.Service;
 public class KafkaOperationsFacade {
     private final KafkaMonitoringService monitoring;
     private final KafkaDeadLetterService deadLetters;
+
+    public ResponseEntity<?> csrf(CsrfToken token) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(Map.of(
+                "headerName", token.getHeaderName(),
+                "token", token.getToken()
+        ));
+    }
 
     public ResponseEntity<?> overview() { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(monitoring.overview()); }
 

@@ -19,25 +19,21 @@ public class AdminFileController {
     private final AdminFileFacade adminFileFacade;
 
     @GetMapping("/csrf")
-    @ResponseBody
     public ResponseEntity<?> csrf(CsrfToken token) {
         return adminFileFacade.csrf(token);
     }
 
     @GetMapping({"", "/"})
-    @ResponseBody
     public ResponseEntity<?> list(@RequestParam(defaultValue = "0") int page) {
         return adminFileFacade.list(page);
     }
 
     @PostMapping(value = {"", "/"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ResponseBody
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Member member) {
         return adminFileFacade.upload(file, member);
     }
 
     @GetMapping("/{id}/download")
-    @ResponseBody
     public ResponseEntity<?> download(@PathVariable String id) {
         return adminFileFacade.download(id);
     }

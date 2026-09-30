@@ -14,13 +14,13 @@ import org.springframework.stereotype.Service;
 public class IntegrationEventLogFacade {
     private final IntegrationEventLogQueryService service;
 
-    public ResponseEntity<IntegrationEventLogResponse> list(Broker broker,
-            Operation operation, Outcome outcome,
-            Long beforeId, int hours) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.find(broker, operation, outcome, beforeId, hours));
+    public ResponseEntity<?> list(Broker broker, Operation operation, Outcome outcome, Long beforeId, int hours) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(service.find(broker, operation, outcome, beforeId, hours));
     }
 
-    public ResponseEntity<IntegrationEventLogResponse.Item> detail(long id) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.findById(id));
+    public ResponseEntity<?> detail(long id) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(service.findById(id));
     }
 }

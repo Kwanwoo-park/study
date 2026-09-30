@@ -35,7 +35,7 @@ public class AdminApiController {
     private final ReportFacade reportFacade;
 
     @PatchMapping("/member/permit")
-    public ResponseEntity<?> memberPermit(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<?> memberPermit (@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -48,7 +48,7 @@ public class AdminApiController {
     }
 
     @PatchMapping("/member/deny")
-    public ResponseEntity<?> memberDeny(@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<?> memberDeny (@RequestBody MemberRequestDto requestDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -61,7 +61,7 @@ public class AdminApiController {
     }
 
     @DeleteMapping("/member/withdrawal")
-    public ResponseEntity<?> memberWithdrawal(@RequestParam String email, HttpServletRequest request) {
+    public ResponseEntity<?> memberWithdrawal (@RequestParam String email, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -74,7 +74,7 @@ public class AdminApiController {
     }
 
     @PostMapping("/forbidden/word/save")
-    public ResponseEntity<?> forbiddenWordSave(@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<?> forbiddenWordSave (@RequestBody ForbiddenRequestDto requestDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
