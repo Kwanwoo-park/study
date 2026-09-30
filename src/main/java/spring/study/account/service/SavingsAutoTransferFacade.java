@@ -22,24 +22,21 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
-public class SavingsAutoTransferService {
+public class SavingsAutoTransferFacade {
     private static final int PAYMENT_GRACE_DAYS = 3;
 
-    private final AccountRepository accountRepository;
-    private final AccountTransactionRepository accountTransactionRepository;
     private final AccountService accountService;
     private final NotificationService notificationService;
     private final AccountTransactionService accountTransactionService;
-    private final AccountNotificationService accountNotificationService;
 
     @Transactional(readOnly = true)
     public List<String> findDueSavingsAccountNumbers(LocalDate processingDate) {
-        return accountRepository.findDueSavingsAccountNumbers(AccountType.INSTALLMENT_SAVINGS, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED), processingDate);
+        return accountService.findDueSavingsAccountNumbers(processingDate);
     }
 
     @Transactional
     public void processDuePayment(String savingsAccountNumber, LocalDate processingDate, LocalDateTime processingTime) {
-        Account savings = accountRepository.findByAccountForUpdate(savingsAccountNumber).orElse(null);
+        Account savings = accountService.findByAccountForUpdate(savingsAccountNumber);
         if (!isDue(savings, processingDate)) {
             return;
         }
@@ -48,7 +45,7 @@ public class SavingsAutoTransferService {
         if (source == null) {
             return;
         }
-        source = accountRepository.findByAccountForUpdate(source.getAccount()).orElse(null);
+        source = accountService.findByAccountForUpdate(source.getAccount());
         if (!isValidSource(savings, source)) {
             return;
         }
@@ -65,7 +62,7 @@ public class SavingsAutoTransferService {
         if (!processingDate.isBefore(terminationDate)) {
             var settlement = accountService.terminateInterestAccount(savings, source, savings.getMember(), processingTime);
             accountTransactionService.recordSettlement(savings, source, settlement, processingTime)
-                    .forEach(accountNotificationService::notifyTransaction);
+                    .forEach(this::notifyMember);
             notificationService.createNotification(savings.getMember(),
                     savings.getName() + " 계좌가 자동이체일로부터 3일 동안 미납되어 자동 해지되었습니다.",
                     Group.TRAN,
@@ -98,21 +95,36 @@ public class SavingsAutoTransferService {
         source.subAmount(paymentAmount);
         savings.addAmount(paymentAmount);
 
-        AccountTransaction transaction = accountTransactionRepository.save(AccountTransaction.builder()
-                .transactionType(AccountTransactionType.SAVINGS_PAYMENT)
-                .transactionStatus(AccountTransactionStatus.COMPLETED)
-                .amount(paymentAmount)
-                .fee(0L)
-                .withdrawalAccount(source)
-                .depositAccount(savings)
-                .balanceAfterTransaction(source.getAmount())
-                .memo("적금 정기 자동이체")
-                .counterpartyName(savings.getName())
-                .bankName("Kwanwoo site account")
-                .transactionTime(processingTime)
-                .build());
+        AccountTransaction transaction = accountTransactionService.recordAutoSaving(AccountTransactionType.SAVINGS_PAYMENT, savings, source, paymentAmount, processingTime);
 
         savings.completeSavingsPayment();
-        accountNotificationService.notifyTransaction(transaction);
+        notifyMember(transaction);
+    }
+
+    private void notifyMember(AccountTransaction transaction) {
+        String amount = NumberFormat.getNumberInstance(Locale.KOREA).format(transaction.getAmount());
+        String status = transaction.getTransactionStatus() == AccountTransactionStatus.CANCELED ? "취소" : "완료";
+
+        Account account;
+
+        if (transaction.getWithdrawalAccount() != null && transaction.getWithdrawalAccount().getMember() != null) {
+            account = transaction.getWithdrawalAccount();
+            notificationService.createNotification(
+                    account.getMember(),
+                    account.getName() + " 계좌에서 " + amount + "원 출금 거래가 " + status  + "되었습니다.",
+                    Group.TRAN,
+                    account.getAccount()
+            );
+        }
+
+        if (transaction.getDepositAccount() != null && transaction.getDepositAccount().getMember() != null) {
+            account = transaction.getDepositAccount();
+            notificationService.createNotification(
+                    account.getMember(),
+                    account.getName() + " 계좌에서 " + amount + "원 입금 거래가 " + status + "되었습니다.",
+                    Group.TRAN,
+                    account.getAccount()
+            );
+        }
     }
 }

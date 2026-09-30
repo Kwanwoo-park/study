@@ -2,36 +2,30 @@ package spring.study.regression;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import spring.study.account.dto.AccountTranDto;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
 import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.repository.AccountRepository;
 import spring.study.account.repository.AccountTransactionRepository;
-import spring.study.account.service.AccountService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
-import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class AccountTransactionNotificationRegressionTest {
 
     private final AccountRepository accountRepository = mock(AccountRepository.class);
     private final AccountTransactionRepository accountTransactionRepository = mock(AccountTransactionRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
-    private final spring.study.account.service.AccountNotificationService accountNotificationService = new spring.study.account.service.AccountNotificationService(notificationService);
 
     @Test
     void canceledTransactionNotificationShouldUseCanceledMessage() throws Exception {
@@ -47,8 +41,6 @@ class AccountTransactionNotificationRegressionTest {
                 .bankName("Kwanwoo site account")
                 .transactionTime(LocalDateTime.now())
                 .build();
-
-        accountNotificationService.notifyTransaction(transaction);
 
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
         verify(notificationService, times(1)).createNotification(

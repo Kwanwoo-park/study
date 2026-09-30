@@ -74,6 +74,11 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
+    public List<String> findDueSavingsAccountNumbers(LocalDate processingDate) {
+        return accountRepository.findDueSavingsAccountNumbers(AccountType.INSTALLMENT_SAVINGS, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED), processingDate);
+    }
+
+    @Transactional(readOnly = true)
     public Account findByAccount(String accountNum) {
         return accountRepository.findById(accountNum).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 계좌입니다"
@@ -82,13 +87,7 @@ public class AccountService {
 
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public Account findByAccountForUpdate(String accountNum) {
-        return accountRepository.findByAccountForUpdate(accountNum).orElseThrow(() -> new IllegalArgumentException(
-                "존재하지 않는 계좌입니다"
-        ));
-    }
-
-    private Account findForUpdate(String accountNumber) {
-        return accountRepository.findByAccountForUpdate(accountNumber)
+        return accountRepository.findByAccountForUpdate(accountNum)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
     }
 
@@ -182,6 +181,15 @@ public class AccountService {
         if (account != null) prepareBalanceChange(account, calculationTime);
     }
 
+    public void validateOutgoingTransaction(Account account) {
+        if (account.getAccountType() == AccountType.INSTALLMENT_SAVINGS) {
+            throw new IllegalArgumentException("적금 계좌에서는 출금 또는 이체할 수 없습니다");
+        }
+        if (account.getAccountType() == AccountType.TIME_DEPOSIT) {
+            throw new IllegalArgumentException("예금 계좌에서는 입금, 출금 또는 이체할 수 없습니다");
+        }
+    }
+
     @Transactional
     public void deleteByAccount(String accountNum) {
         accountRepository.deleteById(accountNum);
@@ -212,15 +220,6 @@ public class AccountService {
     private void validateActive(Account account) {
         if (account.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("만기 또는 해지된 계좌는 거래할 수 없습니다");
-        }
-    }
-
-    void validateOutgoingTransaction(Account account) {
-        if (account.getAccountType() == AccountType.INSTALLMENT_SAVINGS) {
-            throw new IllegalArgumentException("적금 계좌에서는 출금 또는 이체할 수 없습니다");
-        }
-        if (account.getAccountType() == AccountType.TIME_DEPOSIT) {
-            throw new IllegalArgumentException("예금 계좌에서는 입금, 출금 또는 이체할 수 없습니다");
         }
     }
 
@@ -277,12 +276,15 @@ public class AccountService {
     }
 
     private Account lockAndValidateSavingsSource(Account selected, Member member, long paymentAmount) {
-        Account lockedSource = findForUpdate(selected.getAccount());
+        Account lockedSource = accountRepository.findByAccountForUpdate(selected.getAccount())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
+
         if (lockedSource.getMember() == null || !lockedSource.getMember().getId().equals(member.getId()) || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다");
         } else if (lockedSource.getAmount() < paymentAmount) {
             throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 적금 납입 금액보다 부족합니다");
         }
+
         return lockedSource;
     }
 
@@ -309,7 +311,8 @@ public class AccountService {
                     ));
         }
 
-        Account lockedSource = findForUpdate(selected.getAccount());
+        Account lockedSource = accountRepository.findByAccountForUpdate(selected.getAccount())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
 
         if (lockedSource.getMember() == null || !lockedSource.getMember().getId().equals(member.getId()) || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new IllegalArgumentException("본인의 활성 입출금 계좌만 예금 출금 계좌로 선택할 수 있습니다");

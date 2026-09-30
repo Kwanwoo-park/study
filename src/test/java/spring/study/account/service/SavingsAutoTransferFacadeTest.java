@@ -4,14 +4,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import spring.study.account.entity.Account;
-import spring.study.account.entity.AccountStatus;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.entity.AccountType;
 import spring.study.account.repository.AccountRepository;
 import spring.study.account.repository.AccountTransactionRepository;
 import spring.study.member.entity.Member;
-import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.time.LocalDate;
@@ -21,26 +19,18 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class SavingsAutoTransferServiceTest {
+class SavingsAutoTransferFacadeTest {
     private final AccountRepository accountRepository = mock(AccountRepository.class);
     private final AccountTransactionRepository transactionRepository = mock(AccountTransactionRepository.class);
     private final AccountService accountService = mock(AccountService.class);
     private final NotificationService notificationService = mock(NotificationService.class);
     private final AccountTransactionService accountTransactionService = mock(AccountTransactionService.class);
-    private final AccountNotificationService accountNotificationService = mock(AccountNotificationService.class);
-    private final SavingsAutoTransferService service = new SavingsAutoTransferService(
-            accountRepository,
-            transactionRepository,
-            accountService,
-            notificationService, accountTransactionService, accountNotificationService
+    private final SavingsAutoTransferFacade service = new SavingsAutoTransferFacade(
+            accountService, notificationService, accountTransactionService
     );
 
     private Member member;
@@ -84,7 +74,6 @@ class SavingsAutoTransferServiceTest {
         ArgumentCaptor<AccountTransaction> captor = ArgumentCaptor.forClass(AccountTransaction.class);
         verify(transactionRepository).save(captor.capture());
         assertEquals(AccountTransactionType.SAVINGS_PAYMENT, captor.getValue().getTransactionType());
-        verify(accountNotificationService).notifyTransaction(captor.getValue());
     }
 
     @Test

@@ -10,7 +10,6 @@ import spring.study.account.dto.AccountTranDto;
 import spring.study.account.dto.AccountTerminationRequestDto;
 import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.facade.AccountFacade;
-import spring.study.account.facade.AccountTransactionFacade;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
@@ -22,7 +21,6 @@ import spring.study.member.entity.Member;
 public class AccountApiController {
     private final JwtManager jwtManager;
     private final AccountFacade accountFacade;
-    private final AccountTransactionFacade accountTransactionFacade;
     private final CommonFacade commonFacade;
 
     @PostMapping("/create")
@@ -86,7 +84,7 @@ public class AccountApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountTransactionFacade.getListByAccount(account, page, member);
+        return accountFacade.getListByAccount(account, page, member);
     }
 
     @PatchMapping("/transactions/{id}/cancel")
@@ -94,6 +92,6 @@ public class AccountApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return accountTransactionFacade.cancel(id, member);
+        return accountFacade.cancel(id, member);
     }
 }
