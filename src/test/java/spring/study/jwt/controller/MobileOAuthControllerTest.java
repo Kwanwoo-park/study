@@ -14,6 +14,7 @@ import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 import spring.study.common.service.OnlineUserService;
+import spring.study.jwt.dto.AuthenticationTokens;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -56,8 +57,8 @@ class MobileOAuthControllerTest {
     void exchangesOneTimeCodeForMobileTokens() {
         Member member = Member.builder().id(7L).email("oauth@test.com").name("oauth")
                 .role(Role.USER).build();
-        JwtAuthenticationService.AuthenticationTokens tokens =
-                new JwtAuthenticationService.AuthenticationTokens(
+        AuthenticationTokens tokens =
+                new AuthenticationTokens(
                         "access", "refresh", Instant.now().plusSeconds(600), Instant.now().plusSeconds(1200));
         when(codeService.consume("once")).thenReturn(Optional.of(7L));
         when(memberService.updateLastLoginTime(7L)).thenReturn(member);

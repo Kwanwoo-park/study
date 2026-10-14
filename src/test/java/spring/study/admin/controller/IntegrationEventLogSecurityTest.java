@@ -23,6 +23,7 @@ import spring.study.jwt.component.*;
 import spring.study.jwt.service.*;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.admin.dto.IntegrationEventLogItem;
 
 import java.util.List;
 import java.time.LocalDateTime;
@@ -79,7 +80,7 @@ class IntegrationEventLogSecurityTest {
 
     @Test
     void adminCanReadDetailWithoutCachingOrPayload() throws Exception {
-        when(service.findById(12L)).thenReturn(new IntegrationEventLogResponse.Item(12L, LocalDateTime.now(), "node-1",
+        when(service.findById(12L)).thenReturn(new IntegrationEventLogItem(12L, LocalDateTime.now(), "node-1",
                 Broker.KAFKA, "topic", Route.CHAT, Operation.PUBLISH, Outcome.FAILED, 55L, 1, 2, null, "java.lang.IllegalStateException"));
         mvc.perform(get("/api/admin/event-logs/12").with(user(member(Role.ADMIN))))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
@@ -100,8 +101,11 @@ class IntegrationEventLogSecurityTest {
 
     @Configuration
     @EnableWebMvc @EnableWebSecurity @EnableMethodSecurity
-    @Import({IntegrationEventLogSecurityConfig.class, IntegrationEventLogController.class, spring.study.admin.facade.IntegrationEventLogFacade.class})
+    @Import({IntegrationEventLogSecurityConfig.class, IntegrationEventLogController.class, spring.study.admin.facade.IntegrationEventLogFacade.class,
+            AdminViewController.class, spring.study.common.component.GlobalExceptionHandler.class})
     static class Config {
+        @Bean spring.study.admin.facade.AdminViewFacade views() { return mock(spring.study.admin.facade.AdminViewFacade.class); }
+        @Bean spring.study.admin.facade.SystemIncidentFacade incidents() { return mock(spring.study.admin.facade.SystemIncidentFacade.class); }
         @Bean IntegrationEventLogQueryService service() { return mock(IntegrationEventLogQueryService.class); }
         @Bean JwtAuthenticationFilter jwtFilter() {
             return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));

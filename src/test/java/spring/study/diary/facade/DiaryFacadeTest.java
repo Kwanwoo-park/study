@@ -23,6 +23,20 @@ class DiaryFacadeTest {
     private final Member member = Member.builder().id(1L).build();
 
     @Test
+    void s3FailureQueuesAlreadyUploadedImagesForCleanup() throws Exception {
+        ImageS3Service images = mock(ImageS3Service.class);
+        ImageCleanupService cleanup = mock(ImageCleanupService.class);
+        var first = new org.springframework.mock.web.MockMultipartFile("files", "one.png", "image/png", new byte[]{1});
+        var second = new org.springframework.mock.web.MockMultipartFile("files", "two.png", "image/png", new byte[]{2});
+        when(images.uploadImageToS3(first)).thenReturn("uploaded.png");
+        when(images.uploadImageToS3(second)).thenThrow(new com.amazonaws.AmazonClientException("unavailable"));
+
+        assertThat(new DiaryFacade(service, images, cleanup).uploadImages(List.of(first, second)).getStatusCode().value())
+                .isEqualTo(500);
+        verify(cleanup).enqueueAll(List.of("uploaded.png"));
+    }
+
+    @Test
     void detailApiWrapsTheOwnedDiary() {
         Diary diary = Diary.builder().id(12L).member(member).title("제목").content("본문").build();
         when(service.findByIdAndMember(12L, member)).thenReturn(diary);

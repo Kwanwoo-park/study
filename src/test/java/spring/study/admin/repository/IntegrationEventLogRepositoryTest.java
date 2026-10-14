@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.PageRequest;
 import spring.study.admin.entity.IntegrationEventLog;
+import spring.study.admin.dto.IntegrationEventLogEntry;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,9 +23,9 @@ class IntegrationEventLogRepositoryTest {
     @Test
     void supportsOptionalFiltersCursorAndTimeWindow() {
         LocalDateTime now = LocalDateTime.now();
-        repository.save(new IntegrationEventLog(new Entry(now.minusDays(8), "node", Route.CHAT, Operation.PUBLISH, Outcome.SUCCESS, 1L, 1, 1, null, null)));
-        IntegrationEventLog kafka = repository.save(new IntegrationEventLog(new Entry(now, "node", Route.CHAT, Operation.PUBLISH, Outcome.RETRY_SCHEDULED, 2L, 1, 2, null, "java.lang.IllegalStateException")));
-        IntegrationEventLog redis = repository.saveAndFlush(new IntegrationEventLog(new Entry(now, "node", Route.REALTIME_NOTIFICATION, Operation.CONSUME, Outcome.SUCCESS, 3L, 1, null, null, null)));
+        repository.save(new IntegrationEventLog(new IntegrationEventLogEntry(now.minusDays(8), "node", Route.CHAT, Operation.PUBLISH, Outcome.SUCCESS, 1L, 1, 1, null, null)));
+        IntegrationEventLog kafka = repository.save(new IntegrationEventLog(new IntegrationEventLogEntry(now, "node", Route.CHAT, Operation.PUBLISH, Outcome.RETRY_SCHEDULED, 2L, 1, 2, null, "java.lang.IllegalStateException")));
+        IntegrationEventLog redis = repository.saveAndFlush(new IntegrationEventLog(new IntegrationEventLogEntry(now, "node", Route.REALTIME_NOTIFICATION, Operation.CONSUME, Outcome.SUCCESS, 3L, 1, null, null, null)));
         assertThat(repository.search(now.minusDays(7), null, null, null, null, PageRequest.of(0, 51)))
                 .extracting(IntegrationEventLog::getId).containsExactly(redis.getId(), kafka.getId());
         assertThat(repository.search(now.minusDays(7), Broker.KAFKA, Operation.PUBLISH, Outcome.RETRY_SCHEDULED, null, PageRequest.of(0, 51)))
@@ -36,8 +37,8 @@ class IntegrationEventLogRepositoryTest {
     @Test
     void cleanupDeletesOnlyExpiredLogsInBoundedBatches() {
         LocalDateTime now = LocalDateTime.now();
-        repository.save(new IntegrationEventLog(new Entry(now.minusDays(8), "node", Route.CHAT, Operation.CONSUME, Outcome.SUCCESS, null, 1, null, null, null)));
-        IntegrationEventLog retained = repository.saveAndFlush(new IntegrationEventLog(new Entry(now, "node", Route.CHAT, Operation.CONSUME, Outcome.SUCCESS, null, 1, null, null, null)));
+        repository.save(new IntegrationEventLog(new IntegrationEventLogEntry(now.minusDays(8), "node", Route.CHAT, Operation.CONSUME, Outcome.SUCCESS, null, 1, null, null, null)));
+        IntegrationEventLog retained = repository.saveAndFlush(new IntegrationEventLog(new IntegrationEventLogEntry(now, "node", Route.CHAT, Operation.CONSUME, Outcome.SUCCESS, null, 1, null, null, null)));
         List<Long> ids = repository.findExpiredIds(now.minusDays(7), PageRequest.of(0, 1000));
         assertThat(ids).hasSize(1);
         repository.deleteAllByIdInBatch(ids);

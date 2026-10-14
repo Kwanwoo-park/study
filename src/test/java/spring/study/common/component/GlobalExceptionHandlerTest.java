@@ -17,6 +17,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 class GlobalExceptionHandlerTest {
 
     @Test
+    void exceptionMappingsAreUnambiguous() {
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+                new org.springframework.web.method.annotation.ExceptionHandlerMethodResolver(GlobalExceptionHandler.class));
+    }
+
+    @Test
     void missingUploadPartShouldReturnBadRequestWithoutRecordingAnIncident() {
         SystemIncidentFacade incidentService = mock(SystemIncidentFacade.class);
         GlobalExceptionHandler handler = new GlobalExceptionHandler(incidentService);

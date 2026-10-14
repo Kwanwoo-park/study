@@ -15,8 +15,12 @@ import spring.study.jwt.service.RefreshTokenService;
 import spring.study.common.service.OnlineUserService;
 import spring.study.common.service.ClientIpResolver;
 import spring.study.member.entity.Member;
+import spring.study.jwt.dto.IssuedToken;
+import spring.study.jwt.dto.TokenClaims;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Set;
 
 @Component
@@ -65,7 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = cookieService.read(request, JwtCookieService.REFRESH_COOKIE);
         if (token == null) return null;
         try {
-            JwtTokenProvider.TokenClaims claims = tokenProvider.parse(token, JwtTokenProvider.REFRESH);
+            TokenClaims claims = tokenProvider.parse(token, JwtTokenProvider.REFRESH);
             if (!refreshTokenService.isValid(claims.jti(), claims.memberId())) return null;
             Member member = loadActiveMember(claims);
             if (member == null) {
@@ -78,17 +82,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String path = request.getRequestURI().substring(request.getContextPath().length());
             if (TOKEN_MANAGEMENT_PATHS.contains(path) || path.startsWith("/login/oauth2/code/")) return member;
 
-            JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
-            JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
-            if (!refreshTokenService.rotate(
-                    claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(),
-                    ClientIpResolver.resolve(request))) {
-                cookieService.clearAuthenticationCookies(response);
-                return null;
+            IssuedToken accessToken = tokenProvider.createAccessToken(member);
+            if (tokenProvider.shouldRotateRefreshToken(claims.expiresAt())) {
+                IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
+                if (!refreshTokenService.rotate(
+                        claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(),
+                        ClientIpResolver.resolve(request))) {
+                    cookieService.clearAuthenticationCookies(response);
+                    return null;
+                }
+                cookieService.writeRefreshToken(response, refreshToken.value(), tokenProvider.refreshTokenDuration());
+                cookieService.rememberRefreshToken(request, refreshToken.value());
+            } else {
+                refreshTokenService.recordAccessIfNeeded(member, Duration.between(Instant.now(), claims.expiresAt()));
             }
             cookieService.writeAccessToken(response, accessToken.value(), tokenProvider.accessTokenDuration());
-            cookieService.writeRefreshToken(response, refreshToken.value(), tokenProvider.refreshTokenDuration());
-            cookieService.rememberRefreshToken(request, refreshToken.value());
             return member;
         } catch (JwtTokenProvider.JwtValidationException ignored) {
             cookieService.clearAuthenticationCookies(response);
@@ -96,7 +104,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private Member loadActiveMember(JwtTokenProvider.TokenClaims claims) {
+    private Member loadActiveMember(TokenClaims claims) {
         Member member = memberTokenCacheService
                 .findOrLoad(claims.memberId(), tokenProvider.refreshTokenDuration())
                 .orElse(null);

@@ -33,6 +33,17 @@ class ChatFacadeMessageMutationTest {
     private final ChatFacade chatFacade = new ChatFacade(roomService, roomMemberService, messageService, messageImgService, memberService, moderationService, imageS3Service, mock(ImageUploadCleanupService.class), messagingTemplate);
 
     @Test
+    void nonParticipantsCannotLoadCurrentOrPreviousMessages() {
+        ChatRoom room = message(member(1L)).getRoom();
+        when(roomService.find("room-1")).thenReturn(room);
+        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> chatFacade.loadChatting("room-1", member(2L), 0, 100));
+        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> chatFacade.loadPreviousChatting("room-1", member(2L), 0, 100));
+        verifyNoInteractions(messageService, messageImgService);
+    }
+
+    @Test
     void updateShouldBroadcastChangedMessageWithoutReplacingOriginal() {
         Member owner = member(1L);
         ChatMessage message = message(owner);

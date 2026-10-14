@@ -12,6 +12,7 @@ import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
 import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.repository.AccountTransactionRepository;
+import spring.study.account.dto.AccountTransactionCancellation;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ public class AccountTransactionService {
         return accountTransactionRepository.save(accountTransaction);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public AccountTransaction findUpdate(Long transactionId) {
         return accountTransactionRepository.findByIdForUpdate(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 거래입니다"));
@@ -51,7 +52,7 @@ public class AccountTransactionService {
     }
 
     @Transactional
-    public Cancellation cancelTransaction(AccountTransaction transaction, Account reversalWithdrawalAccount, Account reversalDepositAccount, LocalDateTime cancellationTime) {
+    public AccountTransactionCancellation cancelTransaction(AccountTransaction transaction, Account reversalWithdrawalAccount, Account reversalDepositAccount, LocalDateTime cancellationTime) {
         AccountTransaction cancelTransaction = accountTransactionRepository.save(AccountTransaction.builder()
                 .transactionType(AccountTransactionType.CANCEL)
                 .transactionStatus(AccountTransactionStatus.COMPLETED)
@@ -66,10 +67,9 @@ public class AccountTransactionService {
                 .transactionTime(cancellationTime)
                 .build());
 
-        return new Cancellation(transaction, cancelTransaction);
+        return new AccountTransactionCancellation(transaction, cancelTransaction);
     }
 
-    public record Cancellation(AccountTransaction original, AccountTransaction cancellation) {}
 
     @Transactional
     public AccountTransaction recordOpening(Account source, Account account, long amount) {

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.admin.entity.IntegrationEventLog;
-import spring.study.admin.entity.IntegrationEventLog.Entry;
+import spring.study.admin.dto.IntegrationEventLogEntry;
 import spring.study.admin.repository.IntegrationEventLogRepository;
 
 import java.time.LocalDateTime;
@@ -18,7 +18,7 @@ public class IntegrationEventLogStore {
     private final IntegrationEventLogRepository repository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void append(List<Entry> entries) {
+    public void append(List<IntegrationEventLogEntry> entries) {
         // New entities on each attempt: a rolled-back flush may have assigned IDs.
         repository.saveAllAndFlush(entries.stream().map(IntegrationEventLog::new).toList());
     }

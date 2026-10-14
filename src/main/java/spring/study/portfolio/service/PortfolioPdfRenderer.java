@@ -13,13 +13,15 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class PortfolioPdfRenderer {
-    private String rendererDirectory = "study/tools/portfolio-pdf";
+    @Value("${PORTFOLIO_PDF_RENDERER_DIRECTORY:tools/portfolio-pdf}")
+    private String rendererDirectory = "tools/portfolio-pdf";
+    @Value("${PORTFOLIO_PDF_NODE:node}")
     private String nodeExecutable = "node";
     private volatile Process activeProcess;
     private boolean closed;
 
     public byte[] version() throws IOException {
-        Path directory = Path.of(rendererDirectory).toAbsolutePath();
+        Path directory = rendererPath();
         return (Files.readString(directory.resolve("generate.mjs")) + Files.readString(directory.resolve("package-lock.json"))).getBytes(StandardCharsets.UTF_8);
     }
 
@@ -31,7 +33,7 @@ public class PortfolioPdfRenderer {
             Files.createDirectories(target.getParent());
             Files.write(target, source.getValue());
         }
-        Path script = Path.of(rendererDirectory).toAbsolutePath().resolve("generate.mjs");
+        Path script = rendererPath().resolve("generate.mjs");
         Path log = output.getParent().resolve("renderer.log");
         Process process = start(script, output, staticRoot, log);
         try {
@@ -44,6 +46,16 @@ public class PortfolioPdfRenderer {
             stop(process);
             activeProcess = null;
         }
+    }
+
+    private Path rendererPath() {
+        Path directory = Path.of(rendererDirectory).toAbsolutePath();
+        // The deployment script starts the JAR one directory above the study checkout.
+        if (!Files.isDirectory(directory) && "tools/portfolio-pdf".equals(rendererDirectory)) {
+            Path deploymentDirectory = Path.of("study/tools/portfolio-pdf").toAbsolutePath();
+            if (Files.isDirectory(deploymentDirectory)) return deploymentDirectory;
+        }
+        return directory;
     }
 
     private synchronized Process start(Path script, Path output, Path staticRoot, Path log) throws IOException {

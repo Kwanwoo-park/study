@@ -20,6 +20,7 @@ import spring.study.jwt.service.*;
 import spring.study.kafka.service.*;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.kafka.dto.KafkaDeadLetterListing;
 import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
@@ -50,13 +51,16 @@ class KafkaOperationsSecurityTest {
         verify(deadLetters).requestReplay(1L, 5L);
     }
     @Test void adminCanReadPageAndList() throws Exception {
-        when(deadLetters.list(null, null)).thenReturn(new KafkaDeadLetterService.Listing(List.of(), null));
+        when(deadLetters.list(null, null)).thenReturn(new KafkaDeadLetterListing(List.of(), null));
         mvc.perform(get("/admin/kafka").with(user(member(Role.ADMIN)))).andExpect(status().isOk()).andExpect(view().name("admin/kafka_operations"));
         mvc.perform(get("/api/admin/kafka/dead-letters").with(user(member(Role.ADMIN)))).andExpect(status().isOk()).andExpect(jsonPath("entries").isArray());
     }
     @Configuration @EnableWebMvc @EnableWebSecurity @EnableMethodSecurity
-    @Import({KafkaOperationsSecurityConfig.class, KafkaOperationsController.class, spring.study.kafka.facade.KafkaOperationsFacade.class})
+    @Import({KafkaOperationsSecurityConfig.class, KafkaOperationsController.class, spring.study.kafka.facade.KafkaOperationsFacade.class,
+            AdminViewController.class, spring.study.common.component.GlobalExceptionHandler.class})
     static class Config {
+        @Bean spring.study.admin.facade.AdminViewFacade adminViews() { return mock(spring.study.admin.facade.AdminViewFacade.class); }
+        @Bean spring.study.admin.facade.SystemIncidentFacade incidents() { return mock(spring.study.admin.facade.SystemIncidentFacade.class); }
         @Bean KafkaMonitoringService monitoring() { return mock(KafkaMonitoringService.class); }
         @Bean KafkaDeadLetterService deadLetters() { return mock(KafkaDeadLetterService.class); }
         @Bean JwtAuthenticationFilter jwtFilter() { return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class)); }

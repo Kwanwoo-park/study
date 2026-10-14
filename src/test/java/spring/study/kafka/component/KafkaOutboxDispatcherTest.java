@@ -9,6 +9,7 @@ import spring.study.kafka.entity.KafkaOutboxEvent;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.notification.repository.NotificationRepository;
 import spring.study.admin.service.IntegrationEventLogService;
+import spring.study.kafka.dto.KafkaDispatchResult;
 import static spring.study.admin.entity.IntegrationEventLog.*;
 import static org.mockito.Mockito.verify;
 
@@ -69,7 +70,7 @@ class KafkaOutboxDispatcherTest {
         IllegalStateException failure = new IllegalStateException("Kafka unavailable");
         when(kafkaTemplate.send(any(ProducerRecord.class))).thenThrow(failure);
 
-        KafkaOutboxDispatcher.DispatchResult result = dispatcher.publishPendingEvents();
+        KafkaDispatchResult result = dispatcher.publishPendingEvents();
 
         assertTrue(result.failed());
         assertNotNull(result.retryAt());

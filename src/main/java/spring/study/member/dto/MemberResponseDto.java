@@ -18,7 +18,6 @@ public class MemberResponseDto implements Serializable {
 
     private Long id;
     private String email;
-    private String password;
     private String name;
     private Role role;
     private LocalDateTime registerTime;
@@ -32,7 +31,6 @@ public class MemberResponseDto implements Serializable {
     public MemberResponseDto(Member entity) {
         this.id = entity.getId();
         this.email = entity.getEmail();
-        this.password = entity.getPassword();
         this.name = entity.getName();
         this.role = entity.getRole();
         this.registerTime = entity.getRegisterTime();

@@ -15,6 +15,7 @@ import spring.study.member.facade.MemberFacade;
 import spring.study.member.facade.MemberAuthFacade;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.PasswordChangeVerificationService;
+import spring.study.mail.service.EmailVerificationService;
 
 import java.util.Map;
 
@@ -32,6 +33,7 @@ class MemberPasswordChangeControllerTest {
     private final MemberService memberService = mock(MemberService.class);
     private final JwtAuthenticationFacade authenticationService = mock(JwtAuthenticationFacade.class);
     private final PasswordChangeVerificationService verificationService = mock(PasswordChangeVerificationService.class);
+    private final EmailVerificationService emailVerificationService = mock(EmailVerificationService.class);
     private final HttpServletRequest httpRequest = mock(HttpServletRequest.class);
     private final HttpServletResponse httpResponse = mock(HttpServletResponse.class);
     private MemberApiController controller;
@@ -43,7 +45,7 @@ class MemberPasswordChangeControllerTest {
                 jwtManager,
                 commonFacade,
                 memberFacade,
-                new MemberAuthFacade(memberFacade, memberService, authenticationService, verificationService)
+                new MemberAuthFacade(memberFacade, memberService, authenticationService, verificationService, emailVerificationService)
         );
         member = Member.builder().id(7L).email("member@example.com").build();
     }
@@ -78,13 +80,20 @@ class MemberPasswordChangeControllerTest {
     }
 
     @Test
-    void recoveryPasswordChangeShouldRemainOnExistingUnauthenticatedFlow() {
+    void recoveryPasswordChangeRequiresAnUnusedEmailVerificationToken() {
         MemberRequestDto request = MemberRequestDto.builder()
                 .email("member@example.com")
                 .password("new-password")
                 .build();
         when(jwtManager.getLoginMember(httpRequest)).thenReturn(null);
         when(memberService.findMember("member@example.com")).thenReturn(member);
+
+        assertThat(controller.updatePasswordAction(request, httpRequest, httpResponse).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+        verify(memberFacade, never()).updatePassword("new-password", member);
+
+        request.setVerificationToken("verified-token");
+        when(emailVerificationService.consume(member.getEmail(), "verified-token")).thenReturn(true);
         doReturn(ResponseEntity.ok(Map.of("result", 7L)))
                 .when(memberFacade).updatePassword("new-password", member);
 

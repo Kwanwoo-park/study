@@ -13,6 +13,8 @@ import spring.study.kafka.config.KafkaTopics;
 import spring.study.kafka.entity.KafkaDeadLetter;
 import spring.study.kafka.entity.KafkaDeadLetter.Status;
 import spring.study.kafka.repository.KafkaDeadLetterRepository;
+import spring.study.kafka.dto.KafkaDeadLetterEntry;
+import spring.study.kafka.dto.KafkaDeadLetterListing;
 import static spring.study.admin.entity.IntegrationEventLog.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -39,11 +41,11 @@ public class KafkaDeadLetterService {
     }
 
     @Transactional(readOnly = true)
-    public Listing list(Status status, Long before) {
+    public KafkaDeadLetterListing list(Status status, Long before) {
         if (before != null && before < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         var rows = repository.findRecent(status, before, PageRequest.of(0, 31));
-        List<Entry> entries = rows.stream().limit(30).map(Entry::from).toList();
-        return new Listing(entries, rows.size() > 30 ? entries.get(entries.size() - 1).id() : null);
+        List<KafkaDeadLetterEntry> entries = rows.stream().limit(30).map(KafkaDeadLetterEntry::from).toList();
+        return new KafkaDeadLetterListing(entries, rows.size() > 30 ? entries.get(entries.size() - 1).id() : null);
     }
 
     @Transactional
@@ -61,13 +63,5 @@ public class KafkaDeadLetterService {
         byte[] value = header(record, name);
         if (value == null) return null;
         String text = new String(value, StandardCharsets.UTF_8); return text.substring(0, Math.min(255, text.length()));
-    }
-    public record Listing(List<Entry> entries, Long nextBeforeId) {}
-    public record Entry(Long id, String topic, int partition, long offset, Status status, String errorType,
-                        LocalDateTime createdAt, LocalDateTime replayedAt, LocalDateTime nextAttemptAt, int attempts, boolean replayable) {
-        static Entry from(KafkaDeadLetterRepository.Metadata e) {
-            return new Entry(e.getId(), e.getSourceTopic(), e.getSourcePartition(), e.getSourceOffset(), e.getStatus(), e.getErrorType(),
-                    e.getCreatedAt(), e.getReplayedAt(), e.getNextAttemptAt(), e.getAttemptCount(), e.getPayloadAvailable() && (e.getStatus() == Status.NEW || e.getStatus() == Status.REPLAY_FAILED));
-        }
     }
 }

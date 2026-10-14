@@ -40,15 +40,19 @@ class AdminFileRepositoryTest {
     @Test
     void persistsOnlyFileMetadata() {
         String id = UUID.randomUUID().toString();
-        repository.saveAndFlush(new AdminFile(id, "test.exe", 4, 7L));
+        AdminFile file = new AdminFile(id, "test.exe", 4, 7L);
+        file.pinVersion("saved-version");
+        repository.saveAndFlush(file);
         entityManager.clear();
         AdminFile stored = repository.findById(id).orElseThrow();
         assertThat(stored.getOriginalFilename()).isEqualTo("test.exe");
         assertThat(stored.getSize()).isEqualTo(4);
         assertThat(stored.getUploadedBy()).isEqualTo(7L);
         assertThat(stored.getCreatedAt()).isNotNull();
+        assertThat(stored.getS3VersionId()).isEqualTo("saved-version");
+        assertThat(repository.findFirstByOriginalFilenameOrderByCreatedAtDescIdDesc("test.exe").orElseThrow().getId()).isEqualTo(id);
         assertThat(entityManager.getEntityManager().getMetamodel().entity(AdminFile.class).getAttributes())
                 .extracting(attribute -> attribute.getName())
-                .containsExactlyInAnyOrder("id", "originalFilename", "size", "uploadedBy", "createdAt");
+                .containsExactlyInAnyOrder("id", "originalFilename", "size", "uploadedBy", "createdAt", "s3VersionId");
     }
 }

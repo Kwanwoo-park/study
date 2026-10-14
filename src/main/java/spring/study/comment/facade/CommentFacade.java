@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardService;
 import spring.study.comment.dto.CommentListResponseDto;
@@ -35,6 +36,7 @@ public class CommentFacade {
     private final ReplyService replyService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
 
+    @Transactional
     public ResponseEntity<?> saveComment(CommentRequestDto dto, Member member, HttpServletResponse response) {
         ResponseEntity<?> validation = validateContent(dto.getComments(), member, response);
         if (validation != null) return validation;

@@ -6,6 +6,7 @@ import org.springframework.http.*;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import spring.study.admin.dto.Download;
 import spring.study.admin.service.AdminFileService;
 import spring.study.member.entity.Member;
 
@@ -31,11 +32,14 @@ public class AdminFileFacade {
     }
 
     public ResponseEntity<?> upload(MultipartFile file, Member member) {
-        return ResponseEntity.status(HttpStatus.CREATED).cacheControl(CacheControl.noStore()).body(adminFileService.upload(file, member.getId()));
+        if (file != null) adminFileService.pinExistingVersion(file.getOriginalFilename());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .cacheControl(CacheControl.noStore())
+                .body(adminFileService.upload(file, member.getId()));
     }
 
     public ResponseEntity<?> download(String id) {
-        AdminFileService.Download download = adminFileService.download(id);
+        Download download = adminFileService.download(id);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)

@@ -23,9 +23,8 @@ class ReadOnlyTransactionRegressionTest {
 
     // Audited database reads only: cache, HTTP, S3 and mutation methods are not read transactions.
     private static final Map<String, Set<String>> SERVICE_READS = Map.ofEntries(
-            Map.entry("account.service.AccountService", Set.of("findByAccount", "findByMember", "findActiveByMember", "findAll", "existsByAccount", "hasActiveSavingsUsingSource")),
+            Map.entry("account.service.AccountService", Set.of("findByAccount", "findByMember", "findActiveByMember", "findAll", "existsByAccount", "hasActiveSavingsUsingSource", "findDueSavingsAccountNumbers", "findSavingsSourceAccountNumber")),
             Map.entry("account.service.AccountTransactionService", Set.of("findByAccount", "findByWithdrawalAccount", "findByDepositAccount")),
-            Map.entry("account.service.SavingsAutoTransferService", Set.of("findDueSavingsAccountNumbers")),
             Map.entry("admin.service.AdminFileService", Set.of("list")),
             Map.entry("appeal.service.AppealService", Set.of("findByMember", "findAll")),
             Map.entry("board.service.BoardService", Set.of("findNewBoard", "getBoard", "getBoardByMember", "findAll", "findByMember", "findById", "existBoard", "countByMember", "countByMembers", "getBoardIdList")),

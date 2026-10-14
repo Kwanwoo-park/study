@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MemberSanctionRepository extends JpaRepository<MemberSanction, Long> {
+    @Transactional
+    void deleteByMemberOrIssuedByOrReportReporter(Member member, Member issuedBy, Member reporter);
+
     @Transactional(readOnly = true)
     boolean existsByReportId(Long reportId);
 

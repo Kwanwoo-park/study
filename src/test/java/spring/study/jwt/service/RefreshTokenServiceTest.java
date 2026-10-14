@@ -1,6 +1,8 @@
 package spring.study.jwt.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -159,6 +161,44 @@ class RefreshTokenServiceTest {
         verify(memberTokenCacheService, never()).delete(1L);
     }
 
+    @ParameterizedTest
+    @ValueSource(longs = {1, 14})
+    void refreshOnlyRotatesNearExpiryAndRecordsActivityWithoutWritingOnEveryRefresh(long remainingDays) {
+        JwtTokenProvider provider = tokenProvider();
+        Member member = persistedMember("refresh@example.com", "01012345678", LocalDateTime.now().minusDays(16));
+        ReflectionTestUtils.setField(provider, "refreshTokenDays", remainingDays);
+        var original = provider.createRefreshToken(member);
+        ReflectionTestUtils.setField(provider, "refreshTokenDays", 14L);
+        RefreshToken stored = refreshTokenRepository.save(new RefreshToken(
+                original.jti(), member.getId(), Duration.ofDays(remainingDays)));
+        var originalDatabaseExpiry = stored.getExpiresAt();
+        when(memberTokenCacheService.findOrLoad(eq(member.getId()), any(Duration.class))).thenReturn(Optional.of(member));
+        var authentication = new JwtAuthenticationService(provider, refreshTokenService, memberTokenCacheService);
+
+        var result = authentication.refresh(original.value());
+
+        assertThat(provider.parse(result.accessToken(), JwtTokenProvider.ACCESS).memberId()).isEqualTo(member.getId());
+        assertThat(refreshTokenRepository.count()).isEqualTo(1);
+        if (remainingDays == 1) {
+            assertThat(result.refreshToken()).isNotEqualTo(original.value());
+            assertThat(result.refreshTokenExpiresAt()).isAfter(original.expiresAt());
+            assertThat(refreshTokenService.isValid(original.jti(), member.getId())).isFalse();
+            assertThat(refreshTokenService.isValid(provider.parse(result.refreshToken(), JwtTokenProvider.REFRESH).jti(), member.getId())).isTrue();
+        } else {
+            assertThat(result.refreshToken()).isEqualTo(original.value());
+            assertThat(result.refreshTokenExpiresAt()).isEqualTo(provider.parse(original.value(), JwtTokenProvider.REFRESH).expiresAt());
+            assertThat(refreshTokenRepository.findById(original.jti()).orElseThrow().getExpiresAt()).isEqualTo(originalDatabaseExpiry);
+        }
+        assertThat(memberRepository.findById(member.getId()).orElseThrow().getLastLoginTime()).isAfter(LocalDateTime.now().minusDays(1));
+        refreshTokenService.deleteInactiveMemberTokens();
+        assertThat(refreshTokenRepository.count()).isEqualTo(1);
+        verify(memberTokenCacheService).save(eq(member), any(Duration.class));
+
+        clearInvocations(memberTokenCacheService);
+        authentication.refresh(result.refreshToken());
+        verify(memberTokenCacheService, never()).save(any(), any());
+    }
+
     @Test
     void logoutWithOnlyRefreshCookieMustNotLeaveANewRefreshTokenBehind() throws Exception {
         JwtTokenProvider provider = tokenProvider();
@@ -221,7 +261,9 @@ class RefreshTokenServiceTest {
     void refreshBeforeAnOperationThatLogsOutStillRevokesTheRotatedToken() throws Exception {
         JwtTokenProvider provider = tokenProvider();
         Member member = member(1L);
+        ReflectionTestUtils.setField(provider, "refreshTokenDays", 1L);
         var refresh = provider.createRefreshToken(member);
+        ReflectionTestUtils.setField(provider, "refreshTokenDays", 14L);
         refreshTokenService.save(refresh.jti(), member, provider.refreshTokenDuration());
         when(memberTokenCacheService.findOrLoad(eq(member.getId()), any(Duration.class)))
                 .thenReturn(Optional.of(member));

@@ -11,6 +11,7 @@ import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountStatus;
 import spring.study.account.entity.AccountType;
 import spring.study.account.repository.AccountRepository;
+import spring.study.common.exception.BusinessStateException;
 import spring.study.member.entity.Member;
 
 import java.time.Instant;
@@ -93,7 +94,14 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public List<AccountResponseDto> findByMember(Member member) {
-        return accountRepository.findByMember(member).stream().map(AccountResponseDto::new).toList();
+        return accountRepository.findByMember(member).stream()
+                .filter(account -> account.getAccountStatus() != AccountStatus.DELETED)
+                .map(AccountResponseDto::new).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public String findSavingsSourceAccountNumber(String account) {
+        return accountRepository.findSavingsSourceAccountNumber(account);
     }
 
     @Transactional(readOnly = true)
@@ -192,12 +200,30 @@ public class AccountService {
 
     @Transactional
     public void deleteByAccount(String accountNum) {
-        accountRepository.deleteById(accountNum);
+        Account account = findByAccountForUpdate(accountNum);
+        validateClosable(account);
+        account.setAccountStatus(AccountStatus.DELETED);
     }
 
     @Transactional
     public void deleteByMember(Member member) {
-        accountRepository.deleteByMember(member);
+        List<Account> accounts = accountRepository.findByMemberForUpdate(member);
+        accounts.forEach(this::validateClosable);
+        // Keep the accounts referenced by transaction history, without the withdrawn member.
+        accounts.forEach(account -> {
+            account.setAccountStatus(AccountStatus.DELETED);
+            account.setMember(null);
+        });
+    }
+
+    private void validateClosable(Account account) {
+        if (account.getAmount() != 0L) {
+            throw new BusinessStateException("계좌 잔액을 모두 정리한 후 삭제 또는 탈퇴해 주세요");
+        }
+        if (account.isInterestBearing() && account.getAccountStatus() != AccountStatus.TERMINATED
+                && account.getAccountStatus() != AccountStatus.DELETED) {
+            throw new BusinessStateException("예·적금 계좌를 해지한 후 탈퇴해 주세요");
+        }
     }
 
     private String createAccountLast() {
@@ -239,7 +265,7 @@ public class AccountService {
             throw new SecurityException("본인 계좌로만 해지 정산할 수 있습니다");
         } else if (!source.isInterestBearing()) {
             throw new IllegalArgumentException("예적금 계좌만 해지할 수 있습니다");
-        } else if (source.getAccountStatus() == AccountStatus.TERMINATED) {
+        } else if (source.getAccountStatus() == AccountStatus.TERMINATED || source.getAccountStatus() == AccountStatus.DELETED) {
             throw new IllegalArgumentException("이미 해지된 계좌입니다");
         } else if (settlementAccount.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL
                 || settlementAccount.getAccountStatus() != AccountStatus.ACTIVE) {

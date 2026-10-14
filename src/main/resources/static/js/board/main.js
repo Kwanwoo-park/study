@@ -209,7 +209,7 @@ function fnDraw(data) {
         info.append(name2)
 
         const pre = document.createElement('pre');
-        pre.innerText = board.content;
+        pre.textContent = board.content;
 
         info.append(pre)
 
@@ -254,6 +254,7 @@ function fnDraw(data) {
         main.append(info)
 
         container.appendChild(main);
+        initBoardContent(pre);
         enableBoardImageSwipe(board.id, board.img);
     });
 }

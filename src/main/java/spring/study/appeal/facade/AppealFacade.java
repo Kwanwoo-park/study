@@ -103,14 +103,6 @@ public class AppealFacade {
         });
     }
 
-    @Transactional
-    public AppealResponseDto acceptAndUnblock(Long id) {
-        Appeal appeal = appealService.accept(id);
-        memberSanctionService.unblock(appeal.getMember(), appeal.getRelatedSanction());
-        notificationService.createNotification(appeal.getMember(), "상소가 받아들여져 계정 차단이 해제되었습니다.", Group.ADMIN);
-        return new AppealResponseDto(appeal);
-    }
-
     private Member resolveMember(AppealRequestDto requestDto, Member authenticatedMember) {
         if (authenticatedMember != null) {
             return authenticatedMember;

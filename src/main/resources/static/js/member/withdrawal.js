@@ -11,13 +11,14 @@ if (button) {
             },
             credentials: "include",
         })
-        .then((response) => {
-            if (response.status == 200) {
+        .then(async (response) => {
+            const data = await response.json();
+            if (response.ok) {
                 alert("삭제되었습니다");
                 location.replace(`/member/login`)
             }
            else {
-                alert("다시 시도하여주십시오");
+                alert(data.message || "다시 시도하여주십시오");
            }
         })
         .catch((error) => {

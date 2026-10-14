@@ -19,6 +19,14 @@ import java.util.Collection;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, String> {
+    @Query("select transfer.sourceAccount.account from savingsAutoTransfer transfer where transfer.savingsAccount.account = :account")
+    @Transactional(readOnly = true)
+    String findSavingsSourceAccountNumber(@Param("account") String account);
+
+    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from account a where a.member = :member order by a.account")
+    List<Account> findByMemberForUpdate(@Param("member") Member member);
+
     @Query("select a.account from account a " +
             "join a.savingsAutoTransfer transfer " +
             "where a.accountType = :accountType and " +

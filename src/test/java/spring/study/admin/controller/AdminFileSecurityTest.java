@@ -30,6 +30,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import spring.study.admin.config.AdminFileSecurityConfig;
 import spring.study.admin.dto.AdminFileResponseDto;
+import spring.study.admin.dto.Download;
 import spring.study.admin.entity.AdminFile;
 import spring.study.admin.facade.AdminFileFacade;
 import spring.study.admin.service.AdminFileService;
@@ -112,7 +113,9 @@ class AdminFileSecurityTest {
                         .header(token.get("headerName").asText(), token.get("token").asText()))
                 .andExpect(status().isCreated()).andExpect(jsonPath("originalFilename").value("setup.exe"))
                 .andExpect(jsonPath("s3Bucket").doesNotExist()).andExpect(jsonPath("s3Key").doesNotExist()).andExpect(jsonPath("s3VersionId").doesNotExist());
-        verify(service).upload(any(), eq(7L));
+        var ordered = inOrder(service);
+        ordered.verify(service).pinExistingVersion("setup.exe");
+        ordered.verify(service).upload(any(), eq(7L));
     }
 
     @Test
@@ -126,7 +129,7 @@ class AdminFileSecurityTest {
     @Test
     void downloadIsAnAttachmentAndNeverInlineExecutableContent() throws Exception {
         byte[] bytes = {77, 90, 0, (byte) 255};
-        when(service.download(ID)).thenReturn(new AdminFileService.Download(metadata(), new ByteArrayResource(bytes)));
+        when(service.download(ID)).thenReturn(new Download(metadata(), new ByteArrayResource(bytes)));
         mvc.perform(get("/api/admin/files/" + ID + "/download").with(user(member(Role.ADMIN))))
                 .andExpect(status().isOk()).andExpect(content().bytes(bytes))
                 .andExpect(content().contentType("application/octet-stream"))
@@ -148,7 +151,7 @@ class AdminFileSecurityTest {
             }
         };
         InputStreamResource resource = new InputStreamResource(new S3ObjectInputStream(source, null));
-        when(service.download(ID)).thenReturn(new AdminFileService.Download(metadata(), resource));
+        when(service.download(ID)).thenReturn(new Download(metadata(), resource));
         var downloadRequest = request(method.equals("RANGE") ? HttpMethod.GET : HttpMethod.valueOf(method), "/api/admin/files/" + ID + "/download").with(user(member(Role.ADMIN)));
         if (method.equals("RANGE")) downloadRequest.header("Range", "bytes=0-1");
         mvc.perform(downloadRequest).andExpect(status().isOk()).andExpect(header().string("Content-Length", "4"));

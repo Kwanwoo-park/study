@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,15 +30,29 @@ public class AdminFile {
     @Column(nullable = false)
     private Long uploadedBy;
 
+    @Column(name = "s3_version_id", length = 1024)
+    private String s3VersionId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Builder
     public AdminFile(String id, String originalFilename, long size, Long uploadedBy) {
         this.id = id;
         this.originalFilename = originalFilename;
         this.size = size;
         this.uploadedBy = uploadedBy;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void pinVersion(String versionId) {
+        this.s3VersionId = versionId;
+    }
+
+    public void recordUpload(long size, Long uploadedBy, String versionId) {
+        this.size = size;
+        this.uploadedBy = uploadedBy;
+        this.s3VersionId = versionId;
     }
 
 }

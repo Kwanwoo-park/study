@@ -1,78 +1,56 @@
-const button = document.getElementById('find');
-const email = document.getElementById('email');
-const check = document.getElementById('check');
-const email_certification = document.getElementById('email_certification');
-const memailconfirmTxt = document.getElementById('memailconfirmTxt');
-const memailconfirm = document.getElementById('memailconfirm');
+(function () {
+    const button = document.getElementById('find');
+    const email = document.getElementById('email');
+    const sendButton = document.getElementById('email_certification');
+    const check = document.getElementById('check');
+    const code = document.getElementById('memailconfirm');
+    const message = document.getElementById('memailconfirmTxt');
+    if (!button || !email || !sendButton || !code) return;
+    email.value = new URLSearchParams(location.search).get('email') || email.value;
 
-var code;
-
-if (email_certification) {
-    email_certification.addEventListener('click', (event) => {
-        event.preventDefault();
-
-        if (email.value != '') {
-            fetch(`/api/mail/confirm`, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                body: JSON.stringify({
-                    email: email.value
-                }),
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                code = json['code']
-                alert("해당 이메일로 인증번호 발송이 완료되었습니다\n 확인부탁드립니다");
-                check.style.display = 'inline';
-                email.disabled = true;
-            })
-            .catch((error) => {
-                alert("인증번호 발송에 실패하였습니다\n 다시 시도하여 주십시오");
-            })
+    sendButton.addEventListener('click', async () => {
+        if (!email.value.trim()) return alert('이메일을 입력해 주세요.');
+        sendButton.disabled = true;
+        try {
+            await post('/api/mail/confirm', { email: email.value.trim() });
+            sessionStorage.removeItem('passwordRecoveryVerification');
+            email.disabled = true;
+            check.classList.remove('is-hidden');
+            button.classList.remove('is-hidden');
+            message.textContent = '이메일로 받은 인증번호를 5분 이내에 입력해 주세요.';
+            alert('인증번호를 발송했습니다.');
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            sendButton.disabled = false;
         }
-        else {
-            alert("이메일을 입력하여 주십시오");
-        }
-    })
-}
+    });
 
-if (button) {
-    button.addEventListener('click', (event) => {
-        event.preventDefault();
-
-        if (email.value != '') {
-            fetch(`/api/member/find/email?email=`+email.value, {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['result'] > 0)
-                    location.replace("/member/updatePassword/" + json.member.email);
-                else
-                    alert("존재하지 않는 회원정보입니다.");
-            })
-            .catch((error) => {
-                console.error(error)
-                alert("존재하지 않는 회원정보입니다.");
-            })
+    button.addEventListener('click', async () => {
+        if (!code.value.trim()) return alert('인증번호를 입력해 주세요.');
+        button.disabled = true;
+        try {
+            const data = await post('/api/mail/verify', { email: email.value.trim(), code: code.value.trim() });
+            sessionStorage.setItem('passwordRecoveryVerification', JSON.stringify({
+                email: email.value.trim(), token: data.verificationToken, expiresAt: Date.now() + 5 * 60 * 1000
+            }));
+            location.replace('/member/updatePassword/' + encodeURIComponent(email.value.trim()));
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            button.disabled = false;
         }
-    })
-}
+    });
 
-if (memailconfirm) {
-    memailconfirm.addEventListener('keyup', function() {
-        if (code != memailconfirm.value) {
-            memailconfirmTxt.innerText = '인증번호가 잘못되었습니다.';
-        } else {
-            button.style.display = 'inline';
-            memailconfirmTxt.innerText = '인증번호 확인 완료.';
+    async function post(url, body) {
+        const response = await fetch(url, {
+            method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            credentials: 'include', body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        if (!response.ok || data.status !== 'ok' || (url.endsWith('/verify') && !data.verificationToken)) {
+            throw new Error(data.message || '이메일 인증에 실패했습니다. 다시 시도해 주세요.');
         }
-    })
-}
+        return data;
+    }
+})();

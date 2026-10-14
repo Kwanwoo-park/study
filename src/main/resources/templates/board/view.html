@@ -7,7 +7,8 @@
 	<!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 	<link rel="stylesheet" href="/css/common/common.css?v=20260830">
-	<link rel="stylesheet" href="/css/board/view.css?v=20260830">
+	<link rel="stylesheet" href="/css/board/view.css?v=20261011">
+	<link rel="stylesheet" href="/css/board/content.css?v=20261011">
 	<link rel="stylesheet" href="/css/comment/modal.css">
     <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
@@ -90,7 +91,8 @@
 			<script src="/js/common/image-swipe.js"></script>
 			<script src="/js/board/common-actions.js?v=20260916-replace"></script>
 			<script src="/js/comment/modal.js?v=20260823"></script>
-			<script src="/js/board/view.js"></script>
+			<script src="/js/board/content.js?v=20261011"></script>
+			<script src="/js/board/view.js?v=20261011"></script>
 			<script th:if="${board.img.size > 1}" th:inline="javascript">
 				const boardImages = /*[[${board.img}]]*/ [];
 				enableBoardImageSwipe(/*[[${board.id}]]*/ 0, boardImages);

@@ -60,6 +60,7 @@ public class ChatFacade {
             ));
         }
 
+        requireParticipant(room, member);
         List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room, member);
         ChatRoomMember roomMember = roomMemberService.find(member, room);
         String lastReadAt = roomMember == null || roomMember.getLastReadAt() == null
@@ -89,6 +90,7 @@ public class ChatFacade {
             ));
         }
 
+        requireParticipant(room, member);
         List<ChatMessageResponseDto> list = messageService.loadChatting(cursor, limit, room, member);
 
         int nextCursor = list.isEmpty() ? 0 : cursor + 2;
@@ -100,6 +102,12 @@ public class ChatFacade {
                 "nextCursor", nextCursor,
                 "img", messageImgService.findMessageImg(visibleImageMessages(list))
         ));
+    }
+
+    private void requireParticipant(ChatRoom room, Member member) {
+        if (!roomMemberService.exist(member, room)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "참여 중인 채팅방만 조회할 수 있습니다");
+        }
     }
 
     private List<ChatMessageResponseDto> visibleImageMessages(List<ChatMessageResponseDto> messages) {

@@ -5,6 +5,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.entity.IntegrationEventLog;
 import spring.study.admin.repository.IntegrationEventLogRepository;
+import spring.study.admin.dto.IntegrationEventLogEntry;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,7 +24,7 @@ class IntegrationEventLogQueryServiceTest {
     @Test
     void usesExtraRowToReturnStableCursorWithoutACountQuery() {
         var logs = IntStream.range(0, 51).mapToObj(i -> {
-            var log = new IntegrationEventLog(new Entry(LocalDateTime.now(), "node", Route.CHAT, Operation.PUBLISH, Outcome.SUCCESS, null, 1, null, null, null));
+            var log = new IntegrationEventLog(new IntegrationEventLogEntry(LocalDateTime.now(), "node", Route.CHAT, Operation.PUBLISH, Outcome.SUCCESS, null, 1, null, null, null));
             ReflectionTestUtils.setField(log, "id", 100L - i); return log;
         }).toList();
         when(repository.search(any(), isNull(), isNull(), isNull(), isNull(), any())).thenReturn(logs);
@@ -42,7 +43,7 @@ class IntegrationEventLogQueryServiceTest {
 
     @Test
     void detailReturnsStoredMetadataWithoutDiscardingZeroCounts() {
-        var log = new IntegrationEventLog(new Entry(LocalDateTime.now(), "node-1", Route.REALTIME_NOTIFICATION,
+        var log = new IntegrationEventLog(new IntegrationEventLogEntry(LocalDateTime.now(), "node-1", Route.REALTIME_NOTIFICATION,
                 Operation.PUBLISH, Outcome.NO_SUBSCRIBERS, 42L, 1, null, 0L, null));
         ReflectionTestUtils.setField(log, "id", 15L);
         when(repository.findById(15L)).thenReturn(Optional.of(log));
@@ -60,7 +61,7 @@ class IntegrationEventLogQueryServiceTest {
         when(repository.findById(12L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.findById(12L)).isInstanceOfSatisfying(ResponseStatusException.class,
                 error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
-        var expired = new IntegrationEventLog(new Entry(LocalDateTime.now().minusDays(8), "node", Route.CHAT,
+        var expired = new IntegrationEventLog(new IntegrationEventLogEntry(LocalDateTime.now().minusDays(8), "node", Route.CHAT,
                 Operation.CONSUME, Outcome.SUCCESS, null, 1, null, null, null));
         when(repository.findById(13L)).thenReturn(Optional.of(expired));
         assertThatThrownBy(() -> service.findById(13L)).isInstanceOfSatisfying(ResponseStatusException.class,

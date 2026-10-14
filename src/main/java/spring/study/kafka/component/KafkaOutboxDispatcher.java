@@ -16,6 +16,7 @@ import spring.study.kafka.entity.KafkaOutboxEvent;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.notification.repository.NotificationRepository;
 import spring.study.admin.service.IntegrationEventLogService;
+import spring.study.kafka.dto.KafkaDispatchResult;
 import static spring.study.admin.entity.IntegrationEventLog.*;
 
 import java.time.Duration;
@@ -39,10 +40,10 @@ public class KafkaOutboxDispatcher {
     private long retryMaxDelayMs = 1_800_000L;
 
     @Transactional
-    public DispatchResult publishPendingEvents() {
+    public KafkaDispatchResult publishPendingEvents() {
         LocalDateTime now = LocalDateTime.now();
         List<KafkaOutboxEvent> events = outboxRepository.findNextBatchForUpdate(now, PageRequest.of(0, BATCH_SIZE));
-        if (events.isEmpty()) return DispatchResult.empty();
+        if (events.isEmpty()) return KafkaDispatchResult.empty();
 
         int processedCount = 0;
         for (KafkaOutboxEvent event : events) {
@@ -69,11 +70,11 @@ public class KafkaOutboxDispatcher {
                         event.isDeadLettered() ? Outcome.DEAD_LETTER : Outcome.RETRY_SCHEDULED,
                         event.getId(), 1, event.getAttemptCount(), exception);
                 log.warn("Kafka outbox publish failed. eventId={}, attempt={}, retryAt={}", event.getId(), event.getAttemptCount(), nextRetryAt, exception);
-                return DispatchResult.failed(processedCount, nextRetryAt);
+                return KafkaDispatchResult.failed(processedCount, nextRetryAt);
             }
         }
 
-        return DispatchResult.completed(processedCount, events.size() == BATCH_SIZE);
+        return KafkaDispatchResult.completed(processedCount, events.size() == BATCH_SIZE);
     }
 
     private Object resolvePayload(KafkaOutboxEvent event) throws Exception {
@@ -90,21 +91,4 @@ public class KafkaOutboxDispatcher {
         return Math.min(delay, retryMaxDelayMs);
     }
 
-    public record DispatchResult(int processedCount, boolean batchFull, boolean failed, LocalDateTime retryAt) {
-        public static DispatchResult empty() {
-            return new DispatchResult(0, false, false, null);
-        }
-
-        public static DispatchResult completed(int processedCount, boolean batchFull) {
-            return new DispatchResult(processedCount, batchFull, false, null);
-        }
-
-        public static DispatchResult failed(int processedCount, LocalDateTime retryAt) {
-            return new DispatchResult(processedCount, false, true, retryAt);
-        }
-
-        public boolean hasWork() {
-            return processedCount > 0 || failed;
-        }
-    }
 }

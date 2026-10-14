@@ -12,6 +12,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
+import spring.study.jwt.dto.AuthenticationTokens;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.time.Instant;
@@ -37,8 +38,8 @@ class MobileAuthControllerTest {
                 .build();
         MemberRequestDto request = MemberRequestDto.builder()
                 .email("app@test.com").password("plain-secret").build();
-        JwtAuthenticationService.AuthenticationTokens tokens =
-                new JwtAuthenticationService.AuthenticationTokens(
+        AuthenticationTokens tokens =
+                new AuthenticationTokens(
                         "access", "refresh", Instant.now().plusSeconds(600), Instant.now().plusSeconds(1200));
         when(memberService.loadUserByUsername("app@test.com")).thenReturn(member);
         when(passwordEncoder.matches("plain-secret", "encoded-secret")).thenReturn(true);

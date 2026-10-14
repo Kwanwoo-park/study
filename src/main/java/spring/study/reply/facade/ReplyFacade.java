@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.reply.dto.ReplyRequestDto;
 import spring.study.reply.dto.ReplyResponseDto;
 import spring.study.comment.entity.Comment;
@@ -32,6 +33,7 @@ public class ReplyFacade {
     private final ModerationFacade moderationService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
 
+    @Transactional
     public ResponseEntity<?> saveReply(ReplyRequestDto dto, Member member, HttpServletResponse response) {
         int risk = moderationService.validate(dto.getReply(), member, response);
 

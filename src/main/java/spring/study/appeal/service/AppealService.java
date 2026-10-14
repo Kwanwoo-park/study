@@ -86,6 +86,11 @@ public class AppealService {
         appealRepository.deleteByMember(member);
     }
 
+    @Transactional
+    public void detachSanctions(Member member) {
+        appealRepository.detachSanctions(member);
+    }
+
 
 
 

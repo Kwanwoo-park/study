@@ -11,6 +11,9 @@ import spring.study.kafka.config.KafkaTopics;
 import spring.study.kafka.entity.KafkaDeadLetter.Status;
 import spring.study.kafka.repository.KafkaDeadLetterRepository;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
+import spring.study.kafka.dto.KafkaOverview;
+import spring.study.kafka.dto.KafkaPartitionLag;
+import spring.study.kafka.dto.KafkaTopicHealth;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +25,7 @@ public class KafkaMonitoringService {
     private final KafkaOutboxEventRepository outbox;
     private final KafkaDeadLetterRepository deadLetters;
     private final String group;
-    private BrokerSnapshot cached;
+    private KafkaBrokerSnapshot cached;
     private long cacheExpires;
 
     public KafkaMonitoringService(Admin admin, KafkaOperationsProperties properties, KafkaOutboxEventRepository outbox,
@@ -30,8 +33,8 @@ public class KafkaMonitoringService {
         this.admin = admin; this.properties = properties; this.outbox = outbox; this.deadLetters = deadLetters; this.group = group;
     }
 
-    public Overview overview() {
-        BrokerSnapshot broker = brokerSnapshot();
+    public KafkaOverview overview() {
+        KafkaBrokerSnapshot broker = brokerSnapshot();
         LocalDateTime oldest = outbox.findOldestPendingTime();
         long age = oldest == null ? 0 : Math.max(0, Duration.between(oldest, LocalDateTime.now()).toSeconds());
         long failed = outbox.countByDeadLetteredTrue();
@@ -40,14 +43,14 @@ public class KafkaMonitoringService {
         if (age >= properties.getOutboxWarningSeconds()) warnings.add("발행 대기 중 가장 오래된 이벤트가 " + age + "초 지연되고 있습니다.");
         if (failed > 0) warnings.add("Outbox 최종 실패 " + failed + "건이 있습니다.");
         if (unresolved > 0) warnings.add("확인이 필요한 소비 실패 기록 " + unresolved + "건이 있습니다.");
-        return new Overview(broker.observedAt(), broker.error(), broker.topics(), broker.lags(), broker.totalLag(),
+        return new KafkaOverview(broker.observedAt(), broker.error(), broker.topics(), broker.lags(), broker.totalLag(),
                 outbox.countByDeadLetteredFalse(), age, failed, unresolved,
                 deadLetters.countByStatusIn(List.of(Status.REPLAY_PENDING)), warnings);
     }
 
-    private synchronized BrokerSnapshot brokerSnapshot() {
+    private synchronized KafkaBrokerSnapshot brokerSnapshot() {
         if (cached != null && System.nanoTime() < cacheExpires) return cached;
-        List<TopicHealth> topics = new ArrayList<>(); List<PartitionLag> lags = new ArrayList<>(); List<String> warnings = new ArrayList<>();
+        List<KafkaTopicHealth> topics = new ArrayList<>(); List<KafkaPartitionLag> lags = new ArrayList<>(); List<String> warnings = new ArrayList<>();
         String error = null; Long totalLag = null;
         try {
             var described = admin.describeTopics(KafkaTopics.ALL).allTopicNames().get(5, TimeUnit.SECONDS);
@@ -66,7 +69,7 @@ public class KafkaMonitoringService {
                         : name.equals(KafkaTopics.CHAT) ? properties.getChatPartitions() : properties.getNotificationPartitions();
                 int replicas = topic.partitions().stream().mapToInt(p -> p.replicas().size()).min().orElse(0);
                 long underReplicated = topic.partitions().stream().filter(p -> p.isr().size() < p.replicas().size()).count();
-                topics.add(new TopicHealth(name, topic.partitions().size(), desired, replicas, value(config, "min.insync.replicas"),
+                topics.add(new KafkaTopicHealth(name, topic.partitions().size(), desired, replicas, value(config, "min.insync.replicas"),
                         value(config, "retention.ms"), value(config, "cleanup.policy"), underReplicated));
                 if (underReplicated > 0) warnings.add(name + ": 복제가 지연되는 파티션이 있습니다.");
                 if (topic.partitions().size() != desired || replicas != properties.getReplicationFactor()) warnings.add(name + ": 운영 토픽 구성과 신규 생성 설정이 다릅니다. 기존 구성은 자동 변경하지 않습니다.");
@@ -83,7 +86,7 @@ public class KafkaMonitoringService {
                 OffsetAndMetadata offset = committed.get(tp);
                 long end = ends.get(tp).offset();
                 Long lag = offset == null ? (end == 0 ? Long.valueOf(0) : null) : (offset.offset() > end ? null : Long.valueOf(end - offset.offset()));
-                lags.add(new PartitionLag(tp.topic(), tp.partition(), tp.topic().endsWith(".DLT") ? group + ".dead-letter-store" : group,
+                lags.add(new KafkaPartitionLag(tp.topic(), tp.partition(), tp.topic().endsWith(".DLT") ? group + ".dead-letter-store" : group,
                         offset == null ? null : offset.offset(), end, lag));
                 if (lag == null) { complete = false; warnings.add(tp + ": 커밋된 소비 위치가 없어 지연을 계산할 수 없습니다."); }
                 else sum += lag;
@@ -95,14 +98,9 @@ public class KafkaMonitoringService {
             error = "Kafka 상태 조회에 실패했습니다. 브로커 연결·토픽 존재 여부·조회 권한을 확인해 주세요.";
             warnings.add(error);
         }
-        cached = new BrokerSnapshot(Instant.now(), error, topics, lags, totalLag, warnings);
+        cached = new KafkaBrokerSnapshot(Instant.now(), error, topics, lags, totalLag, warnings);
         cacheExpires = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
         return cached;
     }
     private static String value(Config config, String key) { return config == null || config.get(key) == null ? "unknown" : config.get(key).value(); }
-    public record TopicHealth(String topic, int partitions, int configuredPartitions, int replicas, String minInSyncReplicas, String retentionMs, String cleanupPolicy, long underReplicatedPartitions) {}
-    public record PartitionLag(String topic, int partition, String group, Long committedOffset, long endOffset, Long lag) {}
-    private record BrokerSnapshot(Instant observedAt, String error, List<TopicHealth> topics, List<PartitionLag> lags, Long totalLag, List<String> warnings) {}
-    public record Overview(Instant observedAt, String brokerError, List<TopicHealth> topics, List<PartitionLag> lags, Long totalLag,
-                           long outboxPending, long oldestOutboxSeconds, long outboxFailed, long unresolvedDeadLetters, long replayPending, List<String> warnings) {}
 }

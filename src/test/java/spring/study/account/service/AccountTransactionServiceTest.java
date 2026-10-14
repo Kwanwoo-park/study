@@ -20,14 +20,13 @@ import static org.mockito.Mockito.when;
 
 class AccountTransactionServiceTest {
 
-    private final AccountService accountService = mock(AccountService.class);
     private final AccountTransactionRepository accountTransactionRepository = mock(AccountTransactionRepository.class);
     private final AccountTransactionService accountTransactionService = new AccountTransactionService(
             accountTransactionRepository
     );
 
     @Test
-    void cancelTransferShouldReverseBalancesAndCreateCancelTransaction() {
+    void cancellationRecordsTheReversalChosenByTheFacade() {
         Member sender = createMember(1L);
         Member receiver = createMember(2L);
         Account withdrawalAccount = createAccount("9191000", 10_000L, sender);
@@ -41,17 +40,14 @@ class AccountTransactionServiceTest {
                 LocalDateTime.now().minusHours(1)
         );
 
-        when(accountTransactionRepository.findByIdForUpdate(transaction.getId())).thenReturn(Optional.of(transaction));
-        when(accountService.findByAccountForUpdate(withdrawalAccount.getAccount())).thenReturn(withdrawalAccount);
-        when(accountService.findByAccountForUpdate(depositAccount.getAccount())).thenReturn(depositAccount);
         when(accountTransactionRepository.save(any(AccountTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var canceled = accountTransactionService.cancelTransaction(transaction, withdrawalAccount, depositAccount, transaction.getTransactionTime());
+        var canceled = accountTransactionService.cancelTransaction(transaction, depositAccount, withdrawalAccount, transaction.getTransactionTime());
         AccountTransactionResponseDto cancelTransaction = new AccountTransactionResponseDto(canceled.cancellation());
 
-        assertThat(transaction.getTransactionStatus()).isEqualTo(AccountTransactionStatus.CANCELED);
-        assertThat(withdrawalAccount.getAmount()).isEqualTo(20_000L);
-        assertThat(depositAccount.getAmount()).isZero();
+        assertThat(transaction.getTransactionStatus()).isEqualTo(AccountTransactionStatus.COMPLETED);
+        assertThat(withdrawalAccount.getAmount()).isEqualTo(10_000L);
+        assertThat(depositAccount.getAmount()).isEqualTo(10_000L);
         assertThat(cancelTransaction.getTransactionType()).isEqualTo(AccountTransactionType.CANCEL);
         assertThat(cancelTransaction.getWithdrawalAccount()).isEqualTo(depositAccount.getAccount());
         assertThat(cancelTransaction.getDepositAccount()).isEqualTo(withdrawalAccount.getAccount());

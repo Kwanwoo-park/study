@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import spring.study.admin.entity.IntegrationEventLog.Entry;
+import spring.study.admin.dto.IntegrationEventLogEntry;
 
 import java.util.List;
 
@@ -26,9 +26,9 @@ class IntegrationEventLogServiceTest {
                 new IllegalStateException("Bearer secret email@example.test", new IllegalArgumentException("private payload")));
         verifyNoInteractions(store);
         service.flush();
-        ArgumentCaptor<List<Entry>> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<IntegrationEventLogEntry>> captor = ArgumentCaptor.forClass(List.class);
         verify(store).append(captor.capture());
-        Entry entry = captor.getValue().get(0);
+        IntegrationEventLogEntry entry = captor.getValue().get(0);
         assertThat(entry.errorType()).isEqualTo(IllegalArgumentException.class.getName());
         assertThat(entry.toString()).doesNotContain("secret", "email@example.test", "private payload");
         assertThat(service.diagnostics().pending()).isZero();

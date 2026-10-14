@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.dto.IntegrationEventLogResponse;
-import spring.study.admin.dto.IntegrationEventLogResponse.Item;
+import spring.study.admin.dto.IntegrationEventLogItem;
 import spring.study.admin.entity.IntegrationEventLog;
 import spring.study.admin.entity.IntegrationEventLog.*;
 import spring.study.admin.repository.IntegrationEventLogRepository;
@@ -23,12 +23,12 @@ public class IntegrationEventLogQueryService {
     private final IntegrationEventLogService recorder;
 
     @Transactional(readOnly = true)
-    public Item findById(long id) {
+    public IntegrationEventLogItem findById(long id) {
         if (id < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "로그 ID를 확인해 주세요");
         LocalDateTime since = LocalDateTime.now().minusDays(recorder.retentionDays());
         return repository.findById(id)
                 .filter(log -> !log.getOccurredAt().isBefore(since))
-                .map(Item::new)
+                .map(IntegrationEventLogItem::new)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "기록이 없거나 보관 기간이 지나 삭제되었습니다."));
     }
 
@@ -39,7 +39,7 @@ public class IntegrationEventLogQueryService {
         }
         LocalDateTime since = LocalDateTime.now().minusHours(Math.min(hours, recorder.retentionDays() * 24L));
         List<IntegrationEventLog> logs = repository.search(since, broker, operation, outcome, beforeId, PageRequest.of(0, PAGE_SIZE + 1));
-        List<Item> entries = logs.stream().limit(PAGE_SIZE).map(Item::new).toList();
+        List<IntegrationEventLogItem> entries = logs.stream().limit(PAGE_SIZE).map(IntegrationEventLogItem::new).toList();
         Long next = logs.size() > PAGE_SIZE ? entries.get(entries.size() - 1).id() : null;
         return new IntegrationEventLogResponse(entries, next, recorder.retentionDays(), recorder.diagnostics());
     }

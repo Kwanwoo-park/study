@@ -1,0 +1,39 @@
+.board-content {
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 1rem;
+}
+
+.board-content pre.board-content-text {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.5;
+}
+
+.board-content-text.is-collapsed {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    max-height: 4.5em;
+    overflow: hidden;
+}
+
+.board-content-toggle {
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    cursor: pointer;
+}
+
+.board-content-toggle[hidden] {
+    display: none;
+}
+
+.board-content-toggle:hover,
+.board-content-toggle:focus-visible {
+    text-decoration: underline;
+}

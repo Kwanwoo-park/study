@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import spring.study.admin.dto.IntegrationEventLogResponse;
 import spring.study.admin.entity.IntegrationEventLog.*;
 import spring.study.admin.service.IntegrationEventLogQueryService;
 import org.springframework.stereotype.Service;

@@ -17,7 +17,7 @@ if (button) {
             .then((response) => response.json())
             .then((json) => {
                 if (json['result'] > 0)
-                    location.replace("/member/updatePassword/" + json.member.email);
+                    location.replace('/member/findByEmail?email=' + encodeURIComponent(json.member.email));
                 else
                     alert("존재하지 않는 회원정보입니다.");
             })

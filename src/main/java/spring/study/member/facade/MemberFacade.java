@@ -43,6 +43,9 @@ import spring.study.notification.service.NotificationService;
 import spring.study.report.service.ReportService;
 import spring.study.reply.service.ReplyService;
 import spring.study.todo.service.TodoService;
+import spring.study.mail.service.EmailVerificationService;
+import spring.study.diary.service.DiaryService;
+import spring.study.member.sanction.service.MemberSanctionService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +78,9 @@ public class MemberFacade {
     private final ImageCleanupService imageCleanupService;
     private final ImageUploadCleanupService imageUploadCleanupService;
     private final TodoService todoService;
+    private final EmailVerificationService emailVerificationService;
+    private final DiaryService diaryService;
+    private final MemberSanctionService memberSanctionService;
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
         return login(dto, response, null);
@@ -132,6 +138,7 @@ public class MemberFacade {
         ));
     }
 
+    @Transactional
     public ResponseEntity<?> register(MemberRequestDto dto) {
         int check = validateMember(dto);
 
@@ -182,6 +189,12 @@ public class MemberFacade {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
                     "result", -1L,
                     "message", "금칙어를 사용하였습니다"
+            ));
+        }
+
+        if (!emailVerificationService.consume(dto.getEmail(), dto.getVerificationToken())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -403L, "message", "5분 이내에 이메일 인증을 완료한 후 가입해 주세요"
             ));
         }
 
@@ -419,13 +432,18 @@ public class MemberFacade {
         // the managed aggregate only for this account-deletion operation,
         // which needs the member's lazy associations.
         member = memberService.findById(member.getId());
+        accountService.deleteByMember(member);
         for (Board board : member.getBoard()) {
             imageCleanupService.enqueueAll(board.getImg().stream().map(img -> img.getImgSrc()).toList());
             boardImgService.deleteBoard(board);
             favoriteService.deleteByBoard(board);
+            replyService.deleteReplay(board.getComment());
+            commentService.deleteComment(board);
         }
 
+        appealService.detachSanctions(member);
         appealService.deleteByMember(member);
+        memberSanctionService.deleteByMemberReferences(member);
         bookReviewService.deleteByAuthor(member);
         reportService.deleteByReporter(member);
         notificationService.deleteByMember(member);
@@ -447,7 +465,10 @@ public class MemberFacade {
                 .toList());
         collectionService.deleteByMember(member);
 
-        accountService.deleteByMember(member);
+        for (var diary : member.getDiaries()) {
+            imageCleanupService.enqueueAll(diary.getImages().stream().map(image -> image.getImageUrl()).toList());
+        }
+        diaryService.deleteByMember(member);
         todoService.deleteByMember(member);
 
         imageCleanupService.enqueue(member.getProfile());

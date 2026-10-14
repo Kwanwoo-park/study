@@ -16,6 +16,8 @@ import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.facade.MemberFacade;
 import spring.study.report.facade.ReportFacade;
+import spring.study.admin.dto.SystemDiskSnapshot;
+import spring.study.admin.dto.SystemProcessSnapshot;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.*;
@@ -35,8 +37,8 @@ class AdminSystemDiagnosticsControllerTest {
     void administratorCanInspectProcessesAndDisk() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(jwtManager.getLoginMember(request)).thenReturn(Member.builder().role(Role.ADMIN).build());
-        var processes = new SystemDiagnosticsService.ProcessSnapshot(0, java.util.List.of());
-        var disk = new SystemDiagnosticsService.DiskSnapshot(java.util.List.of(), "project", "", 0, 100, 0, java.util.List.of());
+        var processes = new SystemProcessSnapshot(0, java.util.List.of());
+        var disk = new SystemDiskSnapshot(java.util.List.of(), "project", "", 0, 100, 0, java.util.List.of());
         doReturn(ResponseEntity.ok(processes)).when(adminFacade).systemProcesses();
         doReturn(ResponseEntity.ok(disk)).when(adminFacade).systemDisk("project", "", 0);
         assertSame(processes, controller.systemProcesses(request).getBody());

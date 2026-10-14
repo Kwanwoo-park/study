@@ -4,7 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.member.entity.Member;
+import spring.study.jwt.dto.AuthenticationTokens;
+import spring.study.jwt.dto.IssuedToken;
+import spring.study.jwt.dto.TokenClaims;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.OptionalLong;
 
@@ -20,8 +24,8 @@ public class JwtAuthenticationService {
     }
 
     public AuthenticationTokens issue(Member member, String ipAddress) {
-        JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
-        JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
+        IssuedToken accessToken = tokenProvider.createAccessToken(member);
+        IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
         refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress);
         return toAuthenticationTokens(accessToken, refreshToken);
     }
@@ -31,7 +35,7 @@ public class JwtAuthenticationService {
     }
 
     public AuthenticationTokens refresh(String refreshTokenValue, String ipAddress) {
-        JwtTokenProvider.TokenClaims claims = tokenProvider.parse(refreshTokenValue, JwtTokenProvider.REFRESH);
+        TokenClaims claims = tokenProvider.parse(refreshTokenValue, JwtTokenProvider.REFRESH);
         if (!refreshTokenService.isValid(claims.jti(), claims.memberId())) {
             throw new JwtTokenProvider.JwtValidationException("Revoked refresh token");
         }
@@ -44,8 +48,12 @@ public class JwtAuthenticationService {
             throw new JwtTokenProvider.JwtValidationException("Member access blocked");
         }
 
-        JwtTokenProvider.IssuedToken accessToken = tokenProvider.createAccessToken(member);
-        JwtTokenProvider.IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
+        IssuedToken accessToken = tokenProvider.createAccessToken(member);
+        if (!tokenProvider.shouldRotateRefreshToken(claims.expiresAt())) {
+            refreshTokenService.recordAccessIfNeeded(member, Duration.between(Instant.now(), claims.expiresAt()));
+            return new AuthenticationTokens(accessToken.value(), refreshTokenValue, accessToken.expiresAt(), claims.expiresAt());
+        }
+        IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
         if (!refreshTokenService.rotate(
                 claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress)) {
             throw new JwtTokenProvider.JwtValidationException("Could not rotate refresh token");
@@ -60,7 +68,7 @@ public class JwtAuthenticationService {
     public OptionalLong revokeAndGetMemberId(String refreshTokenValue) {
         if (refreshTokenValue == null || refreshTokenValue.isBlank()) return OptionalLong.empty();
         try {
-            JwtTokenProvider.TokenClaims claims = tokenProvider.parse(
+            TokenClaims claims = tokenProvider.parse(
                     refreshTokenValue, JwtTokenProvider.REFRESH);
             refreshTokenService.revoke(claims.jti());
             return OptionalLong.of(claims.memberId());
@@ -70,7 +78,7 @@ public class JwtAuthenticationService {
         }
     }
 
-    private AuthenticationTokens toAuthenticationTokens(JwtTokenProvider.IssuedToken accessToken, JwtTokenProvider.IssuedToken refreshToken) {
+    private AuthenticationTokens toAuthenticationTokens(IssuedToken accessToken, IssuedToken refreshToken) {
         return new AuthenticationTokens(
                 accessToken.value(),
                 refreshToken.value(),
@@ -79,5 +87,4 @@ public class JwtAuthenticationService {
         );
     }
 
-    public record AuthenticationTokens(String accessToken, String refreshToken, Instant accessTokenExpiresAt, Instant refreshTokenExpiresAt) {}
 }

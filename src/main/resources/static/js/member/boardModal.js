@@ -211,6 +211,7 @@
                 </div>
             `;
 
+            global.initBoardContent(document.getElementById('modalContent'));
             const modalMainImage = document.getElementById('modalMainImage');
             if (hasMultipleImages && modalMainImage && typeof global.initImageSwipe === 'function') {
                 global.initImageSwipe(modalMainImage, {
@@ -373,7 +374,7 @@
 
             edit.style.display = 'none';
             del.style.display = 'none';
-            content.style.display = 'none';
+            content.closest('.board-content').classList.add('is-hidden');
             complete.style.display = 'inline';
             editContent.style.display = 'inline';
             visibilityEditButton.style.display = 'none';

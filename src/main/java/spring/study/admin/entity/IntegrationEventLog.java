@@ -1,5 +1,7 @@
 package spring.study.admin.entity;
 
+import spring.study.admin.dto.IntegrationEventLogEntry;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,9 +31,6 @@ public class IntegrationEventLog {
     }
 
     // Metadata only: never store payload, Kafka key, token, email, or exception message.
-    public record Entry(LocalDateTime occurredAt, String instanceId, Route route, Operation operation,
-                        Outcome outcome, Long referenceId, int itemCount, Integer attempt,
-                        Long subscriberCount, String errorType) {}
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -57,7 +56,7 @@ public class IntegrationEventLog {
     @Column(name = "error_type", length = 255)
     private String errorType;
 
-    public IntegrationEventLog(Entry entry) {
+    public IntegrationEventLog(IntegrationEventLogEntry entry) {
         occurredAt = entry.occurredAt(); instanceId = entry.instanceId(); route = entry.route();
         broker = route.broker; operation = entry.operation(); outcome = entry.outcome();
         referenceId = entry.referenceId(); itemCount = entry.itemCount(); attempt = entry.attempt();

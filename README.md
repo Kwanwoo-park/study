@@ -323,7 +323,8 @@ AWS S3, Google/Naver OAuth2와 mail 계정도 각 환경의 property 또는 secr
 
 - 화면과 `/api/admin/files/**` API는 모두 `ADMIN` 권한이 필요합니다. 파일 URL을 알아도 비로그인 사용자나 일반 회원은 내려받을 수 없습니다.
 - 업로드 전 `GET /api/admin/files/csrf`로 받은 `headerName`/`token`을 요청 헤더에 넣고, `POST /api/admin/files`의 multipart `file` 필드로 전송합니다. 페이지에서 자동 처리하며, API 직접 호출 시에도 CSRF 쿠키와 헤더가 필요합니다.
-- 실제 파일은 **별도 비공개 S3 버킷**의 `admin-files/<UUID>`에 저장합니다. DB의 `admin_file`에는 ID·원본 파일명·크기·업로더 ID·생성 시각만 저장합니다. 관리자 버킷은 설정값을 사용하고 객체 키는 `admin-files/{id}`로 계산하며, 버전 관리는 사용하지 않습니다. 기존 이미지용 `cloud.aws.s3.bucketName`과 업로드 기능은 그대로 유지합니다.
+- 실제 파일은 **별도 비공개 S3 버킷**의 `admin-files/<UUID>`에 저장합니다. 같은 원본 파일명을 다시 업로드하면 기존 UUID와 DB 행을 재사용하며, S3 Versioning으로 이전 버전을 보존합니다. DB에는 ID·원본 파일명·크기·업로더 ID·최초 생성 시각과 정상 저장된 `s3_version_id`를 저장하고, 다운로드는 이 버전을 지정합니다. 기존 이미지용 `cloud.aws.s3.bucketName`과 업로드 기능은 그대로 유지합니다.
+- 업로드에는 S3 버전 관리 `Enabled` 상태가 필요합니다. 실패 시 객체 키 전체를 삭제하지 않고 이번 업로드의 버전만 정리합니다. 서버 IAM에 `s3:GetBucketVersioning`, `s3:GetObjectVersion`, `s3:DeleteObjectVersion` 권한을 추가해야 합니다. 버킷 설정이나 IAM은 애플리케이션이 변경하지 않습니다.
 - S3 공개 URL이나 presigned URL을 클라이언트에 제공하지 않습니다. 서버가 관리자 권한을 확인한 뒤 S3 스트림을 `attachment`/`application/octet-stream`으로 전달합니다. 실행·압축 해제·악성코드 검사는 하지 않습니다.
 - 관리자 S3 버킷 설정이 없거나 버킷의 퍼블릭 액세스 차단 4개 항목을 확인할 수 없으면 업로드/다운로드를 거부합니다. 공개 이미지 버킷이나 로컬 디스크로 대체 저장하지 않습니다. 버킷·IAM 권한을 자동 생성하거나 변경하지 않습니다.
 - 프로젝트 내부 영구 파일 저장과 전용 Docker 파일 볼륨은 사용하지 않습니다. 요청 처리 중에는 서블릿 컨테이너의 multipart 임시 파일이 사용될 수 있습니다. DB와 S3 데이터를 함께 보존하세요.
@@ -344,7 +345,7 @@ spring.servlet.multipart.max-file-size=20MB
 spring.servlet.multipart.max-request-size=210MB
 ```
 
-버킷 준비, IAM 정책 예시, 오류별 확인 사항과 DB 변경은 [관리자 파일 S3 배포 안내](docs/admin-file-storage.md)를 확인하세요. 신규 테이블은 `ddl-auto=update`로 생성하거나 엔티티에 맞춰 직접 준비합니다. 기존 `s3_bucket`, `s3_key`, `s3_version_id` 컬럼은 `ddl-auto=update`로 삭제되지 않으므로 백업 및 사전 확인 후 DB에서 직접 제거해야 합니다. 별도 SQL 스크립트는 제공하지 않으며 실제 DB에 자동 적용하거나 기존 S3/로컬 파일을 삭제하지 않습니다.
+버킷 준비, IAM 정책 예시, 오류별 확인 사항과 DB 변경은 [관리자 파일 S3 배포 안내](docs/admin-file-storage.md)를 확인하세요. `s3_version_id VARCHAR(1024) NULL` 컬럼이 필요하며 기존 컬럼이 있다면 삭제하지 마세요. `ddl-auto=update`를 사용하지 않는 환경은 배포 전에 문서의 DDL을 적용해야 합니다. 기존 S3/로컬 파일이나 같은 이름의 중복 DB 행을 자동 삭제·병합하지 않습니다.
 
 ### 로컬 jar 실행
 
@@ -471,6 +472,10 @@ STUN만으로는 대칭 NAT, 회사/통신사 방화벽 등 일부 네트워크�
 - `/api/account/**` : 계좌·거래·해지
 - `/api/admin/**` : 관리자·시스템 상태·장애·통화 종료
 - `/api/mail/**` : 메일 인증
+
+회원가입·비밀번호 찾기는 `POST /api/mail/confirm`에 `{ "email": "..." }`을 보내 인증번호를 발송하고,
+`POST /api/mail/verify`에 `{ "email": "...", "code": "..." }`을 보내 받은 `verificationToken`을 가입/비밀번호 재설정 요청에 포함합니다.
+인증번호는 응답에 노출하지 않으며, 인증번호와 일회용 `verificationToken`은 각각 5분 뒤 만료됩니다. 메일 재발송 간격은 1분입니다.
 
 ### WebSocket 및 SSE
 

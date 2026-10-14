@@ -19,16 +19,18 @@ public class RegisterMail implements MailServiceInter {
     @Autowired
     JavaMailSender emailSender;
 
-    private String ePw;
-
     @Override
     public MimeMessage createMessage(String to) throws MessagingException, UnsupportedEncodingException {
+        return createMessage(to, createkey());
+    }
+
+    private MimeMessage createMessage(String to, String code) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = emailSender.createMimeMessage();
 
         message.addRecipients(Message.RecipientType.TO, to);
-        message.setSubject("Kwanwoo.site 회원가입 이메일 인증", "utf-8");
+        message.setSubject("Kwanwoo.site 이메일 인증", "utf-8");
 
-        String msgg = getMsgg();
+        String msgg = getMsgg(code);
         message.setText(msgg, "utf-8", "html");// 내용, charset 타입, subtype
         // 보내는 사람의 이메일 주소, 보내는 사람 이름
         message.setFrom(new InternetAddress("akakslslzz@naver.com", "Park kwan woo"));// 보내는 사람
@@ -36,19 +38,19 @@ public class RegisterMail implements MailServiceInter {
         return message;
     }
 
-    private String getMsgg() {
+    private String getMsgg(String code) {
         String msgg = "";
         msgg += "<div style='margin:100px;'>";
         msgg += "<h1> 안녕하세요</h1>";
         msgg += "<h1> Kwanwoo.site 입니다</h1>";
         msgg += "<br>";
-        msgg += "<p>아래 코드를 회원가입 창으로 돌아가 입력해주세요<p>";
+        msgg += "<p>인증을 요청한 화면에 아래 코드를 5분 이내에 입력해주세요.</p>";
         msgg += "<br>";
         msgg += "<div align='center' style='border:1px solid black; font-family:verdana';>";
-        msgg += "<h3 style='color:blue;'>회원가입 인증 코드입니다.</h3>";
+        msgg += "<h3 style='color:blue;'>이메일 인증 코드입니다.</h3>";
         msgg += "<div style='font-size:130%'>";
         msgg += "CODE : <strong>";
-        msgg += ePw + "</strong><div><br/> "; // 메일에 인증번호 넣기
+        msgg += code + "</strong><div><br/> "; // 메일에 인증번호 넣기
         msgg += "</div>";
         return msgg;
     }
@@ -56,7 +58,7 @@ public class RegisterMail implements MailServiceInter {
     @Override
     public String createkey() {
         StringBuilder key = new StringBuilder();
-        Random random = new Random();
+        Random random = new java.security.SecureRandom();
 
         for (int i = 0; i < 8; i++) {
             int index = random.nextInt(3);
@@ -79,9 +81,9 @@ public class RegisterMail implements MailServiceInter {
 
     @Override
     public String sendSimpleMessage(String to) throws Exception {
-        ePw = createkey();
+        String code = createkey();
 
-        MimeMessage message = createMessage(to);
+        MimeMessage message = createMessage(to, code);
 
         try {
             emailSender.send(message);
@@ -90,6 +92,6 @@ public class RegisterMail implements MailServiceInter {
             throw new IllegalArgumentException();
         }
 
-        return ePw;
+        return code;
     }
 }

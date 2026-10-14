@@ -108,6 +108,8 @@ class ImageTransactionCleanupRegressionTest {
     @MockBean BCryptPasswordEncoder encoder;
     @MockBean JwtAuthenticationFacade jwtAuthenticationService;
     @MockBean TodoService todoService;
+    @MockBean spring.study.mail.service.EmailVerificationService emailVerificationService;
+    @MockBean spring.study.member.sanction.service.MemberSanctionService memberSanctionService;
     @MockBean VisibilityAccessPolicy visibilityAccessPolicy;
     @MockBean ModerationFacade moderationService;
     @MockBean SimpMessagingTemplate messagingTemplate;
@@ -124,6 +126,17 @@ class ImageTransactionCleanupRegressionTest {
             memberRepository.deleteAll();
         });
         member = memberRepository.saveAndFlush(Member.builder().email("image@test.com").pwd("pwd").name("member").role(Role.USER).phone("010-0000-0000").birth("2000-01-01").profile(OLD_IMAGE).build());
+    }
+
+    @Test
+    void withdrawalRemovesDiariesAndQueuesTheirImages() {
+        Diary diary = diaryWithImages(NEW_IMAGE);
+
+        memberFacade.deleteMember(member, null);
+
+        assertThat(memberRepository.existsById(member.getId())).isFalse();
+        assertThat(diaryRepository.existsById(diary.getId())).isFalse();
+        assertCleanupUrls(OLD_IMAGE, NEW_IMAGE);
     }
 
     @Test

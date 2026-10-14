@@ -56,8 +56,8 @@ public class DiaryFacade {
                     "result", uploadedUrls.size(),
                     "imageUrls", uploadedUrls
             ));
-        } catch (IOException exception) {
-            imageS3Service.deleteImgSrc(uploadedUrls);
+        } catch (IOException | RuntimeException exception) {
+            imageCleanupService.enqueueAll(uploadedUrls);
             log.error("일기 이미지 업로드 실패", exception);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -1,

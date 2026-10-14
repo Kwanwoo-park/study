@@ -16,6 +16,8 @@ public class MemberRequestDto {
     private Long id;
     private String email;
     private String password;
+    private String code;
+    private String verificationToken;
     private String name;
     private Role role;
     private String profile;

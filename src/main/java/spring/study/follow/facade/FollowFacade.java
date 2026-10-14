@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.follow.dto.FollowResponseDto;
 import spring.study.follow.entity.Follow;
@@ -101,6 +102,7 @@ public class FollowFacade {
         ));
     }
 
+    @Transactional
     public ResponseEntity<?> follow(MemberRequestDto dto, Member member, HttpServletRequest request) {
         if (dto.getEmail() == null || dto.getEmail().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(

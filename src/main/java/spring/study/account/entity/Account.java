@@ -108,7 +108,7 @@ public class Account implements Serializable {
     }
 
     public void accrueInterestUntil(LocalDateTime calculationTime) {
-        if (!isInterestBearing() || accountStatus == AccountStatus.TERMINATED) {
+        if (!isInterestBearing() || accountStatus == AccountStatus.TERMINATED || accountStatus == AccountStatus.DELETED) {
             return;
         }
 

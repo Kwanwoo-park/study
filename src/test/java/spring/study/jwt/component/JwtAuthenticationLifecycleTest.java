@@ -94,16 +94,21 @@ class JwtAuthenticationLifecycleTest {
         verify(refreshTokens, never()).rotate(anyString(), anyString(), any(), any(), any());
     }
 
-    @Test
-    void expiredAccessCookieStillRotatesOnceOnAnOrdinaryAuthenticatedRequest() throws Exception {
+    @ParameterizedTest
+    @ValueSource(longs = {1, 14})
+    void expiredAccessCookieRotatesRefreshOnlyWithinOneDayOfExpiry(long remainingDays) throws Exception {
         ReflectionTestUtils.setField(provider, "accessTokenMinutes", -1L);
         String expiredAccess = provider.createAccessToken(member).value();
         ReflectionTestUtils.setField(provider, "accessTokenMinutes", 15L);
+        ReflectionTestUtils.setField(provider, "refreshTokenDays", remainingDays);
         var refresh = provider.createRefreshToken(member);
+        ReflectionTestUtils.setField(provider, "refreshTokenDays", 14L);
         clearInvocations(provider);
         when(refreshTokens.isValid(refresh.jti(), member.getId())).thenReturn(true);
         when(cache.findOrLoad(eq(member.getId()), any(Duration.class))).thenReturn(Optional.of(member));
-        when(refreshTokens.rotate(eq(refresh.jti()), anyString(), eq(member), any(Duration.class), anyString())).thenReturn(true);
+        if (remainingDays == 1) {
+            when(refreshTokens.rotate(eq(refresh.jti()), anyString(), eq(member), any(Duration.class), anyString())).thenReturn(true);
+        }
         var request = new MockHttpServletRequest("GET", "/board/main");
         request.setCookies(new Cookie(JwtCookieService.ACCESS_COOKIE, expiredAccess),
                 new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
@@ -111,11 +116,21 @@ class JwtAuthenticationLifecycleTest {
 
         filter.doFilter(request, response, mock(FilterChain.class));
 
-        assertThat(response.getHeaders("Set-Cookie")).hasSize(2);
-        assertThat(cookies.readCurrentRefreshToken(request)).isEqualTo(response.getCookie(JwtCookieService.REFRESH_COOKIE).getValue());
-        assertThat(cookies.readCurrentRefreshToken(request)).isNotEqualTo(refresh.value());
         verify(provider).createAccessToken(member);
-        verify(provider).createRefreshToken(member);
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isSameAs(member);
+        if (remainingDays == 1) {
+            assertThat(response.getHeaders("Set-Cookie")).hasSize(2);
+            assertThat(cookies.readCurrentRefreshToken(request)).isEqualTo(response.getCookie(JwtCookieService.REFRESH_COOKIE).getValue());
+            assertThat(cookies.readCurrentRefreshToken(request)).isNotEqualTo(refresh.value());
+            verify(provider).createRefreshToken(member);
+        } else {
+            assertThat(response.getHeaders("Set-Cookie")).hasSize(1);
+            assertThat(response.getCookie(JwtCookieService.REFRESH_COOKIE)).isNull();
+            assertThat(cookies.readCurrentRefreshToken(request)).isEqualTo(refresh.value());
+            verify(provider, never()).createRefreshToken(any());
+            verify(refreshTokens, never()).rotate(anyString(), anyString(), any(), any(), any());
+            verify(refreshTokens).recordAccessIfNeeded(eq(member), any(Duration.class));
+        }
     }
 
     @Test

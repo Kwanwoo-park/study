@@ -1,4 +1,5 @@
 const boardDel = document.getElementById("boardDel");
+initBoardContent(document.getElementById('content'));
 
 if (typeof initCommentModal === 'function') {
     initCommentModal();
@@ -18,7 +19,7 @@ function fnEdit() {
 
     edit.style.display = 'none';
     del.style.display = 'none';
-    content.style.display = 'none';
+    content.closest('.board-content').classList.add('is-hidden');
     visibilityEditButton.style.display = 'none';
 
     complete.style.display = 'inline';

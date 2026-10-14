@@ -15,6 +15,17 @@ import static org.mockito.Mockito.*;
 
 class NotificationApiControllerTest {
     @Test
+    void readUpdateReloadsTheNotificationInsideTheWriteService() {
+        NotificationService service = mock(NotificationService.class);
+        Member member = Member.builder().id(7L).build();
+        when(service.findById(1L)).thenReturn(spring.study.notification.entity.Notification.builder().id(1L).member(member).build());
+
+        new NotificationFacade(service, mock(EmitterService.class)).updateAsRead(1L, member);
+
+        verify(service).updateRead(1L);
+    }
+
+    @Test
     void streamUsesAuthenticatedMemberIdAndReturnsTheSameEmitter() {
         EmitterService emitterService = mock(EmitterService.class);
         JwtManager jwtManager = mock(JwtManager.class);

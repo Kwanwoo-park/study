@@ -172,6 +172,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public String getPassword() {
         return this.pwd;
     }

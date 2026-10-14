@@ -17,6 +17,7 @@ import spring.study.chat.repository.ChatMessageImgRepository;
 import spring.study.chat.repository.ChatRoomMemberRepository;
 import spring.study.chat.repository.ChatRoomRepository;
 import spring.study.member.entity.Member;
+import spring.study.chat.dto.ChatRoomParticipant;
 
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class ChatRoomDetailsService {
         ChatRoom room = requireParticipant(roomId, viewer);
         var members = participants.findParticipantsByRoom(room).stream()
                 .map(participant -> participant.getMember())
-                .map(member -> new ChatRoomDetailsResponse.Participant(member.getName(), member.getEmail(),
+                .map(member -> new ChatRoomParticipant(member.getName(), member.getEmail(),
                         member.getProfile(), member.getId().equals(viewer.getId())))
                 .toList();
         return new ChatRoomDetailsResponse(room.getRoomId(), room.getName(), members);

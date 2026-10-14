@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<?> handleResponseStatus(ResponseStatusException e) {
-        return ResponseEntity.status(e.getStatusCode())
+        return ResponseEntity.status(e.getStatusCode()).cacheControl(CacheControl.noStore())
                 .body(Map.of(
                         "result", -e.getStatusCode().value(),
                         "message", e.getReason() == null ? "요청을 처리할 수 없습니다" : e.getReason()
@@ -111,37 +111,16 @@ public class GlobalExceptionHandler {
                 .body(Map.of("result", -500));
     }
 
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<?> unavailable(ResponseStatusException error) {
-        return ResponseEntity.status(error.getStatusCode()).cacheControl(CacheControl.noStore())
-                .body(Map.of("message", error.getReason() == null ? "내역 조회에 실패했습니다" : error.getReason()));
-    }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<?> invalidPage() {
-        return ResponseEntity.badRequest().cacheControl(CacheControl.noStore())
-                .body(Map.of("message", "올바른 페이지 번호를 입력해 주세요"));
-    }
-
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<?> invalidFilter() {
-        return ResponseEntity.badRequest().cacheControl(CacheControl.noStore()).body(Map.of("message", "조회 조건을 확인해 주세요"));
+        return ResponseEntity.badRequest().cacheControl(CacheControl.noStore())
+                .body(Map.of("result", -400, "message", "조회 조건을 확인해 주세요"));
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<?> unavailable() {
-        return ResponseEntity.status(503).cacheControl(CacheControl.noStore())
-                .body(Map.of("message", "이벤트 로그 저장소에 연결하지 못했습니다. DB와 integration_event_log 테이블을 확인해 주세요."));
-    }
-
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<?> requestError(ResponseStatusException error) {
-        return ResponseEntity.status(error.getStatusCode()).cacheControl(CacheControl.noStore())
-                .body(Map.of("message", error.getReason() == null ? "요청을 확인해 주세요." : error.getReason()));
-    }
-
-    @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<?> databaseError() {
-        return ResponseEntity.status(503).cacheControl(CacheControl.noStore()).body(Map.of("message", "Kafka 운영 기록을 조회하지 못했습니다. DB 연결과 테이블을 확인해 주세요."));
+    public ResponseEntity<?> databaseError(DataAccessException error, HttpServletRequest request) {
+        handleEtc(error, request);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).cacheControl(CacheControl.noStore())
+                .body(Map.of("result", -503, "message", "데이터를 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."));
     }
 }

@@ -40,6 +40,11 @@ public class MemberSanctionService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
+    public void deleteByMemberReferences(Member member) {
+        memberSanctionRepository.deleteByMemberOrIssuedByOrReportReporter(member, member, member);
+    }
+
+    @Transactional
     public void apply(Report report, ReportProcessRequestDto requestDto, Member admin, Member target) {
         if (memberSanctionRepository.existsByReportId(report.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 제재가 적용된 신고입니다");

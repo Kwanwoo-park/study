@@ -12,6 +12,7 @@ import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MobileOAuthCodeService;
 import spring.study.member.service.MemberService;
 import spring.study.common.service.OnlineUserService;
+import spring.study.jwt.dto.AuthenticationTokens;
 
 import java.net.URI;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class MobileOAuthFacade {
         return codeService.consume(request.code())
                 .map(memberService::updateLastLoginTime)
                 .<ResponseEntity<?>>map(member -> {
-                    JwtAuthenticationService.AuthenticationTokens tokens =
+                    AuthenticationTokens tokens =
                             authenticationService.issue(member, ipAddress);
                     onlineUserService.markMobileActive(member.getId());
                     return ResponseEntity.ok(new MobileAuthResponse(member, tokens));

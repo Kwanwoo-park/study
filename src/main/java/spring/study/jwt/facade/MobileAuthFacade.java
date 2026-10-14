@@ -15,6 +15,7 @@ import spring.study.common.service.OnlineUserService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
+import spring.study.jwt.dto.AuthenticationTokens;
 
 import java.util.Map;
 
@@ -47,7 +48,7 @@ public class MobileAuthFacade {
             }
 
             member = memberService.updateLastLoginTime(member.getId());
-            JwtAuthenticationService.AuthenticationTokens tokens = authenticationService.issue(
+            AuthenticationTokens tokens = authenticationService.issue(
                     member, ipAddress);
             onlineUserService.markMobileActive(member.getId());
             return ResponseEntity.ok(new MobileAuthResponse(member, tokens));
@@ -61,7 +62,7 @@ public class MobileAuthFacade {
             return error(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 없습니다");
         }
         try {
-            JwtAuthenticationService.AuthenticationTokens tokens = authenticationService.refresh(
+            AuthenticationTokens tokens = authenticationService.refresh(
                     request.refreshToken(), ipAddress);
             return ResponseEntity.ok(Map.of(
                     "result", 1,

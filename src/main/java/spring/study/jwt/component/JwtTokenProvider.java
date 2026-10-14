@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
 import spring.study.member.entity.Member;
+import spring.study.jwt.dto.IssuedToken;
+import spring.study.jwt.dto.TokenClaims;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -144,6 +146,10 @@ public class JwtTokenProvider {
         return Duration.ofDays(refreshTokenDays);
     }
 
+    public boolean shouldRotateRefreshToken(Instant expiresAt) {
+        return !expiresAt.isAfter(Instant.now().plus(Duration.ofDays(1)));
+    }
+
     private IssuedToken createToken(Member member, String type, Duration duration) {
         Instant now = Instant.now();
         Instant expiresAt = now.plus(duration);
@@ -194,8 +200,6 @@ public class JwtTokenProvider {
         return number.longValue();
     }
 
-    public record IssuedToken(String value, String jti, Instant expiresAt) {}
-    public record TokenClaims(Long memberId, String email, String role, String type, String jti, Instant expiresAt) {}
 
     public static class JwtValidationException extends RuntimeException {
         public JwtValidationException(String message) { super(message); }

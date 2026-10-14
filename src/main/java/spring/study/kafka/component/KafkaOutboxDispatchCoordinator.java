@@ -1,5 +1,7 @@
 package spring.study.kafka.component;
 
+import spring.study.kafka.dto.KafkaDispatchResult;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -71,7 +73,7 @@ public class KafkaOutboxDispatchCoordinator {
         try {
             do {
                 immediateDispatchRequested.set(false);
-                KafkaOutboxDispatcher.DispatchResult result = kafkaOutboxDispatcher.publishPendingEvents();
+                KafkaDispatchResult result = kafkaOutboxDispatcher.publishPendingEvents();
                 handleDispatchResult(result);
                 if (result.failed() && result.retryAt() != null) break;
                 if (result.batchFull() || (result.failed() && result.retryAt() == null)) immediateDispatchRequested.set(true);
@@ -91,7 +93,7 @@ public class KafkaOutboxDispatchCoordinator {
         if (Instant.now().isBefore(blockedUntil)) {
             scheduleRetry(blockedUntil);
         } else {
-            KafkaOutboxDispatcher.DispatchResult result = kafkaOutboxDispatcher.publishPendingEvents();
+            KafkaDispatchResult result = kafkaOutboxDispatcher.publishPendingEvents();
             hasWork = result.hasWork();
             handleDispatchResult(result);
             if (result.batchFull() || (result.failed() && result.retryAt() == null)) requestImmediateDispatch();
@@ -102,7 +104,7 @@ public class KafkaOutboxDispatchCoordinator {
         scheduleSafetyPoll(nextDelay);
     }
 
-    private void handleDispatchResult(KafkaOutboxDispatcher.DispatchResult result) {
+    private void handleDispatchResult(KafkaDispatchResult result) {
         if (!result.failed()) {
             blockedUntil = Instant.MIN;
             return;

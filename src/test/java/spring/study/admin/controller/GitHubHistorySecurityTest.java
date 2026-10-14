@@ -113,8 +113,11 @@ class GitHubHistorySecurityTest {
     @EnableWebMvc
     @EnableWebSecurity
     @EnableMethodSecurity
-    @Import({GitHubHistoryConfig.class, AdminFileSecurityConfig.class, GitHubHistoryController.class, spring.study.admin.facade.GitHubHistoryFacade.class})
+    @Import({GitHubHistoryConfig.class, AdminFileSecurityConfig.class, GitHubHistoryController.class, spring.study.admin.facade.GitHubHistoryFacade.class,
+            AdminViewController.class, spring.study.common.component.GlobalExceptionHandler.class})
     static class Config {
+        @Bean spring.study.admin.facade.AdminViewFacade views() { return mock(spring.study.admin.facade.AdminViewFacade.class); }
+        @Bean spring.study.admin.facade.SystemIncidentFacade incidents() { return mock(spring.study.admin.facade.SystemIncidentFacade.class); }
         @Bean
         GitHubHistoryService service() { return mock(GitHubHistoryService.class, withSettings().withoutAnnotations()); }
 

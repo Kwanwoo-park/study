@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.jwt.dto.TokenClaims;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,7 +34,7 @@ class JwtTokenProviderTest {
     void accessTokenShouldContainAuthenticatedMemberClaims() {
         String token = tokenProvider.createAccessToken(member).value();
 
-        JwtTokenProvider.TokenClaims claims = tokenProvider.parse(token, JwtTokenProvider.ACCESS);
+        TokenClaims claims = tokenProvider.parse(token, JwtTokenProvider.ACCESS);
 
         assertEquals(7L, claims.memberId());
         assertEquals("jwt@test.com", claims.email());

@@ -6,6 +6,17 @@
     if (!page || !password || !email || !updateButton) return;
 
     const verificationRequired = page.dataset.verificationRequired === 'true';
+    let recovery;
+    if (!verificationRequired) {
+        try {
+            recovery = JSON.parse(sessionStorage.getItem('passwordRecoveryVerification'));
+        } catch (_) { /* Invalid or unavailable storage requires verification again. */ }
+        if (!recovery || recovery.email !== email.value || recovery.expiresAt <= Date.now() || !recovery.token) {
+            alert('이메일 인증을 먼저 완료해 주세요.');
+            location.replace('/member/findByEmail');
+            return;
+        }
+    }
     const sendButton = document.getElementById('sendVerification');
     const verifyButton = document.getElementById('verifyCode');
     const codeGroup = document.getElementById('verificationCodeGroup');
@@ -107,11 +118,18 @@
                 credentials: 'include',
                 body: JSON.stringify({
                     email: email.value,
-                    password: password.value
+                    password: password.value,
+                    verificationToken: recovery?.token
                 })
             });
             const data = await response.json();
             if (!response.ok || data.result < 0) {
+                if (!verificationRequired && response.status === 403) {
+                    sessionStorage.removeItem('passwordRecoveryVerification');
+                    alert(data.message || '인증 시간이 만료되었습니다. 다시 인증해 주세요.');
+                    location.replace('/member/findByEmail');
+                    return;
+                }
                 if (verificationRequired) {
                     emailVerified = false;
                     codeInput.value = '';
@@ -124,6 +142,7 @@
             }
 
             alert('비밀번호가 정상적으로 변경되었습니다. 다시 로그인해주세요.');
+            if (!verificationRequired) sessionStorage.removeItem('passwordRecoveryVerification');
             window.location.replace('/member/login');
         } catch (error) {
             console.error(error);

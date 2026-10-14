@@ -72,7 +72,7 @@ public class NotificationFacade {
             ));
         }
 
-        notificationService.updateRead(notification);
+        notificationService.updateRead(id);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L

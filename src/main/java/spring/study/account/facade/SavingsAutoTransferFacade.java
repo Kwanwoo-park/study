@@ -36,23 +36,14 @@ public class SavingsAutoTransferFacade {
 
     @Transactional
     public void processDuePayment(String savingsAccountNumber, LocalDate processingDate, LocalDateTime processingTime) {
-        Account savings = accountService.findByAccountForUpdate(savingsAccountNumber);
-        if (!isDue(savings, processingDate)) {
-            return;
-        }
-
-        Account source = savings.getSavingsSourceAccount();
-        if (source == null) {
-            return;
-        }
-        source = accountService.findByAccountForUpdate(source.getAccount());
-        if (!isValidSource(savings, source)) {
-            return;
-        }
-
-        long paymentAmount = savings.getMonthlySavingsAmount();
-        if (source.getAmount() >= paymentAmount) {
-            transferPayment(savings, source, paymentAmount, processingTime);
+        String sourceNumber = accountService.findSavingsSourceAccountNumber(savingsAccountNumber);
+        if (sourceNumber == null) return;
+        boolean savingsFirst = savingsAccountNumber.compareTo(sourceNumber) < 0;
+        Account first = accountService.findByAccountForUpdate(savingsFirst ? savingsAccountNumber : sourceNumber);
+        Account second = accountService.findByAccountForUpdate(savingsFirst ? sourceNumber : savingsAccountNumber);
+        Account savings = savingsFirst ? first : second;
+        Account source = savingsFirst ? second : first;
+        if (!isDue(savings, processingDate) || !isValidSource(savings, source)) {
             return;
         }
 
@@ -70,6 +61,14 @@ public class SavingsAutoTransferFacade {
             return;
         }
 
+        // Never debit another instalment after maturity.
+        if (!processingTime.isBefore(savings.getMaturityAt())) return;
+        long paymentAmount = savings.getMonthlySavingsAmount();
+        if (source.getAmount() >= paymentAmount) {
+            transferPayment(savings, source, paymentAmount, processingTime);
+            return;
+        }
+
         if (!processingDate.equals(savings.getLastSavingsFailureNotificationDate())) {
             savings.recordSavingsFailureNotification(processingDate);
             String amount = NumberFormat.getNumberInstance(Locale.KOREA).format(paymentAmount);
@@ -83,7 +82,9 @@ public class SavingsAutoTransferFacade {
     }
 
     private boolean isDue(Account savings, LocalDate processingDate) {
-        return savings != null && savings.isSavingsAutoTransferConfigured() && savings.getAccountStatus() != AccountStatus.TERMINATED && !savings.getNextSavingsPaymentDate().isAfter(processingDate);
+        return savings != null && savings.isSavingsAutoTransferConfigured()
+                && (savings.getAccountStatus() == AccountStatus.ACTIVE || savings.getAccountStatus() == AccountStatus.MATURED)
+                && !savings.getNextSavingsPaymentDate().isAfter(processingDate);
     }
 
     private boolean isValidSource(Account savings, Account source) {

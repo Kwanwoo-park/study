@@ -18,4 +18,9 @@ public class MailApiController {
     public ResponseEntity<HashMap<String, String>> mailConfirm(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
         return mailFacade.confirm(memberRequestDto.getEmail());
     }
+
+    @PostMapping("/verify")
+    public ResponseEntity<HashMap<String, String>> verify(@RequestBody MemberRequestDto request) {
+        return mailFacade.verify(request.getEmail(), request.getCode());
+    }
 }

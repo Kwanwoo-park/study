@@ -1,5 +1,7 @@
 package spring.study.kafka.component;
 
+import spring.study.kafka.dto.KafkaDispatchResult;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.scheduling.TaskScheduler;
@@ -27,7 +29,7 @@ class KafkaOutboxDispatchCoordinatorTest {
         KafkaOutboxDispatchCoordinator coordinator = new KafkaOutboxDispatchCoordinator(dispatcher, scheduler, 30_000L, 300_000L);
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         doReturn(future).when(scheduler).schedule(any(Runnable.class), any(Instant.class));
-        when(dispatcher.publishPendingEvents()).thenReturn(KafkaOutboxDispatcher.DispatchResult.empty());
+        when(dispatcher.publishPendingEvents()).thenReturn(KafkaDispatchResult.empty());
 
         coordinator.requestImmediateDispatch();
         verify(scheduler).schedule(runnableCaptor.capture(), any(Instant.class));
@@ -49,7 +51,7 @@ class KafkaOutboxDispatchCoordinatorTest {
             scheduledTimes.add(invocation.getArgument(1));
             return future;
         }).when(scheduler).schedule(any(Runnable.class), any(Instant.class));
-        when(dispatcher.publishPendingEvents()).thenReturn(KafkaOutboxDispatcher.DispatchResult.empty());
+        when(dispatcher.publishPendingEvents()).thenReturn(KafkaDispatchResult.empty());
 
         coordinator.start();
         scheduledTasks.get(0).run();

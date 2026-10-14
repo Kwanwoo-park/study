@@ -15,11 +15,13 @@ import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.service.NotificationService;
+import spring.study.mail.service.EmailVerificationService;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class MemberRegistrationRegressionTest {
@@ -27,7 +29,26 @@ class MemberRegistrationRegressionTest {
     @Mock UserService userService;
     @Mock ForbiddenService forbiddenService;
     @Mock NotificationService notificationService;
+    @Mock EmailVerificationService emailVerificationService;
     @InjectMocks MemberFacade memberFacade;
+
+    @Test
+    void memberAndResponseNeverSerializePasswords() {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+        Member member = Member.builder().id(1L).role(Role.USER).pwd("private-hash").build();
+        assertThat(mapper.valueToTree(member).has("password")).isFalse();
+        assertThat(mapper.valueToTree(new MemberResponseDto(member)).has("password")).isFalse();
+    }
+
+    @Test
+    void registrationWithoutEmailProofDoesNotCreateAMember() {
+        MemberRequestDto request = MemberRequestDto.builder()
+                .email("new@test.com").password("password").name("new member")
+                .phone("010-1111-2222").birth("2000-01-01").build();
+
+        assertThat(memberFacade.register(request).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        verifyNoInteractions(userService);
+    }
 
     @Test
     void registrationReturnsPersistedMemberId() {
@@ -41,6 +62,8 @@ class MemberRegistrationRegressionTest {
         when(forbiddenService.findWordList(Status.APPROVAL, request.getName())).thenReturn(0);
         when(userService.createUser(request)).thenReturn(new MemberResponseDto(saved));
         when(memberService.findAdministrator()).thenReturn(admin);
+        request.setVerificationToken("verified-token");
+        when(emailVerificationService.consume(request.getEmail(), "verified-token")).thenReturn(true);
 
         var response = memberFacade.register(request);
 

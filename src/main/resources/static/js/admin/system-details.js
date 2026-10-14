@@ -86,15 +86,15 @@ function renderSystemProcesses(data) {
     const controls = systemDetailsElement('system-details-controls');
     controls.replaceChildren();
     const summary = document.createElement('span');
-    summary.textContent = `전체 ${data.totalCount}개 · 메모리 사용량 상위 ${data.processes.length}개`;
+    summary.textContent = `전체 ${data.process.totalCount}개 · 메모리 사용량 상위 ${data.process.processes.length}개`;
     controls.append(summary, diagnosticsButton('새로고침', loadSystemDetails));
     const content = systemDetailsElement('system-details-content');
     content.replaceChildren();
-    if (!data.processes.length) return diagnosticsMessage('실행 중인 프로세스가 없습니다.');
+    if (!data.process.processes.length) return diagnosticsMessage('실행 중인 프로세스가 없습니다.');
     const list = document.createElement('div');
     list.className = 'admin-diagnostics-list';
     list.append(createDiagnosticsRow(['PID', '프로세스', '메모리'], true));
-    data.processes.forEach(process => list.append(createDiagnosticsRow([
+    data.process.processes.forEach(process => list.append(createDiagnosticsRow([
         String(process.pid), process.name, formatBytes(process.memoryBytes)
     ])));
     content.append(list);
@@ -106,13 +106,13 @@ function renderSystemDisk(data) {
     const select = document.createElement('select');
     select.className = 'form-select form-select-sm admin-diagnostics-root';
     select.setAttribute('aria-label', '조회 경로');
-    data.roots.forEach(root => {
+    data.disk.roots.forEach(root => {
         const option = document.createElement('option');
         option.value = root.id;
         option.textContent = root.label;
         select.append(option);
     });
-    select.value = data.root;
+    select.value = data.disk.root;
     select.addEventListener('change', () => {
         systemDetailsState.root = select.value;
         systemDetailsState.path = '';
@@ -120,22 +120,22 @@ function renderSystemDisk(data) {
         loadSystemDetails();
     });
     const back = diagnosticsButton('상위 폴더', () => {
-        systemDetailsState.path = data.path.split('/').slice(0, -1).join('/');
+        systemDetailsState.path = data.disk.path.split('/').slice(0, -1).join('/');
         systemDetailsState.page = 0;
         loadSystemDetails();
-    }, !data.path);
+    }, !data.disk.path);
     const path = document.createElement('span');
     path.className = 'admin-diagnostics-path';
-    path.textContent = data.path ? `/${data.path}` : '/';
+    path.textContent = data.disk.path ? `/${data.disk.path}` : '/';
     controls.append(select, back, path, diagnosticsButton('새로고침', loadSystemDetails));
 
     const content = systemDetailsElement('system-details-content');
     content.replaceChildren();
-    if (!data.entries.length && data.totalCount === 0) return diagnosticsMessage('이 폴더는 비어 있습니다.');
+    if (!data.disk.entries.length && data.disk.totalCount === 0) return diagnosticsMessage('이 폴더는 비어 있습니다.');
     const list = document.createElement('div');
     list.className = 'admin-diagnostics-list admin-diagnostics-files';
     list.append(createDiagnosticsRow(['이름', '크기', '수정 시각'], true));
-    data.entries.forEach(entry => {
+    data.disk.entries.forEach(entry => {
         const row = createDiagnosticsRow([
             `${entry.directory ? '📁 ' : '📄 '}${entry.name}`,
             entry.directory ? '폴더' : formatBytes(entry.sizeBytes),
@@ -146,7 +146,7 @@ function renderSystemDisk(data) {
             row.tabIndex = 0;
             row.setAttribute('role', 'button');
             const navigate = () => {
-                systemDetailsState.path = data.path ? `${data.path}/${entry.name}` : entry.name;
+                systemDetailsState.path = data.disk.path ? `${data.disk.path}/${entry.name}` : entry.name;
                 systemDetailsState.page = 0;
                 loadSystemDetails();
             };
@@ -164,10 +164,10 @@ function renderSystemDisk(data) {
     const paging = document.createElement('div');
     paging.className = 'admin-diagnostics-paging';
     paging.append(
-        diagnosticsButton('이전', () => { systemDetailsState.page--; loadSystemDetails(); }, data.page === 0),
-        document.createTextNode(`${data.page + 1} / ${Math.max(1, Math.ceil(data.totalCount / data.pageSize))} · ${data.totalCount}개`),
+        diagnosticsButton('이전', () => { systemDetailsState.page--; loadSystemDetails(); }, data.disk.page === 0),
+        document.createTextNode(`${data.disk.page + 1} / ${Math.max(1, Math.ceil(data.disk.totalCount / data.disk.pageSize))} · ${data.disk.totalCount}개`),
         diagnosticsButton('다음', () => { systemDetailsState.page++; loadSystemDetails(); },
-            (data.page + 1) * data.pageSize >= data.totalCount)
+            (data.disk.page + 1) * data.disk.pageSize >= data.disk.totalCount)
     );
     content.append(paging);
 }

@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.dto.IntegrationEventLogDiagnostics;
+import spring.study.admin.dto.IntegrationEventLogEntry;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,14 +21,14 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class IntegrationEventLogService {
     private final IntegrationEventLogStore store;
-    private final ArrayBlockingQueue<Entry> queue;
+    private final ArrayBlockingQueue<IntegrationEventLogEntry> queue;
     private final boolean enabled;
     private final int retentionDays;
     private final String instanceId = UUID.randomUUID().toString();
     private final AtomicLong dropped = new AtomicLong();
     private final AtomicLong storageFailures = new AtomicLong();
     private final AtomicLong nextWarningAt = new AtomicLong();
-    private List<Entry> pending = List.of();
+    private List<IntegrationEventLogEntry> pending = List.of();
     private volatile int pendingCount;
     private volatile LocalDateTime lastSavedAt;
 
@@ -46,14 +48,14 @@ public class IntegrationEventLogService {
     public void record(Route route, Operation operation, Outcome outcome, Long referenceId, int count,
                        Integer attempt, Long subscribers, Throwable error) {
         if (!enabled) return;
-        Entry entry = entry(route, operation, outcome, referenceId, count, attempt, subscribers, error);
+        IntegrationEventLogEntry entry = entry(route, operation, outcome, referenceId, count, attempt, subscribers, error);
         offer(entry);
     }
 
     public void afterCommit(Route route, Operation operation, Outcome outcome, Long referenceId, int count,
                             Integer attempt, Throwable error) {
         if (!enabled) return;
-        Entry entry = entry(route, operation, outcome, referenceId, count, attempt, null, error);
+        IntegrationEventLogEntry entry = entry(route, operation, outcome, referenceId, count, attempt, null, error);
         if (TransactionSynchronizationManager.isActualTransactionActive() && TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override public void afterCommit() { offer(entry); }
@@ -61,22 +63,22 @@ public class IntegrationEventLogService {
         } else offer(entry);
     }
 
-    private Entry entry(Route route, Operation operation, Outcome outcome, Long referenceId, int count,
+    private IntegrationEventLogEntry entry(Route route, Operation operation, Outcome outcome, Long referenceId, int count,
                         Integer attempt, Long subscribers, Throwable error) {
         String errorType = error == null ? null : NestedExceptionUtils.getMostSpecificCause(error).getClass().getName();
         if (errorType != null && errorType.length() > 255) errorType = errorType.substring(0, 255);
-        return new Entry(LocalDateTime.now(), instanceId, route, operation, outcome, referenceId,
+        return new IntegrationEventLogEntry(LocalDateTime.now(), instanceId, route, operation, outcome, referenceId,
                 Math.max(0, count), attempt, subscribers, errorType);
     }
 
-    private void offer(Entry entry) {
+    private void offer(IntegrationEventLogEntry entry) {
         if (!queue.offer(entry)) { dropped.incrementAndGet(); warn("buffer-full"); }
     }
 
     public synchronized void flush() {
         if (!enabled) return;
         if (pending.isEmpty()) {
-            List<Entry> batch = new ArrayList<>(100);
+            List<IntegrationEventLogEntry> batch = new ArrayList<>(100);
             queue.drainTo(batch, 100); pending = batch; pendingCount = batch.size();
         }
         if (pending.isEmpty()) return;
@@ -104,8 +106,7 @@ public class IntegrationEventLogService {
     }
 
     public int retentionDays() { return retentionDays; }
-    public Diagnostics diagnostics() {
-        return new Diagnostics(enabled, instanceId, queue.size() + pendingCount, dropped.get(), storageFailures.get(), lastSavedAt);
+    public IntegrationEventLogDiagnostics diagnostics() {
+        return new IntegrationEventLogDiagnostics(enabled, instanceId, queue.size() + pendingCount, dropped.get(), storageFailures.get(), lastSavedAt);
     }
-    public record Diagnostics(boolean enabled, String instanceId, int pending, long dropped, long storageFailures, LocalDateTime lastSavedAt) {}
 }

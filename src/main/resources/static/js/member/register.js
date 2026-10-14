@@ -10,7 +10,8 @@ const button = document.getElementById('submit');
 const memailconfirmTxt = document.getElementById('memailconfirmTxt');
 const memailconfirm = document.getElementById('memailconfirm');
 
-let code;
+let verificationToken;
+const verifyEmail = document.getElementById('verifyEmail');
 
 if (email_check) {
     email_check.addEventListener('click', (event) => {
@@ -28,7 +29,7 @@ if (email_check) {
             .then((json) => {
                 if (json['result'] > 0) {
                     alert("사용 가능한 이메일입니다");
-                    email_certification.style.display = 'inline';
+                    email_certification.classList.remove('is-hidden');
                 }
                 else {
                     alert("이미 가입된 이메일입니다");
@@ -60,9 +61,10 @@ if (email_certification) {
             .then((response) => response.json())
             .then((json) => {
                 if (json['status'] == 'ok') {
-                    code = json['code'];
+                    verificationToken = null;
+                    button.classList.add('is-hidden');
                     alert("해당 이메일로 인증번호 발송이 완료되었습니다\n 확인부탁드립니다")
-                    check.style.display = 'inline';
+                    check.classList.remove('is-hidden');
                     email.disabled = true;
                 } else
                     alert("인증번호 발송에 실패하였습니다\n 잠시후에 시도하여 주십시오");
@@ -80,7 +82,7 @@ if (button) {
 
         if (memailconfirm.value == '')
             alert('메일 인증값 입력 안 함!!')
-        else if (code == null)
+        else if (!verificationToken)
             alert('메일 인증 안 함!!')
         else if (password.value == '')
             alert('비밀번호 입력 안 함!!')
@@ -103,13 +105,16 @@ if (button) {
                     password: password.value,
                     name: name.value,
                     phone: phone.value,
-                    birth: birth.value
+                    birth: birth.value,
+                    verificationToken
                 }),
                 credentials: "include",
             })
             .then((response) => response.json())
             .then((json) => {
-                if (json['result'] == -1)
+                if (json['result'] < 0 && json.message)
+                    alert(json.message);
+                else if (json['result'] == -1)
                     alert("부적절한 내용 감지되었습니다");
                 else if (json['result'] == -2)
                     alert("회원가입에 실패하였습니다\n입력 값들을 확인해주세요")
@@ -125,13 +130,28 @@ if (button) {
     })
 }
 
-if (memailconfirm) {
-    memailconfirm.addEventListener('keyup', function() {
-        if (code != memailconfirm.value) {
-            memailconfirmTxt.innerText = '인증번호가 잘못되었습니다.';
-        } else {
-            button.style.display = 'inline';
-            memailconfirmTxt.innerText = '인증번호 확인 완료.';
-        }
-    })
-}
+verifyEmail?.addEventListener('click', async () => {
+    verifyEmail.disabled = true;
+    try {
+        const response = await fetch('/api/mail/verify', {
+            method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            credentials: 'include', body: JSON.stringify({ email: email.value, code: memailconfirm.value.trim() })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.verificationToken) throw new Error(data.message || '인증번호를 확인해 주세요.');
+        verificationToken = data.verificationToken;
+        memailconfirmTxt.textContent = '인증 완료. 5분 이내에 가입해 주세요.';
+        button.classList.remove('is-hidden');
+    } catch (error) {
+        verificationToken = null;
+        button.classList.add('is-hidden');
+        memailconfirmTxt.textContent = error.message;
+    } finally {
+        verifyEmail.disabled = false;
+    }
+});
+
+memailconfirm?.addEventListener('input', () => {
+    verificationToken = null;
+    button.classList.add('is-hidden');
+});

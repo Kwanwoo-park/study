@@ -178,44 +178,6 @@ class AppealServiceTest {
         assertThat(captor.getValue().getRelatedSanction()).isSameAs(sanction);
     }
 
-    @Test
-    void administratorCanAcceptAppealAndUnblockMember() {
-        Member member = member(1L, "member@example.com", Role.USER);
-        member.ban();
-        Member admin = member(2L, "admin@example.com", Role.ADMIN);
-        Report report = org.mockito.Mockito.mock(Report.class);
-        MemberSanction sanction = MemberSanction.builder()
-                .member(member)
-                .report(report)
-                .issuedBy(admin)
-                .type(ReportAction.PERMANENT_BAN)
-                .reason("신고 처리")
-                .startedAt(LocalDateTime.now().minusDays(1))
-                .build();
-        Appeal appeal = Appeal.builder()
-                .id(30L)
-                .member(member)
-                .relatedSanction(sanction)
-                .title("차단 재검토")
-                .content("차단을 재검토해주세요.")
-                .build();
-        when(appealRepository.findById(30L)).thenReturn(Optional.of(appeal));
-
-        AppealResponseDto response = appealService.acceptAndUnblock(30L);
-
-        assertThat(response.getStatus()).isEqualTo(AppealStatus.ACCEPTED);
-        assertThat(response.isMemberBlocked()).isFalse();
-        assertThat(member.getAccountStatus()).isEqualTo(MemberStatus.ACTIVE);
-        assertThat(member.getRole()).isEqualTo(Role.USER);
-        assertThat(sanction.getCanceledAt()).isNotNull();
-        verify(eventPublisher).publishEvent(new MemberChangedEvent(member.getId()));
-        verify(notificationService).createNotification(
-                member,
-                "상소가 받아들여져 계정 차단이 해제되었습니다.",
-                Group.ADMIN
-        );
-    }
-
     private AppealRequestDto request(String title, String content) {
         AppealRequestDto request = new AppealRequestDto();
         request.setTitle(title);

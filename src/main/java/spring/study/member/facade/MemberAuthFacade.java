@@ -11,6 +11,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.PasswordChangeVerificationService;
+import spring.study.mail.service.EmailVerificationService;
 
 import java.util.Map;
 
@@ -21,6 +22,7 @@ public class MemberAuthFacade {
     private final MemberService memberService;
     private final JwtAuthenticationFacade jwtAuthenticationService;
     private final PasswordChangeVerificationService passwordChangeVerificationService;
+    private final EmailVerificationService emailVerificationService;
 
     public ResponseEntity<?> logout(Member member, HttpServletRequest request, HttpServletResponse response) {
         jwtAuthenticationService.logout(request, response);
@@ -39,6 +41,14 @@ public class MemberAuthFacade {
         }
 
         Member member = memberService.findMember(requestDto.getEmail());
+        if (requestDto.getPassword() == null || requestDto.getPassword().isBlank()) {
+            return memberFacade.updatePassword(requestDto.getPassword(), member);
+        }
+        if (!emailVerificationService.consume(requestDto.getEmail(), requestDto.getVerificationToken())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -403L, "message", "5분 이내에 이메일 인증을 완료한 후 비밀번호를 변경해 주세요"
+            ));
+        }
 
         return memberFacade.updatePassword(requestDto.getPassword(), member);
     }

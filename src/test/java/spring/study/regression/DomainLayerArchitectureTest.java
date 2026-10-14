@@ -49,6 +49,21 @@ class DomainLayerArchitectureTest {
     }
 
     @Test
+    void recordsAreDeclaredInSeparateTopLevelFiles() throws Exception {
+        var resolver = new PathMatchingResourcePatternResolver();
+        var readers = new CachingMetadataReaderFactory(resolver);
+        int records = 0;
+        for (var resource : resolver.getResources("classpath*:spring/study/**/*.class")) {
+            String name = readers.getMetadataReader(resource).getClassMetadata().getClassName();
+            Class<?> type = Class.forName(name, false, getClass().getClassLoader());
+            if (!type.isRecord()) continue;
+            records++;
+            assertThat(type.getEnclosingClass()).as(name).isNull();
+        }
+        assertThat(records).isPositive();
+    }
+
+    @Test
     void controllersDoNotBypassFacadesAndFacadesDoNotAccessRepositories() throws Exception {
         for (String layer : List.of("controller", "facade")) {
             for (Class<?> type : classes(layer)) {
@@ -88,7 +103,7 @@ class DomainLayerArchitectureTest {
         List<Class<?>> classes = new ArrayList<>();
         for (var resource : resolver.getResources("classpath*:spring/study/**/" + layer + "/*.class")) {
             String name = readers.getMetadataReader(resource).getClassMetadata().getClassName();
-            if (!name.contains("$")) classes.add(Class.forName(name));
+            if (!name.contains("$") && !name.endsWith("Test")) classes.add(Class.forName(name));
         }
         return classes.stream().distinct().toList();
     }

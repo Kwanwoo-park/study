@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.entity.Board;
 import spring.study.board.service.BoardService;
 import spring.study.favorite.dto.FavoriteResponseDto;
@@ -50,6 +51,7 @@ public class FavoriteFacade {
         ));
     }
 
+    @Transactional
     public ResponseEntity<?> like(Long id, Member member) {
         Board board = boardService.findById(id);
         if (!visibilityAccessPolicy.canViewBoard(board, member)) return forbiddenBoard();

@@ -101,6 +101,11 @@ class PortfolioPdfServiceTest {
     }
 
     @Test
+    void rendererFindsItsScriptsFromTheProjectRoot() throws Exception {
+        assertThat(new PortfolioPdfRenderer().version()).isNotEmpty();
+    }
+
+    @Test
     void loadsActualDeployedResourcesWithoutDependingOnWorkingDirectory() throws Exception {
         assertThat(new PortfolioPdfService(renderer).loadSources()).containsKeys("portfolio/index.html", "portfolio/styles.css", "portfolio/print.css", "portfolio/app.js", "css/common/page-back.css", "js/common/page-back.js");
     }

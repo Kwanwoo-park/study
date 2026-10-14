@@ -14,6 +14,7 @@ import spring.study.common.component.TransactionRunner;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
+import spring.study.account.dto.AccountTransactionCancellation;
 
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -219,7 +220,7 @@ public class AccountFacade {
 
                 transaction.cancel();
 
-                AccountTransactionService.Cancellation canceled = accountTransactionService.cancelTransaction(transaction, reversalWithdrawalAccount, reversalDepositAccount, cancellationTime);
+                AccountTransactionCancellation canceled = accountTransactionService.cancelTransaction(transaction, reversalWithdrawalAccount, reversalDepositAccount, cancellationTime);
                 notifyMember(canceled.original());
                 return new AccountTransactionResponseDto(canceled.cancellation());
             });
@@ -269,7 +270,8 @@ public class AccountFacade {
 
         Account account = accountService.findByAccount(accountNumber);
 
-        if (!account.getMember().getId().equals(member.getId())) {
+        if (account.getAccountStatus() == AccountStatus.DELETED) return accountNotFound();
+        if (member == null || account.getMember() == null || !account.getMember().getId().equals(member.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "result", -10L,
                     "message", "본인 계좌만 조회할 수 있습니다"

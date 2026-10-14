@@ -121,8 +121,7 @@ test('accepting a call replaces the page while retaining room, call and auto-acc
 });
 
 for (const [file, buttonId, expected] of [
-    ['member/email_find.js', 'find', '/member/updatePassword/member@example.test'],
-    ['member/info_find.js', 'find', '/member/updatePassword/member@example.test'],
+    ['member/info_find.js', 'find', '/member/findByEmail?email=member%40example.test'],
     ['member/updatePhone.js', 'update', '/board/main'],
 ]) {
     test(`${file}: successful response navigates with replace`, async () => {
@@ -140,3 +139,24 @@ for (const [file, buttonId, expected] of [
         assert.deepEqual(replaced, [expected]);
     });
 }
+
+test('password recovery navigates only after server email verification and stores the proof', async () => {
+    const {context, replaced} = environment();
+    const elements = new Map();
+    const stored = new Map();
+    context.sessionStorage = {setItem: (key, value) => stored.set(key, value)};
+    context.document.getElementById = id => {
+        if (!elements.has(id)) elements.set(id, {value: 'member@example.test', classList: {remove() {}}, listeners: {},
+            addEventListener(type, handler) { this.listeners[type] = handler; }});
+        return elements.get(id);
+    };
+    context.fetch = async (url, request) => {
+        assert.equal(url, '/api/mail/verify');
+        assert.equal(JSON.parse(request.body).email, 'member@example.test');
+        return {ok: true, json: async () => ({status: 'ok', verificationToken: 'verified-token'})};
+    };
+    vm.runInContext(source('member/email_find.js'), context);
+    await elements.get('find').listeners.click();
+    assert.deepEqual(replaced, ['/member/updatePassword/member%40example.test']);
+    assert.equal(JSON.parse(stored.get('passwordRecoveryVerification')).token, 'verified-token');
+});

@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
 import spring.study.member.service.MemberService;
+import spring.study.account.service.AccountService;
+import spring.study.diary.service.DiaryService;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,14 +23,18 @@ class TodoWithdrawalTest {
         MemberFacade facade = (MemberFacade) constructor.newInstance(arguments);
         MemberService members = (MemberService) dependencies.get(MemberService.class);
         TodoService todos = (TodoService) dependencies.get(TodoService.class);
+        AccountService accounts = (AccountService) dependencies.get(AccountService.class);
+        DiaryService diaries = (DiaryService) dependencies.get(DiaryService.class);
         Member principal = Member.builder().id(7L).email("owner@example.test").build();
         Member managed = Member.builder().id(7L).email("owner@example.test").build();
         when(members.findById(7L)).thenReturn(managed);
 
         facade.deleteMember(principal, null);
 
-        var ordered = inOrder(members, todos);
+        var ordered = inOrder(members, accounts, diaries, todos);
         ordered.verify(members).findById(7L);
+        ordered.verify(accounts).deleteByMember(managed);
+        ordered.verify(diaries).deleteByMember(managed);
         ordered.verify(todos).deleteByMember(managed);
         ordered.verify(members).deleteById(7L);
     }

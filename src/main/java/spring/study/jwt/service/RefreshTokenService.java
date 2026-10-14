@@ -65,6 +65,14 @@ public class RefreshTokenService {
         return refreshTokenRepository.existsByJtiAndMemberIdAndExpiresAtAfter(jti, memberId, Instant.now());
     }
 
+    public void recordAccessIfNeeded(Member member, Duration ttl) {
+        if (member.getLastLoginTime() == null
+                || !member.getLastLoginTime().isAfter(LocalDateTime.now().minusDays(1))) {
+            recordAccess(member);
+            memberTokenCacheService.save(member, ttl);
+        }
+    }
+
     public void revoke(String jti) {
         refreshTokenRepository.findById(jti).ifPresent(refreshToken -> {
             refreshTokenRepository.delete(refreshToken);
