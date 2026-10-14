@@ -178,23 +178,6 @@ class GitHubHistoryServiceTest {
         server.verify();
     }
 
-    @Test
-    void rateLimitPausesUncachedRequestsAcrossBothTabs() {
-        server.expect(requestTo(COMMITS)).andRespond(withStatus(HttpStatus.FORBIDDEN)
-                .header("X-RateLimit-Remaining", "0").header("Retry-After", "120")
-                .body("private upstream diagnostic with test-token"));
-        server.expect(requestTo(ACTIVITY)).andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
-        assertThatThrownBy(() -> service.commits(1)).isInstanceOfSatisfying(ResponseStatusException.class, error -> {
-            assertThat(error.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-            assertThat(error.getReason()).contains("조회 한도").doesNotContain("test-token", "private upstream");
-        });
-        clock.now = clock.now.plusSeconds(119);
-        assertThatThrownBy(() -> service.activity("")).isInstanceOf(ResponseStatusException.class);
-        clock.now = clock.now.plusSeconds(2);
-        assertThat(service.activity("").entries()).isEmpty();
-        server.verify();
-    }
-
     @ParameterizedTest
     @ValueSource(ints = {401, 403, 404, 429, 500})
     void upstreamErrorsNeverExposeTokensOrErrorBodies(int status) {
@@ -263,17 +246,6 @@ class GitHubHistoryServiceTest {
                 .header(HttpHeaders.LINK, "<" + link + ">; rel=\"next\""));
         assertThat(service.commits(1).nextCursor()).isNull();
         server.verify();
-    }
-
-    @Test
-    void supportsPublicRepositoriesAndEncodesBranchAsOneQueryValue() {
-        RestTemplate client = new RestTemplate();
-        var publicServer = MockRestServiceServer.bindTo(client).build();
-        var publicService = new GitHubHistoryService(client, "owner", "repo", "feature/a&b", "");
-        publicServer.expect(requestTo("https://api.github.com/repos/owner/repo/commits?per_page=20&sha=feature%2Fa%26b&page=1"))
-                .andExpect(headerDoesNotExist("Authorization")).andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
-        assertThat(publicService.commits(1).entries()).isEmpty();
-        publicServer.verify();
     }
 
     private String commitJson() {

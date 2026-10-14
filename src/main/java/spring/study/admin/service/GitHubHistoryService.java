@@ -96,7 +96,7 @@ public class GitHubHistoryService {
         Map<String, String> parameters = new LinkedHashMap<>();
         parameters.put("branch", branch);
 
-        String next = "", before, after, value;
+        String next = null, before, after, value;
 
         if (cursor != null && !cursor.isEmpty()) {
             String[] parts = cursor.split(":", 2);
@@ -136,7 +136,7 @@ public class GitHubHistoryService {
             }
         }
 
-        if (next.equals(cursor)) next = null;
+        if (next != null && next.equals(cursor)) next = null;
 
         return new GitHubHistoryResponse<>(owner + "/" + repository, branch, entries, next, response.fetchedAt());
     }
