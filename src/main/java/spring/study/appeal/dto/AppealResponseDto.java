@@ -27,9 +27,7 @@ public class AppealResponseDto {
         this.memberName = appeal.getMember().getName();
         this.memberBlocked = appeal.getMember().isAccessBlocked();
         this.sanctionId = appeal.getRelatedSanction() == null ? null : appeal.getRelatedSanction().getId();
-        this.reportId = appeal.getRelatedSanction() == null
-                ? null
-                : appeal.getRelatedSanction().getReport().getId();
+        this.reportId = appeal.getRelatedSanction() == null ? null : appeal.getRelatedSanction().getReport().getId();
         this.title = appeal.getTitle();
         this.content = appeal.getContent();
         this.status = appeal.getStatus();

@@ -38,8 +38,7 @@ public class Appeal extends BasetimeEntity {
     private AppealStatus status;
 
     @Builder
-    public Appeal(Long id, Member member, MemberSanction relatedSanction, String title,
-                  String content, AppealStatus status) {
+    public Appeal(Long id, Member member, MemberSanction relatedSanction, String title, String content, AppealStatus status) {
         this.id = id;
         this.member = member;
         this.relatedSanction = relatedSanction;
@@ -48,7 +47,7 @@ public class Appeal extends BasetimeEntity {
         this.status = status == null ? AppealStatus.PENDING : status;
     }
 
-    public void accept() {
-        status = AppealStatus.ACCEPTED;
+    public void changeStatus(AppealStatus status) {
+        this.status = status;
     }
 }

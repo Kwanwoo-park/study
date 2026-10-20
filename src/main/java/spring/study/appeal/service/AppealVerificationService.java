@@ -36,14 +36,13 @@ public class AppealVerificationService {
 
         String cooldownKey = cooldownKey(member.getId());
         Boolean allowed = redisTemplate.opsForValue().setIfAbsent(cooldownKey, "1", RESEND_COOLDOWN);
+
         if (!Boolean.TRUE.equals(allowed)) {
-            throw new ResponseStatusException(
-                    HttpStatus.TOO_MANY_REQUESTS,
-                    "인증번호는 1분 후 다시 요청할 수 있습니다"
-            );
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "인증번호는 1분 후 다시 요청할 수 있습니다");
         }
 
         String code = String.format(Locale.ROOT, "%06d", secureRandom.nextInt(1_000_000));
+
         try {
             redisTemplate.opsForValue().set(codeKey(member.getId()), digest(code), VERIFICATION_TTL);
             redisTemplate.delete(attemptKey(member.getId()));
@@ -58,26 +57,22 @@ public class AppealVerificationService {
     public String verifyCode(String email, String code) {
         Member member = findMember(email);
         String savedCode = redisTemplate.opsForValue().get(codeKey(member.getId()));
-        if (savedCode == null) {
-            throw invalidCode();
-        }
+
+        if (savedCode == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증번호가 만료되었거나 올바르지 않습니다");
 
         Long attempts = redisTemplate.opsForValue().increment(attemptKey(member.getId()));
+
         if (attempts != null && attempts == 1L) {
             redisTemplate.expire(attemptKey(member.getId()), VERIFICATION_TTL);
-        }
-        if (attempts != null && attempts > MAX_ATTEMPTS) {
+        } else if (attempts != null && attempts > MAX_ATTEMPTS) {
             redisTemplate.delete(codeKey(member.getId()));
             redisTemplate.delete(attemptKey(member.getId()));
-            throw new ResponseStatusException(
-                    HttpStatus.TOO_MANY_REQUESTS,
-                    "인증 시도 횟수를 초과했습니다. 인증번호를 다시 발급해주세요"
-            );
+
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "인증 시도 횟수를 초과했습니다. 인증번호를 다시 발급해주세요");
         }
 
-        if (!MessageDigest.isEqual(
-                savedCode.getBytes(StandardCharsets.UTF_8),
-                digest(code).getBytes(StandardCharsets.UTF_8))) {
+        if (!MessageDigest.isEqual(savedCode.getBytes(StandardCharsets.UTF_8), digest(code).getBytes(StandardCharsets.UTF_8))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증번호가 올바르지 않습니다");
         }
 
@@ -85,36 +80,37 @@ public class AppealVerificationService {
         redisTemplate.delete(attemptKey(member.getId()));
 
         String verificationToken = newVerificationToken();
-        redisTemplate.opsForValue().set(
-                verifiedTokenKey(verificationToken),
-                String.valueOf(member.getId()),
-                VERIFICATION_TTL
-        );
+        redisTemplate.opsForValue().set(verifiedTokenKey(verificationToken), String.valueOf(member.getId()), VERIFICATION_TTL);
+
         return verificationToken;
     }
 
     public Member consumeVerification(String email, String verificationToken) {
-        if (verificationToken == null || verificationToken.isBlank()) {
-            throw verificationRequired();
-        }
+        if (verificationToken == null || verificationToken.isBlank())
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "5분 이내에 이메일 인증을 완료한 후 상소문을 제출해주세요");
 
         Member member = findMember(email);
-        String verifiedMemberId = redisTemplate.opsForValue()
-                .getAndDelete(verifiedTokenKey(verificationToken));
-        if (verifiedMemberId == null || !verifiedMemberId.equals(String.valueOf(member.getId()))) {
-            throw verificationRequired();
-        }
+        String verifiedMemberId = redisTemplate.opsForValue().getAndDelete(verifiedTokenKey(verificationToken));
+
+        if (verifiedMemberId == null || !verifiedMemberId.equals(String.valueOf(member.getId())))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "5분 이내에 이메일 인증을 완료한 후 상소문을 제출해주세요");
+
         return member;
     }
 
     private Member findMember(String email) {
         Member member = findMemberOrNull(email);
-        if (member == null) throw invalidCode();
+
+        if (member == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증번호가 만료되었거나 올바르지 않습니다");
+
         return member;
     }
 
     private Member findMemberOrNull(String email) {
-        if (email == null || email.isBlank()) return null;
+        if (email == null || email.isBlank())
+            return null;
+
         return memberRepository.findByEmail(email.trim()).orElse(null);
     }
 
@@ -126,26 +122,12 @@ public class AppealVerificationService {
 
     private String digest(String value) {
         try {
-            byte[] hash = MessageDigest.getInstance("SHA-256")
-                    .digest(value.getBytes(StandardCharsets.UTF_8));
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
+
             return java.util.HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256을 사용할 수 없습니다", exception);
         }
-    }
-
-    private ResponseStatusException invalidCode() {
-        return new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "인증번호가 만료되었거나 올바르지 않습니다"
-        );
-    }
-
-    private ResponseStatusException verificationRequired() {
-        return new ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "5분 이내에 이메일 인증을 완료한 후 상소문을 제출해주세요"
-        );
     }
 
     private String codeKey(Long memberId) {

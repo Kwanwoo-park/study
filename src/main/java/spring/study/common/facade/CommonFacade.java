@@ -11,8 +11,7 @@ import java.util.Map;
 public class CommonFacade {
 
     public ResponseEntity<?> validationFailure(BindingResult bindingResult, String fallbackMessage) {
-        String message = bindingResult.getFieldErrors().isEmpty()
-                ? fallbackMessage : bindingResult.getFieldErrors().get(0).getDefaultMessage();
+        String message = bindingResult.getFieldErrors().isEmpty() ? fallbackMessage : bindingResult.getFieldErrors().get(0).getDefaultMessage();
 
         return ResponseEntity.badRequest().body(Map.of(
                 "result", -10L,

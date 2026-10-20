@@ -243,7 +243,7 @@ public class AdminFacade {
     }
 
     public ResponseEntity<?> acceptAppeal(Long appealId) {
-        Appeal appeal = appealService.accept(appealId);
+        Appeal appeal = appealService.changeStatus(appealId, AppealStatus.ACCEPTED);
 
         memberSanctionService.unblock(appeal.getMember(), appeal.getRelatedSanction());
         notificationService.createNotification(appeal.getMember(), "상소가 받아들여져 계정 차단이 해제되었습니다", Group.ADMIN);

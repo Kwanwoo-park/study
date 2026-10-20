@@ -25,31 +25,33 @@ public class AppealApiController {
     @GetMapping("/context")
     public ResponseEntity<?> context(HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
+
+        if (member == null)
+            return commonFacade.unauthorized();
 
         return appealFacade.context(member);
     }
 
     @PostMapping("/verification/send")
-    public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody AppealVerificationSendRequest verificationRequest,
-                                                  BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) return commonFacade.validationFailure(bindingResult, "이메일을 확인해주세요");
+    public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody AppealVerificationSendRequest verificationRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors())
+            return commonFacade.validationFailure(bindingResult, "이메일을 확인해주세요");
 
         return appealFacade.sendVerificationCode(verificationRequest.email());
     }
 
     @PostMapping("/verification/verify")
-    public ResponseEntity<?> verifyEmail(@Valid @RequestBody AppealVerificationConfirmRequest verificationRequest,
-                                         BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) return commonFacade.validationFailure(bindingResult, "인증번호를 확인해주세요");
+    public ResponseEntity<?> verifyEmail(@Valid @RequestBody AppealVerificationConfirmRequest verificationRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors())
+            return commonFacade.validationFailure(bindingResult, "인증번호를 확인해주세요");
 
         return appealFacade.verifyEmail(verificationRequest);
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody AppealRequestDto requestDto,
-                                    BindingResult bindingResult, HttpServletRequest request) {
-        if (bindingResult.hasErrors()) return commonFacade.validationFailure(bindingResult, "상소문 입력 내용을 확인해주세요");
+    public ResponseEntity<?> create(@Valid @RequestBody AppealRequestDto requestDto, BindingResult bindingResult, HttpServletRequest request) {
+        if (bindingResult.hasErrors())
+            return commonFacade.validationFailure(bindingResult, "상소문 입력 내용을 확인해주세요");
 
         return appealFacade.create(requestDto, jwtManager.getLoginMember(request));
     }

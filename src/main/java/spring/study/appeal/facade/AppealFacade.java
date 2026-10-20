@@ -13,6 +13,7 @@ import spring.study.member.entity.Member;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
+import spring.study.member.sanction.entity.MemberSanction;
 import spring.study.member.service.MemberService;
 import spring.study.member.sanction.service.MemberSanctionService;
 import spring.study.notification.service.NotificationService;
@@ -93,10 +94,10 @@ public class AppealFacade {
         ));
     }
 
-    public AppealResponseDto submit(AppealRequestDto requestDto, Member authenticatedMember) {
+    private AppealResponseDto submit(AppealRequestDto requestDto, Member authenticatedMember) {
         return transactions.write(() -> {
             Member member = resolveMember(requestDto, authenticatedMember);
-            var sanction = memberSanctionService.findOwned(requestDto.getSanctionId(), member);
+            MemberSanction sanction = memberSanctionService.findOwned(requestDto.getSanctionId(), member);
             Appeal appeal = appealService.create(requestDto, member, sanction);
             notifyAdministrators(appeal);
             return new AppealResponseDto(appeal);
@@ -107,11 +108,12 @@ public class AppealFacade {
         if (authenticatedMember != null) {
             return authenticatedMember;
         }
+
         if (requestDto.getEmail() == null || requestDto.getEmail().isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비로그인 상소는 이메일 인증이 필요합니다");
         }
-        return appealVerificationService.consumeVerification(
-                requestDto.getEmail(), requestDto.getVerificationToken());
+
+        return appealVerificationService.consumeVerification(requestDto.getEmail(), requestDto.getVerificationToken());
     }
 
     private void notifyAdministrators(Appeal appeal) {
