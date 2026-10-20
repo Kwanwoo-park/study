@@ -1,11 +1,7 @@
 package spring.study.admin.service;
 
 import org.springframework.stereotype.Service;
-import spring.study.admin.dto.SystemDiskRoot;
-import spring.study.admin.dto.SystemDiskSnapshot;
-import spring.study.admin.dto.SystemFileRow;
-import spring.study.admin.dto.SystemProcessRow;
-import spring.study.admin.dto.SystemProcessSnapshot;
+import spring.study.admin.dto.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;

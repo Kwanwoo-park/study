@@ -26,7 +26,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
-    private final SystemIncidentFacade systemIncidentService;
+    private final SystemIncidentFacade systemIncidentFacade;
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleBadRequest(IllegalArgumentException e) {
@@ -103,7 +103,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleEtc(Exception e, HttpServletRequest request) {
         log.error("서버 오류", e);
         try {
-            systemIncidentService.record(request, e);
+            systemIncidentFacade.record(request, e);
         } catch (Exception recordException) {
             log.error("장애 기록 저장 실패", recordException);
         }

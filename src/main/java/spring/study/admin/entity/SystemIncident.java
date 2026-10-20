@@ -25,7 +25,7 @@ public class SystemIncident {
     private LocalDateTime occurredAt;
 
     @Column(name = "occurrence_count", nullable = false)
-    private long occurrenceCount = 1L;
+    private long occurrenceCount;
 
     @Column(name = "request_method", nullable = false, length = 10)
     private String requestMethod;

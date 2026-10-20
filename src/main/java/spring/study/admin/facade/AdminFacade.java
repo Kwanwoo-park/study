@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.admin.dto.AdminNewBoardResponseDto;
+import spring.study.admin.dto.SystemIncidentResponseDto;
 import spring.study.admin.service.SystemIncidentService;
 import spring.study.admin.service.SystemDiagnosticsService;
 import spring.study.appeal.dto.AppealResponseDto;
@@ -20,6 +21,7 @@ import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.AudioCallSignalingService;
 import spring.study.chat.service.ChatPresenceService;
+import spring.study.common.service.IpLocationService;
 import spring.study.jwt.dto.AdminTokenSessionResponse;
 import spring.study.kafka.service.KafkaQueueQueryService;
 import spring.study.member.dto.MemberRequestDto;
@@ -49,8 +51,8 @@ public class AdminFacade {
     private final MemberService memberService;
     private final MemberSanctionService memberSanctionService;
     private final BoardService boardService;
+    private final IpLocationService ipLocationService;
     private final AppealService appealService;
-    private final spring.study.appeal.facade.AppealFacade appealFacade;
     private final ChatMessageService chatMessageService;
     private final SystemIncidentService systemIncidentService;
     private final AudioCallSignalingService audioCallSignalingService;
@@ -156,7 +158,11 @@ public class AdminFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "unacknowledgedCount", systemIncidentService.countUnacknowledged(),
-                "list", systemIncidentService.findRecent()
+                "list", systemIncidentService.findRecent().stream()
+                        .map(incident ->
+                                new SystemIncidentResponseDto(incident, ipLocationService.find(incident.getRequestIp()))
+                        )
+                        .toList()
         ));
     }
 

@@ -17,7 +17,9 @@ import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.notification.repository.NotificationRepository;
 import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.kafka.dto.KafkaDispatchResult;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -51,7 +53,7 @@ public class KafkaOutboxDispatcher {
                 Object payload = resolvePayload(event);
                 if (payload == null) {
                     outboxRepository.delete(event);
-                    eventLogs.afterCommit(Route.kafka(event.getTopic()), Operation.PUBLISH, Outcome.SKIPPED, event.getId(), 1, event.getAttemptCount() + 1, null);
+                    eventLogs.afterCommit(IntegrationEventLogRoute.kafka(event.getTopic()), IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.SKIPPED, event.getId(), 1, event.getAttemptCount() + 1, null);
                     processedCount++;
                     continue;
                 }
@@ -59,15 +61,15 @@ public class KafkaOutboxDispatcher {
                 record.headers().add(KafkaTopics.EVENT_ID_HEADER, ("outbox-" + event.getId()).getBytes(StandardCharsets.UTF_8));
                 kafkaTemplate.send(record)
                         .get(Duration.ofSeconds(10).toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
-                eventLogs.record(Route.kafka(event.getTopic()), Operation.PUBLISH, Outcome.SUCCESS, event.getId(), 1, event.getAttemptCount() + 1, null, null);
+                eventLogs.record(IntegrationEventLogRoute.kafka(event.getTopic()), IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.SUCCESS, event.getId(), 1, event.getAttemptCount() + 1, null, null);
                 outboxRepository.delete(event);
                 processedCount++;
             } catch (Exception exception) {
                 LocalDateTime retryAt = LocalDateTime.now().plusNanos(calculateRetryDelayMillis(event) * 1_000_000L);
                 event.recordFailure(exception.getMessage(), retryAt);
                 LocalDateTime nextRetryAt = event.isDeadLettered() ? null : retryAt;
-                eventLogs.afterCommit(Route.kafka(event.getTopic()), Operation.PUBLISH,
-                        event.isDeadLettered() ? Outcome.DEAD_LETTER : Outcome.RETRY_SCHEDULED,
+                eventLogs.afterCommit(IntegrationEventLogRoute.kafka(event.getTopic()), IntegrationEventLogOperation.PUBLISH,
+                        event.isDeadLettered() ? IntegrationEventLogOutcome.DEAD_LETTER : IntegrationEventLogOutcome.RETRY_SCHEDULED,
                         event.getId(), 1, event.getAttemptCount(), exception);
                 log.warn("Kafka outbox publish failed. eventId={}, attempt={}, retryAt={}", event.getId(), event.getAttemptCount(), nextRetryAt, exception);
                 return KafkaDispatchResult.failed(processedCount, nextRetryAt);

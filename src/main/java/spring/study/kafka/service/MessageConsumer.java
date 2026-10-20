@@ -15,7 +15,9 @@ import spring.study.chat.service.ChatMessageBatchService;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.service.NotificationRealtimePublisher;
 import spring.study.admin.service.IntegrationEventLogService;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 
 import java.util.List;
 
@@ -36,9 +38,9 @@ public class MessageConsumer {
             for (ChatMessageRequestDto message : savedMessages) {
                 chatRealtimePublisher.publish(message);
             }
-            eventLogs.record(Route.CHAT, Operation.CONSUME, Outcome.SUCCESS, null, messages.size(), null);
+            eventLogs.record(IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SUCCESS, null, messages.size(), null);
         } catch (RuntimeException exception) {
-            eventLogs.record(Route.CHAT, Operation.CONSUME, Outcome.FAILED, null, messages == null ? 0 : messages.size(), exception);
+            eventLogs.record(IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.FAILED, null, messages == null ? 0 : messages.size(), exception);
             throw exception;
         }
     }
@@ -51,14 +53,14 @@ public class MessageConsumer {
             if (notification == null || notification.getId() == null) throw new IllegalArgumentException("Invalid notification event");
             Notification current = notificationRepository.findById(notification.getId()).orElse(null);
             if (current == null) {
-                eventLogs.record(Route.NOTIFICATION, Operation.CONSUME, Outcome.SKIPPED, notification.getId(), 1, null);
+                eventLogs.record(IntegrationEventLogRoute.NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SKIPPED, notification.getId(), 1, null);
                 return;
             }
             var idHeader = record.headers().lastHeader(KafkaTopics.EVENT_ID_HEADER);
             notificationRealtimePublisher.publish(current, idHeader == null ? null : new String(idHeader.value(), StandardCharsets.UTF_8));
-            eventLogs.record(Route.NOTIFICATION, Operation.CONSUME, Outcome.SUCCESS, notification.getId(), 1, null);
+            eventLogs.record(IntegrationEventLogRoute.NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SUCCESS, notification.getId(), 1, null);
         } catch (RuntimeException exception) {
-            eventLogs.record(Route.NOTIFICATION, Operation.CONSUME, Outcome.FAILED, notification == null ? null : notification.getId(), 1, exception);
+            eventLogs.record(IntegrationEventLogRoute.NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.FAILED, notification == null ? null : notification.getId(), 1, exception);
             throw exception;
         }
     }

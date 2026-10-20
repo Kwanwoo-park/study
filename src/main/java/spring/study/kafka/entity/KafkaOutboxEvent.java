@@ -19,8 +19,6 @@ import java.time.LocalDateTime;
 public class KafkaOutboxEvent {
     private static final int MAX_ATTEMPT_COUNT = 10;
 
-    public enum PayloadType { CHAT_MESSAGE, NOTIFICATION }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -52,7 +50,7 @@ public class KafkaOutboxEvent {
     @Column(name = "dead_lettered", nullable = false)
     private boolean deadLettered;
 
-    public KafkaOutboxEvent(String topic, String eventKey, PayloadType payloadType, String payload) {
+    public KafkaOutboxEvent(String topic, String eventKey, KafkaOutboxPayloadType payloadType, String payload) {
         this.topic = topic;
         this.eventKey = eventKey;
         this.payloadType = payloadType.name();
@@ -61,8 +59,8 @@ public class KafkaOutboxEvent {
         this.nextAttemptAt = createdAt;
     }
 
-    public PayloadType resolvedPayloadType() {
-        return PayloadType.valueOf(payloadType);
+    public KafkaOutboxPayloadType resolvedPayloadType() {
+        return KafkaOutboxPayloadType.valueOf(payloadType);
     }
 
     public void recordFailure(String error, LocalDateTime retryAt) {

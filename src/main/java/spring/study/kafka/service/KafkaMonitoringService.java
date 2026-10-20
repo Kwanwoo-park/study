@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import spring.study.kafka.config.KafkaOperationsProperties;
 import spring.study.kafka.config.KafkaTopics;
-import spring.study.kafka.entity.KafkaDeadLetter.Status;
+import spring.study.kafka.entity.KafkaDeadLetterStatus;
 import spring.study.kafka.repository.KafkaDeadLetterRepository;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.kafka.dto.KafkaOverview;
@@ -38,14 +38,14 @@ public class KafkaMonitoringService {
         LocalDateTime oldest = outbox.findOldestPendingTime();
         long age = oldest == null ? 0 : Math.max(0, Duration.between(oldest, LocalDateTime.now()).toSeconds());
         long failed = outbox.countByDeadLetteredTrue();
-        long unresolved = deadLetters.countByStatusIn(List.of(Status.NEW, Status.REPLAY_FAILED));
+        long unresolved = deadLetters.countByStatusIn(List.of(KafkaDeadLetterStatus.NEW, KafkaDeadLetterStatus.REPLAY_FAILED));
         List<String> warnings = new ArrayList<>(broker.warnings());
         if (age >= properties.getOutboxWarningSeconds()) warnings.add("발행 대기 중 가장 오래된 이벤트가 " + age + "초 지연되고 있습니다.");
         if (failed > 0) warnings.add("Outbox 최종 실패 " + failed + "건이 있습니다.");
         if (unresolved > 0) warnings.add("확인이 필요한 소비 실패 기록 " + unresolved + "건이 있습니다.");
         return new KafkaOverview(broker.observedAt(), broker.error(), broker.topics(), broker.lags(), broker.totalLag(),
                 outbox.countByDeadLetteredFalse(), age, failed, unresolved,
-                deadLetters.countByStatusIn(List.of(Status.REPLAY_PENDING)), warnings);
+                deadLetters.countByStatusIn(List.of(KafkaDeadLetterStatus.REPLAY_PENDING)), warnings);
     }
 
     private synchronized KafkaBrokerSnapshot brokerSnapshot() {

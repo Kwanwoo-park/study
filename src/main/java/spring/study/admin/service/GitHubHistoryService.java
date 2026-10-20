@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
+import spring.study.admin.dto.GitHubCachedResponse;
 import spring.study.admin.dto.GitHubHistoryResponse;
 import spring.study.admin.dto.GitHubActivity;
 import spring.study.admin.dto.GitHubCommit;

@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.PageRequest;
 import spring.study.kafka.entity.KafkaOutboxEvent;
+import spring.study.kafka.entity.KafkaOutboxPayloadType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +26,7 @@ class KafkaOutboxEventRepositoryTest {
 
     @Test
     void queryShouldReturnOnlyEventsWhoseRetryTimeHasArrived() {
-        KafkaOutboxEvent event = repository.saveAndFlush(new KafkaOutboxEvent("topic", "room-1", KafkaOutboxEvent.PayloadType.CHAT_MESSAGE, "{}"));
+        KafkaOutboxEvent event = repository.saveAndFlush(new KafkaOutboxEvent("topic", "room-1", KafkaOutboxPayloadType.CHAT_MESSAGE, "{}"));
         LocalDateTime now = LocalDateTime.now();
 
         List<KafkaOutboxEvent> readyEvents = repository.findNextBatchForUpdate(now.plusSeconds(1), PageRequest.of(0, 100));

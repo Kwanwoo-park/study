@@ -9,7 +9,9 @@ import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageBatchService;
 import spring.study.notification.service.NotificationRealtimePublisher;
 import spring.study.admin.service.IntegrationEventLogService;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -44,7 +46,7 @@ class MessageConsumerTest {
         InOrder inOrder = inOrder(batchService, messagingTemplate);
         inOrder.verify(batchService).saveBatch(batch);
         inOrder.verify(messagingTemplate).publish(message);
-        verify(logs).record(Route.CHAT, Operation.CONSUME, Outcome.SUCCESS, null, 1, null);
+        verify(logs).record(IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SUCCESS, null, 1, null);
     }
 
     @Test
@@ -53,7 +55,7 @@ class MessageConsumerTest {
         RuntimeException failure = new IllegalStateException("private message must not become log metadata");
         when(batchService.saveBatch(batch)).thenThrow(failure);
         assertThatThrownBy(() -> consumer.consume(batch)).isSameAs(failure);
-        verify(logs).record(Route.CHAT, Operation.CONSUME, Outcome.FAILED, null, 0, failure);
+        verify(logs).record(IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.FAILED, null, 0, failure);
         verifyNoInteractions(messagingTemplate);
     }
 }

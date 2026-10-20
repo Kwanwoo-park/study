@@ -10,7 +10,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import spring.study.account.entity.Account;
-import spring.study.board.dto.BoardResponseDto;
 import spring.study.common.entity.BasetimeEntity;
 import spring.study.common.entity.CommonVisibility;
 import spring.study.board.entity.Board;

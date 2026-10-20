@@ -11,11 +11,13 @@ import org.springframework.http.HttpStatus;
 import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.kafka.config.KafkaTopics;
 import spring.study.kafka.entity.KafkaDeadLetter;
-import spring.study.kafka.entity.KafkaDeadLetter.Status;
+import spring.study.kafka.entity.KafkaDeadLetterStatus;
 import spring.study.kafka.repository.KafkaDeadLetterRepository;
 import spring.study.kafka.dto.KafkaDeadLetterEntry;
 import spring.study.kafka.dto.KafkaDeadLetterListing;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -41,7 +43,7 @@ public class KafkaDeadLetterService {
     }
 
     @Transactional(readOnly = true)
-    public KafkaDeadLetterListing list(Status status, Long before) {
+    public KafkaDeadLetterListing list(KafkaDeadLetterStatus status, Long before) {
         if (before != null && before < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         var rows = repository.findRecent(status, before, PageRequest.of(0, 31));
         List<KafkaDeadLetterEntry> entries = rows.stream().limit(30).map(KafkaDeadLetterEntry::from).toList();
@@ -53,7 +55,7 @@ public class KafkaDeadLetterService {
         KafkaDeadLetter entry = repository.lockById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "기록을 찾을 수 없습니다."));
         try { entry.requestReplay(administratorId); }
         catch (IllegalStateException error) { throw new ResponseStatusException(HttpStatus.CONFLICT, error.getMessage()); }
-        eventLogs.afterCommit(Route.kafka(entry.getSourceTopic()), Operation.REPLAY, Outcome.QUEUED, entry.getId(), 1, 0, null);
+        eventLogs.afterCommit(IntegrationEventLogRoute.kafka(entry.getSourceTopic()), IntegrationEventLogOperation.REPLAY, IntegrationEventLogOutcome.QUEUED, entry.getId(), 1, 0, null);
     }
 
     private static byte[] header(ConsumerRecord<?, ?> record, String name) {

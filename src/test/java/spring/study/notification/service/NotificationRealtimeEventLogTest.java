@@ -20,7 +20,9 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 
 class NotificationRealtimeEventLogTest {
     private final RedisTemplate<String, String> redis = mock(RedisTemplate.class);
@@ -39,8 +41,8 @@ class NotificationRealtimeEventLogTest {
     void recordsRedisSubscriberCountAndZeroSubscribersSeparately() {
         when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenReturn(0L, 2L);
         publisher.publish(notification()); publisher.publish(notification());
-        verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.NO_SUBSCRIBERS, 9L, 1, null, 0L, null);
-        verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.SUCCESS, 9L, 1, null, 2L, null);
+        verify(logs).record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.NO_SUBSCRIBERS, 9L, 1, null, 0L, null);
+        verify(logs).record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.SUCCESS, 9L, 1, null, 2L, null);
     }
 
     @Test
@@ -48,14 +50,14 @@ class NotificationRealtimeEventLogTest {
         RuntimeException failure = new IllegalStateException("Redis unavailable");
         when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenThrow(failure);
         assertThatThrownBy(() -> publisher.publish(notification())).isSameAs(failure);
-        verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.FAILED, 9L, 1, failure);
+        verify(logs).record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.FAILED, 9L, 1, failure);
     }
 
     @Test
     void duplicateRedisDeliveryIsLoggedWithoutAnotherSuccessfulPublish() {
         when(redis.execute(any(RedisScript.class), anyList(), anyString(), anyString(), anyString())).thenReturn(-1L);
         publisher.publish(notification(), "outbox-10");
-        verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.DUPLICATE, 9L, 1, null, null, null);
+        verify(logs).record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.DUPLICATE, 9L, 1, null, null, null);
     }
 
     @Test
@@ -66,7 +68,7 @@ class NotificationRealtimeEventLogTest {
         subscriber.onMessage(new DefaultMessage(NotificationRealtimePublisher.CHANNEL.getBytes(StandardCharsets.UTF_8), json.getBytes(StandardCharsets.UTF_8)), null);
         var order = inOrder(emitters, logs);
         order.verify(emitters).save(eq("7"), any(NotificationRealtimeEvent.class));
-        order.verify(logs).record(Route.REALTIME_NOTIFICATION, Operation.CONSUME, Outcome.SUCCESS, 9L, 1, null);
+        order.verify(logs).record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SUCCESS, 9L, 1, null);
     }
 
     @Test
@@ -74,7 +76,7 @@ class NotificationRealtimeEventLogTest {
         EmitterService emitters = mock(EmitterService.class);
         NotificationRealtimeSubscriber subscriber = new NotificationRealtimeSubscriber(mapper, emitters, logs);
         assertThatCode(() -> subscriber.onMessage(new DefaultMessage("notification-events".getBytes(StandardCharsets.UTF_8), "private-invalid-json".getBytes(StandardCharsets.UTF_8)), null)).doesNotThrowAnyException();
-        verify(logs).record(eq(Route.REALTIME_NOTIFICATION), eq(Operation.CONSUME), eq(Outcome.FAILED), isNull(), eq(1), any(JsonProcessingException.class));
+        verify(logs).record(eq(IntegrationEventLogRoute.REALTIME_NOTIFICATION), eq(IntegrationEventLogOperation.CONSUME), eq(IntegrationEventLogOutcome.FAILED), isNull(), eq(1), any(JsonProcessingException.class));
         verifyNoInteractions(emitters);
     }
 }

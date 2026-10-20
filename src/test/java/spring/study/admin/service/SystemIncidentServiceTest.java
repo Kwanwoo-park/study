@@ -29,12 +29,9 @@ class SystemIncidentServiceTest {
     @Mock
     private HttpServletRequest request;
 
-    @Mock
-    private IpLocationService ipLocationService;
-
     @Test
     void recordShouldPersistSanitizedMostSpecificExceptionDetails() {
-        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository, ipLocationService);
+        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository);
         RuntimeException exception = new RuntimeException("outer", new IllegalStateException("database\nfailed\tbadly"));
         when(request.getMethod()).thenReturn("GET");
         when(request.getRequestURI()).thenReturn("/api/member/detail");
@@ -57,7 +54,7 @@ class SystemIncidentServiceTest {
 
     @Test
     void acknowledgeShouldMarkIncidentAsAcknowledged() {
-        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository, ipLocationService);
+        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository);
         SystemIncident incident = SystemIncident.builder()
                 .occurredAt(LocalDateTime.now())
                 .requestMethod("GET")
@@ -77,7 +74,7 @@ class SystemIncidentServiceTest {
 
     @Test
     void acknowledgeAllShouldMarkEveryUnacknowledgedIncident() {
-        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository, ipLocationService);
+        SystemIncidentService service = new SystemIncidentService(systemIncidentRepository);
         when(systemIncidentRepository.acknowledgeAll(any(LocalDateTime.class))).thenReturn(3);
 
         int acknowledgedCount = service.acknowledgeAll();

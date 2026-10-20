@@ -7,7 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
-import spring.study.kafka.entity.KafkaDeadLetter.Status;
+import spring.study.kafka.entity.KafkaDeadLetterStatus;
 import spring.study.member.entity.Member;
 
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class KafkaOperationsController {
     }
 
     @GetMapping("/dead-letters")
-    public ResponseEntity<?> list(@RequestParam(required = false) Status status, @RequestParam(required = false) Long beforeId) {
+    public ResponseEntity<?> list(@RequestParam(required = false) KafkaDeadLetterStatus status, @RequestParam(required = false) Long beforeId) {
         return facade.list(status, beforeId);
     }
 

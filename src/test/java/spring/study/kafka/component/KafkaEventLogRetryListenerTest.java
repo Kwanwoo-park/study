@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.*;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 
 class KafkaEventLogRetryListenerTest {
     @Test
@@ -21,8 +23,8 @@ class KafkaEventLogRetryListenerTest {
         Exception error = new IllegalArgumentException("bad serialized payload");
         listener.failedDelivery(record, error, 3);
         listener.recovered(record, error);
-        verify(logs).record(Route.NOTIFICATION, Operation.CONSUMER_RETRY, Outcome.FAILED, null, 1, 3, null, error);
-        verify(logs).record(Route.NOTIFICATION, Operation.CONSUMER_RETRY, Outcome.DLT_PUBLISHED, null, 1, null, null, error);
+        verify(logs).record(IntegrationEventLogRoute.NOTIFICATION, IntegrationEventLogOperation.CONSUMER_RETRY, IntegrationEventLogOutcome.FAILED, null, 1, 3, null, error);
+        verify(logs).record(IntegrationEventLogRoute.NOTIFICATION, IntegrationEventLogOperation.CONSUMER_RETRY, IntegrationEventLogOutcome.DLT_PUBLISHED, null, 1, null, null, error);
     }
     @Test
     void batchErrorIsOneMetadataRecordWithBatchSize() {
@@ -32,6 +34,6 @@ class KafkaEventLogRetryListenerTest {
                 List.of(new ConsumerRecord<>("topic", 0, 1, "key", "secret"), new ConsumerRecord<>("topic", 0, 2, "key", "secret"))));
         Exception error = new IllegalStateException("failed");
         listener.failedDelivery(records, error, 2);
-        verify(logs).record(Route.CHAT, Operation.CONSUMER_RETRY, Outcome.FAILED, null, 2, 2, null, error);
+        verify(logs).record(IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.CONSUMER_RETRY, IntegrationEventLogOutcome.FAILED, null, 2, 2, null, error);
     }
 }

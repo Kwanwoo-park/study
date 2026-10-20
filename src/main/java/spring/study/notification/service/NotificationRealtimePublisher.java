@@ -15,7 +15,9 @@ import java.util.List;
 import spring.study.notification.dto.NotificationRealtimeEvent;
 import spring.study.notification.entity.Notification;
 import spring.study.admin.service.IntegrationEventLogService;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 
 @Service
 @RequiredArgsConstructor
@@ -44,14 +46,14 @@ public class NotificationRealtimePublisher {
             String key = "notification:delivered:" + fingerprint(identity);
             Long subscribers = redisTemplate.execute(PUBLISH_ONCE, List.of(key), CHANNEL, payload, Long.toString(properties.getDedupTtlSeconds()));
             if (subscribers == null) throw new IllegalStateException("Redis delivery result unavailable");
-            eventLogs.record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH,
-                    subscribers == -1 ? Outcome.DUPLICATE : subscribers == 0 ? Outcome.NO_SUBSCRIBERS : Outcome.SUCCESS,
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH,
+                    subscribers == -1 ? IntegrationEventLogOutcome.DUPLICATE : subscribers == 0 ? IntegrationEventLogOutcome.NO_SUBSCRIBERS : IntegrationEventLogOutcome.SUCCESS,
                     notification.getId(), 1, null, subscribers < 0 ? null : subscribers, null);
         } catch (JsonProcessingException exception) {
-            eventLogs.record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.FAILED, notification == null ? null : notification.getId(), 1, exception);
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.FAILED, notification == null ? null : notification.getId(), 1, exception);
             throw new IllegalStateException("실시간 알림을 직렬화할 수 없습니다", exception);
         } catch (RuntimeException exception) {
-            eventLogs.record(Route.REALTIME_NOTIFICATION, Operation.PUBLISH, Outcome.FAILED, notification == null ? null : notification.getId(), 1, exception);
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.FAILED, notification == null ? null : notification.getId(), 1, exception);
             throw exception;
         }
     }

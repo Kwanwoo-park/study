@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,7 +18,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import spring.study.admin.config.IntegrationEventLogSecurityConfig;
 import spring.study.admin.dto.IntegrationEventLogResponse;
-import spring.study.admin.service.IntegrationEventLogQueryService;
+import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.component.*;
 import spring.study.jwt.service.*;
@@ -29,7 +30,10 @@ import java.util.List;
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogBroker;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -38,10 +42,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringJUnitConfig(IntegrationEventLogSecurityTest.Config.class)
+@TestPropertySource(properties = {"admin.event-log.enabled=false", "admin.event-log.capacity=100", "admin.event-log.retention-days=7"})
 @WebAppConfiguration
 class IntegrationEventLogSecurityTest {
     @Autowired WebApplicationContext context;
-    @Autowired IntegrationEventLogQueryService service;
+    @Autowired IntegrationEventLogService service;
     MockMvc mvc;
 
     @BeforeEach
@@ -79,12 +84,25 @@ class IntegrationEventLogSecurityTest {
     }
 
     @Test
+    void enumFiltersKeepTheirExistingRequestValues() throws Exception {
+        when(service.find(IntegrationEventLogBroker.KAFKA, IntegrationEventLogOperation.PUBLISH,
+                IntegrationEventLogOutcome.FAILED, null, 24))
+                .thenReturn(new IntegrationEventLogResponse(List.of(), null, 7, null));
+        mvc.perform(get("/api/admin/event-logs?broker=KAFKA&operation=PUBLISH&outcome=FAILED")
+                .with(user(member(Role.ADMIN)))).andExpect(status().isOk());
+        verify(service).find(IntegrationEventLogBroker.KAFKA, IntegrationEventLogOperation.PUBLISH,
+                IntegrationEventLogOutcome.FAILED, null, 24);
+    }
+
+    @Test
     void adminCanReadDetailWithoutCachingOrPayload() throws Exception {
         when(service.findById(12L)).thenReturn(new IntegrationEventLogItem(12L, LocalDateTime.now(), "node-1",
-                Broker.KAFKA, "topic", Route.CHAT, Operation.PUBLISH, Outcome.FAILED, 55L, 1, 2, null, "java.lang.IllegalStateException"));
+                IntegrationEventLogBroker.KAFKA, "topic", IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.FAILED, 55L, 1, 2, null, "java.lang.IllegalStateException"));
         mvc.perform(get("/api/admin/event-logs/12").with(user(member(Role.ADMIN))))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("id").value(12)).andExpect(jsonPath("referenceId").value(55))
+                .andExpect(jsonPath("broker").value("KAFKA")).andExpect(jsonPath("route").value("CHAT"))
+                .andExpect(jsonPath("operation").value("PUBLISH")).andExpect(jsonPath("outcome").value("FAILED"))
                 .andExpect(jsonPath("errorType").value("java.lang.IllegalStateException"))
                 .andExpect(jsonPath("payload").doesNotExist()).andExpect(jsonPath("stackTrace").doesNotExist());
     }
@@ -106,7 +124,7 @@ class IntegrationEventLogSecurityTest {
     static class Config {
         @Bean spring.study.admin.facade.AdminViewFacade views() { return mock(spring.study.admin.facade.AdminViewFacade.class); }
         @Bean spring.study.admin.facade.SystemIncidentFacade incidents() { return mock(spring.study.admin.facade.SystemIncidentFacade.class); }
-        @Bean IntegrationEventLogQueryService service() { return mock(IntegrationEventLogQueryService.class); }
+        @Bean IntegrationEventLogService service() { return mock(IntegrationEventLogService.class); }
         @Bean JwtAuthenticationFilter jwtFilter() {
             return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));
         }

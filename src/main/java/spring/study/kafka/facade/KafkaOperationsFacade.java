@@ -5,7 +5,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
-import spring.study.kafka.entity.KafkaDeadLetter.Status;
+import spring.study.kafka.entity.KafkaDeadLetterStatus;
 import spring.study.kafka.service.KafkaDeadLetterService;
 import spring.study.kafka.service.KafkaMonitoringService;
 import spring.study.member.entity.Member;
@@ -27,7 +27,7 @@ public class KafkaOperationsFacade {
 
     public ResponseEntity<?> overview() { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(monitoring.overview()); }
 
-    public ResponseEntity<?> list(Status status, Long beforeId) {
+    public ResponseEntity<?> list(KafkaDeadLetterStatus status, Long beforeId) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(deadLetters.list(status, beforeId));
     }
 

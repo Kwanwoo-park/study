@@ -1,11 +1,14 @@
 package spring.study.admin.dto;
 
 import spring.study.admin.entity.IntegrationEventLog;
-import spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogBroker;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 import java.time.LocalDateTime;
 
-public record IntegrationEventLogItem(Long id, LocalDateTime occurredAt, String instanceId, Broker broker, String destination,
-                   Route route, Operation operation, Outcome outcome, Long referenceId, int itemCount,
+public record IntegrationEventLogItem(Long id, LocalDateTime occurredAt, String instanceId, IntegrationEventLogBroker broker, String destination,
+                   IntegrationEventLogRoute route, IntegrationEventLogOperation operation, IntegrationEventLogOutcome outcome, Long referenceId, int itemCount,
                    Integer attempt, Long subscriberCount, String errorType) {
     public IntegrationEventLogItem(IntegrationEventLog log) {
         this(

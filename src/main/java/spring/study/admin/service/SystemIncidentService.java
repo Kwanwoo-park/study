@@ -18,24 +18,19 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SystemIncidentService {
-    private static final int MAX_PATH_LENGTH = 500;
-    private static final int MAX_TYPE_LENGTH = 255;
-    private static final int MAX_MESSAGE_LENGTH = 1000;
-
     private final SystemIncidentRepository systemIncidentRepository;
-    private final IpLocationService ipLocationService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(IncidentRequestContext request, Exception exception) {
         Throwable cause = NestedExceptionUtils.getMostSpecificCause(exception);
         LocalDateTime occurredAt = LocalDateTime.now();
         String requestMethod = limit(valueOrDefault(request.method(), "UNKNOWN"), 10);
-        String requestPath = limit(valueOrDefault(request.path(), "UNKNOWN"), MAX_PATH_LENGTH);
+        String requestPath = limit(valueOrDefault(request.path(), "UNKNOWN"), 500);
         String requestIp = request.ipAddress();
-        String exceptionType = limit(cause.getClass().getName(), MAX_TYPE_LENGTH);
-        String errorMessage = limit(sanitize(valueOrDefault(cause.getMessage(), "메시지 없는 서버 오류")), MAX_MESSAGE_LENGTH);
-
+        String exceptionType = limit(cause.getClass().getName(), 255);
+        String errorMessage = limit(sanitize(valueOrDefault(cause.getMessage(), "메시지 없는 서버 오류")), 1000);
         SystemIncident existing = systemIncidentRepository.findFirstByRequestMethodAndRequestPathAndRequestIpAndExceptionTypeAndErrorMessageAndAcknowledgedFalse(requestMethod, requestPath, requestIp, exceptionType, errorMessage).orElse(null);
+
         if (existing != null) {
             existing.recordRecurrence(occurredAt);
             return;
@@ -53,10 +48,8 @@ public class SystemIncidentService {
     }
 
     @Transactional(readOnly = true)
-    public List<SystemIncidentResponseDto> findRecent() {
-        return systemIncidentRepository.findTop50ByOrderByOccurredAtDesc().stream()
-                .map(incident -> new SystemIncidentResponseDto(incident, ipLocationService.find(incident.getRequestIp())))
-                .toList();
+    public List<SystemIncident> findRecent() {
+        return systemIncidentRepository.findTop50ByOrderByOccurredAtDesc();
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +60,7 @@ public class SystemIncidentService {
     @Transactional
     public void acknowledge(Long id) {
         SystemIncident incident = systemIncidentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 장애 기록입니다"));
+
         if (!incident.isAcknowledged()) {
             incident.acknowledge(LocalDateTime.now());
         }

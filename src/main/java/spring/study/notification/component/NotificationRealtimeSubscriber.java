@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import spring.study.common.service.EmitterService;
 import spring.study.notification.dto.NotificationRealtimeEvent;
 import spring.study.admin.service.IntegrationEventLogService;
-import static spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 
 import java.nio.charset.StandardCharsets;
 
@@ -31,9 +33,9 @@ public class NotificationRealtimeSubscriber implements MessageListener {
             );
             notificationId = event.id();
             emitterService.save(event.memberId().toString(), event);
-            eventLogs.record(Route.REALTIME_NOTIFICATION, Operation.CONSUME, Outcome.SUCCESS, notificationId, 1, null);
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SUCCESS, notificationId, 1, null);
         } catch (Exception exception) {
-            eventLogs.record(Route.REALTIME_NOTIFICATION, Operation.CONSUME, Outcome.FAILED, notificationId, 1, exception);
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.FAILED, notificationId, 1, exception);
             log.error("Redis 실시간 알림 처리 실패", exception);
         }
     }

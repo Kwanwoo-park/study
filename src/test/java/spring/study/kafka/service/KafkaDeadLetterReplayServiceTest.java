@@ -9,7 +9,7 @@ import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.kafka.config.KafkaOperationsProperties;
 import spring.study.kafka.config.KafkaTopics;
 import spring.study.kafka.entity.KafkaDeadLetter;
-import spring.study.kafka.entity.KafkaDeadLetter.Status;
+import spring.study.kafka.entity.KafkaDeadLetterStatus;
 import spring.study.kafka.repository.KafkaDeadLetterRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -34,7 +34,7 @@ class KafkaDeadLetterReplayServiceTest {
         assertThat(sent.getValue().value()).isSameAs(payload);
         assertThat(sent.getValue().key()).isEqualTo("room");
         assertThat(new String(sent.getValue().headers().lastHeader(KafkaTopics.EVENT_ID_HEADER).value(), StandardCharsets.UTF_8)).isEqualTo("outbox-7");
-        assertThat(event.getStatus()).isEqualTo(Status.REPLAYED);
+        assertThat(event.getStatus()).isEqualTo(KafkaDeadLetterStatus.REPLAYED);
     }
     @Test
     void brokerFailureDoesNotClaimSuccessfulReplay() {
@@ -45,7 +45,7 @@ class KafkaDeadLetterReplayServiceTest {
         when(repository.findReplayBatch(any(), any(), any())).thenReturn(List.of(event));
         when(template.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.failedFuture(new IllegalStateException("down")));
         service.publishPending();
-        assertThat(event.getStatus()).isEqualTo(Status.REPLAY_PENDING);
+        assertThat(event.getStatus()).isEqualTo(KafkaDeadLetterStatus.REPLAY_PENDING);
         assertThat(event.getAttemptCount()).isEqualTo(1);
         assertThat(event.getReplayedAt()).isNull();
         assertThat(event.getNextAttemptAt()).isNotNull();

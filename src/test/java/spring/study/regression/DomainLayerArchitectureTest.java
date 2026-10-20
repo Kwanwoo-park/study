@@ -49,18 +49,18 @@ class DomainLayerArchitectureTest {
     }
 
     @Test
-    void recordsAreDeclaredInSeparateTopLevelFiles() throws Exception {
+    void recordsAndEnumsAreDeclaredInSeparateTopLevelFiles() throws Exception {
         var resolver = new PathMatchingResourcePatternResolver();
         var readers = new CachingMetadataReaderFactory(resolver);
-        int records = 0;
+        int valueTypes = 0;
         for (var resource : resolver.getResources("classpath*:spring/study/**/*.class")) {
             String name = readers.getMetadataReader(resource).getClassMetadata().getClassName();
             Class<?> type = Class.forName(name, false, getClass().getClassLoader());
-            if (!type.isRecord()) continue;
-            records++;
+            if (!type.isRecord() && !type.isEnum()) continue;
+            valueTypes++;
             assertThat(type.getEnclosingClass()).as(name).isNull();
         }
-        assertThat(records).isPositive();
+        assertThat(valueTypes).isPositive();
     }
 
     @Test

@@ -16,7 +16,10 @@ import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.dto.IntegrationEventLogItem;
 import spring.study.admin.dto.IntegrationEventLogResponse;
 import spring.study.admin.entity.IntegrationEventLog;
-import spring.study.admin.entity.IntegrationEventLog.*;
+import spring.study.admin.entity.IntegrationEventLogBroker;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
 import spring.study.admin.dto.IntegrationEventLogDiagnostics;
 import spring.study.admin.dto.IntegrationEventLogEntry;
 import spring.study.admin.repository.IntegrationEventLogRepository;
@@ -61,11 +64,11 @@ public class IntegrationEventLogService {
         pending = List.of();
     }
 
-    public void record(Route route, Operation operation, Outcome outcome, Long referenceId, int count, Throwable error) {
+    public void record(IntegrationEventLogRoute route, IntegrationEventLogOperation operation, IntegrationEventLogOutcome outcome, Long referenceId, int count, Throwable error) {
         record(route, operation, outcome, referenceId, count, null, null, error);
     }
 
-    public void record(Route route, Operation operation, Outcome outcome, Long referenceId, int count, Integer attempt, Long subscribers, Throwable error) {
+    public void record(IntegrationEventLogRoute route, IntegrationEventLogOperation operation, IntegrationEventLogOutcome outcome, Long referenceId, int count, Integer attempt, Long subscribers, Throwable error) {
         if (!enabled) return;
 
         IntegrationEventLogEntry entry = entry(route, operation, outcome, referenceId, count, attempt, subscribers, error);
@@ -73,7 +76,7 @@ public class IntegrationEventLogService {
         offer(entry);
     }
 
-    public void afterCommit(Route route, Operation operation, Outcome outcome, Long referenceId, int count,
+    public void afterCommit(IntegrationEventLogRoute route, IntegrationEventLogOperation operation, IntegrationEventLogOutcome outcome, Long referenceId, int count,
                             Integer attempt, Throwable error) {
         if (!enabled) return;
 
@@ -147,7 +150,7 @@ public class IntegrationEventLogService {
     }
 
     @Transactional(readOnly = true)
-    public IntegrationEventLogResponse find(Broker broker, Operation operation, Outcome outcome, Long beforeId, int hours) {
+    public IntegrationEventLogResponse find(IntegrationEventLogBroker broker, IntegrationEventLogOperation operation, IntegrationEventLogOutcome outcome, Long beforeId, int hours) {
         if ((beforeId != null && beforeId < 1) || hours < 1 || hours > 720) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "조회 기간과 페이지를 확인해 주세요");
         }
@@ -164,7 +167,7 @@ public class IntegrationEventLogService {
         return new IntegrationEventLogDiagnostics(enabled, instanceId, queue.size() + pendingCount, dropped.get(), storageFailures.get(), lastSavedAt);
     }
 
-    private IntegrationEventLogEntry entry(Route route, Operation operation, Outcome outcome, Long referenceId, int count, Integer attempt, Long subscribers,Throwable error) {
+    private IntegrationEventLogEntry entry(IntegrationEventLogRoute route, IntegrationEventLogOperation operation, IntegrationEventLogOutcome outcome, Long referenceId, int count, Integer attempt, Long subscribers,Throwable error) {
         String errorType = error == null ? null : NestedExceptionUtils.getMostSpecificCause(error).getClass().getName();
 
         if (errorType != null && errorType.length() > 255)
