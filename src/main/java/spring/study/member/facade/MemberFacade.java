@@ -9,16 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.account.service.AccountService;
 import spring.study.appeal.service.AppealService;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.aws.service.ImageCleanupService;
-import spring.study.aws.service.ImageUploadCleanupService;
-import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
+import spring.study.board.entity.BoardImg;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.bookreview.service.BookReviewService;
@@ -27,6 +24,8 @@ import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.collection.service.CollectionService;
 import spring.study.comment.service.CommentService;
 import spring.study.common.entity.CommonVisibility;
+import spring.study.diary.entity.Diary;
+import spring.study.diary.entity.DiaryImage;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
 import spring.study.forbidden.entity.Status;
@@ -34,7 +33,6 @@ import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
-import spring.study.member.entity.Role;
 import spring.study.jwt.facade.JwtAuthenticationFacade;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
@@ -47,7 +45,6 @@ import spring.study.mail.service.EmailVerificationService;
 import spring.study.diary.service.DiaryService;
 import spring.study.member.sanction.service.MemberSanctionService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -76,7 +73,6 @@ public class MemberFacade {
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationFacade jwtAuthenticationService;
     private final ImageCleanupService imageCleanupService;
-    private final ImageUploadCleanupService imageUploadCleanupService;
     private final TodoService todoService;
     private final EmailVerificationService emailVerificationService;
     private final DiaryService diaryService;
@@ -234,8 +230,7 @@ public class MemberFacade {
         }
     }
 
-    @Transactional
-    public ResponseEntity<?> changeProfileImage(MultipartFile file, Member member, HttpServletRequest request) {
+    public ResponseEntity<?> changeProfileImage(MultipartFile file, Member member) {
         if (imageS3Service.fileFormatCheck(file)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
@@ -243,11 +238,9 @@ public class MemberFacade {
             ));
         }
 
-        List<String> uploadedUrls = new ArrayList<>();
-        boolean rollbackCleanupRegistered = imageUploadCleanupService.registerRollbackCleanup(uploadedUrls);
+        String imageUrl = "";
         try {
-            String imageUrl = imageS3Service.uploadImageToS3(file);
-            uploadedUrls.add(imageUrl);
+            imageUrl = imageS3Service.uploadImageToS3(file);
             String oldProfile = member.getProfile();
 
             member.setProfile(imageUrl);
@@ -261,10 +254,7 @@ public class MemberFacade {
                     "result", member.getId()
             ));
         } catch (Exception e) {
-            if (TransactionSynchronizationManager.isActualTransactionActive()) {
-                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            }
-            if (!rollbackCleanupRegistered) imageUploadCleanupService.cleanupFailedUploads(uploadedUrls);
+            imageS3Service.deleteImage(imageUrl);
             log.error("profile image change failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -10L,
@@ -356,7 +346,7 @@ public class MemberFacade {
         ));
     }
 
-    public ResponseEntity<?> updatePhone(MemberRequestDto dto, HttpServletRequest request) {
+    public ResponseEntity<?> updatePhone(MemberRequestDto dto) {
         int check = validateMember2(dto);
 
         if (check == -1) {
@@ -414,7 +404,7 @@ public class MemberFacade {
     }
 
     @Transactional
-    public ResponseEntity<?> deleteMember(Member member, HttpServletRequest request) {
+    public ResponseEntity<?> deleteMember(Member member) {
         removeMemberData(member);
 
         return ResponseEntity.ok(Map.of("result", member.getId()));
@@ -434,7 +424,7 @@ public class MemberFacade {
         member = memberService.findById(member.getId());
         accountService.deleteByMember(member);
         for (Board board : member.getBoard()) {
-            imageCleanupService.enqueueAll(board.getImg().stream().map(img -> img.getImgSrc()).toList());
+            imageCleanupService.enqueueAll(board.getImg().stream().map(BoardImg::getImgSrc).toList());
             boardImgService.deleteBoard(board);
             favoriteService.deleteByBoard(board);
             replyService.deleteReplay(board.getComment());
@@ -465,9 +455,10 @@ public class MemberFacade {
                 .toList());
         collectionService.deleteByMember(member);
 
-        for (var diary : member.getDiaries()) {
-            imageCleanupService.enqueueAll(diary.getImages().stream().map(image -> image.getImageUrl()).toList());
+        for (Diary diary : member.getDiaries()) {
+            imageCleanupService.enqueueAll(diary.getImages().stream().map(DiaryImage::getImageUrl).toList());
         }
+
         diaryService.deleteByMember(member);
         todoService.deleteByMember(member);
 

@@ -7,7 +7,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.server.ResponseStatusException;
-import spring.study.appeal.dto.AppealResponseDto;
 import spring.study.appeal.entity.Appeal;
 import spring.study.appeal.facade.AppealFacade;
 import spring.study.appeal.service.AppealService;

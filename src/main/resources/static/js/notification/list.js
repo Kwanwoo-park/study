@@ -64,7 +64,8 @@ function fnDraw(data) {
     const notiUl = document.createElement('ul');
     notiUl.className = 'noti-ul';
 
-    data.list.forEach(item => {
+    data.list.forEach(original => {
+        const item = typeof fnApplyNotificationReadWatermarks === 'function' ? fnApplyNotificationReadWatermarks(original) : original;
         notificationItemsById.set(String(item.id), item);
 
         const mainLi = document.createElement('li');
@@ -73,7 +74,11 @@ function fnDraw(data) {
         const clickDiv = document.createElement('div');
         clickDiv.onclick = async function() {
             const updated = await fnReadSilent(item.id);
-            if (updated) fnApplyNotificationReadState(item.id);
+            if (!updated) {
+                alert('알림 읽음 처리에 실패했습니다. 다시 시도해주세요.');
+                return;
+            }
+            fnApplyNotificationReadState(item.id);
             fnNotificationMove(item.notiGroup, item.url);
         }
 
@@ -165,7 +170,8 @@ function fnUpdateGroupUnreadCounts(list) {
         notificationGroupUnreadCounts[group] = 0;
     });
 
-    list.forEach(item => {
+    list.forEach(original => {
+        const item = typeof fnApplyNotificationReadWatermarks === 'function' ? fnApplyNotificationReadWatermarks(original) : original;
         notificationItemsById.set(String(item.id), item);
         if (item.readStatus == 'UNREAD' && notificationGroupUnreadCounts[item.notiGroup] != null) {
             notificationGroupUnreadCounts[item.notiGroup] += 1;
@@ -205,29 +211,50 @@ function fnApplyNotificationReadState(id) {
 
 function fnHandleIncomingNotificationCount(notification) {
     const key = String(notification.id);
-    if (notificationItemsById.has(key)) return;
+    const previous = notificationItemsById.get(key);
+    if (previous && typeof fnNotificationRevisionKey === 'function'
+            && fnNotificationRevisionKey(notification.updateTime || notification.registerTime)
+                < fnNotificationRevisionKey(previous.updateTime || previous.registerTime)) return;
+
+    if (notification.readStatus === 'READ') {
+        fnApplyNotificationReadState(notification.id);
+        notificationItemsById.set(key, notification);
+        return;
+    }
 
     notificationItemsById.set(key, notification);
 
     const group = notification.notiGroup;
     const readStatus = notification.readStatus || 'UNREAD';
-    if (readStatus == 'UNREAD' && notificationGroupUnreadCounts[group] != null) {
+    if (readStatus == 'UNREAD' && (!previous || previous.readStatus === 'READ') && notificationGroupUnreadCounts[group] != null) {
         notificationGroupUnreadCounts[group] += 1;
         fnRenderGroupUnreadCounts();
+        const button = document.getElementById(notification.id);
+        if (button) {
+            button.disabled = false;
+            button.innerText = '읽음으로 표시';
+            button.onclick = () => fnRead(notification.id);
+        }
     }
+}
+
+function fnApplyNotificationReadEvent(read) {
+    notificationItemsById.forEach(item => {
+        if (fnNotificationMatchesRead(item, read)) fnApplyNotificationReadState(item.id);
+    });
 }
 
 function fnAllRead() {
     fetch(`/api/notification/mark-all-as-read`, {
         method: 'PATCH',
         headers: {
-            "Content-Type": "appllication/json; charset=utf-8",
+            "Content-Type": "application/json; charset=utf-8",
         },
         credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
-        if (json['result'] > 0) {
+        if (json['result'] >= 0) {
             alert('알림이 모두 읽음으로 표시되었습니다');
             window.location.reload();
         } else {

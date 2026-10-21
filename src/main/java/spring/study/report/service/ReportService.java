@@ -2,7 +2,6 @@ package spring.study.report.service;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -10,14 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.member.entity.Member;
-import spring.study.member.entity.Role;
-import spring.study.member.event.MemberChangedEvent;
-import spring.study.member.repository.MemberRepository;
-import spring.study.member.sanction.entity.MemberSanction;
-import spring.study.member.sanction.repository.MemberSanctionRepository;
-import spring.study.board.repository.BoardRepository;
-import spring.study.comment.repository.CommentRepository;
-import spring.study.chat.repository.ChatMessageRepository;
 import spring.study.report.dto.ReportProcessRequestDto;
 import spring.study.report.dto.ReportRequestDto;
 import spring.study.report.dto.ReportResponseDto;
@@ -26,11 +17,8 @@ import spring.study.report.entity.ReportReason;
 import spring.study.report.entity.ReportStatus;
 import spring.study.report.entity.ReportAction;
 import spring.study.report.repository.ReportRepository;
-import spring.study.notification.entity.Group;
-import spring.study.notification.service.NotificationService;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service

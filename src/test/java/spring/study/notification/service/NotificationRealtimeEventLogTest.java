@@ -12,6 +12,8 @@ import spring.study.common.service.EmitterService;
 import spring.study.member.entity.Member;
 import spring.study.notification.component.NotificationRealtimeSubscriber;
 import spring.study.notification.dto.NotificationRealtimeEvent;
+import spring.study.notification.dto.NotificationReadState;
+import java.time.LocalDateTime;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Status;
@@ -35,6 +37,20 @@ class NotificationRealtimeEventLogTest {
         notification.setId(9L); notification.setMember(Member.builder().id(7L).build());
         notification.setMessage("private body"); notification.setReadStatus(Status.values()[0]);
         notification.setNotiGroup(Group.values()[0]); return notification;
+    }
+
+    @Test
+    void readStatePublishedToRedisIsAppliedByAnotherServersSubscriber() throws Exception {
+        var read = new NotificationReadState(7L, null, "CHAT", "room", LocalDateTime.now());
+        when(redis.convertAndSend(eq(NotificationRealtimePublisher.READ_CHANNEL), anyString())).thenReturn(2L);
+        publisher.publishReadState(read);
+        var payload = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(redis).convertAndSend(eq(NotificationRealtimePublisher.READ_CHANNEL), payload.capture());
+        EmitterService otherServer = mock(EmitterService.class);
+        new NotificationRealtimeSubscriber(mapper, otherServer, logs).onMessage(new DefaultMessage(
+                NotificationRealtimePublisher.READ_CHANNEL.getBytes(StandardCharsets.UTF_8),
+                payload.getValue().getBytes(StandardCharsets.UTF_8)), null);
+        verify(otherServer).applyReadState(read);
     }
 
     @Test

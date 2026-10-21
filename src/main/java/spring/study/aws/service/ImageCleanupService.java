@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.aws.entity.ImageCleanupTask;
 import spring.study.aws.repository.ImageCleanupTaskRepository;
@@ -17,7 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ImageCleanupService {
     private final ImageCleanupTaskRepository repository;
-    private final ImageS3Service imageS3Service;
 
     @Transactional(readOnly = true)
     public long countPending() {
@@ -26,36 +24,34 @@ public class ImageCleanupService {
 
     @Transactional
     public void enqueue(String imageUrl) {
-        if (imageUrl != null && !imageUrl.isBlank()) repository.save(new ImageCleanupTask(imageUrl));
+        if (imageUrl != null && !imageUrl.isBlank())
+            repository.save(ImageCleanupTask
+                    .builder()
+                    .imageUrl(imageUrl)
+                    .build());
     }
 
     @Transactional
     public void enqueueAll(Collection<String> imageUrls) {
-        if (imageUrls == null) return;
+        if (imageUrls == null)
+            return;
+
         List<ImageCleanupTask> tasks = imageUrls.stream()
                 .filter(url -> url != null && !url.isBlank())
                 .distinct()
                 .map(ImageCleanupTask::new)
                 .toList();
+
         repository.saveAll(tasks);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void enqueueFailedUploads(Collection<String> imageUrls) {
-        // Compensation must survive the failed business transaction, including afterCompletion.
-        enqueueAll(imageUrls);
+    @Transactional(readOnly = true)
+    public List<ImageCleanupTask> findTask(PageRequest request) {
+        return repository.findNextBatchForUpdate(request);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void processNextBatch() {
-        for (ImageCleanupTask task : repository.findNextBatchForUpdate(PageRequest.of(0, 100))) {
-            try {
-                imageS3Service.deleteImage(task.getImageUrl());
-                repository.delete(task);
-            } catch (Exception exception) {
-                task.recordFailure(exception.getMessage());
-                log.warn("S3 image cleanup will be retried. taskId={}", task.getId(), exception);
-            }
-        }
+    @Transactional
+    public void deleteTask(ImageCleanupTask task) {
+        repository.delete(task);
     }
 }

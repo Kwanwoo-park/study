@@ -7,10 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import spring.study.admin.dto.SystemIncidentResponseDto;
 import spring.study.admin.entity.SystemIncident;
 import spring.study.admin.repository.SystemIncidentRepository;
-import spring.study.common.service.IpLocationService;
 
 import java.time.LocalDateTime;
 import java.util.List;

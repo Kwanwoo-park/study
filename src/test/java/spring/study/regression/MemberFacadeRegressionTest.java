@@ -18,7 +18,6 @@ import spring.study.member.facade.MemberFacade;
 import spring.study.member.service.MemberService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -90,7 +89,7 @@ class MemberFacadeRegressionTest {
         when(memberService.findMember("a@test.com")).thenReturn(member);
         when(memberService.updatePhoneAndBirth(1L, "010-9999-8888", "2000-01-01")).thenReturn(-2);
 
-        var response = memberFacade.updatePhone(dto, request);
+        var response = memberFacade.updatePhone(dto);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }

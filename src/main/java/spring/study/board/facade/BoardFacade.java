@@ -17,7 +17,6 @@ import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
 import spring.study.common.facade.ModerationFacade;
 import spring.study.common.service.VisibilityAccessPolicy;
-import spring.study.favorite.entity.Favorite;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.service.FollowService;
 import spring.study.member.entity.Member;
@@ -28,7 +27,6 @@ import spring.study.reply.service.ReplyService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor

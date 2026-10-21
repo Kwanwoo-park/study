@@ -4,6 +4,7 @@ public enum IntegrationEventLogRoute {
     CHAT(IntegrationEventLogBroker.KAFKA, "topic"),
     NOTIFICATION(IntegrationEventLogBroker.KAFKA, "topic2"),
     REALTIME_NOTIFICATION(IntegrationEventLogBroker.REDIS, "notification-events"),
+    REALTIME_NOTIFICATION_READ(IntegrationEventLogBroker.REDIS, "notification-read-events"),
     UNKNOWN_KAFKA(IntegrationEventLogBroker.KAFKA, "unknown");
 
     public final IntegrationEventLogBroker broker;

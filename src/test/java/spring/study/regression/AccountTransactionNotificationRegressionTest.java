@@ -6,7 +6,6 @@ import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
 import spring.study.account.entity.AccountTransactionType;
-import spring.study.account.repository.AccountRepository;
 import spring.study.account.repository.AccountTransactionRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;

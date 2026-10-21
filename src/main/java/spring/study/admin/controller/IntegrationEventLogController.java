@@ -10,7 +10,6 @@ import spring.study.admin.entity.IntegrationEventLogBroker;
 import spring.study.admin.entity.IntegrationEventLogOperation;
 import spring.study.admin.entity.IntegrationEventLogOutcome;
 
-import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController

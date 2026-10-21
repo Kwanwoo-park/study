@@ -1,27 +1,19 @@
 package spring.study.account.service;
 
 import org.junit.jupiter.api.Test;
-import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountStatus;
-import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountType;
 import spring.study.account.repository.AccountRepository;
 import spring.study.account.repository.AccountTransactionRepository;
-import spring.study.member.entity.Member;
 import spring.study.notification.service.NotificationService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class AccountInterestServiceTest {
     private final AccountRepository accountRepository = mock(AccountRepository.class);

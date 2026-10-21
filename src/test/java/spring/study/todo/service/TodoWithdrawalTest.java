@@ -29,7 +29,7 @@ class TodoWithdrawalTest {
         Member managed = Member.builder().id(7L).email("owner@example.test").build();
         when(members.findById(7L)).thenReturn(managed);
 
-        facade.deleteMember(principal, null);
+        facade.deleteMember(principal);
 
         var ordered = inOrder(members, accounts, diaries, todos);
         ordered.verify(members).findById(7L);

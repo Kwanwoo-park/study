@@ -6,6 +6,8 @@ import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.common.repository.EmitterRepository;
+import spring.study.notification.dto.NotificationReadState;
+import spring.study.notification.dto.NotificationRealtimeEvent;
 
 import java.io.IOException;
 import java.util.Map;
@@ -19,10 +21,27 @@ public class EmitterService {
 
     public void save(String id, Object notification) {
         Map<String, SseEmitter> sseEmitters = emitterRepository.findAllEmitterStartWithById(id);
-        if (!sseEmitters.isEmpty()) emitterRepository.saveEventCache(id, notification);
+        if (sseEmitters.isEmpty()) return;
+        Object accepted = emitterRepository.saveEventCache(id, notification);
+        if (accepted == null) return;
         sseEmitters.forEach((key, emitter) -> {
-            sendToClient(emitter, key, notification);
+            sendToClient(emitter, key, accepted);
         });
+    }
+
+    public void applyReadState(NotificationReadState read) {
+        if (!emitterRepository.applyReadState(read)) return;
+        emitterRepository.findAllEmitterStartWithById(read.memberId().toString()).forEach((key, emitter) -> {
+            try {
+                emitter.send(SseEmitter.event().name("notification-read").data(read));
+            } catch (IOException | IllegalStateException exception) {
+                disconnect(read.memberId().toString(), key);
+            }
+        });
+    }
+
+    public void cleanupEventCache() {
+        emitterRepository.cleanupExpired();
     }
 
     private void sendToClient(SseEmitter emitter, String emitterId, Object data) {
@@ -63,7 +82,9 @@ public class EmitterService {
 
         Map<String, Object> events = emitterRepository.findAllEventCacheStartWithById(id);
 
-        events.values().forEach(event -> sendToClient(emitter, emitterId, event));
+        events.values().stream()
+                .filter(event -> !(event instanceof NotificationRealtimeEvent notification) || !"READ".equals(notification.readStatus()))
+                .forEach(event -> sendToClient(emitter, emitterId, event));
 
         try {
             emitter.send(SseEmitter.event().reconnectTime(3000).name("connect").data("connected"));

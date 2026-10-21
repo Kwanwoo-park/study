@@ -4,7 +4,6 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import spring.study.chat.dto.ChatMessageResponseDto;
-import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageImg;
 import spring.study.chat.repository.ChatMessageImgRepository;
 

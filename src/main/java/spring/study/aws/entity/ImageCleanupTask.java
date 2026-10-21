@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,6 +33,7 @@ public class ImageCleanupTask {
     @Column(name = "last_error", length = 1000)
     private String lastError;
 
+    @Builder
     public ImageCleanupTask(String imageUrl) {
         this.imageUrl = imageUrl;
         this.createdAt = LocalDateTime.now();

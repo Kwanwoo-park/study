@@ -1,34 +1,33 @@
 package spring.study.aws.facade;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import spring.study.aws.entity.ImageCleanupTask;
+import spring.study.aws.service.ImageCleanupService;
 import spring.study.aws.service.ImageS3Service;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Locale;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageFacade {
     private final ImageS3Service imageS3Service;
+    private final ImageCleanupService cleanupService;
 
-    public ResponseEntity<byte[]> getImage(String name, String extension) throws IOException {
-        byte[] bytes = imageS3Service.readImage(name);
-        HttpHeaders headers = new HttpHeaders();
-        switch (extension.toLowerCase(Locale.ROOT)) {
-            case "jpg", "jpeg" -> headers.setContentType(MediaType.IMAGE_JPEG);
-            case "gif" -> headers.setContentType(MediaType.IMAGE_GIF);
-            case "png" -> headers.setContentType(MediaType.IMAGE_PNG);
-            default -> headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void processNextBatch() {
+        for (ImageCleanupTask task : cleanupService.findTask(PageRequest.of(0, 100))) {
+            try {
+                imageS3Service.deleteImage(task.getImageUrl());
+                cleanupService.deleteTask(task);
+            } catch (Exception exception) {
+                task.recordFailure(exception.getMessage());
+                log.warn("S3 image cleanup will be retried. taskId={}", task.getId(), exception);
+            }
         }
-        headers.setContentLength(bytes.length);
-        headers.setContentDispositionFormData("attachment", URLEncoder.encode(name, StandardCharsets.UTF_8).replace("+", "%20"));
-        return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
     }
 }

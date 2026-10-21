@@ -13,9 +13,11 @@ import spring.study.notification.repository.NotificationRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -25,7 +27,8 @@ class NotificationServiceTest {
 
     private final NotificationRepository notificationRepository = mock(NotificationRepository.class);
     private final MessageProducer producer = mock(MessageProducer.class);
-    private final NotificationService notificationService = new NotificationService(notificationRepository, producer);
+    private final NotificationReadStateService readStates = mock(NotificationReadStateService.class);
+    private final NotificationService notificationService = new NotificationService(notificationRepository, producer, readStates);
 
     @Test
     void createNotificationShouldUpdateExistingUnreadNotificationForSameTarget() {
@@ -97,22 +100,24 @@ class NotificationServiceTest {
         Member member = createMember(1L, "member@test.com");
 
         when(notificationRepository.updateReadStatusByMemberAndGroupAndUrl(
-                member,
-                Group.CHAT,
-                "room-1",
-                Status.UNREAD,
-                Status.READ
+                eq(member),
+                eq(Group.CHAT),
+                eq("room-1"),
+                eq(Status.UNREAD),
+                eq(Status.READ),
+                any(LocalDateTime.class)
         )).thenReturn(1);
 
         int result = notificationService.updateReadByGroupAndUrl(member, Group.CHAT, "room-1");
 
         assertThat(result).isEqualTo(1);
         verify(notificationRepository).updateReadStatusByMemberAndGroupAndUrl(
-                member,
-                Group.CHAT,
-                "room-1",
-                Status.UNREAD,
-                Status.READ
+                eq(member),
+                eq(Group.CHAT),
+                eq("room-1"),
+                eq(Status.UNREAD),
+                eq(Status.READ),
+                any(LocalDateTime.class)
         );
     }
 

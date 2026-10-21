@@ -91,7 +91,7 @@ public class MemberAuthFacade {
     }
 
     public ResponseEntity<?> withdraw(Member member, HttpServletRequest request, HttpServletResponse response) {
-        ResponseEntity<?> result = memberFacade.deleteMember(member, request);
+        ResponseEntity<?> result = memberFacade.deleteMember(member);
         jwtAuthenticationService.logout(request, response);
 
         return result;

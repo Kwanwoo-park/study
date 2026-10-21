@@ -70,6 +70,7 @@ public class RedisConfig {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(subscriber, new ChannelTopic(NotificationRealtimePublisher.CHANNEL));
+        container.addMessageListener(subscriber, new ChannelTopic(NotificationRealtimePublisher.READ_CHANNEL));
         return container;
     }
 }

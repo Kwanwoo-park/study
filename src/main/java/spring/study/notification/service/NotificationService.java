@@ -12,10 +12,10 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.entity.Status;
 import spring.study.notification.repository.NotificationRepository;
+import spring.study.notification.dto.NotificationReadState;
 import spring.study.common.exception.ResourceNotFoundException;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
 
@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageRequest;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final MessageProducer producer;
+    private final NotificationReadStateService readStateService;
 
     @Transactional
     public Notification createNotification(Member member, String message, Group group) {
@@ -80,12 +81,15 @@ public class NotificationService {
 
     @Transactional
     public void updateRead(Notification notification) {
-        notification.changeToRead();
+        updateRead(notification.getId());
     }
 
     @Transactional
     public int updateAllRead(Member member) {
-        return notificationRepository.updateAll(member.getId(), Status.READ);
+        LocalDateTime readBefore = LocalDateTime.now();
+        int updated = notificationRepository.updateAll(member.getId(), Status.READ, readBefore);
+        readStateService.afterCommit(new NotificationReadState(member.getId(), null, null, null, readBefore));
+        return updated;
     }
 
     @Transactional
@@ -94,13 +98,17 @@ public class NotificationService {
             return 0;
         }
 
-        return notificationRepository.updateReadStatusByMemberAndGroupAndUrl(
+        LocalDateTime readBefore = LocalDateTime.now();
+        int updated = notificationRepository.updateReadStatusByMemberAndGroupAndUrl(
                 member,
                 group,
                 url,
                 Status.UNREAD,
-                Status.READ
+                Status.READ,
+                readBefore
         );
+        readStateService.afterCommit(new NotificationReadState(member.getId(), null, group.name(), url, readBefore));
+        return updated;
     }
 
     @Transactional
@@ -113,7 +121,7 @@ public class NotificationService {
                 url,
                 Status.UNREAD
         ).map(notification -> {
-            notification.changeToRead();
+            markAsRead(notification);
             producer.sendNotification(notification);
             return 1;
         }).orElse(0);
@@ -121,11 +129,21 @@ public class NotificationService {
 
     @Transactional
     public void updateRead(Long id) {
-        Notification notification = notificationRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
+        Notification notification = notificationRepository.findForReadById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 알림입니다"
         ));
 
+        markAsRead(notification);
+    }
+
+    private void markAsRead(Notification notification) {
+        // Capture scalars inside the transaction; never retain a lazy entity in the callback.
+        LocalDateTime readBefore = LocalDateTime.now();
+        LocalDateTime revision = notification.getUpdateTime() == null ? notification.getRegisterTime() : notification.getUpdateTime();
+        if (revision != null && revision.isAfter(readBefore)) readBefore = revision;
         notification.changeToRead();
+        readStateService.afterCommit(new NotificationReadState(
+                notification.getMember().getId(), notification.getId(), null, null, readBefore));
     }
 
     @Transactional(readOnly = true)

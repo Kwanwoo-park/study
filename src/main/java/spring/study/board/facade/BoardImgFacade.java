@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
-import spring.study.aws.service.ImageCleanupService;
 import spring.study.board.entity.Board;
 import spring.study.board.entity.BoardImg;
 import spring.study.board.service.BoardImgService;
@@ -15,7 +14,6 @@ import spring.study.board.service.BoardService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -27,7 +25,6 @@ public class BoardImgFacade {
     private final BoardService boardService;
     private final BoardImgService boardImgService;
     private final ImageS3Service imageS3Service;
-    private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<Map<String, Object>> imageSave(List<MultipartFile> files, Long id, Member member) {
         int check = imageS3Service.fileSizeCheck(files);
@@ -60,6 +57,7 @@ public class BoardImgFacade {
         }
 
         List<String> uploadedUrls = new ArrayList<>();
+
         try {
             for (MultipartFile file : files) {
                 String imageUrl = imageS3Service.uploadImageToS3(file);
@@ -76,7 +74,7 @@ public class BoardImgFacade {
                     "result", files.size()
             ));
         } catch (Exception e) {
-            imageCleanupService.enqueueAll(uploadedUrls);
+            imageS3Service.deleteImgSrc(uploadedUrls);
             log.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -1,

@@ -1,19 +1,14 @@
 package spring.study.account.service;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import spring.study.account.dto.AccountTranDto;
 import spring.study.account.dto.AccountResponseDto;
 import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountType;
 import spring.study.account.entity.AccountStatus;
-import spring.study.account.entity.AccountTransaction;
-import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.repository.AccountRepository;
-import spring.study.account.repository.AccountTransactionRepository;
 import spring.study.member.entity.Member;
-import spring.study.notification.service.NotificationService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

@@ -16,8 +16,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.transaction.support.TransactionTemplate;
-import spring.study.account.entity.Account;
 import spring.study.account.repository.AccountRepository;
 import spring.study.notification.service.NotificationService;
 

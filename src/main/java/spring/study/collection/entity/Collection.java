@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.minidev.json.annotate.JsonIgnore;
 import spring.study.common.entity.BasetimeEntity;
 import spring.study.member.entity.Member;
 

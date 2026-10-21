@@ -2,7 +2,6 @@ package spring.study.report.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -13,7 +12,6 @@ import org.springframework.web.server.ResponseStatusException;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.entity.MemberStatus;
-import spring.study.member.entity.Member;
 import spring.study.member.repository.MemberRepository;
 import spring.study.member.sanction.entity.MemberSanction;
 import spring.study.member.sanction.repository.MemberSanctionRepository;

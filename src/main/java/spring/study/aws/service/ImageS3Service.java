@@ -79,11 +79,13 @@ public class ImageS3Service {
 
     public String uploadImageToS3(MultipartFile image) throws IOException{
         String originName = image.getOriginalFilename();
+
         if (originName == null || originName.isBlank()) {
             throw new IOException("image original filename is empty");
         }
 
         String ext = StringUtils.getFilenameExtension(originName);
+
         if (ext == null || ext.isBlank()) {
             throw new IOException("image extension is empty");
         }

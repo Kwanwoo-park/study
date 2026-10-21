@@ -53,7 +53,7 @@ public class MemberApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return memberFacade.changeProfileImage(file, member, request);
+        return memberFacade.changeProfileImage(file, member);
     }
 
     @GetMapping("/find/email")
@@ -106,7 +106,7 @@ public class MemberApiController {
 
     @PatchMapping("/updatePhone")
     public ResponseEntity<?> updatePhone(@RequestBody @Valid MemberRequestDto memberUpdateDto, HttpServletRequest request) {
-        return memberFacade.updatePhone(memberUpdateDto, request);
+        return memberFacade.updatePhone(memberUpdateDto);
     }
 
     @PatchMapping("/visibility")

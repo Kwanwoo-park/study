@@ -12,6 +12,75 @@ let incomingAudioRingtoneInterval = null;
 let audioCallNotificationPreference = null;
 let audioCallNotificationPreferenceRequest = null;
 const incomingAudioSystemNotifications = new Map();
+const notificationReadWatermarks = new Map();
+const notificationLatestEvents = new Map();
+
+function fnNotificationRevisionKey(value) {
+    if (!value) return '';
+    const [whole, fraction = ''] = String(value).split('.');
+    return `${whole}.${fraction.padEnd(9, '0')}`;
+}
+
+function fnNotificationMatchesRead(notification, read) {
+    if (read.notificationId != null && String(read.notificationId) !== String(notification.id)) return false;
+    if (read.notiGroup != null && (read.notiGroup !== notification.notiGroup || read.url !== notification.url)) return false;
+    const revision = fnNotificationRevisionKey(notification.updateTime || notification.registerTime);
+    return !revision || revision <= fnNotificationRevisionKey(read.readBefore);
+}
+
+function fnApplyNotificationReadWatermarks(notification) {
+    const latest = notificationLatestEvents.get(String(notification.id));
+    if (latest && latest.readStatus === 'READ'
+            && fnNotificationRevisionKey(latest.updateTime || latest.registerTime)
+                >= fnNotificationRevisionKey(notification.updateTime || notification.registerTime)) {
+        return {...notification, readStatus: 'READ'};
+    }
+    for (const read of notificationReadWatermarks.values()) {
+        if (fnNotificationMatchesRead(notification, read)) return {...notification, readStatus: 'READ'};
+    }
+    return notification;
+}
+
+function fnAcceptNotificationEvent(notification) {
+    const key = String(notification.id);
+    const previous = notificationLatestEvents.get(key);
+    if (previous) {
+        const order = fnNotificationRevisionKey(notification.updateTime || notification.registerTime)
+            .localeCompare(fnNotificationRevisionKey(previous.updateTime || previous.registerTime));
+        if (order < 0 || (order === 0 && previous.readStatus === 'READ' && notification.readStatus !== 'READ')) return false;
+        if (order === 0 && previous.readStatus === notification.readStatus && previous.message === notification.message && previous.url === notification.url) return false;
+    }
+    notificationLatestEvents.set(key, notification);
+    if (notificationLatestEvents.size > 1000) notificationLatestEvents.delete(notificationLatestEvents.keys().next().value);
+    return true;
+}
+
+function fnHandleNotificationReadEvent(read) {
+    if (!read || !read.readBefore) return;
+    const key = read.notificationId != null ? `id:${read.notificationId}`
+        : read.notiGroup != null ? `target:${read.notiGroup}:${read.url}` : 'all';
+    const previous = notificationReadWatermarks.get(key);
+    if (previous && fnNotificationRevisionKey(previous.readBefore) >= fnNotificationRevisionKey(read.readBefore)) return;
+    notificationReadWatermarks.set(key, read);
+    notificationLatestEvents.forEach((notification, id) => {
+        if (fnNotificationMatchesRead(notification, read)) notificationLatestEvents.set(id, {...notification, readStatus: 'READ'});
+    });
+
+    const banner = document.getElementById('notification-banner');
+    if (banner && banner.dataset.notification) {
+        try {
+            if (fnNotificationMatchesRead(JSON.parse(banner.dataset.notification), read)) banner.classList.add('d-none');
+        } catch (error) {
+            console.error('알림 표시 상태 처리 오류:', error);
+        }
+    }
+    if (activeIncomingAudioCall && activeIncomingAudioCall.notificationId != null && fnNotificationMatchesRead({
+        id: activeIncomingAudioCall.notificationId, notiGroup: 'CALL', url: activeIncomingAudioCall.url,
+        registerTime: activeIncomingAudioCall.registerTime, updateTime: activeIncomingAudioCall.updateTime
+    }, read)) fnCloseIncomingAudioCall(activeIncomingAudioCall.callId);
+    if (typeof fnApplyNotificationReadEvent === 'function') fnApplyNotificationReadEvent(read);
+    fnUpdateUnreadNotificationDot();
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     fnInitThemeSelector();
@@ -21,9 +90,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const eventSource = new EventSource('/api/notification/stream');
 
+    eventSource.addEventListener('notification-read', function(event) {
+        try {
+            fnHandleNotificationReadEvent(JSON.parse(event.data));
+        } catch (error) {
+            console.error('알림 읽음 동기화 오류:', error);
+        }
+    });
+
     eventSource.addEventListener('notification', function(event) {
         try {
-            let json = JSON.parse(event.data);
+            let json = fnApplyNotificationReadWatermarks(JSON.parse(event.data));
+            if (!fnAcceptNotificationEvent(json)) return;
             const notificationId = json['id'];
             const notificationMessage = json['message'];
             const notificationGroup = json['notiGroup'];
@@ -34,6 +112,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (notificationMessage) {
                 fnUpdateUnreadNotificationDot();
                 if (typeof fnHandleIncomingNotificationCount === 'function') fnHandleIncomingNotificationCount(json);
+                if (notificationReadStatus === 'READ') {
+                    if (typeof fnApplyNotificationReadState === 'function') fnApplyNotificationReadState(notificationId);
+                    const banner = document.getElementById('notification-banner');
+                    if (banner && String(banner.dataset.notificationId) === String(notificationId)) banner.classList.add('d-none');
+                }
                 if (isAudioCall) {
                     if (notificationReadStatus === 'READ' && typeof fnApplyNotificationReadState === 'function') {
                         fnApplyNotificationReadState(notificationId);
@@ -52,6 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 notificationBanner.classList.remove('d-none');
                 notificationBanner.style.cursor = 'pointer';
                 notificationBanner.dataset.notificationId = notificationId || '';
+                notificationBanner.dataset.notification = JSON.stringify(json);
                 notificationBanner.onclick = function() {
                     notificationBanner.classList.add('d-none');
                     fnMoveNotificationAfterRead(notificationId, notificationGroup, notificationUrl);
@@ -122,11 +206,16 @@ async function fnHandleAudioCallRealtime(notification) {
         return;
     }
 
+    // A read/ended event can arrive while the preference and incoming-call requests are in flight.
+    if (fnApplyNotificationReadWatermarks(notification).readStatus === 'READ') return;
+
     fnShowIncomingAudioCall({
         callId: details.callId,
         roomId: details.roomId,
         url: details.url,
         notificationId: notification.id,
+        registerTime: notification.registerTime,
+        updateTime: notification.updateTime,
         callerName: activeSignal.senderName || activeSignal.senderEmail || '상대방'
     });
 }
@@ -565,7 +654,11 @@ function fnMarkNotificationAsRead(id) {
 }
 
 function fnMoveNotificationAfterRead(id, group, url) {
-    fnMarkNotificationAsRead(id).finally(() => {
+    fnMarkNotificationAsRead(id).then(updated => {
+        if (!updated) {
+            alert('알림 읽음 처리에 실패했습니다. 다시 시도해주세요.');
+            return;
+        }
         fnNotificationMove(group, url);
     });
 }

@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spring.study.admin.entity.SystemIncident;
 import spring.study.admin.repository.SystemIncidentRepository;
-import spring.study.common.service.IpLocationService;
 
 import java.time.LocalDateTime;
 import java.util.Optional;

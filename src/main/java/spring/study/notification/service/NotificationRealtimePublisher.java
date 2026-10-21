@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
 import spring.study.notification.dto.NotificationRealtimeEvent;
+import spring.study.notification.dto.NotificationReadState;
 import spring.study.notification.entity.Notification;
 import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.admin.entity.IntegrationEventLogOperation;
@@ -23,6 +24,7 @@ import spring.study.admin.entity.IntegrationEventLogRoute;
 @RequiredArgsConstructor
 public class NotificationRealtimePublisher {
     public static final String CHANNEL = "notification-events";
+    public static final String READ_CHANNEL = "notification-read-events";
     private static final DefaultRedisScript<Long> PUBLISH_ONCE = new DefaultRedisScript<>("""
             if redis.call('EXISTS', KEYS[1]) == 1 then return -1 end
             local subscribers = redis.call('PUBLISH', ARGV[1], ARGV[2])
@@ -37,6 +39,21 @@ public class NotificationRealtimePublisher {
 
     public void publish(Notification notification) {
         publish(notification, null);
+    }
+
+    public void publishReadState(NotificationReadState read) {
+        try {
+            Long subscribers = redisTemplate.convertAndSend(READ_CHANNEL, objectMapper.writeValueAsString(read));
+            if (subscribers == null || subscribers == 0) throw new IllegalStateException("No notification read subscribers available");
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION_READ, IntegrationEventLogOperation.PUBLISH,
+                    IntegrationEventLogOutcome.SUCCESS, read.notificationId(), 1, null, subscribers, null);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Notification read state serialization failed", exception);
+        } catch (RuntimeException exception) {
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION_READ, IntegrationEventLogOperation.PUBLISH,
+                    IntegrationEventLogOutcome.FAILED, read.notificationId(), 1, exception);
+            throw exception;
+        }
     }
 
     public void publish(Notification notification, String eventId) {
