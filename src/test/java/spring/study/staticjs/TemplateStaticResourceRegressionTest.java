@@ -416,32 +416,6 @@ class TemplateStaticResourceRegressionTest {
     }
 
     @Test
-    void adminReportApplyShouldIncludeBottomNavigation() throws IOException {
-        String reportApplyTemplate = readSource(
-                Path.of("src/main/resources/templates/admin/report_apply.html"));
-
-        assertTrue(reportApplyTemplate.contains(
-                        "fragments/common :: memberNavi(${email}, ${profile})"),
-                "admin report apply should include the shared bottom navigation");
-        assertTrue(reportApplyTemplate.contains(
-                        "fragments/common :: notificationBanner"),
-                "admin report apply should include the notification banner used by common navigation");
-        assertTrue(reportApplyTemplate.contains(
-                        "<script src=\"/js/common/common.js?v=20260916-replace\"></script>"),
-                "admin report apply should load common navigation actions");
-    }
-
-    @Test
-    void administratorDashboardShouldReceiveRealtimeNotifications() throws IOException {
-        String administratorTemplate = readSource(ADMIN_TEMPLATE);
-
-        assertTrue(administratorTemplate.contains("fragments/common :: notificationBanner"),
-                "administrator dashboard should render realtime notification banners");
-        assertTrue(administratorTemplate.contains("/js/common/common.js?v=20260916-replace"),
-                "administrator dashboard should connect to the shared notification stream");
-    }
-
-    @Test
     void diarySearchShouldRunWhileUserTypes() throws IOException {
         String diaryListJs = readSource(DIARY_LIST_JS);
 

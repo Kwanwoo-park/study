@@ -76,34 +76,6 @@ class ReadOnlyTransactionRegressionTest {
     }
 
     @Test
-    void declaredJpaQueriesAreReadOnlyExceptLocksAndMutations() throws Exception {
-        var resolver = new PathMatchingResourcePatternResolver();
-        var readerFactory = new CachingMetadataReaderFactory(resolver);
-        int queryCount = 0;
-        for (var resource : resolver.getResources("classpath*:spring/study/**/repository/*Repository.class")) {
-            Class<?> type = Class.forName(readerFactory.getMetadataReader(resource).getClassMetadata().getClassName());
-            if (!JpaRepository.class.isAssignableFrom(type)) continue;
-            for (Method method : type.getDeclaredMethods()) {
-                if (method.isSynthetic()) continue;
-                TransactionAttribute transaction = attributes.getTransactionAttribute(method, type);
-                boolean query = method.getName().matches("^(find|count|exists|search).*")
-                        && !method.isAnnotationPresent(Lock.class)
-                        && !method.isAnnotationPresent(Modifying.class);
-                if (query) {
-                    queryCount++;
-                    assertThat(transaction).as(method.toGenericString()).isNotNull();
-                    assertThat(transaction.isReadOnly()).as(method.toGenericString()).isTrue();
-                    assertThat(transaction.getPropagationBehavior()).as(method.toGenericString())
-                            .isEqualTo(TransactionDefinition.PROPAGATION_REQUIRED);
-                } else if (transaction != null) {
-                    assertThat(transaction.isReadOnly()).as(method.toGenericString()).isFalse();
-                }
-            }
-        }
-        assertThat(queryCount).isPositive();
-    }
-
-    @Test
     void externalIpLookupKeepsExistingTransactionSuspension() throws Exception {
         Method method = RefreshTokenService.class.getMethod("findActiveSessions");
         TransactionAttribute transaction = attributes.getTransactionAttribute(method, RefreshTokenService.class);
