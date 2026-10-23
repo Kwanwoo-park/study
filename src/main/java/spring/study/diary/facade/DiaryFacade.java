@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.aws.service.ImageS3Service;
-import spring.study.aws.service.ImageCleanupService;
 import spring.study.diary.dto.DiaryImageRequestDto;
 import spring.study.diary.dto.DiaryListResponseDto;
 import spring.study.diary.dto.DiaryRequestDto;
@@ -33,37 +32,40 @@ import java.util.stream.Collectors;
 public class DiaryFacade {
     private final DiaryService diaryService;
     private final ImageS3Service imageS3Service;
-    private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<?> uploadImages(List<MultipartFile> files) {
         int fileCount = imageS3Service.fileSizeCheck(files);
+
         if (fileCount == -1) {
             throw new IllegalArgumentException("이미지 파일이 없습니다");
         }
+
         if (fileCount == -2) {
             throw new IllegalArgumentException("이미지는 최대 10장까지 업로드할 수 있습니다");
         }
+
         if (imageS3Service.findFormatCheck(files)) {
             throw new IllegalArgumentException("JPG, JPEG, PNG, GIF 이미지만 업로드할 수 있습니다");
         }
 
         List<String> uploadedUrls = new ArrayList<>();
+
         try {
-            for (MultipartFile file : files) {
+            for (MultipartFile file : files)
                 uploadedUrls.add(imageS3Service.uploadImageToS3(file));
-            }
-            return ResponseEntity.ok(Map.of(
-                    "result", uploadedUrls.size(),
-                    "imageUrls", uploadedUrls
-            ));
         } catch (IOException | RuntimeException exception) {
-            imageCleanupService.enqueueAll(uploadedUrls);
+            imageS3Service.deleteImgSrc(uploadedUrls);
             log.error("일기 이미지 업로드 실패", exception);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -1,
                     "message", "이미지 업로드 중 오류가 발생했습니다"
             ));
         }
+
+        return ResponseEntity.ok(Map.of(
+                "result", uploadedUrls.size(),
+                "imageUrls", uploadedUrls
+        ));
     }
 
     @Transactional
@@ -144,6 +146,7 @@ public class DiaryFacade {
                     .filter(java.util.Objects::nonNull)
                     .map(DiaryImageRequestDto::getImageUrl)
                     .collect(Collectors.toSet());
+
             removedImageUrls = diary.getImages().stream()
                     .map(DiaryImage::getImageUrl)
                     .filter(url -> !requestedImageUrls.contains(url))
@@ -157,9 +160,11 @@ public class DiaryFacade {
         }
 
         DiaryResponseDto responseDto = new DiaryResponseDto(diaryService.save(diary));
+
         if (!removedImageUrls.isEmpty()) {
-            imageCleanupService.enqueueAll(removedImageUrls);
+            imageS3Service.deleteImgSrc(removedImageUrls);
         }
+
         return ResponseEntity.ok(Map.of(
                 "result", responseDto.getId(),
                 "diary", responseDto
@@ -174,7 +179,7 @@ public class DiaryFacade {
                 .toList();
         diaryService.delete(diary);
         if (!imageUrls.isEmpty()) {
-            imageCleanupService.enqueueAll(imageUrls);
+            imageS3Service.deleteImgSrc(imageUrls);
         }
         return ResponseEntity.ok(Map.of(
                 "result", id

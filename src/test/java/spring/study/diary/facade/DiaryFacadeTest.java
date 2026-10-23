@@ -3,7 +3,6 @@ package spring.study.diary.facade;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 import spring.study.aws.service.ImageS3Service;
-import spring.study.aws.service.ImageCleanupService;
 import spring.study.diary.dto.DiaryListResponseDto;
 import spring.study.diary.dto.DiaryResponseDto;
 import spring.study.diary.entity.Diary;
@@ -19,22 +18,8 @@ import static org.mockito.Mockito.*;
 
 class DiaryFacadeTest {
     private final DiaryService service = mock(DiaryService.class);
-    private final DiaryFacade facade = new DiaryFacade(service, mock(ImageS3Service.class), mock(ImageCleanupService.class));
+    private final DiaryFacade facade = new DiaryFacade(service, mock(ImageS3Service.class));
     private final Member member = Member.builder().id(1L).build();
-
-    @Test
-    void s3FailureQueuesAlreadyUploadedImagesForCleanup() throws Exception {
-        ImageS3Service images = mock(ImageS3Service.class);
-        ImageCleanupService cleanup = mock(ImageCleanupService.class);
-        var first = new org.springframework.mock.web.MockMultipartFile("files", "one.png", "image/png", new byte[]{1});
-        var second = new org.springframework.mock.web.MockMultipartFile("files", "two.png", "image/png", new byte[]{2});
-        when(images.uploadImageToS3(first)).thenReturn("uploaded.png");
-        when(images.uploadImageToS3(second)).thenThrow(new com.amazonaws.AmazonClientException("unavailable"));
-
-        assertThat(new DiaryFacade(service, images, cleanup).uploadImages(List.of(first, second)).getStatusCode().value())
-                .isEqualTo(500);
-        verify(cleanup).enqueueAll(List.of("uploaded.png"));
-    }
 
     @Test
     void detailApiWrapsTheOwnedDiary() {

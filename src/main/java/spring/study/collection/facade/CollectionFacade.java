@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.aws.service.ImageS3Service;
-import spring.study.aws.service.ImageCleanupService;
 import spring.study.collection.dto.CollectionRequestDto;
 import spring.study.collection.dto.CollectionResponseDto;
 import spring.study.collection.entity.Collection;
@@ -25,7 +24,6 @@ import java.util.Map;
 public class CollectionFacade {
     private final CollectionService collectionService;
     private final ImageS3Service imageS3Service;
-    private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<?> check(Member member) {
         return ResponseEntity.ok(Map.of("result", member.getId()));
@@ -102,7 +100,7 @@ public class CollectionFacade {
         }
 
         collectionService.deleteByIds(idList);
-        imageCleanupService.enqueueAll(imgSrcList);
+        imageS3Service.deleteImgSrc(imgSrcList);
 
         return ResponseEntity.ok(Map.of(
                 "result", 1L

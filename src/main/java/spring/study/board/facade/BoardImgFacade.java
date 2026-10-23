@@ -49,6 +49,7 @@ public class BoardImgFacade {
         }
 
         Board board = boardService.findById(id);
+
         if (!board.getMember().getId().equals(member.getId()) && member.getRole() != Role.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "result", -403,
@@ -56,30 +57,30 @@ public class BoardImgFacade {
             ));
         }
 
-        List<String> uploadedUrls = new ArrayList<>();
+        List<BoardImg> imgList = new ArrayList<>();
 
         try {
             for (MultipartFile file : files) {
                 String imageUrl = imageS3Service.uploadImageToS3(file);
-                uploadedUrls.add(imageUrl);
-            }
-            boardImgService.saveAll(uploadedUrls.stream()
-                    .map(imageUrl -> BoardImg.builder()
-                                .imgSrc(imageUrl)
-                                .board(board)
-                                .build())
-                    .toList());
 
-            return ResponseEntity.ok(Map.of(
-                    "result", files.size()
-            ));
+                imgList.add(BoardImg.builder()
+                        .imgSrc(imageUrl)
+                        .board(board)
+                        .build());
+            }
+
+            boardImgService.saveAll(imgList);
         } catch (Exception e) {
-            imageS3Service.deleteImgSrc(uploadedUrls);
+            imageS3Service.deleteImgSrc(imgList.stream().map(BoardImg::getImgSrc).toList());
             log.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -1,
                     "message", "오류가 발생하였습니다"
             ));
         }
+
+        return ResponseEntity.ok(Map.of(
+                "result", files.size()
+        ));
     }
 }

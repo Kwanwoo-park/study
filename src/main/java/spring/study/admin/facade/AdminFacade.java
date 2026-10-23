@@ -14,7 +14,6 @@ import spring.study.appeal.dto.AppealResponseDto;
 import spring.study.appeal.entity.Appeal;
 import spring.study.appeal.entity.AppealStatus;
 import spring.study.appeal.service.AppealService;
-import spring.study.aws.service.ImageCleanupService;
 import spring.study.board.service.BoardService;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
@@ -60,7 +59,6 @@ public class AdminFacade {
     private final RefreshTokenService refreshTokenService;
     private final ChatPresenceService chatPresenceService;
     private final KafkaQueueQueryService kafkaQueueQueryService;
-    private final ImageCleanupService imageCleanupService;
     private final SystemDiagnosticsService systemDiagnosticsService;
     private final NotificationService notificationService;
 
@@ -321,8 +319,7 @@ public class AdminFacade {
 
         return Map.of(
                 "kafkaPending", kafka.pending(),
-                "kafkaDeadLetters", kafka.failed(),
-                "imageCleanupPending", imageCleanupService.countPending()
+                "kafkaDeadLetters", kafka.failed()
         );
     }
 

@@ -8,6 +8,9 @@ import org.springframework.web.server.ResponseStatusException;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.entity.Board;
 import spring.study.common.service.JwtManager;
+import spring.study.common.service.VisibilityAccessPolicy;
+import spring.study.favorite.service.FavoriteService;
+import spring.study.follow.service.FollowService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.board.service.BoardService;
@@ -19,12 +22,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BoardViewFacade {
     private final BoardService boardService;
-    private final BoardFacade boardFacade;
     private final JwtManager jwtManager;
+    private final FavoriteService favoriteService;
+    private final FollowService followService;
+    private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     public String getBoardListPage(Model model, Integer page, Integer size, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/all";
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/board/all";
 
         if (member.getRole() != Role.ADMIN) {
             jwtManager.logout(request);
@@ -39,7 +45,8 @@ public class BoardViewFacade {
 
     public String mainPage(Model model, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/main";
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/board/main";
 
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
@@ -49,7 +56,8 @@ public class BoardViewFacade {
 
     public String getBoardWritePage(Model model, HttpServletRequest request){
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/write";
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/board/write";
 
         model.addAttribute("name", member.getName());
         model.addAttribute("profile", member.getProfile());
@@ -60,18 +68,21 @@ public class BoardViewFacade {
 
     public String getBoardViewPage(Model model, BoardRequestDto boardRequestDto, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/board/view?id=" + boardRequestDto.getId();
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/board/view?id=" + boardRequestDto.getId();
 
         if (boardService.existBoard(boardRequestDto.getId())) {
             Board board = boardService.findById(boardRequestDto.getId());
-            if (!boardFacade.canView(board, member)) {
+            boolean includePrivate = isOwnerOrFollower(member, board.getMember());
+
+            if (!visibilityAccessPolicy.canViewBoard(board, member, includePrivate)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비공개 게시물입니다.");
             }
-            boolean includePrivate = boardFacade.canViewPrivateBoards(member, board.getMember());
+
             long[] ids = boardService.getBoardIdList(boardRequestDto.getId(), board.getMember(), includePrivate);
 
             model.addAttribute("board", board);
-            model.addAttribute("like", boardFacade.checkFavorite(board, member));
+            model.addAttribute("like", favoriteService.existFavorite(member, board));
             model.addAttribute("member", member.getEmail());
             model.addAttribute("previous", ids[0]);
             model.addAttribute("next", ids[1]);
@@ -80,5 +91,13 @@ public class BoardViewFacade {
         }
 
         return "board/view";
+    }
+
+    private boolean isOwnerOrFollower(Member viewer, Member author) {
+        if (viewer == null || author == null || viewer.getId() == null || author.getId() == null) {
+            return false;
+        }
+
+        return viewer.getId().equals(author.getId()) || followService.existFollow(viewer, author);
     }
 }

@@ -13,14 +13,13 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.account.service.AccountService;
 import spring.study.appeal.service.AppealService;
 import spring.study.aws.service.ImageS3Service;
-import spring.study.aws.service.ImageCleanupService;
 import spring.study.board.entity.Board;
-import spring.study.board.entity.BoardImg;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.bookreview.service.BookReviewService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRoomMemberService;
+import spring.study.collection.entity.Collection;
 import spring.study.collection.service.CollectionService;
 import spring.study.comment.service.CommentService;
 import spring.study.common.entity.CommonVisibility;
@@ -72,7 +71,6 @@ public class MemberFacade {
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
     private final JwtAuthenticationFacade jwtAuthenticationService;
-    private final ImageCleanupService imageCleanupService;
     private final TodoService todoService;
     private final EmailVerificationService emailVerificationService;
     private final DiaryService diaryService;
@@ -238,21 +236,13 @@ public class MemberFacade {
             ));
         }
 
-        String imageUrl = "";
+        String imageUrl = "", oldProfile = "";
         try {
             imageUrl = imageS3Service.uploadImageToS3(file);
-            String oldProfile = member.getProfile();
+            oldProfile = member.getProfile();
 
             member.setProfile(imageUrl);
             memberService.updateProfile(member.getId(), imageUrl);
-
-            if (oldProfile != null && !oldProfile.equals(imageUrl)) {
-                imageCleanupService.enqueue(oldProfile);
-            }
-
-            return ResponseEntity.ok(Map.of(
-                    "result", member.getId()
-            ));
         } catch (Exception e) {
             imageS3Service.deleteImage(imageUrl);
             log.error("profile image change failed", e);
@@ -261,6 +251,12 @@ public class MemberFacade {
                     "message", "이미지 업로드 중 오류가 발생하였습니다"
             ));
         }
+
+        imageS3Service.deleteImage(oldProfile);
+
+        return ResponseEntity.ok(Map.of(
+                "result", member.getId()
+        ));
     }
 
     public ResponseEntity<?> findEmail(String email) {
@@ -424,7 +420,7 @@ public class MemberFacade {
         member = memberService.findById(member.getId());
         accountService.deleteByMember(member);
         for (Board board : member.getBoard()) {
-            imageCleanupService.enqueueAll(board.getImg().stream().map(BoardImg::getImgSrc).toList());
+            imageS3Service.deleteImage(board.getImg());
             boardImgService.deleteBoard(board);
             favoriteService.deleteByBoard(board);
             replyService.deleteReplay(board.getComment());
@@ -450,19 +446,17 @@ public class MemberFacade {
         messageService.deleteByMember(member);
         roomMemberService.delete(member);
 
-        imageCleanupService.enqueueAll(collectionService.findByMember(member).stream()
-                .map(spring.study.collection.entity.Collection::getImgSrc)
-                .toList());
+        imageS3Service.deleteImgSrc(collectionService.findByMember(member).stream().map(Collection::getImgSrc).toList());
         collectionService.deleteByMember(member);
 
         for (Diary diary : member.getDiaries()) {
-            imageCleanupService.enqueueAll(diary.getImages().stream().map(DiaryImage::getImageUrl).toList());
+            imageS3Service.deleteImgSrc(diary.getImages().stream().map(DiaryImage::getImageUrl).toList());
         }
 
         diaryService.deleteByMember(member);
         todoService.deleteByMember(member);
 
-        imageCleanupService.enqueue(member.getProfile());
+        imageS3Service.deleteImage(member.getProfile());
         memberService.deleteById(member.getId());
     }
 

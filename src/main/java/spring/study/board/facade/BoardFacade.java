@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.aws.service.ImageS3Service;
-import spring.study.aws.service.ImageCleanupService;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
@@ -42,7 +41,6 @@ public class BoardFacade {
     private final ImageS3Service imageS3Service;
     private final ModerationFacade moderationService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
-    private final ImageCleanupService imageCleanupService;
 
     public ResponseEntity<?> load(int cursor, int limit, Member member) {
         List<Member> memberList = followService.getMemberList(member);
@@ -65,6 +63,7 @@ public class BoardFacade {
 
     public ResponseEntity<?> loadMemberBoards(int cursor, int limit, String email, Member loginMember) {
         Member targetMember = memberService.findMember(email);
+
         if (!visibilityAccessPolicy.canViewMember(targetMember, loginMember)) {
             return forbiddenVisibility();
         }
@@ -95,15 +94,17 @@ public class BoardFacade {
 
         Board board = boardService.findById(id);
         boolean includePrivate = isOwnerOrFollower(member, board.getMember());
+
         if (!visibilityAccessPolicy.canViewBoard(board, member, includePrivate)) {
             return forbiddenVisibility();
         }
+
         long[] ids = boardService.getBoardIdList(id, board.getMember(), includePrivate);
 
         return ResponseEntity.ok(Map.of(
                 "result", 10,
                 "board", new BoardResponseDto(board),
-                "like", checkFavorite(board, member),
+                "like", favoriteService.existFavorite(member, board),
                 "like_count", favoriteService.countFavorites(board),
                 "comment_count", commentService.countComments(board),
                 "email", member.getEmail(),
@@ -114,18 +115,19 @@ public class BoardFacade {
 
     public ResponseEntity<?> write(BoardRequestDto dto, Member member, HttpServletResponse response) {
         ResponseEntity<?> validation = validateContent(dto.getContent(), member, response);
-        if (validation != null) return validation;
+        if (validation != null)
+            return validation;
 
         dto.setMember(member);
-        Board board = dto.toEntity();
 
-        Board saved = boardService.save(board);
+        Board saved = boardService.save(dto);
 
-        if (saved == null)
+        if (saved == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -10,
                     "message", "게시글이 저장되지 않았습니다"
             ));
+        }
 
         return ResponseEntity.ok(Map.of(
                 "result", saved.getId()
@@ -134,6 +136,7 @@ public class BoardFacade {
 
     public ResponseEntity<?> update(BoardRequestDto dto, Member member, HttpServletResponse response) {
         Board board = boardService.findById(dto.getId());
+
         if (!board.getMember().getId().equals(member.getId()) && member.getRole() != Role.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "result", -1,
@@ -142,7 +145,8 @@ public class BoardFacade {
         }
 
         ResponseEntity<?> validation = validateContent(dto.getContent(), member, response);
-        if (validation != null) return validation;
+        if (validation != null)
+            return validation;
 
         return ResponseEntity.ok(Map.of(
                 "result", boardService.updateBoard(dto.getId(), dto.getContent(), dto.getVisibility())
@@ -162,7 +166,7 @@ public class BoardFacade {
         favoriteService.deleteByBoard(board);
         replyService.deleteReplay(board.getComment());
         commentService.deleteComment(board);
-        imageCleanupService.enqueueAll(board.getImg().stream().map(img -> img.getImgSrc()).toList());
+        imageS3Service.deleteImage(board.getImg());
         boardImgService.deleteBoard(board);
         boardService.deleteById(boardId);
 
@@ -178,22 +182,6 @@ public class BoardFacade {
         favoriteService.findLikedBoardIds(member, boardList).forEach(boardId -> map.put(boardId, true));
 
         return map;
-    }
-
-    public Boolean checkFavorite(Board board, Member member) {
-        return favoriteService.existFavorite(member, board);
-    }
-
-    public boolean canView(Board board, Member member) {
-        return visibilityAccessPolicy.canViewBoard(
-                board,
-                member,
-                isOwnerOrFollower(member, board.getMember())
-        );
-    }
-
-    public boolean canViewPrivateBoards(Member viewer, Member author) {
-        return isOwnerOrFollower(viewer, author);
     }
 
     private boolean isOwnerOrFollower(Member viewer, Member author) {

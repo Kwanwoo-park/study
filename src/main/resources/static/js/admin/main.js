@@ -545,8 +545,7 @@ function fnSystemStatusDraw(data) {
             'WebSocket ' + data.traffic.activeWebSockets + '개'
         ]),
         createMetricCard('작업 대기열', Number(data.queues?.kafkaPending || 0) + '건', [
-            'Kafka 실패 ' + Number(data.queues?.kafkaDeadLetters || 0) + '건',
-            '이미지 정리 ' + Number(data.queues?.imageCleanupPending || 0) + '건'
+            'Kafka 실패 ' + Number(data.queues?.kafkaDeadLetters || 0) + '건'
         ])
     );
 }
