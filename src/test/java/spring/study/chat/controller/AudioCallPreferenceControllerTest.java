@@ -8,16 +8,21 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import spring.study.chat.dto.AudioCallPreferenceRequest;
 import spring.study.chat.facade.ChatFacade;
 import spring.study.chat.facade.ChatSendFacade;
 import spring.study.chat.facade.ChatRoomFacade;
 import spring.study.chat.facade.AudioCallFacade;
 import spring.study.chat.service.AudioCallSignalingService;
+import spring.study.chat.service.ChatRoomMemberService;
+import spring.study.chat.service.ChatRoomService;
 import spring.study.chat.service.IceServerService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
+import spring.study.member.service.MemberService;
+import spring.study.notification.service.NotificationService;
 
 import java.util.Map;
 
@@ -35,6 +40,7 @@ class AudioCallPreferenceControllerTest {
     @Mock private IceServerService iceServerService;
     @Mock private ChatSendFacade chatSendFacade;
     @Mock private AudioCallSignalingService audioCallSignalingService;
+    @Mock private MemberService memberService;
     @Mock private HttpServletRequest request;
 
     private ChatApiController controller;
@@ -44,7 +50,9 @@ class AudioCallPreferenceControllerTest {
     @BeforeEach
     void setUp() {
         controller = new ChatApiController(jwtManager, commonFacade, chatFacade, chatSendFacade,
-                mock(ChatRoomFacade.class), new AudioCallFacade(audioCallSignalingService, iceServerService));
+                mock(ChatRoomFacade.class), new AudioCallFacade(audioCallSignalingService, memberService,
+                mock(ChatRoomService.class), mock(ChatRoomMemberService.class), iceServerService,
+                mock(SimpMessagingTemplate.class), mock(NotificationService.class)));
         member = Member.builder().id(7L).email("member@example.com").build();
         when(jwtManager.getLoginMember(request)).thenReturn(member);
     }
@@ -61,15 +69,14 @@ class AudioCallPreferenceControllerTest {
 
     @Test
     void preferenceShouldAllowMemberToDisableIncomingCalls() {
-        when(audioCallSignalingService.updateIncomingCallPreference(member.getEmail(), false))
-                .thenReturn(false);
+        when(memberService.findMember(member.getEmail())).thenReturn(member);
 
         ResponseEntity<?> response = controller.updateAudioCallPreference(
                 new AudioCallPreferenceRequest(false), request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(((Map<?, ?>) response.getBody()).get("enabled")).isEqualTo(false);
-        verify(audioCallSignalingService).updateIncomingCallPreference(member.getEmail(), false);
+        verify(memberService).updateAudioCallEnabled(member.getId(), false);
     }
 
     @Test
@@ -78,7 +85,6 @@ class AudioCallPreferenceControllerTest {
                 new AudioCallPreferenceRequest(null), request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        verify(audioCallSignalingService, never())
-                .updateIncomingCallPreference(member.getEmail(), false);
+        verify(memberService, never()).updateAudioCallEnabled(member.getId(), false);
     }
 }

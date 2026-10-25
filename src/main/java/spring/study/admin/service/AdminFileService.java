@@ -29,6 +29,7 @@ import spring.study.admin.repository.AdminFileRepository;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -46,7 +47,9 @@ public class AdminFileService {
 
     @Transactional(readOnly = true)
     public Page<AdminFileResponseDto> list(int page) {
-        if (page < 0 || page > 1000000) throw new IllegalArgumentException("올바른 페이지 번호를 입력해 주세요");
+        if (page < 0 || page > 1000000)
+            throw new IllegalArgumentException("올바른 페이지 번호를 입력해 주세요");
+
         return adminFileRepository.findAll(PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt", "id"))).map(AdminFileResponseDto::from);
     }
 
@@ -74,9 +77,9 @@ public class AdminFileService {
 
         String originalFilename = safeFilename(file.getOriginalFilename());
         long size = file.getSize();
-        var existing = adminFileRepository.findFirstByOriginalFilenameOrderByCreatedAtDescIdDesc(originalFilename);
+        Optional<AdminFile> existing = adminFileRepository.findFirstByOriginalFilenameOrderByCreatedAtDescIdDesc(originalFilename);
         AdminFile stored = existing.orElseGet(() -> AdminFile.builder().id(UUID.randomUUID().toString())
-                        .originalFilename(originalFilename).size(size).uploadedBy(uploadedBy).build());
+                .originalFilename(originalFilename).size(size).uploadedBy(uploadedBy).build());
         String id = stored.getId();
         String key = objectKey(id);
         ObjectMetadata metadata = new ObjectMetadata();
@@ -85,6 +88,7 @@ public class AdminFileService {
         try {
             requirePrivateBucket();
             requireVersioningEnabled();
+
             if (existing.isPresent() && stored.getS3VersionId() == null) {
                 throw unavailable("기존 파일의 버전 정보를 먼저 확인해 주세요");
             }
@@ -97,19 +101,25 @@ public class AdminFileService {
             try (InputStream input = file.getInputStream()) {
                 uploadedVersionId = amazonS3.putObject(new PutObjectRequest(bucket, key, input, metadata)).getVersionId();
             }
+
             if (uploadedVersionId == null || uploadedVersionId.isBlank() || "null".equals(uploadedVersionId)) {
                 throw unavailable("새 파일의 S3 버전 ID를 확인하지 못했습니다. 버킷 버전 관리를 확인해 주세요");
             }
 
             stored.recordUpload(size, uploadedBy, uploadedVersionId);
+
             AdminFileResponseDto result = AdminFileResponseDto.from(adminFileRepository.saveAndFlush(stored));
+
             if (TransactionSynchronizationManager.isSynchronizationActive()) {
                 String versionId = uploadedVersionId;
+
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
                     public void afterCompletion(int status) {
-                        if (status == STATUS_ROLLED_BACK) removeFailedUpload(id, versionId);
-                        else if (status == STATUS_UNKNOWN) log.error("관리자 파일 DB 커밋 결과 확인 필요: id={}, versionId={}", id, versionId);
+                        if (status == STATUS_ROLLED_BACK)
+                            removeFailedUpload(id, versionId);
+                        else if (status == STATUS_UNKNOWN)
+                            log.error("관리자 파일 DB 커밋 결과 확인 필요: id={}, versionId={}", id, versionId);
                     }
                 });
             }
@@ -152,12 +162,16 @@ public class AdminFileService {
     }
 
     private String safeFilename(String filename) {
-        if (filename == null) throw new IllegalArgumentException("파일 이름이 필요합니다");
+        if (filename == null)
+            throw new IllegalArgumentException("파일 이름이 필요합니다");
+
         String normalized = filename.replace('\\', '/');
         String name = normalized.substring(normalized.lastIndexOf('/') + 1).replaceAll("[\\p{Cntrl}\\p{Cf}]", "_").strip();
+
         if (name.isBlank() || name.equals(".") || name.equals("..") || name.length() > 255) {
             throw new IllegalArgumentException("파일 이름은 1~255자로 지정해 주세요");
         }
+
         return name;
     }
 
@@ -166,9 +180,12 @@ public class AdminFileService {
     }
 
     private void requirePrivateBucket() {
-        if (bucket.isBlank()) throw unavailable("관리자 파일용 비공개 S3 버킷(admin.files.s3.bucket)을 설정해 주세요");
+        if (bucket.isBlank())
+            throw unavailable("관리자 파일용 비공개 S3 버킷(admin.files.s3.bucket)을 설정해 주세요");
+
         try {
             PublicAccessBlockConfiguration configuration = amazonS3.getPublicAccessBlock(new GetPublicAccessBlockRequest().withBucketName(bucket)).getPublicAccessBlockConfiguration();
+
             if (configuration == null || !Boolean.TRUE.equals(configuration.getBlockPublicAcls()) || !Boolean.TRUE.equals(configuration.getIgnorePublicAcls()) || !Boolean.TRUE.equals(configuration.getBlockPublicPolicy()) || !Boolean.TRUE.equals(configuration.getRestrictPublicBuckets())) {
                 throw unavailable("관리자 파일용 S3 버킷의 퍼블릭 액세스 차단 4개 항목을 모두 켜 주세요");
             }
@@ -191,8 +208,11 @@ public class AdminFileService {
 
     private void removeFailedUpload(String id, String versionId) {
         // Never delete by key: it could hide an existing file or delete another upload.
-        if (versionId == null || versionId.isBlank() || "null".equals(versionId)) return;
+        if (versionId == null || versionId.isBlank() || "null".equals(versionId))
+            return;
+
         String key = objectKey(id);
+
         try {
             amazonS3.deleteVersion(bucket, key, versionId);
         } catch (AmazonClientException error) {

@@ -77,13 +77,11 @@ public class Report extends BasetimeEntity {
         this.status = status;
         this.action = action;
         this.reportMemo = reportMemo;
-        changeUpdateTime(LocalDateTime.now());
     }
 
     public void cancel() {
         this.status = ReportStatus.CANCELED;
         this.action = ReportAction.NONE;
         this.reportMemo = "신고 취소";
-        changeUpdateTime(LocalDateTime.now());
     }
 }

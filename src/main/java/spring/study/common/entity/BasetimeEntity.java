@@ -20,12 +20,4 @@ public class BasetimeEntity {
 
     @LastModifiedDate
     private LocalDateTime updateTime;
-
-    public void changeUpdateTime(LocalDateTime update) {
-        this.updateTime = update;
-    }
-
-    public void changeRegisterTime(LocalDateTime registerTime) {
-        this.registerTime = registerTime;
-    }
 }

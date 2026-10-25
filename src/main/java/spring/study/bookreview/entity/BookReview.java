@@ -51,8 +51,7 @@ public class BookReview extends BasetimeEntity {
     private String content;
 
     @Builder
-    public BookReview(Long id, Member author, String reviewTitle, String bookTitle,
-                      String bookAuthor, int rating, LocalDate finishedDate, String content) {
+    public BookReview(Long id, Member author, String reviewTitle, String bookTitle, String bookAuthor, int rating, LocalDate finishedDate, String content) {
         this.id = id;
         this.author = author;
         this.reviewTitle = reviewTitle;
@@ -63,8 +62,7 @@ public class BookReview extends BasetimeEntity {
         this.content = content;
     }
 
-    public void update(String reviewTitle, String bookTitle, String bookAuthor,
-                       int rating, LocalDate finishedDate, String content) {
+    public void update(String reviewTitle, String bookTitle, String bookAuthor, int rating, LocalDate finishedDate, String content) {
         this.reviewTitle = reviewTitle;
         this.bookTitle = bookTitle;
         this.bookAuthor = bookAuthor;

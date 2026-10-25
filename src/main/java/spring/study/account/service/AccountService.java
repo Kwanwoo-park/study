@@ -1,5 +1,6 @@
 package spring.study.account.service;
 
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -275,7 +276,7 @@ public class AccountService {
         }
     }
 
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    @Transactional(propagation = Propagation.MANDATORY)
     public Account resolveSavingsSourceAccount(Member member, AccountCreateRequestDto requestDto) {
         validateSavingsRequest(requestDto);
 
@@ -314,7 +315,7 @@ public class AccountService {
         return lockedSource;
     }
 
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    @Transactional(propagation = Propagation.MANDATORY)
     public Account resolveTimeDepositSourceAccount(Member member, AccountCreateRequestDto requestDto) {
         validateTimeDepositRequest(requestDto);
 

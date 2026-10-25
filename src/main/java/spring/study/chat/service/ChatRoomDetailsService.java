@@ -9,10 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 import spring.study.chat.dto.ChatRoomDetailsResponse;
 import spring.study.chat.dto.ChatRoomImageResponse;
 import spring.study.chat.dto.ChatRoomImagesResponse;
-import spring.study.chat.entity.ChatMessage;
-import spring.study.chat.entity.ChatMessageStatus;
 import spring.study.chat.entity.ChatRoom;
-import spring.study.chat.entity.MessageType;
 import spring.study.chat.repository.ChatMessageImgRepository;
 import spring.study.chat.repository.ChatRoomMemberRepository;
 import spring.study.chat.repository.ChatRoomRepository;
@@ -46,7 +43,6 @@ public class ChatRoomDetailsService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "올바른 사진 조회 위치를 입력해 주세요");
         }
         List<ChatRoomImageResponse> found = images.findVisibleRoomImages(room, viewer, cursor,
-                MessageType.IMAGE, ChatMessageStatus.ACTIVE, ChatMessage.CENSORED_MESSAGE,
                 PageRequest.of(0, IMAGE_PAGE_SIZE + 1));
         boolean hasNext = found.size() > IMAGE_PAGE_SIZE;
         List<ChatRoomImageResponse> page = List.copyOf(found.subList(0, Math.min(IMAGE_PAGE_SIZE, found.size())));

@@ -23,7 +23,8 @@ public class BookReviewApiController {
     @GetMapping
     public ResponseEntity<?> list(@RequestParam(defaultValue = "") String keyword,
                                   @RequestParam(defaultValue = "0") int page,
-                                  @RequestParam(defaultValue = "9") int size, HttpServletRequest request) {
+                                  @RequestParam(defaultValue = "9") int size,
+                                  HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
@@ -39,21 +40,27 @@ public class BookReviewApiController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody BookReviewRequestDto requestDto,
-                                    BindingResult bindingResult, HttpServletRequest request) {
-        if (bindingResult.hasErrors()) return commonFacade.validationFailure(bindingResult, "독후감 입력 내용을 확인해주세요");
+    public ResponseEntity<?> create(@Valid @RequestBody BookReviewRequestDto requestDto, BindingResult bindingResult, HttpServletRequest request) {
+        if (bindingResult.hasErrors())
+            return commonFacade.validationFailure(bindingResult, "독후감 입력 내용을 확인해주세요");
+
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
+
+        if (member == null)
+            return commonFacade.unauthorized();
 
         return bookReviewFacade.create(requestDto, member);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody BookReviewRequestDto requestDto,
-                                    BindingResult bindingResult, HttpServletRequest request) {
-        if (bindingResult.hasErrors()) return commonFacade.validationFailure(bindingResult, "독후감 입력 내용을 확인해주세요");
+    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody BookReviewRequestDto requestDto, BindingResult bindingResult, HttpServletRequest request) {
+        if (bindingResult.hasErrors())
+            return commonFacade.validationFailure(bindingResult, "독후감 입력 내용을 확인해주세요");
+
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
+
+        if (member == null)
+            return commonFacade.unauthorized();
 
         return bookReviewFacade.update(id, requestDto, member);
     }
@@ -61,7 +68,9 @@ public class BookReviewApiController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
+
+        if (member == null)
+            return commonFacade.unauthorized();
 
         return bookReviewFacade.delete(id, member);
     }

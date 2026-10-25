@@ -18,7 +18,7 @@ import spring.study.board.service.BoardService;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.service.ChatMessageService;
-import spring.study.chat.service.AudioCallSignalingService;
+import spring.study.chat.facade.AudioCallFacade;
 import spring.study.chat.service.ChatPresenceService;
 import spring.study.common.service.IpLocationService;
 import spring.study.jwt.dto.AdminTokenSessionResponse;
@@ -54,7 +54,7 @@ public class AdminFacade {
     private final AppealService appealService;
     private final ChatMessageService chatMessageService;
     private final SystemIncidentService systemIncidentService;
-    private final AudioCallSignalingService audioCallSignalingService;
+    private final AudioCallFacade audioCallFacade;
     private final OnlineUserService onlineUserService;
     private final RefreshTokenService refreshTokenService;
     private final ChatPresenceService chatPresenceService;
@@ -193,7 +193,7 @@ public class AdminFacade {
     }
 
     public ResponseEntity<?> forceTerminateAudioCall(String callId) {
-        audioCallSignalingService.forceTerminate(callId);
+        audioCallFacade.forceTerminate(callId);
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "message", "통화를 강제로 종료했습니다"

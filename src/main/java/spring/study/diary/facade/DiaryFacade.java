@@ -139,7 +139,6 @@ public class DiaryFacade {
         Diary diary = getOwnedDiary(requestDto.getId(), member);
         List<String> removedImageUrls = new ArrayList<>();
         diary.update(requestDto.getTitle(), requestDto.getContent(), requestDto.getVisibility());
-        diary.changeUpdateTime(LocalDateTime.now());
 
         if (requestDto.getImages() != null) {
             Set<String> requestedImageUrls = requestDto.getImages().stream()

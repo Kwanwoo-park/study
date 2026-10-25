@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 public class ChatMessage extends BasetimeEntity implements Serializable, Persistable<String> {
     @Serial
     private static final long serialVersionUID = 10L;
+
     public static final String CENSORED_MESSAGE = "<부적절한 내용이 포함되어 검열되었습니다>";
 
     @Id
@@ -36,7 +37,7 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30, columnDefinition = "varchar(30) default 'ACTIVE'")
-    private ChatMessageStatus status = ChatMessageStatus.ACTIVE;
+    private ChatMessageStatus status;
 
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean edited;
@@ -67,7 +68,6 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
         this.status = ChatMessageStatus.ACTIVE;
         this.member = member;
         this.room = room;
-        changeRegisterTime(registerTime);
     }
 
     @Override
@@ -80,9 +80,8 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
     @PostPersist
     void markNotNew() {
         newEntity = false;
-        if (status == null) {
+        if (status == null)
             status = ChatMessageStatus.ACTIVE;
-        }
     }
 
     public void addMember(Member member) {

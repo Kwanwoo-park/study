@@ -56,11 +56,11 @@ class ChatRoomDetailsServiceTest {
 
     @Test
     void rechecksMembershipOnEveryGalleryPageAfterLeaving() {
-        when(images.findVisibleRoomImages(any(), any(), any(), any(), any(), any(), any())).thenReturn(List.of());
+        when(images.findVisibleRoomImages(any(), any(), any(), any())).thenReturn(List.of());
         assertThat(service.images("room-a", viewer, null).images()).isEmpty();
         when(participants.existsByMemberAndRoom(viewer, room)).thenReturn(false);
         assertStatus(() -> service.images("room-a", viewer, 1L), HttpStatus.FORBIDDEN);
-        verify(images, times(1)).findVisibleRoomImages(any(), any(), any(), any(), any(), any(), any());
+        verify(images, times(1)).findVisibleRoomImages(any(), any(), any(), any());
     }
 
     @Test
@@ -75,11 +75,11 @@ class ChatRoomDetailsServiceTest {
     @Test
     void fetchesOneExtraImageAndReturnsTheLastVisibleIdAsCursor() {
         var found = LongStream.rangeClosed(1, 25).mapToObj(id -> new ChatRoomImageResponse(26 - id, "message", "url", LocalDateTime.now(), "sender")).toList();
-        when(images.findVisibleRoomImages(eq(room), eq(viewer), isNull(), any(), any(), any(), any())).thenReturn(found);
+        when(images.findVisibleRoomImages(eq(room), eq(viewer), isNull(), any())).thenReturn(found);
         var response = service.images("room-a", viewer, null);
         assertThat(response.images()).hasSize(24);
         assertThat(response.nextCursor()).isEqualTo(2L);
-        verify(images).findVisibleRoomImages(eq(room), eq(viewer), isNull(), any(), any(), any(), argThat(page -> page.getPageSize() == 25));
+        verify(images).findVisibleRoomImages(eq(room), eq(viewer), isNull(), argThat(page -> page.getPageSize() == 25));
     }
 
     @Test

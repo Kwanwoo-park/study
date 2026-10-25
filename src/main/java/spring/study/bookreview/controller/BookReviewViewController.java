@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class BookReviewViewController {
     private final BookReviewViewFacade facade;
 
-
     @GetMapping
     public String list(@RequestParam(defaultValue = "") String keyword,
                        @RequestParam(defaultValue = "0") int page,

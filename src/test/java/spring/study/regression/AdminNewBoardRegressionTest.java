@@ -13,7 +13,7 @@ import spring.study.board.entity.Board;
 import spring.study.board.entity.BoardImg;
 import spring.study.board.service.BoardService;
 import spring.study.chat.service.ChatMessageService;
-import spring.study.chat.service.AudioCallSignalingService;
+import spring.study.chat.facade.AudioCallFacade;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -39,7 +39,7 @@ class AdminNewBoardRegressionTest {
     @Mock private ChatMessageService chatMessageService;
     @Mock private RedisTemplate<String, String> redisTemplate;
     @Mock private SystemIncidentService systemIncidentService;
-    @Mock private AudioCallSignalingService audioCallSignalingService;
+    @Mock private AudioCallFacade audioCallFacade;
     @Mock private OnlineUserService onlineUserService;
 
     @InjectMocks
@@ -49,7 +49,7 @@ class AdminNewBoardRegressionTest {
     void administratorShouldBeAbleToForceTerminateAnAudioCall() {
         Map<?, ?> body = (Map<?, ?>) adminFacade.forceTerminateAudioCall("call-1").getBody();
 
-        verify(audioCallSignalingService).forceTerminate("call-1");
+        verify(audioCallFacade).forceTerminate("call-1");
         assertEquals(1L, body.get("result"));
     }
 

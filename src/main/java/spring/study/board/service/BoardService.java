@@ -52,9 +52,11 @@ public class BoardService {
     @Transactional(readOnly = true)
     public List<Board> getBoardByMember(int cursor, int limit, Member member, boolean includePrivate) {
         PageRequest pageable = PageRequest.of(cursor, limit, Sort.by("registerTime").descending());
+
         if (includePrivate) {
             return boardRepository.findByMember(member, pageable);
         }
+
         return boardRepository.findByMemberAndVisibility(member, CommonVisibility.PUBLIC, pageable);
     }
 
@@ -102,6 +104,7 @@ public class BoardService {
         if (includePrivate) {
             return boardRepository.countByMember(member);
         }
+
         return boardRepository.countByMemberAndVisibility(member, CommonVisibility.PUBLIC);
     }
 
@@ -136,7 +139,6 @@ public class BoardService {
 
         board.changeContent(content);
         board.changeVisibility(visibility);
-        board.changeUpdateTime(LocalDateTime.now());
 
         return board.getId();
     }

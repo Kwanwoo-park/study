@@ -2,7 +2,7 @@ package spring.study.chat.component;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import spring.study.chat.service.AudioCallSignalingService;
+import spring.study.chat.facade.AudioCallFacade;
 
 import java.security.Principal;
 
@@ -15,28 +15,28 @@ class AudioCallDisconnectListenerTest {
 
     @Test
     void disconnectedAuthenticatedSessionShouldEndItsActiveCall() {
-        AudioCallSignalingService signalingService = mock(AudioCallSignalingService.class);
+        AudioCallFacade audioCallFacade = mock(AudioCallFacade.class);
         SessionDisconnectEvent event = mock(SessionDisconnectEvent.class);
         Principal member = mock(Principal.class);
         when(event.getUser()).thenReturn(member);
         when(member.getName()).thenReturn("member@test.com");
         when(event.getSessionId()).thenReturn("session-1");
-        AudioCallDisconnectListener listener = new AudioCallDisconnectListener(signalingService);
+        AudioCallDisconnectListener listener = new AudioCallDisconnectListener(audioCallFacade);
 
         listener.handleSessionDisconnect(event);
 
-        verify(signalingService).handleDisconnect("member@test.com", "session-1");
+        verify(audioCallFacade).handleDisconnect("member@test.com", "session-1");
     }
 
     @Test
     void anonymousDisconnectShouldNotTouchCallState() {
-        AudioCallSignalingService signalingService = mock(AudioCallSignalingService.class);
+        AudioCallFacade audioCallFacade = mock(AudioCallFacade.class);
         SessionDisconnectEvent event = mock(SessionDisconnectEvent.class);
-        AudioCallDisconnectListener listener = new AudioCallDisconnectListener(signalingService);
+        AudioCallDisconnectListener listener = new AudioCallDisconnectListener(audioCallFacade);
 
         listener.handleSessionDisconnect(event);
 
-        verify(signalingService, never()).handleDisconnect(
+        verify(audioCallFacade, never()).handleDisconnect(
                 org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
     }
 }

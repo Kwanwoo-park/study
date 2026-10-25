@@ -96,8 +96,7 @@ class ChatRoomImagesRepositoryTest {
     }
 
     private List<ChatRoomImageResponse> find(ChatRoom room, Member viewer, Long cursor, int size) {
-        return images.findVisibleRoomImages(room, viewer, cursor, MessageType.IMAGE, ChatMessageStatus.ACTIVE,
-                ChatMessage.CENSORED_MESSAGE, PageRequest.of(0, size));
+        return images.findVisibleRoomImages(room, viewer, cursor, PageRequest.of(0, size));
     }
 
     private Member member(String name) {

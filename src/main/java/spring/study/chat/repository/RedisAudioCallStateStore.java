@@ -211,14 +211,20 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
                 call.callId(),
                 Long.toString(ttl.toMillis())
         );
+
         return Long.valueOf(1L).equals(result);
     }
 
     @Override
     public Optional<AudioCall> find(String callId) {
-        if (callId == null || callId.isBlank()) return Optional.empty();
+        if (callId == null || callId.isBlank())
+            return Optional.empty();
+
         String value = redisTemplate.opsForValue().get(callKey(callId));
-        if (value == null) return Optional.empty();
+
+        if (value == null)
+            return Optional.empty();
+
         try {
             return Optional.of(deserialize(value));
         } catch (IllegalStateException exception) {
@@ -229,14 +235,21 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
 
     @Override
     public Optional<AudioCall> findByMember(String memberEmail) {
-        if (memberEmail == null || memberEmail.isBlank()) return Optional.empty();
+        if (memberEmail == null || memberEmail.isBlank())
+            return Optional.empty();
+
         String callId = redisTemplate.opsForValue().get(memberKey(memberEmail));
-        if (callId == null) return Optional.empty();
+
+        if (callId == null)
+            return Optional.empty();
+
         Optional<AudioCall> call = find(callId);
+
         if (call.isEmpty() || !call.get().contains(memberEmail)) {
             redisTemplate.delete(memberKey(memberEmail));
             return Optional.empty();
         }
+
         return call;
     }
 
@@ -250,7 +263,8 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
                 Long.toString(ttl.toMillis()),
                 call.callId()
         );
-        return result == null || result.isBlank() ? Optional.empty() : Optional.of(deserialize(result));
+
+        return result.isBlank() ? Optional.empty() : Optional.of(deserialize(result));
     }
 
     @Override
@@ -262,12 +276,12 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
                 Long.toString(ttl.toMillis()),
                 call.callId()
         );
+
         return parseMutation(result);
     }
 
     @Override
-    public Optional<AudioCallMutation> leave(
-            AudioCall call, String memberEmail, String sessionId, Duration ttl) {
+    public Optional<AudioCallMutation> leave(AudioCall call, String memberEmail, String sessionId, Duration ttl) {
         String result = redisTemplate.execute(
                 LEAVE_SCRIPT,
                 keys(call),
@@ -276,6 +290,7 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
                 Long.toString(ttl.toMillis()),
                 call.callId()
         );
+
         return parseMutation(result);
     }
 
@@ -289,22 +304,26 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
                 Long.toString(ttl.toMillis()),
                 call.callId()
         );
+
         return Long.valueOf(1L).equals(result);
     }
 
     @Override
     public boolean remove(AudioCall call) {
         Long result = redisTemplate.execute(REMOVE_SCRIPT, keys(call), call.callId());
+
         return Long.valueOf(1L).equals(result);
     }
 
     private List<String> keys(AudioCall call) {
         List<String> keys = new ArrayList<>(call.participants().size() + 1);
+
         keys.add(callKey(call.callId()));
         call.participants().stream()
                 .map(AudioCallParticipant::email)
                 .map(this::memberKey)
                 .forEach(keys::add);
+
         return keys;
     }
 
@@ -325,12 +344,15 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
     }
 
     private Optional<AudioCallMutation> parseMutation(String value) {
-        if (value == null || value.isBlank()) return Optional.empty();
+        if (value == null || value.isBlank())
+            return Optional.empty();
+
         boolean ended = value.startsWith("ENDED:");
         String prefix = ended ? "ENDED:" : "UPDATED:";
-        if (!value.startsWith(prefix)) {
+
+        if (!value.startsWith(prefix))
             throw new IllegalStateException("통화 상태 변경 결과를 읽을 수 없습니다.");
-        }
+
         return Optional.of(new AudioCallMutation(deserialize(value.substring(prefix.length())), ended));
     }
 
@@ -341,8 +363,7 @@ public class RedisAudioCallStateStore implements AudioCallStateStore {
     private String memberKey(String email) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return MEMBER_KEY_PREFIX + HexFormat.of().formatHex(
-                    digest.digest(email.getBytes(StandardCharsets.UTF_8)));
+            return MEMBER_KEY_PREFIX + HexFormat.of().formatHex(digest.digest(email.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("회원 통화 키를 생성할 수 없습니다.", exception);
         }

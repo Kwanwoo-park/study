@@ -75,8 +75,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
                                  @Param("activeStatus") ChatMessageStatus activeStatus);
 
     @Transactional(readOnly = true)
-    Optional<ChatMessage> findFirstByRoomAndStatusOrderByRegisterTimeDesc(ChatRoom room,
-                                                                         ChatMessageStatus status);
+    Optional<ChatMessage> findFirstByRoomAndStatusOrderByRegisterTimeDesc(ChatRoom room, ChatMessageStatus status);
 
     @Transactional(readOnly = true)
     List<ChatMessage> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);

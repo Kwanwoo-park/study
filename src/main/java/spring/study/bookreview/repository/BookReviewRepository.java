@@ -23,7 +23,6 @@ public interface BookReviewRepository extends JpaRepository<BookReview, Long> {
     @Transactional(readOnly = true)
     Page<BookReview> search(@Param("keyword") String keyword, Pageable pageable);
 
-    @Modifying
-    @Query("delete from book_review review where review.author = :author")
-    void deleteByAuthor(@Param("author") Member author);
+    @Transactional
+    void deleteByAuthor(Member author);
 }

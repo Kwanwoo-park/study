@@ -65,6 +65,5 @@ public class Notification extends BasetimeEntity implements Serializable {
         this.message = message;
         this.url = url;
         this.readStatus = Status.UNREAD;
-        changeUpdateTime(LocalDateTime.now());
     }
 }

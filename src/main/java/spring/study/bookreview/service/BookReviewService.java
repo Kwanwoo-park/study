@@ -19,16 +19,15 @@ import spring.study.member.entity.Role;
 @Service
 @RequiredArgsConstructor
 public class BookReviewService {
-    private static final int MAX_PAGE_SIZE = 30;
-
     private final BookReviewRepository bookReviewRepository;
 
     @Transactional(readOnly = true)
     public Page<BookReviewResponseDto> findAll(String keyword, int page, int size) {
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
+
         PageRequest pageable = PageRequest.of(
                 Math.max(page, 0),
-                Math.min(Math.max(size, 1), MAX_PAGE_SIZE),
+                Math.min(Math.max(size, 1), 30),
                 Sort.by(Sort.Order.desc("registerTime"), Sort.Order.desc("id"))
         );
         return bookReviewRepository.search(normalizedKeyword, pageable).map(BookReviewResponseDto::new);
@@ -36,7 +35,7 @@ public class BookReviewService {
 
     @Transactional(readOnly = true)
     public BookReviewResponseDto findById(Long id) {
-        return new BookReviewResponseDto(findEntity(id));
+        return new BookReviewResponseDto(bookReviewRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 독후감입니다")));
     }
 
     @Transactional
@@ -57,7 +56,9 @@ public class BookReviewService {
     @Transactional
     public BookReviewResponseDto update(Long id, BookReviewRequestDto requestDto, Member member) {
         requireAdministrator(member);
-        BookReview review = findEntity(id);
+
+        BookReview review = bookReviewRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 독후감입니다"));
+
         review.update(
                 requestDto.getReviewTitle().trim(),
                 requestDto.getBookTitle().trim(),
@@ -66,13 +67,15 @@ public class BookReviewService {
                 requestDto.getFinishedDate(),
                 requestDto.getContent().trim()
         );
+
         return new BookReviewResponseDto(review);
     }
 
     @Transactional
     public void delete(Long id, Member member) {
         requireAdministrator(member);
-        bookReviewRepository.delete(findEntity(id));
+
+        bookReviewRepository.deleteById(id);
     }
 
     @Transactional
@@ -84,13 +87,5 @@ public class BookReviewService {
         if (member == null || member.getRole() != Role.ADMIN) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "관리자만 독후감을 관리할 수 있습니다");
         }
-    }
-
-    private BookReview findEntity(Long id) {
-        if (id == null) {
-            throw new ResourceNotFoundException("존재하지 않는 독후감입니다");
-        }
-        return bookReviewRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 독후감입니다"));
     }
 }

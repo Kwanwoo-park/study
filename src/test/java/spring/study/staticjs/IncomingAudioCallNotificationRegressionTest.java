@@ -26,13 +26,13 @@ class IncomingAudioCallNotificationRegressionTest {
     @Test
     void endedCallEventShouldCloseEveryTabAndItsSystemNotification() throws IOException {
         String commonJs = read("src/main/resources/static/js/common/common.js");
-        String service = read("src/main/java/spring/study/chat/service/AudioCallSignalingService.java");
+        String facade = read("src/main/java/spring/study/chat/facade/AudioCallFacade.java");
 
         assertTrue(commonJs.contains("notification.readStatus === 'READ'"));
         assertTrue(commonJs.contains("fnCloseIncomingAudioCall(details.callId)"));
         assertTrue(commonJs.contains("incomingAudioSystemNotifications.get(resolvedCallId)?.close()"));
-        assertTrue(service.contains("closeIncomingNotification(call, senderEmail);"));
-        assertTrue(service.contains("notificationService.closeRealtimeNotification("));
+        assertTrue(facade.contains("closeIncomingNotification(call, senderEmail);"));
+        assertTrue(facade.contains("notificationService.closeRealtimeNotification("));
     }
 
     @Test
