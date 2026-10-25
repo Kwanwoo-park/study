@@ -98,7 +98,7 @@ class BookReviewApiControllerTest {
         mvc.perform(delete("/api/book-reviews/4"))
                 .andExpect(status().isOk()).andExpect(jsonPath("result").value(4))
                 .andExpect(jsonPath("message").value("독후감이 삭제되었습니다"));
-        verify(repository).delete(review);
+        verify(repository).deleteById(4L);
     }
 
     @Test

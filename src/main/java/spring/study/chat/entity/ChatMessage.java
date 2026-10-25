@@ -68,6 +68,7 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
         this.status = ChatMessageStatus.ACTIVE;
         this.member = member;
         this.room = room;
+        changeRegisterTime(registerTime);
     }
 
     @Override
