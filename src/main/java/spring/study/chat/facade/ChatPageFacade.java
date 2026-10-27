@@ -29,7 +29,6 @@ public class ChatPageFacade {
     private final ChatRoomService roomService;
     private final ChatMessageService messageService;
     private final ChatRoomMemberService roomMemberService;
-    private final ChatViewFacade viewFacade;
 
     public String chatList(Model model, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);

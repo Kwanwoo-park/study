@@ -20,8 +20,9 @@ class ChatRoomFacadeTest {
     private final ChatRoomMemberService memberService = mock(ChatRoomMemberService.class);
     private final ChatPresenceService presenceService = mock(ChatPresenceService.class);
     private final ChatMessageService messageService = mock(ChatMessageService.class);
+    private final ChatMessageImgService imgService = mock(ChatMessageImgService.class);
     private final NotificationService notificationService = mock(NotificationService.class);
-    private final ChatRoomFacade facade = new ChatRoomFacade(roomService, memberService, messageService, presenceService, notificationService, mock(ChatRoomDetailsService.class));
+    private final ChatRoomFacade facade = new ChatRoomFacade(roomService, memberService, imgService, messageService, presenceService, notificationService);
     private final Member member = Member.builder().id(1L).email("me@example.test").name("me").build();
 
     @Test

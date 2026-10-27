@@ -30,10 +30,4 @@ public class ChatRoomDetailsController {
             @RequestParam(required = false) Long cursor, HttpServletRequest request) {
         return chatRoomFacade.images(roomId, jwtManager.getLoginMember(request), cursor);
     }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<?> invalidCursor() {
-        return ResponseEntity.badRequest().cacheControl(CacheControl.noStore())
-                .body(Map.of("message", "올바른 사진 조회 위치를 입력해 주세요"));
-    }
 }

@@ -4,6 +4,8 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import spring.study.chat.dto.ChatRoomDetailsResponse;
+import spring.study.chat.dto.ChatRoomParticipant;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.ChatRoomMember;
 import spring.study.member.entity.Member;
@@ -84,6 +86,16 @@ public class ChatRoomMemberService {
     @Transactional(readOnly = true)
     public List<ChatRoomMember> find(ChatRoom room) {
         return chatRoomMemberRepository.findByRoom(room);
+    }
+
+    @Transactional(readOnly = true)
+    public ChatRoomDetailsResponse details(ChatRoom room, Member viewer) {
+        List<ChatRoomParticipant> members = chatRoomMemberRepository.findParticipantsByRoom(room).stream()
+                .map(ChatRoomMember::getMember)
+                .map(member -> new ChatRoomParticipant(member.getName(), member.getEmail(), member.getProfile(), member.getId().equals(viewer.getId())))
+                .toList();
+
+        return new ChatRoomDetailsResponse(room.getRoomId(), room.getName(), members);
     }
 
     public void delete(Member member, ChatRoom room) {

@@ -2,8 +2,10 @@ package spring.study.chat.facade;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import spring.study.chat.dto.ChatRoomDetailsResponse;
 import spring.study.chat.dto.ChatRoomImagesResponse;
 import spring.study.chat.dto.MobileChatRoomResponse;
@@ -28,7 +30,6 @@ public class ChatRoomFacade {
     private final ChatMessageService messageService;
     private final ChatPresenceService chatPresenceService;
     private final NotificationService notificationService;
-    private final ChatRoomDetailsService chatRoomDetailsService;
 
     public ResponseEntity<?> rooms(Member member) {
         List<ChatRoom> rooms = chatRoomMemberService.find(member);
@@ -44,13 +45,17 @@ public class ChatRoomFacade {
     }
 
     public ResponseEntity<ChatRoomDetailsResponse> details(String roomId, Member member) {
+        ChatRoom room = requireParticipant(roomId, member);
+
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                .body(chatRoomDetailsService.details(roomId, member));
+                .body(chatRoomMemberService.details(room, member));
     }
 
     public ResponseEntity<ChatRoomImagesResponse> images(String roomId, Member member, Long cursor) {
+        ChatRoom room = requireParticipant(roomId, member);
+
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                .body(imgService.images(roomId, member, cursor));
+                .body(imgService.images(room, member, cursor));
     }
 
     public ResponseEntity<?> active(String roomId, Member member) {
@@ -84,5 +89,20 @@ public class ChatRoomFacade {
         }
 
         return unreadCountMap;
+    }
+
+    private ChatRoom requireParticipant(String roomId, Member viewer) {
+        if (viewer == null)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+
+        ChatRoom room = chatRoomService.find(roomId);
+
+        if (room == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다");
+
+        if (!chatRoomMemberService.exist(viewer, room))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "참여 중인 채팅방만 조회할 수 있습니다");
+
+        return room;
     }
 }

@@ -58,7 +58,7 @@ class ControllerFacadeWiringRegressionTest {
                 CommonFacade.class, AppealApiController.class, AppealFacade.class,
                 BoardApiController.class, BoardFacade.class, BookReviewApiController.class, BookReviewFacade.class,
                 ChatApiController.class, ChatRoomDetailsController.class, ChatWebSocketApiController.class, ChatFacade.class, ChatSendFacade.class,
-                ChatViewFacade.class, ChatRoomFacade.class, AudioCallFacade.class,
+                ChatRoomFacade.class, AudioCallFacade.class,
                 CollectionApiController.class, CollectionFacade.class, CommentApiController.class, CommentFacade.class,
                 DiaryApiController.class, DiaryFacade.class, FavoriteApiController.class, FavoriteFacade.class,
                 FollowApiController.class, FollowFacade.class, ForbiddenApiController.class, ForbiddenFacade.class,
