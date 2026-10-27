@@ -61,14 +61,13 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
     private boolean newEntity = true;
 
     @Builder
-    public ChatMessage(String id, String message, MessageType type, Member member, ChatRoom room, LocalDateTime registerTime) {
+    public ChatMessage(String id, String message, MessageType type, Member member, ChatRoom room) {
         this.id = id;
         this.message = message;
         this.type = type;
         this.status = ChatMessageStatus.ACTIVE;
         this.member = member;
         this.room = room;
-        changeRegisterTime(registerTime);
     }
 
     @Override

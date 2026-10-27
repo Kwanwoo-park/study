@@ -16,6 +16,7 @@ import spring.study.chat.repository.ChatRoomRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,6 +83,11 @@ public class ChatRoomService {
         if (search1 != null)
             return search1;
         else return search2;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, ChatRoom> findByRoomIdIn(Set<String> roomIdList) {
+        return chatRoomRepository.findByRoomIdIn(roomIdList).stream().collect(Collectors.toMap(ChatRoom::getRoomId, Function.identity()));
     }
 
     public void delete(String roomId) {

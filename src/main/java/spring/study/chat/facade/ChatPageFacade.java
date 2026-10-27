@@ -4,13 +4,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.entity.ChatRoomMember;
+import spring.study.chat.service.ChatMessageService;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatPageFacade {
     private final JwtManager jwtManager;
     private final ChatRoomService roomService;
+    private final ChatMessageService messageService;
     private final ChatRoomMemberService roomMemberService;
     private final ChatViewFacade viewFacade;
 
@@ -35,11 +43,11 @@ public class ChatPageFacade {
             return "chat/adminChatList";
         }
         else {
-            List<ChatRoom> list = viewFacade.chatList(member);
+            List<ChatRoom> list = roomMemberService.find(member);
 
             model.addAttribute("roomList", list);
             model.addAttribute("member", roomMemberService.findMember(list, member));
-            model.addAttribute("unreadCount", viewFacade.unreadCount(member, list));
+            model.addAttribute("unreadCount", unReadCount(member, list));
 
             return "chat/chatList";
         }
@@ -75,5 +83,20 @@ public class ChatPageFacade {
         }
 
         return names;
+    }
+
+    private Map<String, Long> unReadCount(Member member, List<ChatRoom> rooms) {
+        Map<String, Long> unreadCountMap = new HashMap<>();
+
+        for (ChatRoom room : rooms) {
+            ChatRoomMember roomMember = roomMemberService.find(member, room);
+            LocalDateTime lastReadAt = roomMember == null ? null : roomMember.getLastReadAt();
+
+            long unreadCount = messageService.countUnread(room, member, lastReadAt);
+
+            unreadCountMap.put(room.getRoomId(), unreadCount);
+        }
+
+        return unreadCountMap;
     }
 }

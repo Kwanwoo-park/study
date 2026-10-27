@@ -13,7 +13,6 @@ import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -24,12 +23,13 @@ class ChatFacadeMessageMutationTest {
     private final ChatRoomService roomService = mock(ChatRoomService.class);
     private final ChatRoomMemberService roomMemberService = mock(ChatRoomMemberService.class);
     private final ChatMessageService messageService = mock(ChatMessageService.class);
+    private final ChatMessageHiddenService messageHiddenService = mock(ChatMessageHiddenService.class);
     private final ChatMessageImgService messageImgService = mock(ChatMessageImgService.class);
     private final MemberService memberService = mock(MemberService.class);
     private final ModerationFacade moderationService = mock(ModerationFacade.class);
     private final ImageS3Service imageS3Service = mock(ImageS3Service.class);
     private final SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
-    private final ChatFacade chatFacade = new ChatFacade(roomService, roomMemberService, messageService, messageImgService, memberService, moderationService, imageS3Service, messagingTemplate);
+    private final ChatFacade chatFacade = new ChatFacade(roomService, roomMemberService, messageService, messageHiddenService, messageImgService, memberService, moderationService, imageS3Service, messagingTemplate);
 
     @Test
     void nonParticipantsCannotLoadCurrentOrPreviousMessages() {
@@ -77,7 +77,7 @@ class ChatFacadeMessageMutationTest {
 
         chatFacade.deleteMessage(message.getId(), ChatMessageDeleteScope.ME, member);
 
-        verify(messageService).hideForMember(message.getId(), member);
+        verify(messageHiddenService).hideForMember(message, member);
         verify(messageService, never()).deleteForAll(any(), any());
         verifyNoInteractions(messagingTemplate);
         verify(messageImgService, never()).deleteMessage(any());
@@ -116,7 +116,6 @@ class ChatFacadeMessageMutationTest {
                         .name("room")
                         .count(2L)
                         .build())
-                .registerTime(LocalDateTime.now())
                 .build();
     }
 

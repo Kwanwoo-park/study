@@ -27,6 +27,9 @@ import spring.study.member.repository.MemberRepository;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -112,6 +115,11 @@ public class MemberService implements UserDetailsService {
     @Transactional(readOnly = true)
     public List<Member> findNewUser(LocalDateTime start, LocalDateTime end) {
         return memberRepository.findByRegisterTimeBetween(start, end);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Member> findByEmailIn(Set<String> emailList) {
+        return memberRepository.findByEmailIn(emailList).stream().collect(Collectors.toMap(Member::getEmail, Function.identity()));
     }
 
     @Transactional

@@ -1,13 +1,13 @@
 package spring.study.chat.service;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.dto.ChatMessageEventDto;
 import spring.study.chat.dto.ChatMessageResponseDto;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatMessageStatus;
 import spring.study.chat.entity.MessageType;
-import spring.study.chat.repository.ChatMessageHiddenRepository;
 import spring.study.chat.repository.ChatMessageRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -26,11 +26,7 @@ import static org.mockito.Mockito.when;
 
 class ChatMessageServiceTest {
     private final ChatMessageRepository chatMessageRepository = mock(ChatMessageRepository.class);
-    private final ChatMessageHiddenRepository chatMessageHiddenRepository = mock(ChatMessageHiddenRepository.class);
-    private final ChatMessageService chatMessageService = new ChatMessageService(
-            chatMessageRepository,
-            chatMessageHiddenRepository
-    );
+    private final ChatMessageService chatMessageService = new ChatMessageService(chatMessageRepository);
 
     @Test
     void countUnreadShouldNotPassOutOfRangeDateWhenMemberNeverReadRoom() {
@@ -127,7 +123,6 @@ class ChatMessageServiceTest {
                 .type(MessageType.TALK)
                 .member(owner)
                 .room(ChatRoom.builder().id(1L).roomId("room-1").name("room").count(2L).build())
-                .registerTime(LocalDateTime.now())
                 .build();
         when(chatMessageRepository.findById(message.getId())).thenReturn(java.util.Optional.of(message));
 
@@ -138,19 +133,6 @@ class ChatMessageServiceTest {
 
         assertEquals("금칙어 사용으로 검열된 메시지는 수정할 수 없습니다.", exception.getReason());
         assertFalse(message.isEdited());
-    }
-
-    @Test
-    void hideForMemberShouldCreateVisibilityRecordWithoutDeletingMessage() {
-        Member member = member(1L, "member@test.com");
-        ChatMessage message = message(member, MessageType.TALK);
-        when(chatMessageRepository.findById(message.getId())).thenReturn(java.util.Optional.of(message));
-        when(chatMessageHiddenRepository.existsByMessageAndMember(message, member)).thenReturn(false);
-
-        chatMessageService.hideForMember(message.getId(), member);
-
-        verify(chatMessageHiddenRepository).save(any());
-        verify(chatMessageRepository, never()).deleteById(any());
     }
 
     @Test
@@ -208,14 +190,15 @@ class ChatMessageServiceTest {
     }
 
     private ChatMessage message(Member owner, MessageType type, LocalDateTime registerTime) {
-        return ChatMessage.builder()
+        ChatMessage message = ChatMessage.builder()
                 .id("message-1")
                 .message("원본 메시지")
                 .type(type)
                 .member(owner)
                 .room(ChatRoom.builder().id(1L).roomId("room-1").name("room").count(2L).build())
-                .registerTime(registerTime)
                 .build();
+        ReflectionTestUtils.setField(message, "registerTime", registerTime);
+        return message;
     }
 
     private Member member(Long id, String email) {

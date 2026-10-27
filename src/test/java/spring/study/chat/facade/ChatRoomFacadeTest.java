@@ -16,24 +16,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 class ChatRoomFacadeTest {
-    private final ChatViewFacade viewFacade = mock(ChatViewFacade.class);
     private final ChatRoomService roomService = mock(ChatRoomService.class);
     private final ChatRoomMemberService memberService = mock(ChatRoomMemberService.class);
     private final ChatPresenceService presenceService = mock(ChatPresenceService.class);
+    private final ChatMessageService messageService = mock(ChatMessageService.class);
     private final NotificationService notificationService = mock(NotificationService.class);
-    private final ChatRoomFacade facade = new ChatRoomFacade(viewFacade, roomService, memberService,
-            presenceService, notificationService, mock(ChatRoomDetailsService.class));
+    private final ChatRoomFacade facade = new ChatRoomFacade(roomService, memberService, messageService, presenceService, notificationService, mock(ChatRoomDetailsService.class));
     private final Member member = Member.builder().id(1L).email("me@example.test").name("me").build();
 
     @Test
-    void roomListPreservesParticipantProjectionUnreadCountAndFallbacks() {
+    void roomListPreservesParticipantProjectionUnReadCountAndFallbacks() {
         ChatRoom first = ChatRoom.builder().id(1L).roomId("first").name("first room").build();
         ChatRoom second = ChatRoom.builder().id(2L).roomId("second").name("second room").build();
         Member participant = Member.builder().id(2L).email("other@example.test").name("other").build();
         List<ChatRoom> rooms = List.of(first, second);
-        when(viewFacade.chatList(member)).thenReturn(rooms);
+        when(memberService.find(member)).thenReturn(rooms);
         when(memberService.findMember(rooms, member)).thenReturn(new HashMap<>(Map.of("first", List.of(participant))));
-        when(viewFacade.unreadCount(member, rooms)).thenReturn(Map.of("first", 3L));
 
         var response = facade.rooms(member);
 

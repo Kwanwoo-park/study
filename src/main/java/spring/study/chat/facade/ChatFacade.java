@@ -20,10 +20,7 @@ import spring.study.chat.entity.ChatRoomMember;
 import spring.study.chat.entity.MessageType;
 import spring.study.chat.entity.ChatMessageDeleteScope;
 import spring.study.chat.entity.ChatMessageStatus;
-import spring.study.chat.service.ChatMessageImgService;
-import spring.study.chat.service.ChatMessageService;
-import spring.study.chat.service.ChatRoomMemberService;
-import spring.study.chat.service.ChatRoomService;
+import spring.study.chat.service.*;
 import spring.study.common.facade.ModerationFacade;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
@@ -39,6 +36,7 @@ public class ChatFacade {
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
+    private final ChatMessageHiddenService messageHiddenService;
     private final ChatMessageImgService messageImgService;
     private final MemberService memberService;
     private final ModerationFacade moderationService;
@@ -225,7 +223,8 @@ public class ChatFacade {
     public ResponseEntity<?> updateMessage(String messageId, ChatMessageRequestDto requestDto, Member member, HttpServletResponse response) {
         ChatMessage originalMessage = messageService.findById(messageId);
         validateParticipant(originalMessage, member);
-        messageService.validateEditable(originalMessage, member);
+
+        messageService.validateOwner(originalMessage, member);
 
         String content = requestDto.getMessage();
         int risk = moderationService.validate(content, member, response);
@@ -258,7 +257,8 @@ public class ChatFacade {
         validateParticipant(message, member);
 
         if (scope == ChatMessageDeleteScope.ME) {
-            messageService.hideForMember(messageId, member);
+            messageHiddenService.hideForMember(message, member);
+
             return ResponseEntity.ok(Map.of(
                     "result", messageId,
                     "scope", scope

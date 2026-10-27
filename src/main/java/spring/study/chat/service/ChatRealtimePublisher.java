@@ -16,7 +16,10 @@ public class ChatRealtimePublisher {
 
     public void publish(ChatMessageRequestDto message) {
         String key = "chat:realtime:delivered:" + message.getId();
-        if (Boolean.TRUE.equals(redis.hasKey(key))) return;
+
+        if (redis.hasKey(key))
+            return;
+
         messaging.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
         // Only mark AFTER sending: a failed WebSocket send must remain retryable after the DB commit.
         // A crash between send and this marker can still redeliver; clients deduplicate by message ID.

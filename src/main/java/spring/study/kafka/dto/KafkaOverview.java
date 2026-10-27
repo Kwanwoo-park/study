@@ -4,4 +4,6 @@ import java.time.Instant;
 import java.util.List;
 
 public record KafkaOverview(Instant observedAt, String brokerError, List<KafkaTopicHealth> topics, List<KafkaPartitionLag> lags, Long totalLag,
-                       long outboxPending, long oldestOutboxSeconds, long outboxFailed, long unresolvedDeadLetters, long replayPending, List<String> warnings) {}
+                       long outboxPending, long oldestOutboxSeconds, long outboxFailed, long unresolvedDeadLetters, long replayPending,
+                       List<String> warnings, String clusterId, Integer controllerId,
+                       List<KafkaBrokerInfo> brokers, List<KafkaConsumerGroupInfo> consumerGroups) {}

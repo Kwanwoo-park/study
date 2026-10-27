@@ -6,34 +6,68 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
+
+import spring.study.chat.entity.ChatMessage;
+import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatRealtimePublisher;
+import spring.study.chat.service.ChatRoomService;
 import spring.study.kafka.config.KafkaTopics;
-import spring.study.notification.repository.NotificationRepository;
+import spring.study.member.entity.Member;
+import spring.study.member.service.MemberService;
 import org.springframework.stereotype.Component;
 import spring.study.chat.dto.ChatMessageRequestDto;
-import spring.study.chat.service.ChatMessageBatchService;
 import spring.study.notification.entity.Notification;
 import spring.study.notification.service.NotificationRealtimePublisher;
 import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.admin.entity.IntegrationEventLogOperation;
 import spring.study.admin.entity.IntegrationEventLogOutcome;
 import spring.study.admin.entity.IntegrationEventLogRoute;
+import spring.study.notification.service.NotificationService;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class MessageConsumer {
     private final ChatRealtimePublisher chatRealtimePublisher;
+    private final MemberService memberService;
+    private final ChatRoomService roomService;
+    private final ChatMessageService messageService;
     private final NotificationRealtimePublisher notificationRealtimePublisher;
-    private final ChatMessageBatchService chatMessageBatchService;
     private final IntegrationEventLogService eventLogs;
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
     @KafkaListener(topics = "topic", containerFactory = "chatBatchKafkaListenerContainerFactory")
     public void consume(@Payload List<ChatMessageRequestDto> messages){
         try {
-            List<ChatMessageRequestDto> savedMessages = chatMessageBatchService.saveBatch(messages);
+            if (messageService.checkMessage(messages).isEmpty())
+                return;
+
+            Set<String> roomIdList = messages.stream()
+                    .map(ChatMessageRequestDto::getRoomId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            Set<String> emailList = messages.stream()
+                    .map(ChatMessageRequestDto::getEmail)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            List<String> idList = messages.stream()
+                    .map(ChatMessageRequestDto::getId)
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            Map<String, ChatRoom> rooms = roomService.findByRoomIdIn(roomIdList);
+            Map<String, Member> members = memberService.findByEmailIn(emailList);
+            Map<String, ChatMessage> existing = messageService.findAllById(idList);
+
+            List<ChatMessageRequestDto> savedMessages = messageService.saveBatch(rooms, members, existing, messages);
 
             for (ChatMessageRequestDto message : savedMessages) {
                 chatRealtimePublisher.publish(message);
@@ -51,7 +85,7 @@ public class MessageConsumer {
         Notification notification = record.value();
         try {
             if (notification == null || notification.getId() == null) throw new IllegalArgumentException("Invalid notification event");
-            Notification current = notificationRepository.findById(notification.getId()).orElse(null);
+            Notification current = notificationService.findById(notification.getId());
             if (current == null) {
                 eventLogs.record(IntegrationEventLogRoute.NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SKIPPED, notification.getId(), 1, null);
                 return;

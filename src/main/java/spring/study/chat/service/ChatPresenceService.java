@@ -15,8 +15,7 @@ public class ChatPresenceService {
     private final RedisTemplate<String, String> redisTemplate;
 
     public long countActiveConnections() {
-        var keys = redisTemplate.keys("chat:room:*:active:*");
-        return keys == null ? 0L : keys.size();
+        return redisTemplate.keys("chat:room:*:active:*").size();
     }
 
     public void active(String roomId, Member member) {
@@ -28,9 +27,7 @@ public class ChatPresenceService {
     }
 
     public boolean isActive(String roomId, Member member) {
-        Boolean hasKey = redisTemplate.hasKey(createKey(roomId, member));
-
-        return Boolean.TRUE.equals(hasKey);
+        return redisTemplate.hasKey(createKey(roomId, member));
     }
 
     private String createKey(String roomId, Member member) {

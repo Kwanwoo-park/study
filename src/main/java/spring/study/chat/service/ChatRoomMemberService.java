@@ -47,8 +47,15 @@ public class ChatRoomMemberService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChatRoomMember> find(Member member) {
-        return chatRoomMemberRepository.findByMember(member);
+    public List<ChatRoom> find(Member member) {
+        List<ChatRoomMember> list = chatRoomMemberRepository.findByMember(member);
+
+        return list.stream().map(ChatRoomMember::getRoom)
+                .sorted(Comparator.comparing(
+                            ChatRoom::getLastChatTime,
+                            Comparator.nullsFirst(Comparator.naturalOrder())
+                    ).reversed()
+                ).toList();
     }
 
     @Transactional(readOnly = true)

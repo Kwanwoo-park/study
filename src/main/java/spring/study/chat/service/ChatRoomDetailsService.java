@@ -10,6 +10,7 @@ import spring.study.chat.dto.ChatRoomDetailsResponse;
 import spring.study.chat.dto.ChatRoomImageResponse;
 import spring.study.chat.dto.ChatRoomImagesResponse;
 import spring.study.chat.entity.ChatRoom;
+import spring.study.chat.entity.ChatRoomMember;
 import spring.study.chat.repository.ChatMessageImgRepository;
 import spring.study.chat.repository.ChatRoomMemberRepository;
 import spring.study.chat.repository.ChatRoomRepository;
@@ -29,10 +30,9 @@ public class ChatRoomDetailsService {
 
     public ChatRoomDetailsResponse details(String roomId, Member viewer) {
         ChatRoom room = requireParticipant(roomId, viewer);
-        var members = participants.findParticipantsByRoom(room).stream()
-                .map(participant -> participant.getMember())
-                .map(member -> new ChatRoomParticipant(member.getName(), member.getEmail(),
-                        member.getProfile(), member.getId().equals(viewer.getId())))
+        List<ChatRoomParticipant> members = participants.findParticipantsByRoom(room).stream()
+                .map(ChatRoomMember::getMember)
+                .map(member -> new ChatRoomParticipant(member.getName(), member.getEmail(), member.getProfile(), member.getId().equals(viewer.getId())))
                 .toList();
         return new ChatRoomDetailsResponse(room.getRoomId(), room.getName(), members);
     }

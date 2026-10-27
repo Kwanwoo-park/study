@@ -82,7 +82,8 @@ class KafkaDeadLetterIntegrationTest {
             assertThat(entry.getStatus()).isEqualTo(KafkaDeadLetterStatus.REPLAYED);
             assertThat(new String(replayed.headers().lastHeader(KafkaTopics.EVENT_ID_HEADER).value(), StandardCharsets.UTF_8)).isEqualTo("outbox-42");
             var outbox = mock(KafkaOutboxEventRepository.class);
-            var overview = new KafkaMonitoringService(admin, properties, outbox, repository, "reliability-check").overview();
+            var overview = new KafkaMonitoringService(new spring.study.kafka.repository.KafkaClusterRepository(admin, "reliability-check"),
+                    properties, outbox, repository).overview();
             assertThat(overview.brokerError()).isNull();
             assertThat(overview.topics()).hasSize(4);
             assertThat(overview.lags()).hasSize(4);

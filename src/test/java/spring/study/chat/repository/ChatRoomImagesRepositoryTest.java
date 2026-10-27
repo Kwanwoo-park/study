@@ -108,7 +108,7 @@ class ChatRoomImagesRepositoryTest {
 
     private ChatMessage message(ChatRoom room, Member sender, MessageType type, String content) {
         return em.persist(ChatMessage.builder().id(UUID.randomUUID().toString()).room(room).member(sender)
-                .message(content).type(type).registerTime(LocalDateTime.now()).build());
+                .message(content).type(type).build());
     }
 
     private ChatMessageImg photo(ChatMessage message) {

@@ -21,6 +21,8 @@ import spring.study.kafka.service.*;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.kafka.dto.KafkaDeadLetterListing;
+import spring.study.kafka.dto.KafkaOverview;
+import spring.study.kafka.dto.KafkaBrokerInfo;
 import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
@@ -39,6 +41,7 @@ class KafkaOperationsSecurityTest {
     @Test void readAndReplayRequireAdministrator() throws Exception {
         mvc.perform(get("/admin/kafka")).andExpect(status().isNotFound());
         mvc.perform(get("/api/admin/kafka/overview")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/admin/kafka/overview").with(user(member(Role.USER)))).andExpect(status().isForbidden());
         mvc.perform(get("/api/admin/kafka/dead-letters").with(user(member(Role.USER)))).andExpect(status().isForbidden());
         mvc.perform(post("/api/admin/kafka/dead-letters/1/replay").with(user(member(Role.USER))).with(csrf())).andExpect(status().isForbidden());
         verifyNoInteractions(monitoring, deadLetters);
@@ -54,6 +57,17 @@ class KafkaOperationsSecurityTest {
         when(deadLetters.list(null, null)).thenReturn(new KafkaDeadLetterListing(List.of(), null));
         mvc.perform(get("/admin/kafka").with(user(member(Role.ADMIN)))).andExpect(status().isOk()).andExpect(view().name("admin/kafka_operations"));
         mvc.perform(get("/api/admin/kafka/dead-letters").with(user(member(Role.ADMIN)))).andExpect(status().isOk()).andExpect(jsonPath("entries").isArray());
+    }
+    @Test void adminOverviewIncludesReadOnlyClusterMetadata() throws Exception {
+        when(monitoring.overview()).thenReturn(new KafkaOverview(null, null, List.of(), List.of(), null,
+                0, 0, 0, 0, 0, List.of(), "cluster-test", 1,
+                List.of(new KafkaBrokerInfo(1, "broker.test", 9092, null, true, 4, 4)), List.of()));
+
+        mvc.perform(get("/api/admin/kafka/overview").with(user(member(Role.ADMIN))))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("clusterId").value("cluster-test"))
+                .andExpect(jsonPath("brokers[0].controller").value(true))
+                .andExpect(jsonPath("consumerGroups").isArray());
     }
     @Configuration @EnableWebMvc @EnableWebSecurity @EnableMethodSecurity
     @Import({KafkaOperationsSecurityConfig.class, KafkaOperationsController.class, spring.study.kafka.facade.KafkaOperationsFacade.class,
