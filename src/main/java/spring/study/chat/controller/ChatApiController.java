@@ -42,14 +42,6 @@ public class ChatApiController {
         return chatRoomFacade.rooms(member);
     }
 
-    @PostMapping("/send")
-    public ResponseEntity<?> sendMessage(@RequestBody ChatMessageRequestDto message, HttpServletRequest request, HttpServletResponse response) {
-        Member member = jwtManager.getLoginMember(request);
-        if (member == null) return commonFacade.unauthorized();
-
-        return chatSendFacade.sendMessage(message, member, response);
-    }
-
     @GetMapping("/audio/ice-servers")
     public ResponseEntity<?> getAudioIceServers(HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);

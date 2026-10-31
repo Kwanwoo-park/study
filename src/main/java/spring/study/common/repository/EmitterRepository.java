@@ -84,13 +84,14 @@ public class EmitterRepository {
 
     public synchronized void cleanupExpired() {
         long now = System.currentTimeMillis();
+
         if (now < nextCleanupAt) return;
+
         nextCleanupAt = now + 30000;
         LocalDateTime cutoff = expirationCutoff();
         readStates.values().forEach(states -> states.values().removeIf(read -> read.readBefore().isBefore(cutoff)));
         readStates.values().removeIf(Map::isEmpty);
-        eventCache.values().removeIf(value -> value instanceof NotificationRealtimeEvent event
-                && event.revisionTime() != null && event.revisionTime().isBefore(cutoff));
+        eventCache.values().removeIf(value -> value instanceof NotificationRealtimeEvent event && event.revisionTime() != null && event.revisionTime().isBefore(cutoff));
     }
 
     private LocalDateTime expirationCutoff() {

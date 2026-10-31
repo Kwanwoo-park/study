@@ -83,9 +83,12 @@ public class CommentService {
     public HashMap<Long, Long> countComments(List<Board> boardList) {
         HashMap<Long, Long> map = new HashMap<>();
         boardList.forEach(board -> map.put(board.getId(), 0L));
-        if (boardList.isEmpty()) return map;
+
+        if (boardList.isEmpty())
+            return map;
+
         commentRepository.countByBoardIds(boardList.stream().map(Board::getId).toList())
-                .forEach(row -> map.put((Long) row[0], (Long) row[1]));
+                .forEach(row -> map.put(row[0], row[1]));
 
         return map;
     }

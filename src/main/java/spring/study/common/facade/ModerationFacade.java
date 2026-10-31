@@ -39,11 +39,11 @@ public class ModerationFacade {
         if (member.getRole() == Role.ADMIN) {
             notificationService.createNotification(
                     member,
-                    "경고일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT)
-                            + " / 사유: 금칙어 사용 (관리자 계정 정지 제외)",
+                    "경고일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " / 사유: 금칙어 사용 (관리자 계정 정지 제외)",
                     Group.ADMIN
             );
             moderationService.clear(member);
+
             return 1;
         }
 
@@ -57,6 +57,7 @@ public class ModerationFacade {
                 "금지일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " (영구) / 사유: 금칙어 사용",
                 Group.ADMIN
         );
+
         notificationService.createNotification(
                 memberService.findAdministrator(),
                 member.getName() + "님이 금칙어를 사용하여 차단하였습니다",

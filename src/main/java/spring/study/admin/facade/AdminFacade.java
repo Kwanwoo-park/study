@@ -309,7 +309,7 @@ public class AdminFacade {
 
     private Map<String, Object> Traffic() {
         return Map.of(
-                "activeSessions", onlineUserService.countOnlineMembers(),
+                "activeSessions", onlineUserService.findOnlineMemberIds().size(),
                 "activeWebSockets", chatPresenceService.countActiveConnections()
         );
     }

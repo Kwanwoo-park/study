@@ -123,10 +123,4 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).cacheControl(CacheControl.noStore())
                 .body(Map.of("result", -503, "message", "데이터를 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."));
     }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<?> invalidCursor() {
-        return ResponseEntity.badRequest().cacheControl(CacheControl.noStore())
-                .body(Map.of("message", "올바른 사진 조회 위치를 입력해 주세요"));
-    }
 }

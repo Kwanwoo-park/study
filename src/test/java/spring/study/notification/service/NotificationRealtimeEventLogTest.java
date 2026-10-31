@@ -25,6 +25,7 @@ import static org.mockito.Mockito.*;
 import spring.study.admin.entity.IntegrationEventLogOperation;
 import spring.study.admin.entity.IntegrationEventLogOutcome;
 import spring.study.admin.entity.IntegrationEventLogRoute;
+import spring.study.notification.facade.NotificationFacade;
 
 class NotificationRealtimeEventLogTest {
     private final RedisTemplate<String, String> redis = mock(RedisTemplate.class);
@@ -47,7 +48,7 @@ class NotificationRealtimeEventLogTest {
         var payload = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(redis).convertAndSend(eq(NotificationRealtimePublisher.READ_CHANNEL), payload.capture());
         EmitterService otherServer = mock(EmitterService.class);
-        new NotificationRealtimeSubscriber(mapper, otherServer, logs).onMessage(new DefaultMessage(
+        new NotificationRealtimeSubscriber(mock(NotificationFacade.class)).onMessage(new DefaultMessage(
                 NotificationRealtimePublisher.READ_CHANNEL.getBytes(StandardCharsets.UTF_8),
                 payload.getValue().getBytes(StandardCharsets.UTF_8)), null);
         verify(otherServer).applyReadState(read);
@@ -79,18 +80,18 @@ class NotificationRealtimeEventLogTest {
     @Test
     void receivedNotificationRecordsTheNotificationIdAfterSseDispatch() throws Exception {
         EmitterService emitters = mock(EmitterService.class);
-        NotificationRealtimeSubscriber subscriber = new NotificationRealtimeSubscriber(mapper, emitters, logs);
+        NotificationRealtimeSubscriber subscriber = new NotificationRealtimeSubscriber(mock(NotificationFacade.class));
         String json = mapper.writeValueAsString(NotificationRealtimeEvent.from(notification()));
         subscriber.onMessage(new DefaultMessage(NotificationRealtimePublisher.CHANNEL.getBytes(StandardCharsets.UTF_8), json.getBytes(StandardCharsets.UTF_8)), null);
         var order = inOrder(emitters, logs);
-        order.verify(emitters).save(eq("7"), any(NotificationRealtimeEvent.class));
+        order.verify(emitters).find(eq("7"));
         order.verify(logs).record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SUCCESS, 9L, 1, null);
     }
 
     @Test
     void malformedRedisPayloadIsRecordedWithoutDispatching() {
         EmitterService emitters = mock(EmitterService.class);
-        NotificationRealtimeSubscriber subscriber = new NotificationRealtimeSubscriber(mapper, emitters, logs);
+        NotificationRealtimeSubscriber subscriber = new NotificationRealtimeSubscriber(mock(NotificationFacade.class));
         assertThatCode(() -> subscriber.onMessage(new DefaultMessage("notification-events".getBytes(StandardCharsets.UTF_8), "private-invalid-json".getBytes(StandardCharsets.UTF_8)), null)).doesNotThrowAnyException();
         verify(logs).record(eq(IntegrationEventLogRoute.REALTIME_NOTIFICATION), eq(IntegrationEventLogOperation.CONSUME), eq(IntegrationEventLogOutcome.FAILED), isNull(), eq(1), any(JsonProcessingException.class));
         verifyNoInteractions(emitters);

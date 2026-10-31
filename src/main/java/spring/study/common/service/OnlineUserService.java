@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -20,23 +21,34 @@ public class OnlineUserService {
     private final RedisTemplate<String, String> redisTemplate;
 
     public void connectWeb(String memberId) {
-        touch(WEB_KEY_PREFIX + memberId, WEB_TTL);
+        if (memberId == null)
+            return;
+
+        redisTemplate.opsForValue().set(WEB_KEY_PREFIX + memberId, "1", WEB_TTL);
         syncOnlineTotal();
     }
 
     public void disconnectWeb(String memberId) {
+        if (memberId == null)
+            return;
+
         redisTemplate.delete(WEB_KEY_PREFIX + memberId);
         syncOnlineTotal();
     }
 
     public void markMobileActive(Long memberId) {
-        if (memberId == null) return;
-        touch(MOBILE_KEY_PREFIX + memberId, MOBILE_ACTIVITY_TTL);
+        if (memberId == null)
+            return;
+
+        redisTemplate.opsForValue().set(MOBILE_KEY_PREFIX + memberId, "1", MOBILE_ACTIVITY_TTL);
     }
 
     public void markMobileInactive(Long memberId) {
-        if (memberId == null) return;
+        if (memberId == null)
+            return;
+
         redisTemplate.delete(MOBILE_KEY_PREFIX + memberId);
+
         syncOnlineTotal();
     }
 
@@ -47,21 +59,15 @@ public class OnlineUserService {
         return Set.copyOf(memberIds);
     }
 
-    public long countOnlineMembers() {
-        return findOnlineMemberIds().size();
-    }
-
     public void syncOnlineTotal() {
-        long count = countOnlineMembers();
+        long count = findOnlineMemberIds().size();
+
         if (count == 0L) {
             redisTemplate.delete(TOTAL_KEY);
             return;
         }
-        redisTemplate.opsForValue().set(TOTAL_KEY, Long.toString(count));
-    }
 
-    private void touch(String key, Duration ttl) {
-        redisTemplate.opsForValue().set(key, "1", ttl);
+        redisTemplate.opsForValue().set(TOTAL_KEY, Long.toString(count));
     }
 
     private void addMemberIds(Set<Long> memberIds, Set<String> keys, String prefix) {
@@ -75,7 +81,7 @@ public class OnlineUserService {
                 .forEach(memberIds::add);
     }
 
-    private java.util.Optional<Long> parseMemberId(String value) {
+    private Optional<Long> parseMemberId(String value) {
         try {
             return java.util.Optional.of(Long.parseLong(value));
         } catch (NumberFormatException exception) {

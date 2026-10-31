@@ -42,9 +42,11 @@ public class CommentFacade {
         if (validation != null) return validation;
 
         Board board = boardService.findById(dto.getId());
+
         if (!visibilityAccessPolicy.canViewBoard(board, member)) {
             return forbiddenBoard();
         }
+
         Member otherMember = board.getMember();
 
         dto.setBoard(board);
@@ -66,15 +68,19 @@ public class CommentFacade {
 
     public ResponseEntity<?> updateComment(CommentRequestDto dto, Member member, HttpServletResponse response) {
         Comment target = commentService.findById(dto.getId());
+
         if (!isOwnerOrAdmin(target, member)) {
             return forbiddenComment();
         }
+
         if (!visibilityAccessPolicy.canViewBoard(target.getBoard(), member)) {
             return forbiddenBoard();
         }
 
         ResponseEntity<?> validation = validateContent(dto.getComments(), member, response);
-        if (validation != null) return validation;
+
+        if (validation != null)
+            return validation;
 
         return ResponseEntity.ok(Map.of(
                 "result", commentService.updateComments(dto.getId(), dto.getComments())
@@ -88,8 +94,8 @@ public class CommentFacade {
         if (!isOwnerOrAdmin(comment, member)) {
             return forbiddenComment();
         }
-        if (member.getRole() != Role.ADMIN
-                && (comment.getBoard() == null || !comment.getBoard().getId().equals(id))) {
+
+        if (member.getRole() != Role.ADMIN && (comment.getBoard() == null || !comment.getBoard().getId().equals(id))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
                     "message", "게시글과 댓글 정보가 일치하지 않습니다"
@@ -106,9 +112,11 @@ public class CommentFacade {
 
     public ResponseEntity<?> getList(Long boardId, Member member, int cursor, int limit) {
         Board board = boardService.findById(boardId);
+
         if (!visibilityAccessPolicy.canViewBoard(board, member)) {
             return forbiddenBoard();
         }
+
         long totalCount = commentService.countComments(board);
         List<CommentListResponseDto> list = commentService.getComments(board, cursor, limit).stream()
                 .map(CommentListResponseDto::new)

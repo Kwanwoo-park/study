@@ -97,19 +97,6 @@ public class ChatFacade {
         ));
     }
 
-    private void requireParticipant(ChatRoom room, Member member) {
-        if (!roomMemberService.exist(member, room)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "참여 중인 채팅방만 조회할 수 있습니다");
-        }
-    }
-
-    private List<ChatMessageResponseDto> visibleImageMessages(List<ChatMessageResponseDto> messages) {
-        return messages.stream()
-                .filter(item -> item.getType().equals(MessageType.IMAGE))
-                .filter(item -> item.getStatus() != ChatMessageStatus.DELETED_FOR_ALL)
-                .toList();
-    }
-
     public ResponseEntity<?> createRoom(String name, Member member) {
         ChatRoom room = roomService.createRoom(name, 1L);
 
@@ -228,6 +215,7 @@ public class ChatFacade {
 
         String content = requestDto.getMessage();
         int risk = moderationService.validate(content, member, response);
+
         if (risk != 0) {
             if (risk == -99) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -243,6 +231,7 @@ public class ChatFacade {
 
         ChatMessage message = messageService.edit(messageId, content, member);
         ChatMessageEventDto event = ChatMessageEventDto.updated(message);
+
         updateRoomSummary(message.getRoom());
         broadcast(event);
 
@@ -267,6 +256,7 @@ public class ChatFacade {
 
         ChatMessage deletedMessage = messageService.deleteForAll(messageId, member);
         ChatMessageEventDto event = ChatMessageEventDto.deletedForAll(deletedMessage);
+
         updateRoomSummary(deletedMessage.getRoom());
         broadcast(event);
 
@@ -275,6 +265,19 @@ public class ChatFacade {
                 "scope", scope,
                 "event", event
         ));
+    }
+
+    private void requireParticipant(ChatRoom room, Member member) {
+        if (!roomMemberService.exist(member, room)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "참여 중인 채팅방만 조회할 수 있습니다");
+        }
+    }
+
+    private List<ChatMessageResponseDto> visibleImageMessages(List<ChatMessageResponseDto> messages) {
+        return messages.stream()
+                .filter(item -> item.getType().equals(MessageType.IMAGE))
+                .filter(item -> item.getStatus() != ChatMessageStatus.DELETED_FOR_ALL)
+                .toList();
     }
 
     private void validateParticipant(ChatMessage message, Member member) {

@@ -1,11 +1,14 @@
 package spring.study.notification.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.EmitterService;
 import spring.study.common.service.JwtManager;
+import spring.study.common.service.OnlineUserService;
 import spring.study.member.entity.Member;
 import spring.study.notification.facade.NotificationFacade;
 import spring.study.notification.service.NotificationService;
@@ -20,7 +23,7 @@ class NotificationApiControllerTest {
         Member member = Member.builder().id(7L).build();
         when(service.findById(1L)).thenReturn(spring.study.notification.entity.Notification.builder().id(1L).member(member).build());
 
-        new NotificationFacade(service, mock(EmitterService.class)).updateAsRead(1L, member);
+        new NotificationFacade(mock(ObjectMapper.class), mock(IntegrationEventLogService.class), service, mock(EmitterService.class), mock(OnlineUserService.class)).updateAsRead(1L, member);
 
         verify(service).updateRead(1L);
     }
@@ -29,7 +32,7 @@ class NotificationApiControllerTest {
     void streamUsesAuthenticatedMemberIdAndReturnsTheSameEmitter() {
         EmitterService emitterService = mock(EmitterService.class);
         JwtManager jwtManager = mock(JwtManager.class);
-        NotificationFacade facade = new NotificationFacade(mock(NotificationService.class), emitterService);
+        NotificationFacade facade = new NotificationFacade(mock(ObjectMapper.class), mock(IntegrationEventLogService.class), mock(NotificationService.class), emitterService, mock(OnlineUserService.class));
         NotificationApiController controller = new NotificationApiController(jwtManager, new CommonFacade(), facade);
         MockHttpServletRequest request = new MockHttpServletRequest();
         SseEmitter emitter = new SseEmitter();

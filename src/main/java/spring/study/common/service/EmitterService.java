@@ -2,14 +2,11 @@ package spring.study.common.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.common.repository.EmitterRepository;
 import spring.study.notification.dto.NotificationReadState;
-import spring.study.notification.dto.NotificationRealtimeEvent;
 
-import java.io.IOException;
 import java.util.Map;
 
 @Service
@@ -17,92 +14,43 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EmitterService {
     private final EmitterRepository emitterRepository;
-    private final OnlineUserService onlineUserService;
 
-    public void save(String id, Object notification) {
-        Map<String, SseEmitter> sseEmitters = emitterRepository.findAllEmitterStartWithById(id);
-        if (sseEmitters.isEmpty()) return;
-        Object accepted = emitterRepository.saveEventCache(id, notification);
-        if (accepted == null) return;
-        sseEmitters.forEach((key, emitter) -> {
-            sendToClient(emitter, key, accepted);
-        });
+    public Map<String, SseEmitter> find(String id) {
+        return emitterRepository.findAllEmitterStartWithById(id);
     }
 
-    public void applyReadState(NotificationReadState read) {
-        if (!emitterRepository.applyReadState(read)) return;
-        emitterRepository.findAllEmitterStartWithById(read.memberId().toString()).forEach((key, emitter) -> {
-            try {
-                emitter.send(SseEmitter.event().name("notification-read").data(read));
-            } catch (IOException | IllegalStateException exception) {
-                disconnect(read.memberId().toString(), key);
-            }
-        });
+    public Object saveEventCache(String id, Object notification) {
+        return emitterRepository.saveEventCache(id, notification);
+    }
+
+    public Map<String, SseEmitter> applyReadState(NotificationReadState read) {
+        if (!emitterRepository.applyReadState(read))
+            return Map.of();
+
+        return emitterRepository.findAllEmitterStartWithById(read.memberId().toString());
+    }
+
+    public Map<String, SseEmitter> findAllEmitterStartWithById(String id) {
+        return emitterRepository.findAllEmitterStartWithById(id);
+    }
+
+    public Map<String, Object> findAllEventCacheStartWithById(String id) {
+        return emitterRepository.findAllEventCacheStartWithById(id);
     }
 
     public void cleanupEventCache() {
         emitterRepository.cleanupExpired();
     }
 
-    private void sendToClient(SseEmitter emitter, String emitterId, Object data) {
-        try {
-            emitter.send(SseEmitter.event()
-                    .reconnectTime(3000)
-                    .id(emitterId)
-                    .name("notification")
-                    .data(data)
-            );
-        } catch (ClientAbortException e) {
-            log.debug("Client aborted SSE Connection: {}", emitterId);
-            emitter.complete();
-            disconnect(extractMemberId(emitterId), emitterId);
-        } catch (IOException e) {
-            log.debug("SSE Connection closed: {}", emitterId);
-            emitter.complete();
-            disconnect(extractMemberId(emitterId), emitterId);
-        }
+    public SseEmitter addEmitter(String emitterId) {
+        return emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L));
     }
 
-    private String extractMemberId(String emitterId) {
-        int separatorIndex = emitterId.indexOf("_");
-
-        return separatorIndex < 0 ? emitterId : emitterId.substring(0, separatorIndex);
-    }
-
-    public SseEmitter addEmitter(String id) {
-        String emitterId = id + "_" + System.currentTimeMillis();
-
-        SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L));
-
-        onlineUserService.connectWeb(id);
-
-        emitter.onCompletion(() -> disconnect(id, emitterId));
-        emitter.onTimeout(() -> disconnect(id, emitterId));
-        emitter.onError(e -> disconnect(id, emitterId));
-
-        Map<String, Object> events = emitterRepository.findAllEventCacheStartWithById(id);
-
-        events.values().stream()
-                .filter(event -> !(event instanceof NotificationRealtimeEvent notification) || !"READ".equals(notification.readStatus()))
-                .forEach(event -> sendToClient(emitter, emitterId, event));
-
-        try {
-            emitter.send(SseEmitter.event().reconnectTime(3000).name("connect").data("connected"));
-        } catch (IOException e) {
-            disconnect(id, emitterId);
-        }
-
-        return emitter;
-    }
-
-    private void disconnect(String id, String emitterId) {
+    public void deleteById(String emitterId) {
         emitterRepository.deleteById(emitterId);
+    }
 
-        if (!emitterRepository.findAllEmitterStartWithById(id).isEmpty()) {
-            return;
-        }
-
+    public void deleteAll(String id) {
         emitterRepository.deleteAllEventCacheByMemberId(id);
-        onlineUserService.disconnectWeb(id);
     }
 }

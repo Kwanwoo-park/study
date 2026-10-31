@@ -8,16 +8,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import spring.study.board.entity.Board;
-import spring.study.board.service.BoardService;
 import spring.study.comment.dto.CommentRequestDto;
 import spring.study.comment.entity.Comment;
 import spring.study.comment.service.CommentService;
 import spring.study.common.facade.ModerationFacade;
-import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.notification.service.NotificationService;
-import spring.study.reply.service.ReplyService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -28,11 +24,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CommentFacadeAuthorizationTest {
     @Mock CommentService commentService;
-    @Mock BoardService boardService;
-    @Mock NotificationService notificationService;
     @Mock ModerationFacade moderationService;
-    @Mock ReplyService replyService;
-    @Mock VisibilityAccessPolicy visibilityAccessPolicy;
     @InjectMocks CommentFacade commentFacade;
 
     @Test

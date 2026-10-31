@@ -32,5 +32,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Query("select c.board.id, count(c.id) from comment c where c.board.id in :boardIds group by c.board.id")
     @Transactional(readOnly = true)
-    List<Object[]> countByBoardIds(@Param("boardIds") Collection<Long> boardIds);
+    List<Long[]> countByBoardIds(@Param("boardIds") List<Long> boardIds);
 }
