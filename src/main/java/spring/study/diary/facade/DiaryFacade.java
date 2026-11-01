@@ -15,15 +15,12 @@ import spring.study.diary.dto.DiaryRequestDto;
 import spring.study.diary.dto.DiaryResponseDto;
 import spring.study.diary.entity.Diary;
 import spring.study.diary.entity.DiaryImage;
+import spring.study.diary.service.DiaryImageService;
 import spring.study.diary.service.DiaryService;
 import spring.study.member.entity.Member;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +28,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DiaryFacade {
     private final DiaryService diaryService;
+    private final DiaryImageService diaryImageService;
     private final ImageS3Service imageS3Service;
 
     public ResponseEntity<?> uploadImages(List<MultipartFile> files) {
@@ -55,7 +53,9 @@ public class DiaryFacade {
                 uploadedUrls.add(imageS3Service.uploadImageToS3(file));
         } catch (IOException | RuntimeException exception) {
             imageS3Service.deleteImgSrc(uploadedUrls);
+
             log.error("일기 이미지 업로드 실패", exception);
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -1,
                     "message", "이미지 업로드 중 오류가 발생했습니다"
@@ -71,16 +71,22 @@ public class DiaryFacade {
     @Transactional
     public ResponseEntity<?> create(DiaryRequestDto requestDto, Member member) {
         validate(member, requestDto, false);
-        DiaryResponseDto diary = diaryService.save(requestDto, member);
+
+        Diary diary = diaryService.create(requestDto, member);
+        List<DiaryImage> images = toImages(requestDto.getImages());
+        images.forEach(diary::addImage);
+        diaryImageService.saveAll(images);
+
         return ResponseEntity.ok(Map.of(
                 "result", diary.getId(),
-                "diary", diary
+                "diary", new DiaryResponseDto(diary)
         ));
     }
 
     @Transactional(readOnly = true)
     public ResponseEntity<?> findById(Long id, Member member) {
         DiaryResponseDto diary = findDetail(id, member);
+
         return ResponseEntity.ok(Map.of(
                 "result", diary.getId(),
                 "diary", diary
@@ -97,6 +103,7 @@ public class DiaryFacade {
         if (member == null) {
             throw new AccessDeniedException("로그인이 필요합니다");
         }
+
         return diaryService.findListByMember(member, page, size);
     }
 
@@ -108,6 +115,7 @@ public class DiaryFacade {
 
         List<DiaryListResponseDto> diaries = diaryService.findListByMember(member, page, size);
         long totalCount = diaryService.countByMember(member);
+
         return pageResponse(diaries, totalCount, page, size);
     }
 
@@ -116,12 +124,14 @@ public class DiaryFacade {
         if (member == null) {
             throw new AccessDeniedException("로그인이 필요합니다");
         }
+
         if (title == null || title.isBlank()) {
             return load(member, page, size);
         }
 
         List<DiaryListResponseDto> diaries = diaryService.searchByTitle(member, title, page, size);
         long totalCount = diaryService.countByMemberAndTitle(member, title);
+
         return pageResponse(diaries, totalCount, page, size);
     }
 
@@ -130,6 +140,7 @@ public class DiaryFacade {
         if (member == null) {
             throw new AccessDeniedException("로그인이 필요합니다");
         }
+
         return diaryService.countByMember(member);
     }
 
@@ -138,11 +149,12 @@ public class DiaryFacade {
         validate(member, requestDto, true);
         Diary diary = getOwnedDiary(requestDto.getId(), member);
         List<String> removedImageUrls = new ArrayList<>();
+
         diary.update(requestDto.getTitle(), requestDto.getContent(), requestDto.getVisibility());
 
         if (requestDto.getImages() != null) {
             Set<String> requestedImageUrls = requestDto.getImages().stream()
-                    .filter(java.util.Objects::nonNull)
+                    .filter(Objects::nonNull)
                     .map(DiaryImageRequestDto::getImageUrl)
                     .collect(Collectors.toSet());
 
@@ -151,18 +163,17 @@ public class DiaryFacade {
                     .filter(url -> !requestedImageUrls.contains(url))
                     .toList();
 
+            diaryImageService.deleteByDiary(diary);
             new ArrayList<>(diary.getImages()).forEach(diary::removeImage);
-            requestDto.getImages().stream()
-                    .filter(java.util.Objects::nonNull)
-                    .map(DiaryImageRequestDto::toEntity)
-                    .forEach(diary::addImage);
+
+            List<DiaryImage> images = toImages(requestDto.getImages());
+            images.forEach(diary::addImage);
+            diaryImageService.saveAll(images);
         }
 
-        DiaryResponseDto responseDto = new DiaryResponseDto(diaryService.save(diary));
+        DiaryResponseDto responseDto = diaryService.save(diary);
 
-        if (!removedImageUrls.isEmpty()) {
-            imageS3Service.deleteImgSrc(removedImageUrls);
-        }
+        imageS3Service.deleteImgSrc(removedImageUrls);
 
         return ResponseEntity.ok(Map.of(
                 "result", responseDto.getId(),
@@ -173,42 +184,52 @@ public class DiaryFacade {
     @Transactional
     public ResponseEntity<?> delete(Long id, Member member) {
         Diary diary = getOwnedDiary(id, member);
+
         List<String> imageUrls = diary.getImages().stream()
                 .map(DiaryImage::getImageUrl)
                 .toList();
+
+        diaryImageService.deleteByDiary(diary);
         diaryService.delete(diary);
+
         if (!imageUrls.isEmpty()) {
             imageS3Service.deleteImgSrc(imageUrls);
         }
+
         return ResponseEntity.ok(Map.of(
                 "result", id
         ));
+    }
+
+    private List<DiaryImage> toImages(List<DiaryImageRequestDto> images) {
+        if (images == null) return List.of();
+
+        return images.stream()
+                .filter(Objects::nonNull)
+                .map(DiaryImageRequestDto::toEntity)
+                .toList();
     }
 
     private Diary getOwnedDiary(Long id, Member member) {
         if (member == null || member.getId() == null) {
             throw new AccessDeniedException("로그인이 필요합니다");
         }
+
         return diaryService.findByIdAndMember(id, member);
     }
 
     private void validate(Member member, DiaryRequestDto requestDto, boolean requireId) {
         if (member == null) {
             throw new AccessDeniedException("로그인이 필요합니다");
-        }
-        if (requestDto == null) {
+        } else if (requestDto == null) {
             throw new IllegalArgumentException("일기 내용을 입력해 주세요");
-        }
-        if (requireId && requestDto.getId() == null) {
+        } else if (requireId && requestDto.getId() == null) {
             throw new IllegalArgumentException("일기 ID가 필요합니다");
-        }
-        if (requestDto.getTitle() == null || requestDto.getTitle().isBlank()) {
+        } else if (requestDto.getTitle() == null || requestDto.getTitle().isBlank()) {
             throw new IllegalArgumentException("제목을 입력해 주세요");
-        }
-        if (requestDto.getTitle().length() > 200) {
+        } else if (requestDto.getTitle().length() > 200) {
             throw new IllegalArgumentException("제목은 200자 이하여야 합니다");
-        }
-        if (requestDto.getContent() == null) {
+        } else if (requestDto.getContent() == null) {
             throw new IllegalArgumentException("본문을 입력해 주세요");
         }
     }

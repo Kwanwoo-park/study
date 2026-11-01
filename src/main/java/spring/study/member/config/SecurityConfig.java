@@ -18,7 +18,7 @@ import spring.study.member.component.AuthFailureHandler;
 import spring.study.member.component.AuthSuccessHandler;
 import spring.study.member.service.MemberService;
 import spring.study.oauth.service.CustomOAuth2UserService;
-import spring.study.jwt.component.CookieOAuth2AuthorizationRequestRepository;
+import spring.study.jwt.component.CookieOAuth2AuthorizationRequestComponent;
 import spring.study.jwt.component.JwtAuthenticationFilter;
 
 @RequiredArgsConstructor
@@ -33,7 +33,7 @@ public class SecurityConfig{
     private final AuthSuccessHandler authSuccessHandler;
     private final AuthFailureHandler authFailureHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+    private final CookieOAuth2AuthorizationRequestComponent authorizationRequestComponent;
 
     @Bean
     public BCryptPasswordEncoder encryptPassword() {
@@ -55,7 +55,7 @@ public class SecurityConfig{
                 .securityContext(context -> context.requireExplicitSave(false))
                 .oauth2Login(oauth -> oauth
                         .authorizationEndpoint(endpoint -> endpoint
-                                .authorizationRequestRepository(authorizationRequestRepository))
+                                .authorizationRequestRepository(authorizationRequestComponent))
                         .userInfoEndpoint(endpoint -> endpoint.userService(customOAuth2UserService))
                         .loginPage("/member/login")
                         .successHandler(authSuccessHandler)

@@ -17,6 +17,7 @@ import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.component.JwtAuthenticationFilter;
 import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.jwt.entity.RefreshToken;
+import spring.study.jwt.entity.TokenName;
 import spring.study.jwt.repository.RefreshTokenRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -208,8 +209,8 @@ class RefreshTokenServiceTest {
 
             String nextToken = response.getCookie(JwtCookieService.REFRESH_COOKIE).getValue();
             assertThat(nextToken).isNotEqualTo(previousToken);
-            assertThat(refreshTokenService.isValid(provider.parse(previousToken, JwtTokenProvider.REFRESH).jti(), member.getId())).isFalse();
-            assertThat(refreshTokenService.isValid(provider.parse(nextToken, JwtTokenProvider.REFRESH).jti(), member.getId())).isTrue();
+            assertThat(refreshTokenService.isValid(provider.parse(previousToken, TokenName.REFRESH.getValue()).jti(), member.getId())).isFalse();
+            assertThat(refreshTokenService.isValid(provider.parse(nextToken, TokenName.REFRESH.getValue()).jti(), member.getId())).isTrue();
             assertThat(refreshTokenService.isValid(otherDevice.jti(), member.getId())).isTrue();
             assertThat(refreshTokenRepository.count()).isEqualTo(2);
             verify(memberTokenCacheService, never()).delete(member.getId());

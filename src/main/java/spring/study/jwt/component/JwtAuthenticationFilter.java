@@ -9,6 +9,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import spring.study.common.exception.JwtValidationException;
+import spring.study.jwt.entity.TokenName;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
@@ -58,8 +60,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token == null) token = cookieService.read(request, JwtCookieService.ACCESS_COOKIE);
         if (token == null) return null;
         try {
-            return loadActiveMember(tokenProvider.parse(token, JwtTokenProvider.ACCESS));
-        } catch (JwtTokenProvider.JwtValidationException ignored) {
+            return loadActiveMember(tokenProvider.parse(token, TokenName.ACCESS.getValue()));
+        } catch (JwtValidationException ignored) {
             return null;
         }
     }
@@ -69,7 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = cookieService.read(request, JwtCookieService.REFRESH_COOKIE);
         if (token == null) return null;
         try {
-            TokenClaims claims = tokenProvider.parse(token, JwtTokenProvider.REFRESH);
+            TokenClaims claims = tokenProvider.parse(token, TokenName.REFRESH.getValue());
             if (!refreshTokenService.isValid(claims.jti(), claims.memberId())) return null;
             Member member = loadActiveMember(claims);
             if (member == null) {
@@ -98,7 +100,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             cookieService.writeAccessToken(response, accessToken.value(), tokenProvider.accessTokenDuration());
             return member;
-        } catch (JwtTokenProvider.JwtValidationException ignored) {
+        } catch (JwtValidationException ignored) {
             cookieService.clearAuthenticationCookies(response);
             return null;
         }
@@ -113,8 +115,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void setAuthentication(Member member) {
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                member, null, member.getAuthorities());
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(member, null, member.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 

@@ -42,7 +42,7 @@ public class FollowApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return followFacade.follow(memberRequestDto, member, request);
+        return followFacade.follow(memberRequestDto, member);
     }
 
     @DeleteMapping("")
@@ -50,6 +50,6 @@ public class FollowApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return followFacade.unfollow(memberRequestDto, member, request);
+        return followFacade.unfollow(memberRequestDto, member);
     }
 }

@@ -42,6 +42,7 @@ import spring.study.reply.service.ReplyService;
 import spring.study.todo.service.TodoService;
 import spring.study.mail.service.EmailVerificationService;
 import spring.study.diary.service.DiaryService;
+import spring.study.diary.service.DiaryImageService;
 import spring.study.member.sanction.service.MemberSanctionService;
 
 import java.util.List;
@@ -74,6 +75,7 @@ public class MemberFacade {
     private final TodoService todoService;
     private final EmailVerificationService emailVerificationService;
     private final DiaryService diaryService;
+    private final DiaryImageService diaryImageService;
     private final MemberSanctionService memberSanctionService;
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletResponse response) {
@@ -451,6 +453,7 @@ public class MemberFacade {
 
         for (Diary diary : member.getDiaries()) {
             imageS3Service.deleteImgSrc(diary.getImages().stream().map(DiaryImage::getImageUrl).toList());
+            diaryImageService.deleteByDiary(diary);
         }
 
         diaryService.deleteByMember(member);

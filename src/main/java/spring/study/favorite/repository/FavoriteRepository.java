@@ -17,18 +17,23 @@ import java.util.Collection;
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     @Transactional(readOnly = true)
     Favorite findByMemberAndBoard(Member member, Board board);
+
     @Transactional(readOnly = true)
     List<Favorite> findByBoard(Board board, Pageable pageable);
 
     @Transactional(readOnly = true)
     List<Favorite> findByBoard(Board board);
+
     @Transactional(readOnly = true)
     List<Favorite> findByMember(Member member);
 
     @Transactional(readOnly = true)
     long countByBoard(Board board);
 
+    @Transactional
     void deleteByMember(Member member);
+
+    @Transactional
     void deleteByBoard(Board board);
 
     @Transactional(readOnly = true)
@@ -36,7 +41,7 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
     @Query("select f.board.id, count(f.id) from favorite f where f.board.id in :boardIds group by f.board.id")
     @Transactional(readOnly = true)
-    List<Object[]> countByBoardIds(@Param("boardIds") Collection<Long> boardIds);
+    List<Long[]> countByBoardIds(@Param("boardIds") List<Long> boardIds);
 
     @Query("select f.board.id from favorite f where f.member = :member and f.board.id in :boardIds")
     @Transactional(readOnly = true)

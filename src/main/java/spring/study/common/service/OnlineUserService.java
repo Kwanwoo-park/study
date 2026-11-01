@@ -25,6 +25,7 @@ public class OnlineUserService {
             return;
 
         redisTemplate.opsForValue().set(WEB_KEY_PREFIX + memberId, "1", WEB_TTL);
+
         syncOnlineTotal();
     }
 
@@ -33,6 +34,7 @@ public class OnlineUserService {
             return;
 
         redisTemplate.delete(WEB_KEY_PREFIX + memberId);
+
         syncOnlineTotal();
     }
 
@@ -54,8 +56,10 @@ public class OnlineUserService {
 
     public Set<Long> findOnlineMemberIds() {
         Set<Long> memberIds = new HashSet<>();
+
         addMemberIds(memberIds, redisTemplate.keys(WEB_KEY_PREFIX + "*"), WEB_KEY_PREFIX);
         addMemberIds(memberIds, redisTemplate.keys(MOBILE_KEY_PREFIX + "*"), MOBILE_KEY_PREFIX);
+
         return Set.copyOf(memberIds);
     }
 

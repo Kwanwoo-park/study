@@ -12,6 +12,7 @@ import spring.study.favorite.repository.FavoriteRepository;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
@@ -64,17 +65,23 @@ public class FavoriteService {
     @Transactional(readOnly = true)
     public HashMap<Long, Long> countFavorites(List<Board> boardList) {
         HashMap<Long, Long> map = new HashMap<>();
+
+        if (boardList.isEmpty())
+            return map;
+
         boardList.forEach(board -> map.put(board.getId(), 0L));
-        if (boardList.isEmpty()) return map;
+
         favoriteRepository.countByBoardIds(boardList.stream().map(Board::getId).toList())
-                .forEach(row -> map.put((Long) row[0], (Long) row[1]));
+                .forEach(row -> map.put(row[0], row[1]));
 
         return map;
     }
 
     @Transactional(readOnly = true)
     public List<Long> findLikedBoardIds(Member member, List<Board> boards) {
-        if (boards.isEmpty()) return List.of();
+        if (boards.isEmpty())
+            return List.of();
+
         return favoriteRepository.findLikedBoardIds(member, boards.stream().map(Board::getId).toList());
     }
 

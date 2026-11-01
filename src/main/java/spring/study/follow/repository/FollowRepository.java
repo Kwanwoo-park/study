@@ -30,11 +30,13 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     @Transactional(readOnly = true)
     List<Follow> findByFollower(Member follower, Pageable pageable);
+
     @Transactional(readOnly = true)
     List<Follow> findByFollowing(Member following, Pageable pageable);
 
     @Transactional(readOnly = true)
     long countByFollower(Member follower);
+
     @Transactional(readOnly = true)
     long countByFollowing(Member following);
 

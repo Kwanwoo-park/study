@@ -18,18 +18,15 @@ public class VisibilityAccessPolicy {
         if (target == null || viewer == null) {
             return false;
         }
-        return target.getVisibility() == CommonVisibility.PUBLIC
-                || sameMember(target, viewer)
-                || followRepository.existsByFollowerAndFollowing(viewer, target);
+        return target.getVisibility() == CommonVisibility.PUBLIC || sameMember(target, viewer) || followRepository.existsByFollowerAndFollowing(viewer, target);
     }
 
     public boolean canViewBoard(Board board, Member viewer, boolean followsAuthor) {
         if (board == null || viewer == null) {
             return false;
         }
-        return board.getVisibility() == CommonVisibility.PUBLIC
-                || sameMember(board.getMember(), viewer)
-                || followsAuthor;
+
+        return board.getVisibility() == CommonVisibility.PUBLIC || sameMember(board.getMember(), viewer) || followsAuthor;
     }
 
     @Transactional(readOnly = true)
@@ -37,16 +34,15 @@ public class VisibilityAccessPolicy {
         if (board == null || viewer == null) {
             return false;
         }
+
         if (board.getVisibility() == CommonVisibility.PUBLIC || sameMember(board.getMember(), viewer)) {
             return true;
         }
+
         return followRepository.existsByFollowerAndFollowing(viewer, board.getMember());
     }
 
     private boolean sameMember(Member first, Member second) {
-        return first != null
-                && second != null
-                && first.getId() != null
-                && first.getId().equals(second.getId());
+        return first != null && second != null && first.getId() != null && first.getId().equals(second.getId());
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import spring.study.account.entity.Account;
 import spring.study.common.entity.BasetimeEntity;
 import spring.study.common.entity.CommonVisibility;
+import spring.study.collection.entity.Collection;
 import spring.study.board.entity.Board;
 import spring.study.reply.entity.Reply;
 import spring.study.favorite.entity.Favorite;
@@ -130,7 +131,7 @@ public class Member extends BasetimeEntity implements UserDetails {
 
     @JsonIgnore
     @OneToMany(mappedBy = "member")
-    private List<spring.study.collection.entity.Collection> collections = new ArrayList<>();
+    private List<Collection> collections = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "member")
@@ -164,7 +165,7 @@ public class Member extends BasetimeEntity implements UserDetails {
     private Set<SimpleGrantedAuthority> authorities;
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+    public java.util.Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> roles = new HashSet<>();
         roles.add(new SimpleGrantedAuthority(role.getValue()));
         return roles;
@@ -267,12 +268,12 @@ public class Member extends BasetimeEntity implements UserDetails {
         notification.addMember(this);
     }
 
-    public void addCollection(spring.study.collection.entity.Collection collection) {
+    public void addCollection(Collection collection) {
         collection.addMember(this);
     }
 
-    public void removeCollection(spring.study.collection.entity.Collection collection) {
-        for (spring.study.collection.entity.Collection c : collections) {
+    public void removeCollection(Collection collection) {
+        for (Collection c : collections) {
             if (c.getId().equals(collection.getId())) {
                 collections.remove(c);
                 break;

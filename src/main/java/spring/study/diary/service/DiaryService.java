@@ -20,25 +20,23 @@ public class DiaryService {
     private final DiaryRepository diaryRepository;
 
     @Transactional
-    public Diary save(Diary diary) {
-        return diaryRepository.save(diary);
+    public DiaryResponseDto save(Diary diary) {
+        return new DiaryResponseDto(diaryRepository.save(diary));
     }
 
     @Transactional
-    public DiaryResponseDto save(DiaryRequestDto requestDto, Member member) {
-        return new DiaryResponseDto(diaryRepository.save(requestDto.toEntity(member)));
+    public Diary create(DiaryRequestDto requestDto, Member member) {
+        return diaryRepository.save(requestDto.toEntity(member));
     }
 
     @Transactional(readOnly = true)
     public Diary findById(Long id) {
-        return diaryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다"));
+        return diaryRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다"));
     }
 
     @Transactional(readOnly = true)
     public Diary findByIdAndMember(Long id, Member member) {
-        return diaryRepository.findByIdAndMember(id, member)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다"));
+        return diaryRepository.findByIdAndMember(id, member).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다"));
     }
 
     @Transactional(readOnly = true)
@@ -48,21 +46,18 @@ public class DiaryService {
         }
 
         Sort sort = Sort.by(Sort.Order.desc("registerTime"), Sort.Order.desc("id"));
+
         return diaryRepository.findByMember(member, PageRequest.of(page, size, sort));
     }
 
     @Transactional(readOnly = true)
     public List<DiaryResponseDto> findResponseByMember(Member member, int page, int size) {
-        return findByMember(member, page, size).stream()
-                .map(DiaryResponseDto::new)
-                .toList();
+        return findByMember(member, page, size).stream().map(DiaryResponseDto::new).toList();
     }
 
     @Transactional(readOnly = true)
     public List<DiaryListResponseDto> findListByMember(Member member, int page, int size) {
-        return findByMember(member, page, size).stream()
-                .map(DiaryListResponseDto::new)
-                .toList();
+        return findByMember(member, page, size).stream().map(DiaryListResponseDto::new).toList();
     }
 
     @Transactional(readOnly = true)
@@ -72,11 +67,9 @@ public class DiaryService {
         }
 
         Sort sort = Sort.by(Sort.Order.desc("registerTime"), Sort.Order.desc("id"));
-        return diaryRepository.findByMemberAndTitleContainingIgnoreCase(
-                        member,
-                        title.trim(),
-                        PageRequest.of(page, size, sort)
-                ).stream()
+
+        return diaryRepository.findByMemberAndTitleContainingIgnoreCase(member, title.trim(), PageRequest.of(page, size, sort))
+                .stream()
                 .map(DiaryListResponseDto::new)
                 .toList();
     }

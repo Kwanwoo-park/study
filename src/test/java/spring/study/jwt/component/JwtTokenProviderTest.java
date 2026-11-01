@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import spring.study.common.exception.JwtValidationException;
+import spring.study.jwt.entity.TokenName;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.jwt.dto.TokenClaims;
@@ -34,7 +36,7 @@ class JwtTokenProviderTest {
     void accessTokenShouldContainAuthenticatedMemberClaims() {
         String token = tokenProvider.createAccessToken(member).value();
 
-        TokenClaims claims = tokenProvider.parse(token, JwtTokenProvider.ACCESS);
+        TokenClaims claims = tokenProvider.parse(token, TokenName.ACCESS.getValue());
 
         assertEquals(7L, claims.memberId());
         assertEquals("jwt@test.com", claims.email());
@@ -48,15 +50,13 @@ class JwtTokenProviderTest {
         parts[1] = (parts[1].startsWith("a") ? "b" : "a") + parts[1].substring(1);
         String modified = String.join(".", parts);
 
-        assertThrows(JwtTokenProvider.JwtValidationException.class,
-                () -> tokenProvider.parse(modified, JwtTokenProvider.ACCESS));
+        assertThrows(JwtValidationException.class, () -> tokenProvider.parse(modified, TokenName.ACCESS.getValue()));
     }
 
     @Test
     void refreshTokenCannotBeUsedAsAccessToken() {
         String token = tokenProvider.createRefreshToken(member).value();
 
-        assertThrows(JwtTokenProvider.JwtValidationException.class,
-                () -> tokenProvider.parse(token, JwtTokenProvider.ACCESS));
+        assertThrows(JwtValidationException.class, () -> tokenProvider.parse(token, TokenName.ACCESS.getValue()));
     }
 }

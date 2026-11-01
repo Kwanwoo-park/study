@@ -51,6 +51,22 @@ class FollowFacadeTest {
         assertThat(body.get("nextCursor")).isEqualTo(0);
     }
 
+    @Test
+    void bothListsMarkMembersFalseWhenTheViewerFollowsNobody() {
+        prepareViewer();
+        when(followService.findByFollower(viewer)).thenReturn(List.of());
+        when(followService.getVisibleFollowers(target, viewer, 0, 2))
+                .thenReturn(List.of(follow(11L, followed, target)));
+        when(followService.getVisibleFollowing(target, viewer, 0, 2))
+                .thenReturn(List.of(follow(21L, target, followed)));
+
+        Map<?, ?> followers = (Map<?, ?>) facade.getFollower(target.getEmail(), viewer, 0, 2).getBody();
+        Map<?, ?> followings = (Map<?, ?>) facade.getFollowing(target.getEmail(), viewer, 0, 2).getBody();
+
+        assertThat(followers.get("follow")).isEqualTo(Map.of(11L, false));
+        assertThat(followings.get("follow")).isEqualTo(Map.of(21L, false));
+    }
+
     private void prepareViewer() {
         when(memberService.findMember(target.getEmail())).thenReturn(target);
         when(visibility.canViewMember(target, viewer)).thenReturn(true);

@@ -1,6 +1,5 @@
 package spring.study.follow.facade;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,10 +17,10 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -59,7 +58,7 @@ public class FollowFacade {
 
         return ResponseEntity.ok(Map.of(
                 "follower", followers.stream().map(FollowResponseDto::new).toList(),
-                "follow", checkFollowing(followers, followService.findByFollower(member), Follow::getFollower),
+                "follow", checkFollowers(followers, followService.findByFollower(member)),
                 "email", member.getEmail(),
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
@@ -94,7 +93,7 @@ public class FollowFacade {
 
         return ResponseEntity.ok(Map.of(
                 "following", followings.stream().map(FollowResponseDto::new).toList(),
-                "follow", checkFollowing(followings, followService.findByFollower(member), Follow::getFollowing),
+                "follow", checkFollowings(followings, followService.findByFollower(member)),
                 "email", member.getEmail(),
                 "totalCount", totalCount,
                 "nextCursor", nextCursor,
@@ -103,7 +102,7 @@ public class FollowFacade {
     }
 
     @Transactional
-    public ResponseEntity<?> follow(MemberRequestDto dto, Member member, HttpServletRequest request) {
+    public ResponseEntity<?> follow(MemberRequestDto dto, Member member) {
         if (dto.getEmail() == null || dto.getEmail().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
@@ -136,7 +135,7 @@ public class FollowFacade {
         ));
     }
 
-    public ResponseEntity<?> unfollow(MemberRequestDto dto, Member member, HttpServletRequest request) {
+    public ResponseEntity<?> unfollow(MemberRequestDto dto, Member member) {
         if (dto.getEmail() == null || dto.getEmail().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -10L,
@@ -167,22 +166,37 @@ public class FollowFacade {
         ));
     }
 
-    private HashMap<Long, Boolean> checkFollowing(List<Follow> follows, List<Follow> memberFollowers,
-                                                 Function<Follow, Member> targetMember) {
-        HashMap<Long, Boolean> map = new HashMap<>();
+    private HashMap<Long, Boolean> checkFollowers(List<Follow> followers, List<Follow> myFollowings) {
+        Set<Long> followingMemberIds = getFollowingMemberIds(myFollowings);
+        HashMap<Long, Boolean> followingStatus = new HashMap<>();
 
-        for (Follow follow : follows) {
-            map.put(follow.getId(), false);
-
-            for (Follow memberFollow : memberFollowers) {
-                if (Objects.equals(targetMember.apply(follow).getEmail(), memberFollow.getFollowing().getEmail())) {
-                    map.put(follow.getId(), true);
-                    break;
-                }
-            }
+        for (Follow follow : followers) {
+            Long followerId = follow.getFollower().getId();
+            followingStatus.put(follow.getId(), followingMemberIds.contains(followerId));
         }
 
-        return map;
+        return followingStatus;
+    }
+
+    private HashMap<Long, Boolean> checkFollowings(List<Follow> followings, List<Follow> myFollowings) {
+        Set<Long> followingMemberIds = getFollowingMemberIds(myFollowings);
+        HashMap<Long, Boolean> followingStatus = new HashMap<>();
+
+        for (Follow follow : followings) {
+            Long followingId = follow.getFollowing().getId();
+            followingStatus.put(follow.getId(), followingMemberIds.contains(followingId));
+        }
+
+        return followingStatus;
+    }
+
+    private Set<Long> getFollowingMemberIds(List<Follow> myFollowings) {
+        Set<Long> followingMemberIds = new HashSet<>();
+        for (Follow myFollowing : myFollowings) {
+            followingMemberIds.add(myFollowing.getFollowing().getId());
+        }
+
+        return followingMemberIds;
     }
 
     private ResponseEntity<?> privateMemberResponse() {

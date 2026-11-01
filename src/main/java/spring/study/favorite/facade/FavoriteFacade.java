@@ -19,9 +19,10 @@ import spring.study.notification.service.NotificationService;
 import spring.study.common.service.VisibilityAccessPolicy;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,10 @@ public class FavoriteFacade {
 
     public ResponseEntity<?> getList(Long id, Member member, int cursor, int limit) {
         Board board = boardService.findById(id);
-        if (!visibilityAccessPolicy.canViewBoard(board, member)) return forbiddenBoard();
+
+        if (!visibilityAccessPolicy.canViewBoard(board, member))
+            return forbiddenBoard();
+
         long totalCount = favoriteService.countFavorites(board);
         List<Favorite> favorites = favoriteService.getFavorites(board, cursor, limit);
         int nextCursor = (long) (cursor + 1) * limit >= totalCount ? 0 : cursor + 2;
@@ -53,7 +57,9 @@ public class FavoriteFacade {
     @Transactional
     public ResponseEntity<?> like(Long id, Member member) {
         Board board = boardService.findById(id);
-        if (!visibilityAccessPolicy.canViewBoard(board, member)) return forbiddenBoard();
+
+        if (!visibilityAccessPolicy.canViewBoard(board, member))
+            return forbiddenBoard();
 
         if (board == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -73,11 +79,7 @@ public class FavoriteFacade {
         Member otherMember = board.getMember();
 
         if (!member.getId().equals(otherMember.getId()))
-            notificationService.createNotification(otherMember,
-                    member.getName() + "님이 게시글에 좋아요를 눌렀습니다",
-                    Group.FAVORITE,
-                    id.toString()
-            ).addMember(otherMember);
+            notificationService.createNotification(otherMember, member.getName() + "님이 게시글에 좋아요를 눌렀습니다", Group.FAVORITE, id.toString()).addMember(otherMember);
 
         return ResponseEntity.ok(Map.of(
                 "result", favorite.getId()
@@ -86,7 +88,9 @@ public class FavoriteFacade {
 
     public ResponseEntity<?> unlike(Long id, Member member) {
         Board board = boardService.findById(id);
-        if (!visibilityAccessPolicy.canViewBoard(board, member)) return forbiddenBoard();
+
+        if (!visibilityAccessPolicy.canViewBoard(board, member))
+            return forbiddenBoard();
 
         Favorite favorite = favoriteService.findByMemberAndBoard(member, board);
 
@@ -104,23 +108,19 @@ public class FavoriteFacade {
         ));
     }
 
-    private HashMap<Long, Boolean> checkFollowing(List<Favorite> boardFavorites, List<Follow> memberFollower) {
-        HashMap<Long, Boolean> map = new HashMap<>();
-
-        for (Favorite f : boardFavorites) {
-            map.put(f.getId(), false);
-
-            for (Follow following : f.getMember().getFollowing()) {
-                for (Follow follower : memberFollower) {
-                    if (Objects.equals(follower.getId(), following.getId())) {
-                        map.put(f.getId(), true);
-                        break;
-                    }
-                }
-            }
+    private HashMap<Long, Boolean> checkFollowing(List<Favorite> favorites, List<Follow> myFollowings) {
+        Set<Long> followingMemberIds = new HashSet<>();
+        for (Follow myFollowing : myFollowings) {
+            followingMemberIds.add(myFollowing.getFollowing().getId());
         }
 
-        return map;
+        HashMap<Long, Boolean> followingStatus = new HashMap<>();
+        for (Favorite favorite : favorites) {
+            Long memberId = favorite.getMember().getId();
+            followingStatus.put(favorite.getId(), followingMemberIds.contains(memberId));
+        }
+
+        return followingStatus;
     }
 
     private ResponseEntity<?> forbiddenBoard() {

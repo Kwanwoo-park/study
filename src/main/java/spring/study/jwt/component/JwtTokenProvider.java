@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
+import spring.study.common.exception.JwtValidationException;
+import spring.study.jwt.entity.TokenName;
 import spring.study.member.entity.Member;
 import spring.study.jwt.dto.IssuedToken;
 import spring.study.jwt.dto.TokenClaims;
@@ -29,8 +31,6 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class JwtTokenProvider {
-    public static final String ACCESS = "access";
-    public static final String REFRESH = "refresh";
     private static final Base64.Encoder BASE64_URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder BASE64_URL_DECODER = Base64.getUrlDecoder();
 
@@ -55,52 +55,55 @@ public class JwtTokenProvider {
         if (configuredSecret == null || configuredSecret.isBlank()) {
             throw new IllegalStateException("security.jwt.secret must be configured");
         }
+
         secret = configuredSecret.getBytes(StandardCharsets.UTF_8);
+
         if (secret.length < 32) {
             throw new IllegalStateException("security.jwt.secret must contain at least 32 bytes");
         }
     }
 
     public IssuedToken createAccessToken(Member member) {
-        return createToken(member, ACCESS, accessTokenDuration());
+        return createToken(member, TokenName.ACCESS.getValue(), accessTokenDuration());
     }
 
     public IssuedToken createRefreshToken(Member member) {
-        return createToken(member, REFRESH, refreshTokenDuration());
+        return createToken(member, TokenName.REFRESH.getValue(), refreshTokenDuration());
     }
 
     public TokenClaims parse(String token, String expectedType) {
         try {
             String[] parts = token.split("\\.");
-            if (parts.length != 3) throw new JwtValidationException("Malformed JWT");
+
+            if (parts.length != 3)
+                throw new JwtValidationException("Malformed JWT");
 
             byte[] expectedSignature = sign(parts[0] + "." + parts[1]);
             byte[] actualSignature = BASE64_URL_DECODER.decode(parts[2]);
+
             if (!MessageDigest.isEqual(expectedSignature, actualSignature)) {
                 throw new JwtValidationException("Invalid JWT signature");
             }
 
-            Map<String, Object> header = objectMapper.readValue(
-                    BASE64_URL_DECODER.decode(parts[0]), new TypeReference<>() {});
-            if (!"HS256".equals(header.get("alg"))) throw new JwtValidationException("Unsupported JWT algorithm");
+            Map<String, Object> header = objectMapper.readValue(BASE64_URL_DECODER.decode(parts[0]), new TypeReference<>() {});
 
-            Map<String, Object> payload = objectMapper.readValue(
-                    BASE64_URL_DECODER.decode(parts[1]), new TypeReference<>() {});
+            if (!"HS256".equals(header.get("alg")))
+                throw new JwtValidationException("Unsupported JWT algorithm");
+
+            Map<String, Object> payload = objectMapper.readValue(BASE64_URL_DECODER.decode(parts[1]), new TypeReference<>() {});
             String type = stringClaim(payload, "type");
-            if (!expectedType.equals(type)) throw new JwtValidationException("Unexpected JWT type");
-            if (!issuer.equals(stringClaim(payload, "iss"))) throw new JwtValidationException("Invalid JWT issuer");
+
+            if (!expectedType.equals(type))
+                throw new JwtValidationException("Unexpected JWT type");
+            else if (!issuer.equals(stringClaim(payload, "iss")))
+                throw new JwtValidationException("Invalid JWT issuer");
 
             Instant expiresAt = Instant.ofEpochSecond(longClaim(payload, "exp"));
-            if (!expiresAt.isAfter(Instant.now())) throw new JwtValidationException("JWT expired");
 
-            return new TokenClaims(
-                    longClaim(payload, "uid"),
-                    stringClaim(payload, "sub"),
-                    stringClaim(payload, "role"),
-                    type,
-                    stringClaim(payload, "jti"),
-                    expiresAt
-            );
+            if (!expiresAt.isAfter(Instant.now()))
+                throw new JwtValidationException("JWT expired");
+
+            return new TokenClaims(longClaim(payload, "uid"), stringClaim(payload, "sub"), stringClaim(payload, "role"), type, stringClaim(payload, "jti"), expiresAt);
         } catch (JwtValidationException exception) {
             throw exception;
         } catch (Exception exception) {
@@ -111,10 +114,13 @@ public class JwtTokenProvider {
     public String encodeAuthorizationRequest(OAuth2AuthorizationRequest request) {
         try {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
+
             try (ObjectOutputStream objectOutput = new ObjectOutputStream(output)) {
                 objectOutput.writeObject(request);
             }
+
             String payload = BASE64_URL_ENCODER.encodeToString(output.toByteArray());
+
             return payload + "." + BASE64_URL_ENCODER.encodeToString(sign(payload));
         } catch (Exception exception) {
             throw new IllegalStateException("Could not encode OAuth2 authorization request", exception);
@@ -124,14 +130,15 @@ public class JwtTokenProvider {
     public OAuth2AuthorizationRequest decodeAuthorizationRequest(String value) {
         try {
             String[] parts = value.split("\\.");
+
             if (parts.length != 2 || !MessageDigest.isEqual(sign(parts[0]), BASE64_URL_DECODER.decode(parts[1]))) {
                 return null;
             }
-            try (ObjectInputStream input = new ObjectInputStream(
-                    new ByteArrayInputStream(BASE64_URL_DECODER.decode(parts[0])))) {
+
+            try (ObjectInputStream input = new ObjectInputStream(new ByteArrayInputStream(BASE64_URL_DECODER.decode(parts[0])))) {
                 Object request = input.readObject();
-                return request instanceof OAuth2AuthorizationRequest authorizationRequest
-                        ? authorizationRequest : null;
+
+                return request instanceof OAuth2AuthorizationRequest authorizationRequest ? authorizationRequest : null;
             }
         } catch (Exception exception) {
             return null;
@@ -156,6 +163,7 @@ public class JwtTokenProvider {
         String jti = UUID.randomUUID().toString();
         Map<String, Object> header = Map.of("alg", "HS256", "typ", "JWT");
         Map<String, Object> payload = new LinkedHashMap<>();
+
         payload.put("iss", issuer);
         payload.put("sub", member.getEmail());
         payload.put("uid", member.getId());
@@ -170,6 +178,7 @@ public class JwtTokenProvider {
             String payloadPart = BASE64_URL_ENCODER.encodeToString(objectMapper.writeValueAsBytes(payload));
             String unsigned = headerPart + "." + payloadPart;
             String token = unsigned + "." + BASE64_URL_ENCODER.encodeToString(sign(unsigned));
+
             return new IssuedToken(token, jti, expiresAt);
         } catch (Exception exception) {
             throw new IllegalStateException("Could not create JWT", exception);
@@ -180,6 +189,7 @@ public class JwtTokenProvider {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(secret, "HmacSHA256"));
+
             return mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
         } catch (Exception exception) {
             throw new IllegalStateException("Could not sign JWT", exception);
@@ -188,21 +198,20 @@ public class JwtTokenProvider {
 
     private String stringClaim(Map<String, Object> payload, String name) {
         Object value = payload.get(name);
+
         if (!(value instanceof String string) || string.isBlank()) {
             throw new JwtValidationException("Missing JWT claim: " + name);
         }
+
         return string;
     }
 
     private long longClaim(Map<String, Object> payload, String name) {
         Object value = payload.get(name);
-        if (!(value instanceof Number number)) throw new JwtValidationException("Missing JWT claim: " + name);
+
+        if (!(value instanceof Number number))
+            throw new JwtValidationException("Missing JWT claim: " + name);
+
         return number.longValue();
-    }
-
-
-    public static class JwtValidationException extends RuntimeException {
-        public JwtValidationException(String message) { super(message); }
-        public JwtValidationException(String message, Throwable cause) { super(message, cause); }
     }
 }

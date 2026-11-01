@@ -5,18 +5,8 @@ import spring.study.jwt.entity.RefreshToken;
 
 import java.time.Instant;
 
-public record AdminTokenSessionResponse(
-        Long memberId,
-        String memberEmail,
-        String ipAddress,
-        IpLocationResponse ipLocation,
-        Instant expiresAt
-) {
-    public AdminTokenSessionResponse(
-            RefreshToken token,
-            String memberEmail,
-            IpLocationResponse ipLocation
-    ) {
+public record AdminTokenSessionResponse(Long memberId, String memberEmail, String ipAddress, IpLocationResponse ipLocation, Instant expiresAt) {
+    public AdminTokenSessionResponse(RefreshToken token, String memberEmail, IpLocationResponse ipLocation) {
         this(
                 token.getMemberId(),
                 memberEmail,

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import spring.study.common.exception.JwtValidationException;
 import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.jwt.dto.MobileAuthRequest;
 import spring.study.jwt.dto.MobileAuthResponse;
@@ -71,7 +72,7 @@ public class MobileAuthFacade {
                     "accessTokenExpiresAt", tokens.accessTokenExpiresAt(),
                     "refreshTokenExpiresAt", tokens.refreshTokenExpiresAt()
             ));
-        } catch (JwtTokenProvider.JwtValidationException exception) {
+        } catch (JwtValidationException exception) {
             return error(HttpStatus.UNAUTHORIZED, "로그인이 만료되었습니다");
         }
     }

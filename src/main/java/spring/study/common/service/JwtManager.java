@@ -11,15 +11,16 @@ import spring.study.member.entity.Member;
 @Service
 public class JwtManager {
     public Member getLoginMember(HttpServletRequest request) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication() == null
-                ? null
-                : SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Object principal = SecurityContextHolder.getContext().getAuthentication() == null ? null : SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         if (!(principal instanceof Member authenticatedMember)) return null;
 
         if (authenticatedMember.isAccessBlocked()) {
             SecurityContextHolder.clearContext();
+
             return null;
         }
+
         return authenticatedMember;
     }
 

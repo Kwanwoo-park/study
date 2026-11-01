@@ -10,14 +10,14 @@ import spring.study.jwt.service.JwtCookieService;
 
 @Component
 @RequiredArgsConstructor
-public class CookieOAuth2AuthorizationRequestRepository
-        implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
+public class CookieOAuth2AuthorizationRequestComponent implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
     private final JwtTokenProvider tokenProvider;
     private final JwtCookieService cookieService;
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         String cookie = cookieService.read(request, JwtCookieService.OAUTH2_REQUEST_COOKIE);
+
         return cookie == null ? null : tokenProvider.decodeAuthorizationRequest(cookie);
     }
 
@@ -27,13 +27,16 @@ public class CookieOAuth2AuthorizationRequestRepository
             cookieService.clearOAuth2Request(response);
             return;
         }
+
         cookieService.writeOAuth2Request(response, tokenProvider.encodeAuthorizationRequest(authorizationRequest));
     }
 
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request, HttpServletResponse response) {
         OAuth2AuthorizationRequest authorizationRequest = loadAuthorizationRequest(request);
+
         cookieService.clearOAuth2Request(response);
+
         return authorizationRequest;
     }
 }

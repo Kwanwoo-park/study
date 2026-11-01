@@ -13,7 +13,6 @@ import spring.study.diary.entity.Diary;
 import spring.study.member.entity.Member;
 
 import java.util.List;
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -43,20 +42,11 @@ public class DiaryRequestDto {
     }
 
     public Diary toEntity(Member member) {
-        Diary diary = Diary.builder()
+        return Diary.builder()
                 .member(member)
                 .title(title)
                 .content(content)
                 .visibility(visibility)
                 .build();
-
-        if (images != null) {
-            images.stream()
-                    .filter(Objects::nonNull)
-                    .map(DiaryImageRequestDto::toEntity)
-                    .forEach(diary::addImage);
-        }
-
-        return diary;
     }
 }

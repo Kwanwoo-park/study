@@ -1,7 +1,6 @@
 package spring.study.diary.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -58,7 +57,7 @@ public class Diary extends BasetimeEntity {
 
     @JsonIgnore
     @OrderBy("id ASC")
-    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "diary")
     private List<DiaryImage> images = new ArrayList<>();
 
     @Builder
@@ -72,6 +71,7 @@ public class Diary extends BasetimeEntity {
 
     public void addMember(Member member) {
         this.member = member;
+
         if (!member.getDiaries().contains(this)) {
             member.getDiaries().add(this);
         }
@@ -81,6 +81,7 @@ public class Diary extends BasetimeEntity {
         if (!images.contains(image)) {
             images.add(image);
         }
+
         image.addDiary(this);
     }
 
@@ -93,6 +94,7 @@ public class Diary extends BasetimeEntity {
     public void update(String title, String content, CommonVisibility visibility) {
         this.title = title;
         this.content = content;
+
         if (visibility != null) {
             this.visibility = visibility;
         }
