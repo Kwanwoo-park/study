@@ -23,6 +23,8 @@ import spring.study.member.entity.Role;
 import spring.study.kafka.dto.KafkaDeadLetterListing;
 import spring.study.kafka.dto.KafkaOverview;
 import spring.study.kafka.dto.KafkaBrokerInfo;
+import spring.study.member.service.MemberService;
+
 import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
@@ -77,7 +79,7 @@ class KafkaOperationsSecurityTest {
         @Bean spring.study.admin.facade.SystemIncidentFacade incidents() { return mock(spring.study.admin.facade.SystemIncidentFacade.class); }
         @Bean KafkaMonitoringService monitoring() { return mock(KafkaMonitoringService.class); }
         @Bean KafkaDeadLetterService deadLetters() { return mock(KafkaDeadLetterService.class); }
-        @Bean JwtAuthenticationFilter jwtFilter() { return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class)); }
+        @Bean JwtAuthenticationFilter jwtFilter() { return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(MemberService.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class)); }
         @Bean InternalResourceViewResolver views() { return new InternalResourceViewResolver("/templates/", ".html"); }
     }
 }

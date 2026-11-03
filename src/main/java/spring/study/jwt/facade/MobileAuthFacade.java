@@ -8,25 +8,31 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import spring.study.common.exception.JwtValidationException;
 import spring.study.jwt.component.JwtTokenProvider;
-import spring.study.jwt.dto.MobileAuthRequest;
-import spring.study.jwt.dto.MobileAuthResponse;
-import spring.study.jwt.dto.MobileMemberResponse;
-import spring.study.jwt.service.JwtAuthenticationService;
+import spring.study.jwt.dto.*;
+import spring.study.jwt.entity.RefreshToken;
+import spring.study.jwt.entity.TokenName;
 import spring.study.common.service.OnlineUserService;
+import spring.study.jwt.service.MemberTokenCacheService;
+import spring.study.jwt.service.RefreshTokenService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
-import spring.study.jwt.dto.AuthenticationTokens;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.OptionalLong;
 
 @Service
 @RequiredArgsConstructor
 public class MobileAuthFacade {
+    private final JwtTokenProvider tokenProvider;
     private final MemberService memberService;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final JwtAuthenticationService authenticationService;
+    private final MemberTokenCacheService memberTokenCacheService;
     private final OnlineUserService onlineUserService;
+    private final RefreshTokenService refreshTokenService;
 
     public ResponseEntity<?> me(Member member) {
         if (member == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
@@ -49,8 +55,7 @@ public class MobileAuthFacade {
             }
 
             member = memberService.updateLastLoginTime(member.getId());
-            AuthenticationTokens tokens = authenticationService.issue(
-                    member, ipAddress);
+            AuthenticationTokens tokens = issue(member, ipAddress);
             onlineUserService.markMobileActive(member.getId());
             return ResponseEntity.ok(new MobileAuthResponse(member, tokens));
         } catch (BadCredentialsException exception) {
@@ -63,8 +68,7 @@ public class MobileAuthFacade {
             return error(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 없습니다");
         }
         try {
-            AuthenticationTokens tokens = authenticationService.refresh(
-                    request.refreshToken(), ipAddress);
+            AuthenticationTokens tokens = refresh(request.refreshToken(), ipAddress);
             return ResponseEntity.ok(Map.of(
                     "result", 1,
                     "accessToken", tokens.accessToken(),
@@ -78,12 +82,107 @@ public class MobileAuthFacade {
     }
 
     public ResponseEntity<?> logout(MobileAuthRequest request) {
-        authenticationService.revokeAndGetMemberId(request.refreshToken())
-                .ifPresent(onlineUserService::markMobileInactive);
+        revokeAndGetMemberId(request.refreshToken()).ifPresent(onlineUserService::markMobileInactive);
+
         return ResponseEntity.ok(Map.of("result", 1));
     }
 
     private ResponseEntity<?> error(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of("result", -1, "message", message));
+    }
+
+    public AuthenticationTokens issue(Member member, String ipAddress) {
+        IssuedToken accessToken = tokenProvider.createAccessToken(member);
+        IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
+
+        memberService.updateLastLoginTime(member.getId());
+        refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress);
+        memberTokenCacheService.save(member, tokenProvider.refreshTokenDuration());
+
+        return toAuthenticationTokens(accessToken, refreshToken);
+    }
+
+    private AuthenticationTokens toAuthenticationTokens(IssuedToken accessToken, IssuedToken refreshToken) {
+        return new AuthenticationTokens(
+                accessToken.value(),
+                refreshToken.value(),
+                accessToken.expiresAt(),
+                refreshToken.expiresAt()
+        );
+    }
+
+    public OptionalLong revokeAndGetMemberId(String refreshTokenValue) {
+        if (refreshTokenValue == null || refreshTokenValue.isBlank()) return OptionalLong.empty();
+        try {
+            TokenClaims claims = tokenProvider.parse(refreshTokenValue, TokenName.REFRESH.getValue());
+            RefreshToken oldToken = refreshTokenService.findOldToken(claims.jti());
+
+            if (oldToken != null) {
+                refreshTokenService.deleteOldToken(oldToken);
+
+                if (!refreshTokenService.existsByMemberIdAndExpiresAtAfter(oldToken.getMemberId(), Instant.now()))
+                    memberTokenCacheService.delete(oldToken.getMemberId());
+            }
+
+            return OptionalLong.of(claims.memberId());
+        } catch (JwtValidationException ignored) {
+            // Logout remains idempotent for expired or malformed client tokens.
+            return OptionalLong.empty();
+        }
+    }
+
+    private AuthenticationTokens refresh(String refreshTokenValue, String ipAddress) {
+        TokenClaims claims = tokenProvider.parse(refreshTokenValue, TokenName.REFRESH.getValue());
+        if (!refreshTokenService.isValid(claims.jti(), claims.memberId())) {
+            throw new JwtValidationException("Revoked refresh token");
+        }
+
+        Member member = memberTokenCacheService
+                .findOrLoad(claims.memberId(), tokenProvider.refreshTokenDuration())
+                .orElseThrow(() -> new JwtValidationException("Member not found"));
+        if (member.isAccessBlocked() || !member.getEmail().equals(claims.email())) {
+            RefreshToken oldToken = refreshTokenService.findOldToken(claims.jti());
+
+            if (oldToken != null) {
+                refreshTokenService.deleteOldToken(oldToken);
+
+                if (!refreshTokenService.existsByMemberIdAndExpiresAtAfter(oldToken.getMemberId(), Instant.now()))
+                    memberTokenCacheService.delete(oldToken.getMemberId());
+            }
+
+            throw new JwtValidationException("Member access blocked");
+        }
+
+        IssuedToken accessToken = tokenProvider.createAccessToken(member);
+        if (!tokenProvider.shouldRotateRefreshToken(claims.expiresAt())) {
+            if (member.getLastLoginTime() == null || !member.getLastLoginTime().isAfter(LocalDateTime.now().minusDays(1))) {
+                memberService.updateLastLoginTime(member.getId());
+                memberTokenCacheService.save(member, Duration.between(Instant.now(), claims.expiresAt()));
+            }
+
+            return new AuthenticationTokens(accessToken.value(), refreshTokenValue, accessToken.expiresAt(), claims.expiresAt());
+        }
+        IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
+        if (!rotate(
+                claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress)) {
+            throw new JwtValidationException("Could not rotate refresh token");
+        }
+        return toAuthenticationTokens(accessToken, refreshToken);
+    }
+
+    private boolean rotate (String oldJti, String newJti, Member member, Duration ttl, String ipAddress) {
+        RefreshToken oldToken = refreshTokenService.findOldToken(oldJti);
+        Instant now = Instant.now();
+
+        if (oldToken == null || !oldToken.getMemberId().equals(member.getId()) || !oldToken.getExpiresAt().isAfter(now)) {
+            return false;
+        }
+
+        refreshTokenService.deleteOldToken(oldToken);
+        memberService.updateLastLoginTime(member.getId());
+        refreshTokenService.save(newJti, member, ttl, ipAddress);
+        memberTokenCacheService.save(member, ttl);
+
+        return true;
     }
 }

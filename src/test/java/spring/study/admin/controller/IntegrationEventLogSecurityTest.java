@@ -34,6 +34,7 @@ import spring.study.admin.entity.IntegrationEventLogBroker;
 import spring.study.admin.entity.IntegrationEventLogOperation;
 import spring.study.admin.entity.IntegrationEventLogOutcome;
 import spring.study.admin.entity.IntegrationEventLogRoute;
+import spring.study.member.service.MemberService;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -126,7 +127,7 @@ class IntegrationEventLogSecurityTest {
         @Bean spring.study.admin.facade.SystemIncidentFacade incidents() { return mock(spring.study.admin.facade.SystemIncidentFacade.class); }
         @Bean IntegrationEventLogService service() { return mock(IntegrationEventLogService.class); }
         @Bean JwtAuthenticationFilter jwtFilter() {
-            return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));
+            return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(MemberService.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));
         }
         @Bean InternalResourceViewResolver viewResolver() { return new InternalResourceViewResolver("/templates/", ".html"); }
     }

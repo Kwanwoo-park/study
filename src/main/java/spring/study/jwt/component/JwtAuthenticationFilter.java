@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import spring.study.common.exception.JwtValidationException;
+import spring.study.jwt.entity.RefreshToken;
 import spring.study.jwt.entity.TokenName;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
@@ -19,10 +20,12 @@ import spring.study.common.service.ClientIpResolver;
 import spring.study.member.entity.Member;
 import spring.study.jwt.dto.IssuedToken;
 import spring.study.jwt.dto.TokenClaims;
+import spring.study.member.service.MemberService;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Component
@@ -34,14 +37,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/mobile/auth/oauth/exchange"
     );
     private final JwtTokenProvider tokenProvider;
+    private final MemberService memberService;
     private final JwtCookieService cookieService;
     private final RefreshTokenService refreshTokenService;
     private final MemberTokenCacheService memberTokenCacheService;
     private final OnlineUserService onlineUserService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             Member member = authenticateAccessToken(request);
             if (member == null) member = refreshAuthentication(request, response);
@@ -75,8 +78,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (!refreshTokenService.isValid(claims.jti(), claims.memberId())) return null;
             Member member = loadActiveMember(claims);
             if (member == null) {
-                refreshTokenService.revoke(claims.jti());
+                RefreshToken oldToken = refreshTokenService.findOldToken(claims.jti());
+
+                if (oldToken != null) {
+                    refreshTokenService.deleteOldToken(oldToken);
+
+                    if (!refreshTokenService.existsByMemberIdAndExpiresAtAfter(oldToken.getMemberId(), Instant.now()))
+                        memberTokenCacheService.delete(oldToken.getMemberId());
+                }
+
                 cookieService.clearAuthenticationCookies(response);
+
                 return null;
             }
 
@@ -87,16 +99,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             IssuedToken accessToken = tokenProvider.createAccessToken(member);
             if (tokenProvider.shouldRotateRefreshToken(claims.expiresAt())) {
                 IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
-                if (!refreshTokenService.rotate(
-                        claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(),
-                        ClientIpResolver.resolve(request))) {
+                if (!rotate(claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ClientIpResolver.resolve(request))) {
                     cookieService.clearAuthenticationCookies(response);
                     return null;
                 }
                 cookieService.writeRefreshToken(response, refreshToken.value(), tokenProvider.refreshTokenDuration());
                 cookieService.rememberRefreshToken(request, refreshToken.value());
             } else {
-                refreshTokenService.recordAccessIfNeeded(member, Duration.between(Instant.now(), claims.expiresAt()));
+                if (member.getLastLoginTime() == null || !member.getLastLoginTime().isAfter(LocalDateTime.now().minusDays(1))) {
+                    memberService.updateLastLoginTime(member.getId());
+                    memberTokenCacheService.save(member, Duration.between(Instant.now(), claims.expiresAt()));
+                }
             }
             cookieService.writeAccessToken(response, accessToken.value(), tokenProvider.accessTokenDuration());
             return member;
@@ -104,6 +117,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             cookieService.clearAuthenticationCookies(response);
             return null;
         }
+    }
+
+    private boolean rotate (String oldJti, String newJti, Member member, Duration ttl, String ipAddress) {
+        RefreshToken oldToken = refreshTokenService.findOldToken(oldJti);
+        Instant now = Instant.now();
+
+        if (oldToken == null || !oldToken.getMemberId().equals(member.getId()) || !oldToken.getExpiresAt().isAfter(now)) {
+            return false;
+        }
+
+        refreshTokenService.deleteOldToken(oldToken);
+        memberService.updateLastLoginTime(member.getId());
+        refreshTokenService.save(newJti, member, ttl, ipAddress);
+        memberTokenCacheService.save(member, ttl);
+
+        return true;
     }
 
     private Member loadActiveMember(TokenClaims claims) {

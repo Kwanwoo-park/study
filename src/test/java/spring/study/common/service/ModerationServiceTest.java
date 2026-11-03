@@ -9,8 +9,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import spring.study.common.facade.ModerationFacade;
 import spring.study.forbidden.entity.Status;
 import spring.study.forbidden.service.ForbiddenService;
+import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -34,6 +36,8 @@ class ModerationServiceTest {
     @Mock
     private MemberService memberService;
     @Mock
+    private MemberTokenCacheService tokenCacheService;
+    @Mock
     private RedisTemplate<String, String> stringRedisTemplate;
     @Mock
     private HttpServletResponse response;
@@ -46,9 +50,7 @@ class ModerationServiceTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        moderationService = new spring.study.common.facade.ModerationFacade(
-                new ModerationService(forbiddenService, stringRedisTemplate), notificationService, memberService,
-                refreshTokenService, jwtCookieService);
+        moderationService = new ModerationFacade(forbiddenService, new ModerationService(stringRedisTemplate), notificationService, memberService, tokenCacheService, refreshTokenService, jwtCookieService);
     }
 
     @AfterEach
@@ -72,7 +74,7 @@ class ModerationServiceTest {
                 eq(Group.ADMIN)
         );
         verify(memberService).updateRole(member.getId(), Role.DENIED);
-        verify(refreshTokenService).revokeAll(member.getId());
+        verify(refreshTokenService).revoke(member.getId());
         verify(jwtCookieService).clearAuthenticationCookies(response);
         verify(stringRedisTemplate).delete("forbidden:user:" + member.getId());
         org.assertj.core.api.Assertions.assertThat(result).isEqualTo(3);
@@ -97,7 +99,7 @@ class ModerationServiceTest {
                 eq(Group.ADMIN)
         );
         verify(memberService, never()).updateRole(admin.getId(), Role.DENIED);
-        verify(refreshTokenService, never()).revokeAll(admin.getId());
+        verify(refreshTokenService, never()).revoke(admin.getId());
         verify(jwtCookieService, never()).clearAuthenticationCookies(response);
         verify(stringRedisTemplate).delete("forbidden:user:" + admin.getId());
         org.assertj.core.api.Assertions.assertThat(result).isEqualTo(1);

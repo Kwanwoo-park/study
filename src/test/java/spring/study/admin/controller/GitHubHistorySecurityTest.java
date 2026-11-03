@@ -32,6 +32,7 @@ import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.service.MemberService;
 
 import java.time.Instant;
 import java.util.List;
@@ -123,8 +124,7 @@ class GitHubHistorySecurityTest {
 
         @Bean
         JwtAuthenticationFilter jwtFilter() {
-            return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(JwtCookieService.class),
-                    mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));
+            return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(MemberService.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));
         }
 
         @Bean

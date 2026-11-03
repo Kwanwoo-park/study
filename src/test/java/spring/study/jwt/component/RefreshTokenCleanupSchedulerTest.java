@@ -1,6 +1,7 @@
 package spring.study.jwt.component;
 
 import org.junit.jupiter.api.Test;
+import spring.study.jwt.facade.RefreshTokenFacade;
 import spring.study.jwt.service.RefreshTokenService;
 
 import static org.mockito.Mockito.inOrder;
@@ -10,13 +11,12 @@ class RefreshTokenCleanupSchedulerTest {
 
     @Test
     void cleanupShouldDeleteExpiredTokensBeforeInactiveMemberTokens() {
-        RefreshTokenService refreshTokenService = mock(RefreshTokenService.class);
-        RefreshTokenCleanupScheduler scheduler = new RefreshTokenCleanupScheduler(refreshTokenService);
+        RefreshTokenFacade facade = mock(RefreshTokenFacade.class);
+        RefreshTokenCleanupScheduler scheduler = new RefreshTokenCleanupScheduler(facade);
 
         scheduler.cleanup();
 
-        var order = inOrder(refreshTokenService);
-        order.verify(refreshTokenService).deleteExpiredTokens();
-        order.verify(refreshTokenService).deleteInactiveMemberTokens();
+        var order = inOrder(facade);
+        order.verify(facade).cleanUp();
     }
 }

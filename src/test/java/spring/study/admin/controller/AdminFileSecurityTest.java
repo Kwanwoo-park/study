@@ -204,7 +204,7 @@ class AdminFileSecurityTest {
 
         @Bean
         JwtAuthenticationFilter jwtFilter() {
-            return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));
+            return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(MemberService.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));
         }
 
         @Bean

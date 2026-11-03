@@ -15,6 +15,7 @@ import spring.study.jwt.service.RefreshTokenService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.common.service.OnlineUserService;
+import spring.study.member.service.MemberService;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.*;
 class JwtAuthenticationFilterBearerTest {
     private JwtTokenProvider tokenProvider;
     private Member member;
+    private MemberService memberService;
     private JwtCookieService cookieService;
     private MemberTokenCacheService memberTokenCacheService;
     private JwtAuthenticationFilter filter;
@@ -45,11 +47,13 @@ class JwtAuthenticationFilterBearerTest {
                 .id(9L).email("mobile@test.com").pwd("password").name("mobile")
                 .role(Role.USER).phone("01000000000").birth("20000101").profile("profile.png")
                 .build();
+        memberService = mock(MemberService.class);
         cookieService = mock(JwtCookieService.class);
         memberTokenCacheService = mock(MemberTokenCacheService.class);
         onlineUserService = mock(OnlineUserService.class);
         filter = new JwtAuthenticationFilter(
                 tokenProvider,
+                memberService,
                 cookieService,
                 mock(RefreshTokenService.class),
                 memberTokenCacheService,

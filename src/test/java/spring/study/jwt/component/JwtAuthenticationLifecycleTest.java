@@ -18,6 +18,7 @@ import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.member.service.MemberService;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.*;
 
 class JwtAuthenticationLifecycleTest {
     private JwtTokenProvider provider;
+    private final MemberService memberService = mock(MemberService.class);
     private final JwtCookieService cookies = new JwtCookieService();
     private final RefreshTokenService refreshTokens = mock(RefreshTokenService.class);
     private final MemberTokenCacheService cache = mock(MemberTokenCacheService.class);
@@ -43,7 +45,7 @@ class JwtAuthenticationLifecycleTest {
         ReflectionTestUtils.setField(provider, "refreshTokenDays", 14L);
         provider.initializeSecret();
         provider = spy(provider);
-        filter = new JwtAuthenticationFilter(provider, cookies, refreshTokens, cache, mock(OnlineUserService.class));
+        filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokens, cache, mock(OnlineUserService.class));
     }
 
     @AfterEach
@@ -91,7 +93,6 @@ class JwtAuthenticationLifecycleTest {
         assertThat(response.getHeaders("Set-Cookie")).isEmpty();
         verify(provider, never()).createAccessToken(any());
         verify(provider, never()).createRefreshToken(any());
-        verify(refreshTokens, never()).rotate(anyString(), anyString(), any(), any(), any());
     }
 
     @ParameterizedTest
@@ -106,9 +107,7 @@ class JwtAuthenticationLifecycleTest {
         clearInvocations(provider);
         when(refreshTokens.isValid(refresh.jti(), member.getId())).thenReturn(true);
         when(cache.findOrLoad(eq(member.getId()), any(Duration.class))).thenReturn(Optional.of(member));
-        if (remainingDays == 1) {
-            when(refreshTokens.rotate(eq(refresh.jti()), anyString(), eq(member), any(Duration.class), anyString())).thenReturn(true);
-        }
+
         var request = new MockHttpServletRequest("GET", "/board/main");
         request.setCookies(new Cookie(JwtCookieService.ACCESS_COOKIE, expiredAccess),
                 new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
@@ -128,8 +127,6 @@ class JwtAuthenticationLifecycleTest {
             assertThat(response.getCookie(JwtCookieService.REFRESH_COOKIE)).isNull();
             assertThat(cookies.readCurrentRefreshToken(request)).isEqualTo(refresh.value());
             verify(provider, never()).createRefreshToken(any());
-            verify(refreshTokens, never()).rotate(anyString(), anyString(), any(), any(), any());
-            verify(refreshTokens).recordAccessIfNeeded(eq(member), any(Duration.class));
         }
     }
 

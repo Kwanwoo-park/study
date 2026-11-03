@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import spring.study.forbidden.entity.Status;
+import spring.study.forbidden.service.ForbiddenService;
+import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -24,15 +27,29 @@ import java.time.format.DateTimeFormatter;
 public class ModerationFacade {
     private static final DateTimeFormatter SANCTION_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
+    private final ForbiddenService forbiddenService;
     private final ModerationService moderationService;
     private final NotificationService notificationService;
     private final MemberService memberService;
+    private final MemberTokenCacheService tokenCacheService;
     private final RefreshTokenService refreshTokenService;
     private final JwtCookieService jwtCookieService;
 
     public int validate(String checkStr, Member member, HttpServletResponse response) {
-        int risk = moderationService.evaluate(checkStr, member);
+        int risk = evaluate(checkStr, member);
         return risk == 3 ? handleBlockRisk(member, response) : risk;
+    }
+
+    private int evaluate(String content, Member member) {
+        if (content == null || content.isBlank())
+            return -99;
+
+        int risk = forbiddenService.findWordList(Status.APPROVAL, content);
+
+        if (risk == 3 || risk == 0)
+            return risk;
+
+        return moderationService.evaluate(member, risk);
     }
 
     private int handleBlockRisk(Member member, HttpServletResponse response) {
@@ -66,7 +83,8 @@ public class ModerationFacade {
 
         memberService.updateRole(member.getId(), Role.DENIED);
 
-        refreshTokenService.revokeAll(member.getId());
+        refreshTokenService.revoke(member.getId());
+        tokenCacheService.delete(member.getId());
         jwtCookieService.clearAuthenticationCookies(response);
         SecurityContextHolder.clearContext();
 

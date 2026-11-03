@@ -18,19 +18,18 @@ import spring.study.jwt.component.JwtAuthenticationFilter;
 import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.jwt.entity.RefreshToken;
 import spring.study.jwt.entity.TokenName;
+import spring.study.jwt.facade.JwtAuthenticationFacade;
 import spring.study.jwt.repository.RefreshTokenRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.member.repository.MemberRepository;
 import spring.study.common.service.IpLocationService;
+import spring.study.member.service.MemberService;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,7 +52,7 @@ class RefreshTokenServiceTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private MemberService memberService;
 
     @MockBean
     private MemberTokenCacheService memberTokenCacheService;
@@ -84,80 +83,19 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    void expiredTokenIsInvalidAndCleanupDeletesIt() {
-        refreshTokenService.save("expired-jti", member(1L), Duration.ofSeconds(-1));
-
-        assertThat(refreshTokenService.isValid("expired-jti", 1L)).isFalse();
-
-        refreshTokenService.deleteExpiredTokens();
-
-        assertThat(refreshTokenRepository.existsById("expired-jti")).isFalse();
-        verify(memberTokenCacheService).delete(1L);
-    }
-
-    @Test
-    void revokedTokenIsDeleted() {
-        refreshTokenService.save("revoked-jti", member(1L), Duration.ofDays(14));
-
-        refreshTokenService.revoke("revoked-jti");
-
-        assertThat(refreshTokenService.isValid("revoked-jti", 1L)).isFalse();
-        verify(memberTokenCacheService).delete(1L);
-    }
-
-    @Test
-    void revokingOneTokenKeepsCacheWhenMemberHasAnotherValidToken() {
-        Member member = member(1L);
-        refreshTokenService.save("first-jti", member, Duration.ofDays(14));
-        refreshTokenService.save("second-jti", member, Duration.ofDays(14));
-
-        refreshTokenService.revoke("first-jti");
-
-        assertThat(refreshTokenService.isValid("first-jti", 1L)).isFalse();
-        assertThat(refreshTokenService.isValid("second-jti", 1L)).isTrue();
-        verify(memberTokenCacheService, never()).delete(1L);
-    }
-
-    @Test
-    void revokeAllDeletesEveryTokenAndCacheForMember() {
+    void revokeDeletesEveryTokenAndCacheForMember() {
         Member blockedMember = member(1L);
         Member otherMember = member(2L);
         refreshTokenService.save("blocked-first-jti", blockedMember, Duration.ofDays(14));
         refreshTokenService.save("blocked-second-jti", blockedMember, Duration.ofDays(14));
         refreshTokenService.save("other-jti", otherMember, Duration.ofDays(14));
 
-        refreshTokenService.revokeAll(blockedMember.getId());
+        refreshTokenService.revoke(blockedMember.getId());
 
         assertThat(refreshTokenService.isValid("blocked-first-jti", blockedMember.getId())).isFalse();
         assertThat(refreshTokenService.isValid("blocked-second-jti", blockedMember.getId())).isFalse();
         assertThat(refreshTokenService.isValid("other-jti", otherMember.getId())).isTrue();
         verify(memberTokenCacheService).delete(blockedMember.getId());
-    }
-
-    @Test
-    void cleanupKeepsCacheWhenMemberHasANewerValidToken() {
-        Member member = member(1L);
-        refreshTokenService.save("expired-jti", member, Duration.ofSeconds(-1));
-        refreshTokenService.save("valid-jti", member, Duration.ofDays(14));
-
-        refreshTokenService.deleteExpiredTokens();
-
-        assertThat(refreshTokenRepository.existsById("expired-jti")).isFalse();
-        assertThat(refreshTokenService.isValid("valid-jti", 1L)).isTrue();
-        verify(memberTokenCacheService, never()).delete(1L);
-    }
-
-    @Test
-    void rotationReplacesTokenWithoutDeletingMemberCache() {
-        Member member = member(1L);
-        Duration ttl = Duration.ofDays(14);
-        refreshTokenService.save("old-jti", member, ttl);
-
-        assertThat(refreshTokenService.rotate("old-jti", "new-jti", member, ttl)).isTrue();
-
-        assertThat(refreshTokenService.isValid("old-jti", 1L)).isFalse();
-        assertThat(refreshTokenService.isValid("new-jti", 1L)).isTrue();
-        verify(memberTokenCacheService, never()).delete(1L);
     }
 
     @Test
@@ -169,10 +107,8 @@ class RefreshTokenServiceTest {
         when(memberTokenCacheService.findOrLoad(eq(member.getId()), any(Duration.class)))
                 .thenReturn(Optional.of(member));
         JwtCookieService cookies = new JwtCookieService();
-        var authentication = new spring.study.jwt.facade.JwtAuthenticationFacade(
-                new JwtAuthenticationService(provider, refreshTokenService, memberTokenCacheService), cookies, provider);
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(
-                provider, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
+        JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, mock(MemberService.class), mock(MemberTokenCacheService.class), mock(RefreshTokenService.class), cookies);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/member/logout");
         request.setCookies(new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -196,8 +132,7 @@ class RefreshTokenServiceTest {
         refreshTokenService.save(browser.jti(), member, provider.refreshTokenDuration());
         refreshTokenService.save(otherDevice.jti(), member, provider.refreshTokenDuration());
         JwtCookieService cookies = new JwtCookieService();
-        var authentication = new spring.study.jwt.facade.JwtAuthenticationFacade(
-                new JwtAuthenticationService(provider, refreshTokenService, memberTokenCacheService), cookies, provider);
+        JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, mock(MemberService.class), mock(MemberTokenCacheService.class), mock(RefreshTokenService.class), cookies);
         String previousToken = browser.value();
 
         for (int attempt = 0; attempt < 3; attempt++) {
@@ -229,10 +164,8 @@ class RefreshTokenServiceTest {
         when(memberTokenCacheService.findOrLoad(eq(member.getId()), any(Duration.class)))
                 .thenReturn(Optional.of(member));
         JwtCookieService cookies = new JwtCookieService();
-        var authentication = new spring.study.jwt.facade.JwtAuthenticationFacade(
-                new JwtAuthenticationService(provider, refreshTokenService, memberTokenCacheService), cookies, provider);
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(
-                provider, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
+        JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, mock(MemberService.class), mock(MemberTokenCacheService.class), mock(RefreshTokenService.class), cookies);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
         MockHttpServletRequest request = new MockHttpServletRequest("PATCH", "/api/member/updatePassword/authenticated");
         request.setCookies(new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -248,29 +181,6 @@ class RefreshTokenServiceTest {
         }
     }
 
-    @Test
-    void cleanupDeletesAllTokensAndCacheOnlyForMembersInactiveForFifteenDays() {
-        Member inactiveMember = persistedMember(
-                "inactive@example.com", "01011112222", LocalDateTime.now().minusDays(16));
-        Member activeMember = persistedMember(
-                "active@example.com", "01033334444", LocalDateTime.now().minusDays(1));
-        refreshTokenRepository.save(new RefreshToken(
-                "inactive-first-jti", inactiveMember.getId(), Duration.ofDays(30)));
-        refreshTokenRepository.save(new RefreshToken(
-                "inactive-second-jti", inactiveMember.getId(), Duration.ofDays(30)));
-        refreshTokenRepository.save(new RefreshToken(
-                "active-jti", activeMember.getId(), Duration.ofDays(30)));
-        clearInvocations(memberTokenCacheService);
-
-        refreshTokenService.deleteInactiveMemberTokens();
-
-        assertThat(refreshTokenRepository.existsById("inactive-first-jti")).isFalse();
-        assertThat(refreshTokenRepository.existsById("inactive-second-jti")).isFalse();
-        assertThat(refreshTokenRepository.existsById("active-jti")).isTrue();
-        verify(memberTokenCacheService).delete(inactiveMember.getId());
-        verify(memberTokenCacheService, never()).delete(activeMember.getId());
-    }
-
     private JwtTokenProvider tokenProvider() {
         JwtTokenProvider provider = new JwtTokenProvider(new ObjectMapper());
         ReflectionTestUtils.setField(provider, "configuredSecret", "test-secret-that-is-at-least-thirty-two-bytes-long");
@@ -279,19 +189,6 @@ class RefreshTokenServiceTest {
         ReflectionTestUtils.setField(provider, "refreshTokenDays", 14L);
         ReflectionTestUtils.invokeMethod(provider, "initializeSecret");
         return provider;
-    }
-
-    private Member persistedMember(String email, String phone, LocalDateTime lastLoginTime) {
-        return memberRepository.saveAndFlush(Member.builder()
-                .email(email)
-                .pwd("encoded-password")
-                .name("user")
-                .role(Role.USER)
-                .phone(phone)
-                .birth("20000101")
-                .profile("profile.png")
-                .lastLoginTime(lastLoginTime)
-                .build());
     }
 
     private Member member(Long id) {

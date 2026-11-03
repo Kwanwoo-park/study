@@ -4,12 +4,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.jwt.dto.MobileAuthResponse;
 import spring.study.jwt.dto.MobileOAuthExchangeRequest;
 import spring.study.jwt.facade.MobileOAuthFacade;
-import spring.study.jwt.service.JwtAuthenticationService;
 import spring.study.jwt.service.JwtCookieService;
+import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.MobileOAuthCodeService;
+import spring.study.jwt.service.RefreshTokenService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -30,10 +32,12 @@ class MobileOAuthControllerTest {
     private final JwtCookieService cookieService = mock(JwtCookieService.class);
     private final MobileOAuthCodeService codeService = mock(MobileOAuthCodeService.class);
     private final MemberService memberService = mock(MemberService.class);
-    private final JwtAuthenticationService authenticationService = mock(JwtAuthenticationService.class);
     private final OnlineUserService onlineUserService = mock(OnlineUserService.class);
-    private final MobileOAuthController controller = new MobileOAuthController(
-            new MobileOAuthFacade(cookieService, codeService, memberService, authenticationService, onlineUserService));
+    private final JwtTokenProvider provider = mock(JwtTokenProvider.class);
+    private final RefreshTokenService tokenService = mock(RefreshTokenService.class);
+    private final MemberTokenCacheService cacheService = mock(MemberTokenCacheService.class);
+    private final MobileOAuthFacade facade = new MobileOAuthFacade(cookieService, codeService, memberService, cacheService, provider, tokenService, onlineUserService);
+    private final MobileOAuthController controller = new MobileOAuthController(facade);
 
     @Test
     void startsSupportedProviderThroughServerAuthorizationEndpoint() {
@@ -64,7 +68,7 @@ class MobileOAuthControllerTest {
         when(memberService.updateLastLoginTime(7L)).thenReturn(member);
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.setRemoteAddr("203.0.113.11");
-        when(authenticationService.issue(member, "203.0.113.11")).thenReturn(tokens);
+        when(facade.issue(member, "203.0.113.11")).thenReturn(tokens);
 
         ResponseEntity<?> response = controller.exchange(
                 new MobileOAuthExchangeRequest("once"), servletRequest);

@@ -22,6 +22,7 @@ import spring.study.chat.facade.AudioCallFacade;
 import spring.study.chat.service.ChatPresenceService;
 import spring.study.common.service.IpLocationService;
 import spring.study.jwt.dto.AdminTokenSessionResponse;
+import spring.study.jwt.entity.RefreshToken;
 import spring.study.kafka.service.KafkaQueueQueryService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
@@ -165,7 +166,17 @@ public class AdminFacade {
     }
 
     public ResponseEntity<?> tokenSessions() {
-        List<AdminTokenSessionResponse> sessions = refreshTokenService.findActiveSessions();
+        List<RefreshToken> tokens = refreshTokenService.findAllMemberIds();
+        Map<Long, Member> members = memberService.findAllById(tokens.stream().map(RefreshToken::getMemberId).distinct().toList());
+
+        List<AdminTokenSessionResponse> sessions = tokens.stream()
+                .map(token -> {
+                    Member member = members.get(token.getMemberId());
+                    String email = member == null ? "탈퇴한 회원" : member.getEmail();
+
+                    return new AdminTokenSessionResponse(token, email, ipLocationService.find(token.getIpAddress()));
+                })
+                .toList();
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "count", sessions.size(),

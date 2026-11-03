@@ -1,11 +1,6 @@
 package spring.study.regression;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionAttribute;
@@ -73,14 +68,5 @@ class ReadOnlyTransactionRegressionTest {
                 }
             }
         }
-    }
-
-    @Test
-    void externalIpLookupKeepsExistingTransactionSuspension() throws Exception {
-        Method method = RefreshTokenService.class.getMethod("findActiveSessions");
-        TransactionAttribute transaction = attributes.getTransactionAttribute(method, RefreshTokenService.class);
-        assertThat(transaction).isNotNull();
-        assertThat(transaction.isReadOnly()).isTrue();
-        assertThat(transaction.getPropagationBehavior()).isEqualTo(TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
     }
 }

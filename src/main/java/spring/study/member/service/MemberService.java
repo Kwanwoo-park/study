@@ -122,6 +122,16 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findByEmailIn(emailList).stream().collect(Collectors.toMap(Member::getEmail, Function.identity()));
     }
 
+    @Transactional(readOnly = true)
+    public List<Long> findInactiveMemberIds(List<Long> id, LocalDateTime cutoff) {
+        return memberRepository.findInactiveMemberIds(id, cutoff);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Member> findAllById(List<Long> members) {
+        return memberRepository.findAllById(members).stream().collect(Collectors.toMap(Member::getId, Function.identity()));
+    }
+
     @Transactional
     public void deleteById(Long id) {
         memberRepository.deleteById(id);
