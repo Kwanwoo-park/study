@@ -9,6 +9,7 @@ import spring.study.admin.entity.IntegrationEventLog;
 import spring.study.admin.entity.IntegrationEventLogBroker;
 import spring.study.admin.entity.IntegrationEventLogOperation;
 import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.common.dto.EntityIdProjection;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +28,5 @@ public interface IntegrationEventLogRepository extends JpaRepository<Integration
                                      @Param("beforeId") Long beforeId, Pageable pageable);
 
     @Transactional(readOnly = true)
-    @Query("select e.id from IntegrationEventLog e where e.occurredAt < :cutoff order by e.occurredAt, e.id")
-    List<Long> findExpiredIds(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
+    List<EntityIdProjection> findByOccurredAtBeforeOrderByOccurredAtAscIdAsc(LocalDateTime cutoff, Pageable pageable);
 }

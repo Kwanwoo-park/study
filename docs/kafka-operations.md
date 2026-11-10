@@ -10,7 +10,7 @@
 - DLT 발행의 broker ACK를 확인해야 원본 처리를 넘깁니다. DLT 발행이 실패하면 원본 메시지를 다시 처리합니다. 정상 객체와 역직렬화에 실패한 원본 byte[] 모두 보관됩니다.
 - 채팅은 배치 트랜잭션입니다. 실패 레코드를 안전하게 특정할 수 없는 오류는 **전체 실패 배치**를 재시도·DLT 보관합니다. 일부 레코드의 offset만 먼저 커밋해 나머지를 잃는 방식은 사용하지 않습니다.
 - DLT는 별도 소비자 그룹 `{group-id}.dead-letter-store`에서 읽어 `kafka_dead_letter`에 보관합니다. DB 장애 시 포기하지 않고 다시 시도합니다. 원본 topic/partition/offset에 유일 제약을 두어 중복 보관을 방지합니다.
-- 이 테이블에는 재발행에 필요한 원본 본문과 key가 저장됩니다. 관리자 목록 API는 본문/key/event header를 반환하지 않고 메타데이터만 조회합니다. 진단용 `integration_event_log`에는 본문을 저장하지 않습니다.
+- 이 테이블에는 재발행에 필요한 원본 본문과 key가 저장됩니다. 관리자 목록은 `KafkaDeadLetterMetadataDto` 생성자 프로젝션으로 필요한 컬럼과 본문 존재 여부만 조회하며, 본문/key/event header 원문은 조회 결과와 API 응답에 포함하지 않습니다. 진단용 `integration_event_log`에는 본문을 저장하지 않습니다.
 
 ## 재발행
 

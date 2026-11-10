@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import spring.study.account.dto.AccountResponseDto;
+import spring.study.account.dto.AccountNumberProjection;
 import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.entity.Account;
@@ -77,7 +78,9 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public List<String> findDueSavingsAccountNumbers(LocalDate processingDate) {
-        return accountRepository.findDueSavingsAccountNumbers(AccountType.INSTALLMENT_SAVINGS, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED), processingDate);
+        return accountRepository.findByAccountTypeAndAccountStatusInAndSavingsAutoTransfer_NextPaymentDateLessThanEqual(
+                        AccountType.INSTALLMENT_SAVINGS, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED), processingDate)
+                .stream().map(AccountNumberProjection::account).toList();
     }
 
     @Transactional(readOnly = true)
@@ -89,7 +92,7 @@ public class AccountService {
 
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public Account findByAccountForUpdate(String accountNum) {
-        return accountRepository.findByAccountForUpdate(accountNum)
+        return accountRepository.findByAccount(accountNum)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
     }
 
@@ -98,11 +101,6 @@ public class AccountService {
         return accountRepository.findByMember(member).stream()
                 .filter(account -> account.getAccountStatus() != AccountStatus.DELETED)
                 .map(AccountResponseDto::new).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public String findSavingsSourceAccountNumber(String account) {
-        return accountRepository.findSavingsSourceAccountNumber(account);
     }
 
     @Transactional(readOnly = true)
@@ -122,7 +120,9 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public boolean hasActiveSavingsUsingSource(Account sourceAccount) {
-        return accountRepository.existsBySavingsSourceAccountAndAccountStatusIn(sourceAccount, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED));
+        if (sourceAccount == null) return false;
+
+        return accountRepository.existsBySavingsAutoTransfer_SourceAccountAndAccountStatusIn(sourceAccount, List.of(AccountStatus.ACTIVE, AccountStatus.MATURED));
     }
 
     @Transactional
@@ -182,7 +182,7 @@ public class AccountService {
 
     @Transactional
     public void markMaturedAccounts(LocalDateTime now) {
-        accountRepository.findByAccountStatusAndMaturityAtLessThanEqual(AccountStatus.ACTIVE, now)
+        accountRepository.findByAccountStatusAndInterestDetail_MaturityAtLessThanEqual(AccountStatus.ACTIVE, now)
                 .forEach(account -> account.accrueInterestUntil(now));
     }
 
@@ -208,7 +208,7 @@ public class AccountService {
 
     @Transactional
     public void deleteByMember(Member member) {
-        List<Account> accounts = accountRepository.findByMemberForUpdate(member);
+        List<Account> accounts = accountRepository.findByMemberOrderByAccount(member);
         accounts.forEach(this::validateClosable);
         // Keep the accounts referenced by transaction history, without the withdrawn member.
         accounts.forEach(account -> {
@@ -303,7 +303,7 @@ public class AccountService {
     }
 
     private Account lockAndValidateSavingsSource(Account selected, Member member, long paymentAmount) {
-        Account lockedSource = accountRepository.findByAccountForUpdate(selected.getAccount())
+        Account lockedSource = accountRepository.findByAccount(selected.getAccount())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
 
         if (lockedSource.getMember() == null || !lockedSource.getMember().getId().equals(member.getId()) || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
@@ -338,7 +338,7 @@ public class AccountService {
                     ));
         }
 
-        Account lockedSource = accountRepository.findByAccountForUpdate(selected.getAccount())
+        Account lockedSource = accountRepository.findByAccount(selected.getAccount())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
 
         if (lockedSource.getMember() == null || !lockedSource.getMember().getId().equals(member.getId()) || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {

@@ -27,4 +27,9 @@ public class ChatMessageHiddenService {
 
         return message;
     }
+
+    @Transactional(readOnly = true)
+    public boolean existHiddenMessage(ChatMessage message, Member member) {
+        return chatMessageHiddenRepository.existsByMessageAndMember(message, member);
+    }
 }

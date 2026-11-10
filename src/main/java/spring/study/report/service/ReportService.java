@@ -105,7 +105,7 @@ public class ReportService {
 
     @Transactional
     public Report process(Long id, ReportProcessRequestDto requestDto) {
-        Report report = reportRepository.findByIdForUpdate(id)
+        Report report = reportRepository.findForUpdateByIdAndReporterIsNotNull(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 신고입니다"));
 
         validateProcess(report, requestDto);
@@ -145,7 +145,7 @@ public class ReportService {
 
     @Transactional
     public ReportResponseDto cancel(Long id, Member reporter) {
-        Report report = reportRepository.findByIdForUpdate(id)
+        Report report = reportRepository.findForUpdateByIdAndReporterIsNotNull(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 신고입니다"));
 
         if (!report.getReporter().getId().equals(reporter.getId())) {

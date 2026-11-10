@@ -14,6 +14,7 @@ import spring.study.appeal.service.AppealVerificationService;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
+import spring.study.sanction.service.MemberSanctionService;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ class AppealApiControllerTest {
     private final AppealService service = mock(AppealService.class);
     private final AppealVerificationService verificationService = mock(AppealVerificationService.class);
     private final spring.study.member.service.MemberService memberService = mock(spring.study.member.service.MemberService.class);
-    private final spring.study.member.sanction.service.MemberSanctionService sanctions = mock(spring.study.member.sanction.service.MemberSanctionService.class);
+    private final MemberSanctionService sanctions = mock(MemberSanctionService.class);
     private final Member member = Member.builder().id(7L).email("appeal@example.test").build();
     private MockMvc mvc;
 

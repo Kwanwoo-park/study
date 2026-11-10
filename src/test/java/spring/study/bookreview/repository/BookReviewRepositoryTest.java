@@ -43,7 +43,8 @@ class BookReviewRepositoryTest {
                 .build());
 
         assertThat(review.getId()).isNotNull();
-        assertThat(bookReviewRepository.search("조슈아", PageRequest.of(0, 10)).getContent())
+        assertThat(bookReviewRepository.findByReviewTitleLikeIgnoreCaseOrBookTitleLikeIgnoreCaseOrBookAuthorLikeIgnoreCase(
+                "%조슈아%", "%조슈아%", "%조슈아%", PageRequest.of(0, 10)).getContent())
                 .extracting(BookReview::getId)
                 .containsExactly(review.getId());
 

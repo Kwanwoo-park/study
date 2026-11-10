@@ -34,17 +34,18 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
         JsonSerializer<Object> jsonSerializer = new JsonSerializer<>(mapper);
-        return new DefaultKafkaProducerFactory<>(producerSettings(),
-                new StringSerializer(),
-                jsonSerializer);
+
+        return new DefaultKafkaProducerFactory<>(producerSettings(), new StringSerializer(), jsonSerializer);
     }
 
     private Map<String, Object> producerSettings() {
         Map<String, Object> config = new HashMap<>();
+
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, server);
         config.put(ProducerConfig.ACKS_CONFIG, "all");
         config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         config.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 5);
+
         return config;
     }
 
@@ -57,12 +58,16 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Object> recoveryProducerFactory() {
         Map<Class<?>, Serializer<?>> serializers = new LinkedHashMap<>();
+
         serializers.put(byte[].class, new ByteArraySerializer());
         serializers.put(Object.class, new JsonSerializer<>(mapper));
+
         Map<String, Object> settings = producerSettings();
+
         settings.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 5000);
         settings.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 5000);
         settings.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 10000);
+
         return new DefaultKafkaProducerFactory<>(settings, new StringSerializer(), new DelegatingByTypeSerializer(serializers, true));
     }
 

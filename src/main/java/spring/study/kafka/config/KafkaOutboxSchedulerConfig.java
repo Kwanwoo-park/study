@@ -11,11 +11,13 @@ public class KafkaOutboxSchedulerConfig {
     @Bean(name = "kafkaOutboxTaskScheduler")
     public ThreadPoolTaskScheduler kafkaOutboxTaskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+
         scheduler.setPoolSize(1);
         scheduler.setThreadNamePrefix("kafka-outbox-");
         scheduler.setRemoveOnCancelPolicy(true);
         scheduler.setWaitForTasksToCompleteOnShutdown(true);
         scheduler.setAwaitTerminationSeconds(5);
+
         return scheduler;
     }
 }

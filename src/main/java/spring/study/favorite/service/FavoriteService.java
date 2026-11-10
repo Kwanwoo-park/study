@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import spring.study.board.entity.Board;
 import spring.study.favorite.entity.Favorite;
+import spring.study.favorite.dto.FavoriteBoardIdProjection;
 import spring.study.member.entity.Member;
 import spring.study.favorite.repository.FavoriteRepository;
 
@@ -82,7 +83,8 @@ public class FavoriteService {
         if (boards.isEmpty())
             return List.of();
 
-        return favoriteRepository.findLikedBoardIds(member, boards.stream().map(Board::getId).toList());
+        return favoriteRepository.findByMemberAndBoard_IdIn(member, boards.stream().map(Board::getId).toList())
+                .stream().map(FavoriteBoardIdProjection::boardId).toList();
     }
 
     @Transactional

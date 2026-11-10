@@ -23,6 +23,7 @@ import spring.study.admin.entity.IntegrationEventLogRoute;
 import spring.study.admin.dto.IntegrationEventLogDiagnostics;
 import spring.study.admin.dto.IntegrationEventLogEntry;
 import spring.study.admin.repository.IntegrationEventLogRepository;
+import spring.study.common.dto.EntityIdProjection;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -125,7 +126,8 @@ public class IntegrationEventLogService {
             LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
 
             for (int batch = 0; batch < 10; batch++) {
-                List<Long> ids = integrationEventLogRepository.findExpiredIds(cutoff, PageRequest.of(0, 1000));
+                List<Long> ids = integrationEventLogRepository.findByOccurredAtBeforeOrderByOccurredAtAscIdAsc(cutoff, PageRequest.of(0, 1000))
+                        .stream().map(EntityIdProjection::id).toList();
 
                 if (!ids.isEmpty())
                     integrationEventLogRepository.deleteAllByIdInBatch(ids);

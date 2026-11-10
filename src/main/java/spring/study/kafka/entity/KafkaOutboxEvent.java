@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -50,6 +51,7 @@ public class KafkaOutboxEvent {
     @Column(name = "dead_lettered", nullable = false)
     private boolean deadLettered;
 
+    @Builder
     public KafkaOutboxEvent(String topic, String eventKey, KafkaOutboxPayloadType payloadType, String payload) {
         this.topic = topic;
         this.eventKey = eventKey;

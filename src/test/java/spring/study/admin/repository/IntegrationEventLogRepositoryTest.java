@@ -42,7 +42,8 @@ class IntegrationEventLogRepositoryTest {
         LocalDateTime now = LocalDateTime.now();
         repository.save(new IntegrationEventLog(new IntegrationEventLogEntry(now.minusDays(8), "node", IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SUCCESS, null, 1, null, null, null)));
         IntegrationEventLog retained = repository.saveAndFlush(new IntegrationEventLog(new IntegrationEventLogEntry(now, "node", IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SUCCESS, null, 1, null, null, null)));
-        List<Long> ids = repository.findExpiredIds(now.minusDays(7), PageRequest.of(0, 1000));
+        List<Long> ids = repository.findByOccurredAtBeforeOrderByOccurredAtAscIdAsc(now.minusDays(7), PageRequest.of(0, 1000))
+                .stream().map(spring.study.common.dto.EntityIdProjection::id).toList();
         assertThat(ids).hasSize(1);
         repository.deleteAllByIdInBatch(ids);
         assertThat(repository.findAll()).extracting(IntegrationEventLog::getId).containsExactly(retained.getId());

@@ -48,8 +48,11 @@ public class KafkaOutboxDispatchCoordinator {
     @PreDestroy
     public void stop() {
         synchronized (scheduleMonitor) {
-            if (safetyFuture != null) safetyFuture.cancel(false);
-            if (retryFuture != null) retryFuture.cancel(false);
+            if (safetyFuture != null)
+                safetyFuture.cancel(false);
+
+            if (retryFuture != null)
+                retryFuture.cancel(false);
         }
     }
 
@@ -60,11 +63,14 @@ public class KafkaOutboxDispatchCoordinator {
 
     private void scheduleImmediateDispatchIfNeeded() {
         Instant now = Instant.now();
+
         if (now.isBefore(blockedUntil)) {
             scheduleRetry(blockedUntil);
             return;
         }
-        if (!immediateDispatchScheduled.compareAndSet(false, true)) return;
+
+        if (!immediateDispatchScheduled.compareAndSet(false, true))
+            return;
 
         taskScheduler.schedule(this::runImmediateDispatch, now);
     }
@@ -73,14 +79,22 @@ public class KafkaOutboxDispatchCoordinator {
         try {
             do {
                 immediateDispatchRequested.set(false);
+
                 KafkaDispatchResult result = kafkaOutboxDispatcher.publishPendingEvents();
+
                 handleDispatchResult(result);
-                if (result.failed() && result.retryAt() != null) break;
-                if (result.batchFull() || (result.failed() && result.retryAt() == null)) immediateDispatchRequested.set(true);
+
+                if (result.failed() && result.retryAt() != null)
+                    break;
+
+                if (result.batchFull() || (result.failed() && result.retryAt() == null))
+                    immediateDispatchRequested.set(true);
             } while (immediateDispatchRequested.get());
         } finally {
             immediateDispatchScheduled.set(false);
-            if (immediateDispatchRequested.get()) scheduleImmediateDispatchIfNeeded();
+
+            if (immediateDispatchRequested.get())
+                scheduleImmediateDispatchIfNeeded();
         }
     }
 
@@ -90,46 +104,63 @@ public class KafkaOutboxDispatchCoordinator {
         }
 
         boolean hasWork = false;
+
         if (Instant.now().isBefore(blockedUntil)) {
             scheduleRetry(blockedUntil);
         } else {
             KafkaDispatchResult result = kafkaOutboxDispatcher.publishPendingEvents();
+
             hasWork = result.hasWork();
+
             handleDispatchResult(result);
-            if (result.batchFull() || (result.failed() && result.retryAt() == null)) requestImmediateDispatch();
+
+            if (result.batchFull() || (result.failed() && result.retryAt() == null))
+                requestImmediateDispatch();
         }
 
         Duration nextDelay = hasWork ? initialSafetyDelay : nextEmptySafetyDelay;
         nextEmptySafetyDelay = hasWork ? initialSafetyDelay : doubleDelay(nextEmptySafetyDelay);
+
         scheduleSafetyPoll(nextDelay);
     }
 
     private void handleDispatchResult(KafkaDispatchResult result) {
         if (!result.failed()) {
             blockedUntil = Instant.MIN;
+
             return;
         }
+
         if (result.retryAt() == null) {
             blockedUntil = Instant.MIN;
+
             return;
         }
 
         Duration retryDelay = Duration.between(LocalDateTime.now(), result.retryAt());
+
         blockedUntil = Instant.now().plus(retryDelay.isNegative() ? Duration.ZERO : retryDelay);
+
         scheduleRetry(blockedUntil);
     }
 
     private void scheduleSafetyPoll(Duration delay) {
         synchronized (scheduleMonitor) {
-            if (safetyFuture != null && !safetyFuture.isDone()) return;
+            if (safetyFuture != null && !safetyFuture.isDone())
+                return;
+
             safetyFuture = taskScheduler.schedule(this::runSafetyPoll, Instant.now().plus(delay));
         }
     }
 
     private void scheduleRetry(Instant retryAt) {
         synchronized (scheduleMonitor) {
-            if (retryFuture != null && !retryFuture.isDone() && retryScheduledAt != null && !retryAt.isBefore(retryScheduledAt)) return;
-            if (retryFuture != null) retryFuture.cancel(false);
+            if (retryFuture != null && !retryFuture.isDone() && retryScheduledAt != null && !retryAt.isBefore(retryScheduledAt))
+                return;
+
+            if (retryFuture != null)
+                retryFuture.cancel(false);
+
             retryScheduledAt = retryAt;
             retryFuture = taskScheduler.schedule(this::runRetry, retryAt);
         }
@@ -140,11 +171,13 @@ public class KafkaOutboxDispatchCoordinator {
             retryFuture = null;
             retryScheduledAt = null;
         }
+
         requestImmediateDispatch();
     }
 
     private Duration doubleDelay(Duration delay) {
         long doubledMillis = Math.min(delay.toMillis() * 2L, maxSafetyDelay.toMillis());
+
         return Duration.ofMillis(doubledMillis);
     }
 }

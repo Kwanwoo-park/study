@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import spring.study.board.entity.Board;
 import spring.study.favorite.entity.Favorite;
+import spring.study.favorite.dto.FavoriteBoardIdProjection;
 import spring.study.member.entity.Member;
 
 import java.util.List;
@@ -15,6 +16,10 @@ import java.util.Collection;
 
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
+    @Query("select f.board.id, count(f.id) from favorite f where f.board.id in :boardIds group by f.board.id")
+    @Transactional(readOnly = true)
+    List<Long[]> countByBoardIds(@Param("boardIds") List<Long> boardIds);
+
     @Transactional(readOnly = true)
     Favorite findByMemberAndBoard(Member member, Board board);
 
@@ -39,11 +44,6 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     @Transactional(readOnly = true)
     Boolean existsByMemberAndBoard(Member member, Board board);
 
-    @Query("select f.board.id, count(f.id) from favorite f where f.board.id in :boardIds group by f.board.id")
     @Transactional(readOnly = true)
-    List<Long[]> countByBoardIds(@Param("boardIds") List<Long> boardIds);
-
-    @Query("select f.board.id from favorite f where f.member = :member and f.board.id in :boardIds")
-    @Transactional(readOnly = true)
-    List<Long> findLikedBoardIds(@Param("member") Member member, @Param("boardIds") Collection<Long> boardIds);
+    List<FavoriteBoardIdProjection> findByMemberAndBoard_IdIn(Member member, Collection<Long> boardIds);
 }

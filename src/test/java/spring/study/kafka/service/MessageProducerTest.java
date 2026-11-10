@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.ApplicationEventPublisher;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.kafka.entity.KafkaOutboxPayloadType;
-import spring.study.kafka.event.KafkaOutboxDispatchRequestedEvent;
+import spring.study.kafka.dto.KafkaOutboxDispatchRequestedEvent;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.admin.service.IntegrationEventLogService;
 

@@ -115,11 +115,11 @@ class AccountNormalizationPersistenceTest {
         assertEquals(LocalDate.of(2026, 1, 31), saved.getNextSavingsPaymentDate());
         assertEquals(
                 List.of(saved.getAccount()),
-                accountRepository.findDueSavingsAccountNumbers(
+                accountRepository.findByAccountTypeAndAccountStatusInAndSavingsAutoTransfer_NextPaymentDateLessThanEqual(
                         AccountType.INSTALLMENT_SAVINGS,
                         List.of(AccountStatus.ACTIVE),
                         LocalDate.of(2026, 1, 31)
-                )
+                ).stream().map(spring.study.account.dto.AccountNumberProjection::account).toList()
         );
     }
 

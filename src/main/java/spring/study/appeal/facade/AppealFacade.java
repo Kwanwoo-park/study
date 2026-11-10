@@ -13,9 +13,9 @@ import spring.study.member.entity.Member;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
-import spring.study.member.sanction.entity.MemberSanction;
+import spring.study.sanction.entity.MemberSanction;
 import spring.study.member.service.MemberService;
-import spring.study.member.sanction.service.MemberSanctionService;
+import spring.study.sanction.service.MemberSanctionService;
 import spring.study.notification.service.NotificationService;
 import spring.study.notification.entity.Group;
 import spring.study.common.component.TransactionRunner;

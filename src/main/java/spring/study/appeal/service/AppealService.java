@@ -14,7 +14,7 @@ import spring.study.appeal.entity.Appeal;
 import spring.study.appeal.entity.AppealStatus;
 import spring.study.appeal.repository.AppealRepository;
 import spring.study.member.entity.Member;
-import spring.study.member.sanction.entity.MemberSanction;
+import spring.study.sanction.entity.MemberSanction;
 
 import java.util.List;
 
@@ -76,7 +76,7 @@ public class AppealService {
 
     @Transactional
     public void detachSanctions(Member member) {
-        appealRepository.detachSanctions(member);
+        appealRepository.updateRelatedSanction(member);
     }
 
 

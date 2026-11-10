@@ -2,8 +2,7 @@ package spring.study.chat.repository;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Repository;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.ChatRoomMember;
@@ -16,9 +15,9 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
     @Transactional(readOnly = true)
     List<ChatRoomMember> findByRoom(ChatRoom room);
 
-    @Query("select rm from ChatRoomMember rm join fetch rm.member m where rm.room = :room order by m.name, m.id")
+    @EntityGraph(attributePaths = "member")
     @Transactional(readOnly = true)
-    List<ChatRoomMember> findParticipantsByRoom(@Param("room") ChatRoom room);
+    List<ChatRoomMember> findByRoomOrderByMember_NameAscMember_IdAsc(ChatRoom room);
 
     @Transactional(readOnly = true)
     List<ChatRoomMember> findByRoomAndMemberNot(ChatRoom room, Member member);

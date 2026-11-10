@@ -13,36 +13,6 @@ import java.util.List;
 
 @Repository
 public interface FollowRepository extends JpaRepository<Follow, Long> {
-    @Transactional
-    void deleteByFollowerAndFollowing(Member follower, Member following);
-
-    @Transactional
-    void deleteByFollower(Member follower);
-
-    @Transactional
-    void deleteByFollowing(Member following);
-
-    @Transactional(readOnly = true)
-    Follow findByFollowerAndFollowing(Member follower, Member following);
-
-    @Transactional(readOnly = true)
-    List<Follow> findByFollower(Member member);
-
-    @Transactional(readOnly = true)
-    List<Follow> findByFollower(Member follower, Pageable pageable);
-
-    @Transactional(readOnly = true)
-    List<Follow> findByFollowing(Member following, Pageable pageable);
-
-    @Transactional(readOnly = true)
-    long countByFollower(Member follower);
-
-    @Transactional(readOnly = true)
-    long countByFollowing(Member following);
-
-    @Transactional(readOnly = true)
-    boolean existsByFollowerAndFollowing(Member follower, Member following);
-
     @Query("""
             select f from follow f
             where f.following = :target
@@ -86,4 +56,34 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
             """)
     @Transactional(readOnly = true)
     long countVisibleFollowing(@Param("target") Member target, @Param("viewer") Member viewer);
+
+    @Transactional
+    void deleteByFollowerAndFollowing(Member follower, Member following);
+
+    @Transactional
+    void deleteByFollower(Member follower);
+
+    @Transactional
+    void deleteByFollowing(Member following);
+
+    @Transactional(readOnly = true)
+    Follow findByFollowerAndFollowing(Member follower, Member following);
+
+    @Transactional(readOnly = true)
+    List<Follow> findByFollower(Member member);
+
+    @Transactional(readOnly = true)
+    List<Follow> findByFollower(Member follower, Pageable pageable);
+
+    @Transactional(readOnly = true)
+    List<Follow> findByFollowing(Member following, Pageable pageable);
+
+    @Transactional(readOnly = true)
+    long countByFollower(Member follower);
+
+    @Transactional(readOnly = true)
+    long countByFollowing(Member following);
+
+    @Transactional(readOnly = true)
+    boolean existsByFollowerAndFollowing(Member follower, Member following);
 }

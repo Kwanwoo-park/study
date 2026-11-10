@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.kafka.entity.KafkaOutboxEvent;
 import spring.study.kafka.entity.KafkaOutboxPayloadType;
-import spring.study.kafka.event.KafkaOutboxDispatchRequestedEvent;
+import spring.study.kafka.dto.KafkaOutboxDispatchRequestedEvent;
 import spring.study.kafka.repository.KafkaOutboxEventRepository;
 import spring.study.notification.entity.Notification;
 import spring.study.admin.service.IntegrationEventLogService;
@@ -26,12 +26,13 @@ public class MessageProducer {
 
     public void sendMessage(ChatMessageRequestDto message){
         try {
-            KafkaOutboxEvent event = new KafkaOutboxEvent(
-                    "topic",
-                    message.getRoomId(),
-                    KafkaOutboxPayloadType.CHAT_MESSAGE,
-                    objectMapper.writeValueAsString(message)
-            );
+            KafkaOutboxEvent event = KafkaOutboxEvent.builder()
+                    .topic("topic")
+                    .eventKey(message.getRoomId())
+                    .payloadType(KafkaOutboxPayloadType.CHAT_MESSAGE)
+                    .payload(objectMapper.writeValueAsString(message))
+                    .build();
+
             outboxRepository.save(event);
             eventLogs.afterCommit(IntegrationEventLogRoute.CHAT, IntegrationEventLogOperation.QUEUE, IntegrationEventLogOutcome.QUEUED, event.getId(), 1, null, null);
             requestDispatch();
@@ -46,12 +47,13 @@ public class MessageProducer {
 
     public void sendNotification(Notification notification) {
         try {
-            KafkaOutboxEvent event = new KafkaOutboxEvent(
-                    "topic2",
-                    notification.getMember().getId().toString(),
-                    KafkaOutboxPayloadType.NOTIFICATION,
-                    notification.getId().toString()
-            );
+            KafkaOutboxEvent event = KafkaOutboxEvent.builder()
+                    .topic("topic2")
+                    .eventKey(notification.getMember().getId().toString())
+                    .payloadType(KafkaOutboxPayloadType.NOTIFICATION)
+                    .payload(notification.getId().toString())
+                    .build();
+
             outboxRepository.save(event);
             eventLogs.afterCommit(IntegrationEventLogRoute.NOTIFICATION, IntegrationEventLogOperation.QUEUE, IntegrationEventLogOutcome.QUEUED, event.getId(), 1, null, null);
             requestDispatch();

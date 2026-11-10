@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import spring.study.kafka.event.KafkaOutboxDispatchRequestedEvent;
+import spring.study.kafka.dto.KafkaOutboxDispatchRequestedEvent;
 
 @Component
 @RequiredArgsConstructor

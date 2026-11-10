@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 import spring.study.member.entity.Member;
 import spring.study.report.entity.Report;
@@ -48,8 +46,8 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Optional<Report> findById(Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select r from report r join fetch r.reporter where r.id = :id")
-    Optional<Report> findByIdForUpdate(@Param("id") Long id);
+    @EntityGraph(attributePaths = "reporter")
+    Optional<Report> findForUpdateByIdAndReporterIsNotNull(Long id);
 
     @Transactional(readOnly = true)
     boolean existsByReporterAndTargetTypeAndTargetIdAndStatusNot(

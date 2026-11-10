@@ -4,6 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
+import spring.study.admin.entity.IntegrationEventLogOperation;
+import spring.study.admin.entity.IntegrationEventLogOutcome;
+import spring.study.admin.entity.IntegrationEventLogRoute;
+import spring.study.admin.service.IntegrationEventLogService;
+import spring.study.kafka.entity.KafkaDeadLetter;
 import spring.study.kafka.entity.KafkaDeadLetterStatus;
 import spring.study.kafka.service.KafkaDeadLetterService;
 import spring.study.kafka.service.KafkaMonitoringService;
@@ -16,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class KafkaOperationsFacade {
     private final KafkaMonitoringService monitoring;
     private final KafkaDeadLetterService deadLetters;
+    private final IntegrationEventLogService eventLogService;
 
     public ResponseEntity<?> csrf(CsrfToken token) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(Map.of(
@@ -24,14 +30,21 @@ public class KafkaOperationsFacade {
         ));
     }
 
-    public ResponseEntity<?> overview() { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(monitoring.overview()); }
+    public ResponseEntity<?> overview() {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(monitoring.overview());
+    }
 
     public ResponseEntity<?> list(KafkaDeadLetterStatus status, Long beforeId) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(deadLetters.list(status, beforeId));
     }
 
     public ResponseEntity<?> replay(long id, Member administrator) {
-        deadLetters.requestReplay(id, administrator.getId());
+        KafkaDeadLetter entry = deadLetters.requestReplay(id, administrator.getId());
+
+        eventLogService.afterCommit(IntegrationEventLogRoute.kafka(entry.getSourceTopic()), IntegrationEventLogOperation.REPLAY, IntegrationEventLogOutcome.QUEUED, entry.getId(), 1, 0, null);
+
         return ResponseEntity.accepted().cacheControl(CacheControl.noStore()).body(Map.of("message", "재발행 요청을 저장했습니다. 처리 상태를 확인해 주세요."));
     }
 }

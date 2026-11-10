@@ -14,6 +14,11 @@ import java.util.List;
 
 @Repository
 public interface ForbiddenRepository extends JpaRepository<Forbidden, Long> {
+    @Transactional
+    @Modifying
+    @Query("update forbidden set status = :status where id in (:idList)")
+    int updateStatusInIdList(@Param("status") Status status, @Param("idList") List<Long> idList);
+
     @Transactional(readOnly = true)
     List<Forbidden> findByWordContaining(String word);
 
@@ -25,11 +30,6 @@ public interface ForbiddenRepository extends JpaRepository<Forbidden, Long> {
 
     @Transactional(readOnly = true)
     List<Forbidden> findByRisk(Risk risk);
-
-    @Transactional
-    @Modifying
-    @Query("update forbidden set status = :status where id in (:idList)")
-    int updateStatusInIdList(@Param("status") Status status, @Param("idList") List<Long> idList);
 
     @Transactional(readOnly = true)
     Boolean existsByWord(String word);

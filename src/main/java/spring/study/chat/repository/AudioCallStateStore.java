@@ -17,8 +17,7 @@ public interface AudioCallStateStore {
 
     Optional<AudioCallMutation> reject(AudioCall call, String memberEmail, Duration ttl);
 
-    Optional<AudioCallMutation> leave(
-            AudioCall call, String memberEmail, String sessionId, Duration ttl);
+    Optional<AudioCallMutation> leave(AudioCall call, String memberEmail, String sessionId, Duration ttl);
 
     boolean touch(AudioCall call, String memberEmail, String sessionId, Duration ttl);
 

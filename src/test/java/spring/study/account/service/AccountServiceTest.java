@@ -42,7 +42,7 @@ class AccountServiceTest {
                 member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE
         )).thenReturn(List.of(checking));
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(accountRepository.findByAccountForUpdate(checking.getAccount()))
+        when(accountRepository.findByAccount(checking.getAccount()))
                 .thenReturn(java.util.Optional.of(checking));
 
         AccountCreateRequestDto request = new AccountCreateRequestDto();
@@ -81,7 +81,7 @@ class AccountServiceTest {
         when(accountRepository.findByMemberAndAccountTypeAndAccountStatus(
                 member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE
         )).thenReturn(List.of(checking));
-        when(accountRepository.findByAccountForUpdate(checking.getAccount()))
+        when(accountRepository.findByAccount(checking.getAccount()))
                 .thenReturn(java.util.Optional.of(checking));
         AccountCreateRequestDto request = new AccountCreateRequestDto();
         request.setAccountType(AccountType.INSTALLMENT_SAVINGS);
@@ -115,7 +115,7 @@ class AccountServiceTest {
         when(accountRepository.findByMemberAndAccountTypeAndAccountStatus(
                 member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE
         )).thenReturn(List.of(checking));
-        when(accountRepository.findByAccountForUpdate(checking.getAccount())).thenReturn(java.util.Optional.of(checking));
+        when(accountRepository.findByAccount(checking.getAccount())).thenReturn(java.util.Optional.of(checking));
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AccountCreateRequestDto request = new AccountCreateRequestDto();
@@ -171,7 +171,7 @@ class AccountServiceTest {
         when(accountRepository.findByMemberAndAccountTypeAndAccountStatus(
                 member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE
         )).thenReturn(List.of(checking));
-        when(accountRepository.findByAccountForUpdate(checking.getAccount()))
+        when(accountRepository.findByAccount(checking.getAccount()))
                 .thenReturn(java.util.Optional.of(checking));
         AccountCreateRequestDto request = new AccountCreateRequestDto();
         request.setAccountType(AccountType.TIME_DEPOSIT);
@@ -198,9 +198,9 @@ class AccountServiceTest {
     }
 
     private void mockLockedAccounts(Account first, Account second) {
-        when(accountRepository.findByAccountForUpdate(first.getAccount()))
+        when(accountRepository.findByAccount(first.getAccount()))
                 .thenReturn(java.util.Optional.of(first));
-        when(accountRepository.findByAccountForUpdate(second.getAccount()))
+        when(accountRepository.findByAccount(second.getAccount()))
                 .thenReturn(java.util.Optional.of(second));
     }
 

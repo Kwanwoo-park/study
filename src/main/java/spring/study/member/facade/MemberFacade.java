@@ -39,11 +39,12 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.report.service.ReportService;
 import spring.study.reply.service.ReplyService;
+import spring.study.sanction.entity.MemberSanction;
 import spring.study.todo.service.TodoService;
 import spring.study.mail.service.EmailVerificationService;
 import spring.study.diary.service.DiaryService;
 import spring.study.diary.service.DiaryImageService;
-import spring.study.member.sanction.service.MemberSanctionService;
+import spring.study.sanction.service.MemberSanctionService;
 
 import java.util.List;
 import java.util.Map;
@@ -238,7 +239,7 @@ public class MemberFacade {
             ));
         }
 
-        String imageUrl = "", oldProfile = "";
+        String imageUrl = "", oldProfile;
         try {
             imageUrl = imageS3Service.uploadImageToS3(file);
             oldProfile = member.getProfile();

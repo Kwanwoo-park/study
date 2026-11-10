@@ -15,6 +15,10 @@ import java.util.Collection;
 
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+    @Query("select c.board.id, count(c.id) from comment c where c.board.id in :boardIds group by c.board.id")
+    @Transactional(readOnly = true)
+    List<Long[]> countByBoardIds(@Param("boardIds") List<Long> boardIds);
+
     @Transactional(readOnly = true)
     List<Comment> findByBoard(Board board, Pageable pageable);
 
@@ -29,8 +33,4 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Transactional
     void deleteByMember(Member member);
-
-    @Query("select c.board.id, count(c.id) from comment c where c.board.id in :boardIds group by c.board.id")
-    @Transactional(readOnly = true)
-    List<Long[]> countByBoardIds(@Param("boardIds") List<Long> boardIds);
 }

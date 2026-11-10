@@ -10,6 +10,9 @@ import spring.study.kafka.service.KafkaDeadLetterService;
 @Component @RequiredArgsConstructor
 public class KafkaDeadLetterConsumer {
     private final KafkaDeadLetterService service;
+    
     @KafkaListener(topics = {KafkaTopics.CHAT_DLT, KafkaTopics.NOTIFICATION_DLT}, containerFactory = "deadLetterKafkaListenerContainerFactory")
-    public void consume(ConsumerRecord<String, byte[]> record) { service.archive(record); }
+    public void consume(ConsumerRecord<String, byte[]> record) {
+        service.archive(record);
+    }
 }

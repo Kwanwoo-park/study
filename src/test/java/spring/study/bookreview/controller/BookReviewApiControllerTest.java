@@ -57,7 +57,9 @@ class BookReviewApiControllerTest {
     @Test
     void readersReceiveTheExistingPageAndDetailResponseShapes() throws Exception {
         when(jwtManager.getLoginMember(any())).thenReturn(user);
-        when(repository.search(eq("책"), any())).thenReturn(new PageImpl<>(List.of(review()), PageRequest.of(0, 1), 2));
+        when(repository.findByReviewTitleLikeIgnoreCaseOrBookTitleLikeIgnoreCaseOrBookAuthorLikeIgnoreCase(
+                eq("%책%"), eq("%책%"), eq("%책%"), any()))
+                .thenReturn(new PageImpl<>(List.of(review()), PageRequest.of(0, 1), 2));
         when(repository.findById(4L)).thenReturn(Optional.of(review()));
 
         mvc.perform(get("/api/book-reviews?keyword=책&page=0&size=1"))

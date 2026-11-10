@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import spring.study.kafka.config.KafkaOperationsProperties;
 import spring.study.kafka.config.KafkaTopics;
 import spring.study.kafka.dto.KafkaOverview;
+import spring.study.kafka.dto.OutboxCreatedAtProjection;
 import spring.study.kafka.dto.KafkaTopicHealth;
 import spring.study.kafka.dto.KafkaTopicSnapshot;
 import spring.study.kafka.entity.KafkaDeadLetterStatus;
@@ -30,7 +31,8 @@ public class KafkaMonitoringService {
         var broker = cluster.snapshot();
         List<String> warnings = new ArrayList<>(broker.warnings());
         List<KafkaTopicHealth> topics = broker.topics().stream().map(topic -> health(topic, warnings)).toList();
-        LocalDateTime oldest = outbox.findOldestPendingTime();
+        LocalDateTime oldest = outbox.findFirstByDeadLetteredFalseAndCreatedAtIsNotNullOrderByCreatedAtAsc()
+                .map(OutboxCreatedAtProjection::createdAt).orElse(null);
         long age = oldest == null ? 0 : Math.max(0, Duration.between(oldest, LocalDateTime.now()).toSeconds());
         long failed = outbox.countByDeadLetteredTrue();
         long unresolved = deadLetters.countByStatusIn(List.of(KafkaDeadLetterStatus.NEW, KafkaDeadLetterStatus.REPLAY_FAILED));

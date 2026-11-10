@@ -11,6 +11,7 @@ import spring.study.account.entity.AccountTransactionType;
 import spring.study.account.entity.AccountType;
 import spring.study.account.service.AccountService;
 import spring.study.account.service.AccountTransactionService;
+import spring.study.account.service.SavingAutoTransferService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
@@ -25,6 +26,7 @@ import java.util.Locale;
 public class SavingsAutoTransferFacade {
     private static final int PAYMENT_GRACE_DAYS = 3;
 
+    private final SavingAutoTransferService transferService;
     private final AccountService accountService;
     private final NotificationService notificationService;
     private final AccountTransactionService accountTransactionService;
@@ -36,7 +38,7 @@ public class SavingsAutoTransferFacade {
 
     @Transactional
     public void processDuePayment(String savingsAccountNumber, LocalDate processingDate, LocalDateTime processingTime) {
-        String sourceNumber = accountService.findSavingsSourceAccountNumber(savingsAccountNumber);
+        String sourceNumber = transferService.findSavingsSourceAccountNumber(savingsAccountNumber);
         if (sourceNumber == null) return;
         boolean savingsFirst = savingsAccountNumber.compareTo(sourceNumber) < 0;
         Account first = accountService.findByAccountForUpdate(savingsFirst ? savingsAccountNumber : sourceNumber);

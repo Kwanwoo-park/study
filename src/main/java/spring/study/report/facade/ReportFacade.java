@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import spring.study.report.entity.Report;
 import spring.study.report.entity.ReportAction;
 import spring.study.member.service.MemberService;
-import spring.study.member.sanction.service.MemberSanctionService;
+import spring.study.sanction.service.MemberSanctionService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
 import spring.study.chat.service.ChatMessageService;

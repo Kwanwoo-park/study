@@ -1,4 +1,4 @@
-package spring.study.member.sanction.service;
+package spring.study.sanction.service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.member.entity.Member;
 import spring.study.member.event.MemberChangedEvent;
-import spring.study.member.sanction.entity.MemberSanction;
-import spring.study.member.sanction.repository.MemberSanctionRepository;
+import spring.study.sanction.entity.MemberSanction;
+import spring.study.sanction.repository.MemberSanctionRepository;
 import spring.study.report.dto.ReportProcessRequestDto;
 import spring.study.report.entity.Report;
 

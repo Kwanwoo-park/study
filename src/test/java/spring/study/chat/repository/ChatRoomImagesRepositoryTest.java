@@ -91,7 +91,7 @@ class ChatRoomImagesRepositoryTest {
         em.persist(ChatRoomMember.builder().room(room).member(other).build());
         em.flush();
         em.clear();
-        assertThat(participants.findParticipantsByRoom(room)).extracting(value -> value.getMember().getName())
+        assertThat(participants.findByRoomOrderByMember_NameAscMember_IdAsc(room)).extracting(value -> value.getMember().getName())
                 .containsExactly("other", "viewer");
     }
 

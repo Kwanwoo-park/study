@@ -63,6 +63,7 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, Object> chatBatchConsumerFactory() {
         Map<String, Object> config = baseConsumerConfig();
+
         config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, chatBatchMaxRecords);
         config.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, chatBatchFetchMinBytes);
         config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, chatBatchFetchMaxWaitMs);
@@ -72,35 +73,32 @@ public class KafkaConsumerConfig {
 
     private Map<String, Object> baseConsumerConfig() {
         Map<String, Object> config = new HashMap<>();
+
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, server);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         config.put(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, false);
+
         return config;
     }
 
     private ConsumerFactory<String, Object> createConsumerFactory(Map<String, Object> config) {
         // JsonDeserializer
-        JsonDeserializer<Object> jsonDeserializer =
-                new JsonDeserializer<>(Object.class, mapper);
+        JsonDeserializer<Object> jsonDeserializer = new JsonDeserializer<>(Object.class, mapper);
+
         jsonDeserializer.addTrustedPackages("*");
 
         // ErrorHandlingDeserializer
-        ErrorHandlingDeserializer<Object> errorDeserializer =
-                new ErrorHandlingDeserializer<>(jsonDeserializer);
+        ErrorHandlingDeserializer<Object> errorDeserializer = new ErrorHandlingDeserializer<>(jsonDeserializer);
 
-        return new DefaultKafkaConsumerFactory<>(
-                config,
-                new StringDeserializer(),
-                errorDeserializer
-        );
+        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), errorDeserializer);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(KafkaEventLogRetryListener eventLogs, DeadLetterPublishingRecoverer recoverer) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
 
+        factory.setConsumerFactory(consumerFactory());
         factory.getContainerProperties().setMissingTopicsFatal(false);
         factory.setConcurrency(operations.getNotificationConcurrency());
         factory.setCommonErrorHandler(observedErrorHandler(eventLogs, recoverer));
@@ -111,6 +109,7 @@ public class KafkaConsumerConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> chatBatchKafkaListenerContainerFactory(KafkaEventLogRetryListener eventLogs, DeadLetterPublishingRecoverer recoverer) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+
         factory.setConsumerFactory(chatBatchConsumerFactory());
         factory.setBatchListener(true);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.BATCH);
@@ -122,40 +121,51 @@ public class KafkaConsumerConfig {
     }
 
     private DefaultErrorHandler observedErrorHandler(KafkaEventLogRetryListener eventLogs, DeadLetterPublishingRecoverer recoverer) {
-        DefaultErrorHandler handler = new DefaultErrorHandler(recoverer,
-                new FixedBackOff(operations.getConsumerRetryDelayMs(), operations.getConsumerRetries()));
+        DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, new FixedBackOff(operations.getConsumerRetryDelayMs(), operations.getConsumerRetries()));
+
         handler.setRetryListeners(eventLogs);
+
         return handler;
     }
 
     @Bean
-    public DeadLetterPublishingRecoverer deadLetterPublishingRecoverer(
-            @Qualifier("kafkaRecoveryTemplate") KafkaTemplate<String, Object> template) {
+    public DeadLetterPublishingRecoverer deadLetterPublishingRecoverer(@Qualifier("kafkaRecoveryTemplate") KafkaTemplate<String, Object> template) {
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template, (record, error) -> {
-            if (!KafkaTopics.SOURCES.contains(record.topic())) throw new IllegalArgumentException("Unknown source topic");
+            if (!KafkaTopics.SOURCES.contains(record.topic()))
+                throw new IllegalArgumentException("Unknown source topic");
+
             return new TopicPartition(record.topic() + ".DLT", -1);
         });
+
         recoverer.setFailIfSendResultIsError(true);
         recoverer.setWaitForSendResultTimeout(Duration.ofSeconds(15));
         recoverer.setAppendOriginalHeaders(false);
         recoverer.setExceptionHeadersCreator((headers, error, key, names) ->
-                headers.add(KafkaHeaders.DLT_EXCEPTION_FQCN, error.getClass().getName().getBytes(StandardCharsets.UTF_8)));
+                headers.add(KafkaHeaders.DLT_EXCEPTION_FQCN, error.getClass().getName().getBytes(StandardCharsets.UTF_8))
+        );
+
         return recoverer;
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, byte[]> deadLetterKafkaListenerContainerFactory() {
         Map<String, Object> config = baseConsumerConfig();
+
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId + ".dead-letter-store");
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 50);
+
         ConcurrentKafkaListenerContainerFactory<String, byte[]> factory = new ConcurrentKafkaListenerContainerFactory<>();
+
         factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new ByteArrayDeserializer()));
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
+
         // A DB outage must never discard the only replayable copy from the DLT archive.
         DefaultErrorHandler archiveErrors = new DefaultErrorHandler(new FixedBackOff(1000, FixedBackOff.UNLIMITED_ATTEMPTS));
+
         archiveErrors.setClassifications(Map.of(), true);
         factory.setCommonErrorHandler(archiveErrors);
+
         return factory;
     }
 }

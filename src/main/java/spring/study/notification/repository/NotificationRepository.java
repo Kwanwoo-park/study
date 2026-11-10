@@ -46,9 +46,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("readBefore") LocalDateTime readBefore
     );
 
-    @Transactional(readOnly = true)
-    List<Notification> findByMember(Member member);
-
     @Query("select n from Notification n where n.member = :member order by coalesce(n.updateTime, n.registerTime) desc")
     @Transactional(readOnly = true)
     List<Notification> findRecentByMember(@Param("member") Member member, Pageable pageable);
@@ -56,6 +53,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("select n from Notification n where n.member = :member and n.notiGroup = :group order by coalesce(n.updateTime, n.registerTime) desc")
     @Transactional(readOnly = true)
     List<Notification> findRecentByMemberAndGroup(@Param("member") Member member, @Param("group") Group group, Pageable pageable);
+
+    @Transactional(readOnly = true)
+    List<Notification> findByMember(Member member);
 
     @Transactional(readOnly = true)
     List<Notification> findByMemberAndReadStatus(Member member, Status readStatus);
@@ -70,16 +70,17 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select n from Notification n where n.id = :id")
-    Optional<Notification> findForReadById(@Param("id") Long id);
+    Optional<Notification> findForReadById(Long id);
 
     @Transactional(readOnly = true)
     List<Notification> findByReadStatusAndRegisterTimeBefore(Status readStatus, LocalDateTime registerTime);
 
     @Transactional(readOnly = true)
     long countByMemberAndReadStatus(Member member, Status readStatus);
+
     @Transactional(readOnly = true)
     long countByMember(Member member);
+
     @Transactional(readOnly = true)
     long countByMemberAndNotiGroup(Member member, Group group);
 

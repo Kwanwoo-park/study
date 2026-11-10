@@ -5,24 +5,24 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import spring.study.kafka.entity.KafkaOutboxEvent;
+import spring.study.kafka.dto.OutboxCreatedAtProjection;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface KafkaOutboxEventRepository extends JpaRepository<KafkaOutboxEvent, Long> {
+    // Repeat the non-dead-letter condition in both OR branches.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select event from KafkaOutboxEvent event where event.deadLettered = false and (event.nextAttemptAt is null or event.nextAttemptAt <= :now) order by event.id")
-    List<KafkaOutboxEvent> findNextBatchForUpdate(@Param("now") LocalDateTime now, Pageable pageable);
+    List<KafkaOutboxEvent> findForUpdateByDeadLetteredFalseAndNextAttemptAtIsNullOrDeadLetteredFalseAndNextAttemptAtLessThanEqualOrderByIdAsc(LocalDateTime now, Pageable pageable);
 
     @Transactional(readOnly = true)
     long countByDeadLetteredTrue();
+
     @Transactional(readOnly = true)
     long countByDeadLetteredFalse();
 
     @Transactional(readOnly = true)
-    @Query("select min(event.createdAt) from KafkaOutboxEvent event where event.deadLettered = false")
-    LocalDateTime findOldestPendingTime();
+    Optional<OutboxCreatedAtProjection> findFirstByDeadLetteredFalseAndCreatedAtIsNotNullOrderByCreatedAtAsc();
 }

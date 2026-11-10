@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import spring.study.common.entity.BasetimeEntity;
 import spring.study.member.entity.Member;
-import spring.study.member.sanction.entity.MemberSanction;
+import spring.study.sanction.entity.MemberSanction;
 
 @Getter
 @Entity
@@ -49,5 +49,9 @@ public class Appeal extends BasetimeEntity {
 
     public void changeStatus(AppealStatus status) {
         this.status = status;
+    }
+
+    public void changeRelatedSanction() {
+        this.relatedSanction = null;
     }
 }

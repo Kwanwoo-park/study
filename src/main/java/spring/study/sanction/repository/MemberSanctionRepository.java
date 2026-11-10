@@ -1,9 +1,9 @@
-package spring.study.member.sanction.repository;
+package spring.study.sanction.repository;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.EntityGraph;
-import spring.study.member.sanction.entity.MemberSanction;
+import spring.study.sanction.entity.MemberSanction;
 import spring.study.member.entity.Member;
 
 import java.util.List;
@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface MemberSanctionRepository extends JpaRepository<MemberSanction, Long> {
     @Transactional
     void deleteByMemberOrIssuedByOrReportReporter(Member member, Member issuedBy, Member reporter);
+
+    List<MemberSanction> findByMemberOrIssuedByOrReportReporter(Member member, Member issuedBy, Member reporter);
 
     @Transactional(readOnly = true)
     boolean existsByReportId(Long reportId);

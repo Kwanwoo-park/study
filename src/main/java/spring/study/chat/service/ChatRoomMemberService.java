@@ -90,7 +90,7 @@ public class ChatRoomMemberService {
 
     @Transactional(readOnly = true)
     public ChatRoomDetailsResponse details(ChatRoom room, Member viewer) {
-        List<ChatRoomParticipant> members = chatRoomMemberRepository.findParticipantsByRoom(room).stream()
+        List<ChatRoomParticipant> members = chatRoomMemberRepository.findByRoomOrderByMember_NameAscMember_IdAsc(room).stream()
                 .map(ChatRoomMember::getMember)
                 .map(member -> new ChatRoomParticipant(member.getName(), member.getEmail(), member.getProfile(), member.getId().equals(viewer.getId())))
                 .toList();

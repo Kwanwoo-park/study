@@ -1,4 +1,4 @@
-package spring.study.kafka.event;
+package spring.study.kafka.dto;
 
 public record KafkaOutboxDispatchRequestedEvent() {
 }

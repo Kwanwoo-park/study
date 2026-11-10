@@ -1,14 +1,14 @@
 package spring.study.account.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountStatus;
 import spring.study.account.entity.AccountType;
+import spring.study.account.dto.AccountNumberProjection;
 import spring.study.member.entity.Member;
 
 import java.util.List;
@@ -19,39 +19,22 @@ import java.util.Collection;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, String> {
-    @Query("select transfer.sourceAccount.account from savingsAutoTransfer transfer where transfer.savingsAccount.account = :account")
     @Transactional(readOnly = true)
-    String findSavingsSourceAccountNumber(@Param("account") String account);
+    List<AccountNumberProjection> findByAccountTypeAndAccountStatusInAndSavingsAutoTransfer_NextPaymentDateLessThanEqual(AccountType accountType, Collection<AccountStatus> statuses, LocalDate processingDate);
 
-    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
-    @Query("select a from account a where a.member = :member order by a.account")
-    List<Account> findByMemberForUpdate(@Param("member") Member member);
-
-    @Query("select a.account from account a " +
-            "join a.savingsAutoTransfer transfer " +
-            "where a.accountType = :accountType and " +
-            "a.accountStatus in :statuses and " +
-            "transfer.nextPaymentDate <= :processingDate")
     @Transactional(readOnly = true)
-    List<String> findDueSavingsAccountNumbers(@Param("accountType") AccountType accountType, @Param("statuses") Collection<AccountStatus> statuses, @Param("processingDate") LocalDate processingDate);
+    boolean existsBySavingsAutoTransfer_SourceAccountAndAccountStatusIn(Account sourceAccount, Collection<AccountStatus> statuses);
 
-    @Query("select case when count(a) > 0 then true else false end from account a " +
-            "join a.savingsAutoTransfer transfer " +
-            "where transfer.sourceAccount = :sourceAccount and " +
-            "a.accountStatus in :statuses")
     @Transactional(readOnly = true)
-    boolean existsBySavingsSourceAccountAndAccountStatusIn(@Param("sourceAccount") Account savingsSourceAccount, @Param("statuses") Collection<AccountStatus> accountStatuses);
+    List<Account> findByAccountStatusAndInterestDetail_MaturityAtLessThanEqual(AccountStatus accountStatus, LocalDateTime maturityAt);
 
-    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
-    @Query("select a from account a where a.account = :account")
-    Optional<Account> findByAccountForUpdate(@Param("account") String account);
-
-    @Query("select a from account a " +
-            "join a.interestDetail interest " +
-            "where a.accountStatus = :accountStatus and " +
-            "interest.maturityAt <= :maturityAt")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Transactional(readOnly = true)
-    List<Account> findByAccountStatusAndMaturityAtLessThanEqual(@Param("accountStatus") AccountStatus accountStatus, @Param("maturityAt") LocalDateTime maturityAt);
+    List<Account> findByMemberOrderByAccount(Member member);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Transactional(readOnly = true)
+    Optional<Account> findByAccount(String account);
 
     @Transactional(readOnly = true)
     List<Account> findByMember(Member member);

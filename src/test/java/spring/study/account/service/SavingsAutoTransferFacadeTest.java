@@ -27,12 +27,11 @@ import static org.mockito.Mockito.inOrder;
 
 class SavingsAutoTransferFacadeTest {
     private final AccountTransactionRepository transactionRepository = mock(AccountTransactionRepository.class);
+    private final SavingAutoTransferService transferService = mock(SavingAutoTransferService.class);
     private final AccountService accountService = mock(AccountService.class);
     private final NotificationService notificationService = mock(NotificationService.class);
     private final AccountTransactionService accountTransactionService = new AccountTransactionService(transactionRepository);
-    private final SavingsAutoTransferFacade service = new SavingsAutoTransferFacade(
-            accountService, notificationService, accountTransactionService
-    );
+    private final SavingsAutoTransferFacade service = new SavingsAutoTransferFacade(transferService, accountService, notificationService, accountTransactionService);
 
     private Member member;
     private Account source;
@@ -59,7 +58,7 @@ class SavingsAutoTransferFacadeTest {
         dueDate = LocalDate.of(2026, 8, 10);
         savings.setMaturityAt(LocalDateTime.of(2027, 7, 10, 0, 0));
         savings.configureSavingsAutoTransfer(source, 100_000L, 10, dueDate.minusMonths(1));
-        when(accountService.findSavingsSourceAccountNumber(savings.getAccount())).thenReturn(source.getAccount());
+        when(transferService.findSavingsSourceAccountNumber(savings.getAccount())).thenReturn(source.getAccount());
         when(accountService.findByAccountForUpdate(savings.getAccount())).thenReturn(savings);
         when(accountService.findByAccountForUpdate(source.getAccount())).thenReturn(source);
         when(transactionRepository.save(any(AccountTransaction.class)))

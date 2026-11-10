@@ -17,12 +17,6 @@ import java.util.Optional;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, String> {
-    @Transactional(readOnly = true)
-    List<ChatMessage> findByRoom(ChatRoom room);
-
-    @Transactional(readOnly = true)
-    List<ChatMessage> findByRoom(ChatRoom room, Pageable pageable);
-
     @Query("""
             select m
             from message m
@@ -73,6 +67,12 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
                                  @Param("member") Member member,
                                  @Param("registerTime") LocalDateTime registerTime,
                                  @Param("activeStatus") ChatMessageStatus activeStatus);
+
+    @Transactional(readOnly = true)
+    List<ChatMessage> findByRoom(ChatRoom room);
+
+    @Transactional(readOnly = true)
+    List<ChatMessage> findByRoom(ChatRoom room, Pageable pageable);
 
     @Transactional(readOnly = true)
     Optional<ChatMessage> findFirstByRoomAndStatusOrderByRegisterTimeDesc(ChatRoom room, ChatMessageStatus status);

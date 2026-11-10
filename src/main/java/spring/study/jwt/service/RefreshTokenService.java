@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.member.entity.Member;
 import spring.study.jwt.entity.RefreshToken;
 import spring.study.jwt.repository.RefreshTokenRepository;
+import spring.study.jwt.dto.RefreshTokenMemberIdProjection;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -33,7 +34,7 @@ public class RefreshTokenService {
 
     @Transactional(readOnly = true)
     public List<Long> findDistinctMemberIds() {
-        return refreshTokenRepository.findDistinctMemberIds();
+        return refreshTokenRepository.findDistinctBy().stream().map(RefreshTokenMemberIdProjection::memberId).toList();
     }
 
     @Transactional

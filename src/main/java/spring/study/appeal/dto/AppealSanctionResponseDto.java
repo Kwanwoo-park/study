@@ -1,7 +1,7 @@
 package spring.study.appeal.dto;
 
 import lombok.Getter;
-import spring.study.member.sanction.entity.MemberSanction;
+import spring.study.sanction.entity.MemberSanction;
 import spring.study.report.entity.ReportAction;
 import spring.study.report.entity.ReportReason;
 import spring.study.report.entity.ReportStatus;

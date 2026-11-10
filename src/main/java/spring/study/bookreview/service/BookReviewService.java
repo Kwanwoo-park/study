@@ -30,7 +30,15 @@ public class BookReviewService {
                 Math.min(Math.max(size, 1), 30),
                 Sort.by(Sort.Order.desc("registerTime"), Sort.Order.desc("id"))
         );
-        return bookReviewRepository.search(normalizedKeyword, pageable).map(BookReviewResponseDto::new);
+        Page<BookReview> reviews;
+        if (normalizedKeyword.isEmpty()) {
+            reviews = bookReviewRepository.findAll(pageable);
+        } else {
+            String pattern = "%" + normalizedKeyword + "%";
+            reviews = bookReviewRepository.findByReviewTitleLikeIgnoreCaseOrBookTitleLikeIgnoreCaseOrBookAuthorLikeIgnoreCase(
+                    pattern, pattern, pattern, pageable);
+        }
+        return reviews.map(BookReviewResponseDto::new);
     }
 
     @Transactional(readOnly = true)

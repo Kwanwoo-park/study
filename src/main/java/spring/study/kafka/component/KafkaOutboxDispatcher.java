@@ -3,7 +3,6 @@ package spring.study.kafka.component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -13,13 +12,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.kafka.entity.KafkaOutboxEvent;
-import spring.study.kafka.repository.KafkaOutboxEventRepository;
-import spring.study.notification.repository.NotificationRepository;
+import spring.study.kafka.service.KafkaOutboxEventService;
 import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.kafka.dto.KafkaDispatchResult;
 import spring.study.admin.entity.IntegrationEventLogOperation;
 import spring.study.admin.entity.IntegrationEventLogOutcome;
 import spring.study.admin.entity.IntegrationEventLogRoute;
+import spring.study.notification.service.NotificationService;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -31,28 +30,26 @@ import java.util.List;
 public class KafkaOutboxDispatcher {
     private static final int BATCH_SIZE = 100;
 
-    private final KafkaOutboxEventRepository outboxRepository;
-    private final NotificationRepository notificationRepository;
+    private final KafkaOutboxEventService outboxEventService;
+    private final NotificationService notificationService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final IntegrationEventLogService eventLogs;
-    @Value("${kafka.outbox.retry-base-delay-ms:5000}")
-    private long retryBaseDelayMs = 5000L;
-    @Value("${kafka.outbox.retry-max-delay-ms:1800000}")
-    private long retryMaxDelayMs = 1_800_000L;
 
     @Transactional
     public KafkaDispatchResult publishPendingEvents() {
         LocalDateTime now = LocalDateTime.now();
-        List<KafkaOutboxEvent> events = outboxRepository.findNextBatchForUpdate(now, PageRequest.of(0, BATCH_SIZE));
-        if (events.isEmpty()) return KafkaDispatchResult.empty();
+        List<KafkaOutboxEvent> events = outboxEventService.find(now, PageRequest.of(0, BATCH_SIZE));
+
+        if (events.isEmpty())
+            return KafkaDispatchResult.empty();
 
         int processedCount = 0;
         for (KafkaOutboxEvent event : events) {
             try {
                 Object payload = resolvePayload(event);
                 if (payload == null) {
-                    outboxRepository.delete(event);
+                    outboxEventService.delete(event);
                     eventLogs.afterCommit(IntegrationEventLogRoute.kafka(event.getTopic()), IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.SKIPPED, event.getId(), 1, event.getAttemptCount() + 1, null);
                     processedCount++;
                     continue;
@@ -62,7 +59,7 @@ public class KafkaOutboxDispatcher {
                 kafkaTemplate.send(record)
                         .get(Duration.ofSeconds(10).toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
                 eventLogs.record(IntegrationEventLogRoute.kafka(event.getTopic()), IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.SUCCESS, event.getId(), 1, event.getAttemptCount() + 1, null, null);
-                outboxRepository.delete(event);
+                outboxEventService.delete(event);
                 processedCount++;
             } catch (Exception exception) {
                 LocalDateTime retryAt = LocalDateTime.now().plusNanos(calculateRetryDelayMillis(event) * 1_000_000L);
@@ -82,13 +79,15 @@ public class KafkaOutboxDispatcher {
     private Object resolvePayload(KafkaOutboxEvent event) throws Exception {
         return switch (event.resolvedPayloadType()) {
             case CHAT_MESSAGE -> objectMapper.readValue(event.getPayload(), ChatMessageRequestDto.class);
-            case NOTIFICATION -> notificationRepository.findById(Long.valueOf(event.getPayload())).orElse(null);
+            case NOTIFICATION -> notificationService.findById(Long.valueOf(event.getPayload()));
         };
     }
 
     private long calculateRetryDelayMillis(KafkaOutboxEvent event) {
         int exponent = Math.min(event.getAttemptCount(), 20);
         long multiplier = 1L << exponent;
+        long retryBaseDelayMs = 5000L;
+        long retryMaxDelayMs = 1_800_000L;
         long delay = retryBaseDelayMs > retryMaxDelayMs / multiplier ? retryMaxDelayMs : retryBaseDelayMs * multiplier;
         return Math.min(delay, retryMaxDelayMs);
     }

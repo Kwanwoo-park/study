@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import spring.study.admin.entity.SystemIncident;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,7 +33,11 @@ class SystemIncidentRepositoryTest {
         SystemIncident savedAcknowledged = systemIncidentRepository.save(previouslyAcknowledged);
         LocalDateTime acknowledgedAt = LocalDateTime.of(2026, 8, 24, 10, 30);
 
-        int updatedCount = systemIncidentRepository.acknowledgeAll(acknowledgedAt);
+        List<SystemIncident> list = systemIncidentRepository.findByAcknowledgeFalse();
+
+        list.forEach(it -> it.acknowledge(acknowledgedAt));
+
+        int updatedCount = list.size();
 
         assertThat(updatedCount).isEqualTo(2);
         assertThat(systemIncidentRepository.countByAcknowledgedFalse()).isZero();

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.entity.MemberStatus;
+import spring.study.common.dto.EntityIdProjection;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -17,6 +18,11 @@ import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update member m set m.lastLoginTime = :accessedAt where m.id = :memberId")
+    int updateLastLoginTime(@Param("memberId") Long memberId,
+                            @Param("accessedAt") LocalDateTime accessedAt);
+
     @Transactional(readOnly = true)
     List<Member> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
@@ -32,20 +38,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Transactional(readOnly = true)
     List<Member> findByIdIn(List<Long> idList);
 
-    @Query("""
-            select m.id
-            from member m
-            where m.id in :memberIds
-              and (m.lastLoginTime is null or m.lastLoginTime <= :cutoff)
-            """)
+    // Restrict both OR branches to the candidate member IDs.
     @Transactional(readOnly = true)
-    List<Long> findInactiveMemberIds(@Param("memberIds") Collection<Long> memberIds,
-                                     @Param("cutoff") LocalDateTime cutoff);
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update member m set m.lastLoginTime = :accessedAt where m.id = :memberId")
-    int updateLastLoginTime(@Param("memberId") Long memberId,
-                            @Param("accessedAt") LocalDateTime accessedAt);
+    List<EntityIdProjection> findByIdInAndLastLoginTimeIsNullOrIdInAndLastLoginTimeLessThanEqual(
+            Collection<Long> neverLoggedInMemberIds, Collection<Long> inactiveMemberIds, LocalDateTime cutoff);
 
     @Transactional(readOnly = true)
     Member findByPhoneAndBirth(String phone, String birth);

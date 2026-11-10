@@ -49,7 +49,7 @@ class AccountTransactionNotificationRegressionTest {
                 .transactionTime(LocalDateTime.now())
                 .build();
 
-        when(accountTransactionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(transaction));
+        when(accountTransactionRepository.findForUpdateById(1L)).thenReturn(Optional.of(transaction));
         when(accountTransactionRepository.save(any(AccountTransaction.class))).thenAnswer(call -> call.getArgument(0));
         when(accountService.findByAccountForUpdate(account.getAccount())).thenReturn(account);
         TransactionRunner runner = mock(TransactionRunner.class);

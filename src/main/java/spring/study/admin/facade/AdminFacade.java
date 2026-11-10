@@ -27,7 +27,7 @@ import spring.study.kafka.service.KafkaQueueQueryService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.member.sanction.service.MemberSanctionService;
+import spring.study.sanction.service.MemberSanctionService;
 import spring.study.member.service.MemberService;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.service.RefreshTokenService;

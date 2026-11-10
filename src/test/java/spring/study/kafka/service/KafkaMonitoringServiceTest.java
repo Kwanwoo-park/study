@@ -9,10 +9,12 @@ import spring.study.kafka.repository.KafkaClusterRepository;
 import spring.study.kafka.dto.KafkaBrokerSnapshot;
 import spring.study.kafka.dto.KafkaPartitionHealth;
 import spring.study.kafka.dto.KafkaTopicSnapshot;
+import spring.study.kafka.dto.OutboxCreatedAtProjection;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
 
@@ -22,7 +24,8 @@ class KafkaMonitoringServiceTest {
         var outbox = mock(KafkaOutboxEventRepository.class);
         var deadLetters = mock(KafkaDeadLetterRepository.class);
         when(admin.describeCluster()).thenThrow(new IllegalStateException("private-connection-info"));
-        when(outbox.findOldestPendingTime()).thenReturn(LocalDateTime.now().minusMinutes(2));
+        when(outbox.findFirstByDeadLetteredFalseAndCreatedAtIsNotNullOrderByCreatedAtAsc())
+                .thenReturn(Optional.of(new OutboxCreatedAtProjection(LocalDateTime.now().minusMinutes(2))));
         var service = new KafkaMonitoringService(new KafkaClusterRepository(admin, "test"), new KafkaOperationsProperties(), outbox, deadLetters);
         var result = service.overview(); service.overview();
         assertThat(result.totalLag()).isNull();

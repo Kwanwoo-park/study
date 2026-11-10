@@ -20,6 +20,7 @@ import spring.study.kafka.component.KafkaEventLogRetryListener;
 import spring.study.kafka.config.*;
 import spring.study.kafka.entity.KafkaDeadLetter;
 import spring.study.kafka.entity.KafkaDeadLetterStatus;
+import spring.study.kafka.facade.KafkaDeadLetterReplayFacade;
 import spring.study.kafka.repository.*;
 import spring.study.kafka.service.*;
 import java.nio.charset.StandardCharsets;
@@ -68,14 +69,14 @@ class KafkaDeadLetterIntegrationTest {
 
             var repository = mock(KafkaDeadLetterRepository.class);
             var archived = org.mockito.ArgumentCaptor.forClass(KafkaDeadLetter.class);
-            new KafkaDeadLetterService(repository, logs).archive(valid);
+            new KafkaDeadLetterService(repository).archive(valid);
             verify(repository).save(archived.capture());
             var entry = archived.getValue(); entry.requestReplay(1L);
             container.stop();
             broker.consumeFromAnEmbeddedTopic(original, true, KafkaTopics.CHAT);
             original.assignment().forEach(original::position);
-            when(repository.findReplayBatch(any(), any(), any())).thenReturn(List.of(entry));
-            new KafkaDeadLetterReplayService(repository, recovery, logs, properties).publishPending();
+            when(repository.findForUpdateByStatusAndNextAttemptAtLessThanEqualOrderByIdAsc(any(), any(), any())).thenReturn(List.of(entry));
+            new KafkaDeadLetterReplayFacade(mock(KafkaDeadLetterReplayService.class), mock(IntegrationEventLogService.class), recovery).publishPending();
             assertThat(entry.getStatus()).as(entry.getErrorType()).isEqualTo(KafkaDeadLetterStatus.REPLAYED);
             var replayed = KafkaTestUtils.getSingleRecord(original, KafkaTopics.CHAT, Duration.ofSeconds(10));
             assertThat(replayed.value()).containsExactly(valid.value());

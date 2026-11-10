@@ -23,6 +23,7 @@ import spring.study.member.event.MemberDeletedEvent;
 import spring.study.common.entity.CommonVisibility;
 import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.repository.MemberRepository;
+import spring.study.common.dto.EntityIdProjection;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -123,8 +124,11 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    public List<Long> findInactiveMemberIds(List<Long> id, LocalDateTime cutoff) {
-        return memberRepository.findInactiveMemberIds(id, cutoff);
+    public List<Long> findInactiveMemberIds(List<Long> memberIds, LocalDateTime cutoff) {
+        if (memberIds == null || memberIds.isEmpty()) return List.of();
+
+        return memberRepository.findByIdInAndLastLoginTimeIsNullOrIdInAndLastLoginTimeLessThanEqual(memberIds, memberIds, cutoff)
+                .stream().map(EntityIdProjection::id).toList();
     }
 
     @Transactional(readOnly = true)

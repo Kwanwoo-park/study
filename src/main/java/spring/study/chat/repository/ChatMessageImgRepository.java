@@ -15,9 +15,6 @@ import java.util.List;
 
 @Repository
 public interface ChatMessageImgRepository extends JpaRepository<ChatMessageImg, Long> {
-    @Transactional(readOnly = true)
-    List<ChatMessageImg> findByMessageId(String messageId);
-
     @Query("""
             select new spring.study.chat.dto.ChatRoomImageResponse(i.id, m.id, i.imgSrc, m.registerTime, sender.name)
             from ChatMessageImg i
@@ -34,6 +31,9 @@ public interface ChatMessageImgRepository extends JpaRepository<ChatMessageImg, 
             """)
     @Transactional(readOnly = true)
     List<ChatRoomImageResponse> findVisibleRoomImages(@Param("room") ChatRoom room, @Param("viewer") Member viewer, @Param("cursor") Long cursor, Pageable pageable);
+
+    @Transactional(readOnly = true)
+    List<ChatMessageImg> findByMessageId(String messageId);
 
     @Transactional
     void deleteByMessageId(String messageId);

@@ -47,21 +47,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             Member member = authenticateAccessToken(request);
-            if (member == null) member = refreshAuthentication(request, response);
+
+            if (member == null)
+                member = refreshAuthentication(request, response);
+
             if (member != null) {
                 setAuthentication(member);
+
                 if (readBearerToken(request) != null) {
                     onlineUserService.markMobileActive(member.getId());
                 }
             }
         }
+
         filterChain.doFilter(request, response);
     }
 
     private Member authenticateAccessToken(HttpServletRequest request) {
         String token = readBearerToken(request);
-        if (token == null) token = cookieService.read(request, JwtCookieService.ACCESS_COOKIE);
-        if (token == null) return null;
+
+        if (token == null)
+            token = cookieService.read(request, JwtCookieService.ACCESS_COOKIE);
+
+        if (token == null)
+            return null;
+
         try {
             return loadActiveMember(tokenProvider.parse(token, TokenName.ACCESS.getValue()));
         } catch (JwtValidationException ignored) {
@@ -70,13 +80,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Member refreshAuthentication(HttpServletRequest request, HttpServletResponse response) {
-        if (readBearerToken(request) != null) return null;
+        if (readBearerToken(request) != null)
+            return null;
+
         String token = cookieService.read(request, JwtCookieService.REFRESH_COOKIE);
-        if (token == null) return null;
+
+        if (token == null)
+            return null;
+
         try {
             TokenClaims claims = tokenProvider.parse(token, TokenName.REFRESH.getValue());
-            if (!refreshTokenService.isValid(claims.jti(), claims.memberId())) return null;
+
+            if (!refreshTokenService.isValid(claims.jti(), claims.memberId()))
+                return null;
+
             Member member = loadActiveMember(claims);
+
             if (member == null) {
                 RefreshToken oldToken = refreshTokenService.findOldToken(claims.jti());
 
@@ -94,15 +113,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // These endpoints issue or revoke tokens themselves. Do not rotate immediately before them.
             String path = request.getRequestURI().substring(request.getContextPath().length());
-            if (TOKEN_MANAGEMENT_PATHS.contains(path) || path.startsWith("/login/oauth2/code/")) return member;
+
+            if (TOKEN_MANAGEMENT_PATHS.contains(path) || path.startsWith("/login/oauth2/code/"))
+                return member;
 
             IssuedToken accessToken = tokenProvider.createAccessToken(member);
+
             if (tokenProvider.shouldRotateRefreshToken(claims.expiresAt())) {
                 IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
+
                 if (!rotate(claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ClientIpResolver.resolve(request))) {
                     cookieService.clearAuthenticationCookies(response);
+
                     return null;
                 }
+
                 cookieService.writeRefreshToken(response, refreshToken.value(), tokenProvider.refreshTokenDuration());
                 cookieService.rememberRefreshToken(request, refreshToken.value());
             } else {
@@ -111,10 +136,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     memberTokenCacheService.save(member, Duration.between(Instant.now(), claims.expiresAt()));
                 }
             }
+
             cookieService.writeAccessToken(response, accessToken.value(), tokenProvider.accessTokenDuration());
+
             return member;
         } catch (JwtValidationException ignored) {
             cookieService.clearAuthenticationCookies(response);
+
             return null;
         }
     }
@@ -139,19 +167,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Member member = memberTokenCacheService
                 .findOrLoad(claims.memberId(), tokenProvider.refreshTokenDuration())
                 .orElse(null);
-        if (member == null || member.isAccessBlocked() || !member.getEmail().equals(claims.email())) return null;
+
+        if (member == null || member.isAccessBlocked() || !member.getEmail().equals(claims.email()))
+            return null;
+
         return member;
     }
 
     private void setAuthentication(Member member) {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(member, null, member.getAuthorities());
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     private String readBearerToken(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
-        if (authorization == null || !authorization.startsWith("Bearer ")) return null;
+
+        if (authorization == null || !authorization.startsWith("Bearer "))
+            return null;
+
         String token = authorization.substring(7).trim();
+
         return token.isEmpty() ? null : token;
     }
 }

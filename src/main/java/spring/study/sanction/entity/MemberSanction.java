@@ -1,4 +1,4 @@
-package spring.study.member.sanction.entity;
+package spring.study.sanction.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

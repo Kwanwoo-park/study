@@ -32,7 +32,7 @@ public class AccountTransactionService {
 
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public AccountTransaction findUpdate(Long transactionId) {
-        return accountTransactionRepository.findByIdForUpdate(transactionId)
+        return accountTransactionRepository.findForUpdateById(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 거래입니다"));
     }
 

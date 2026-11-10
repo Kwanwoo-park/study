@@ -35,7 +35,7 @@ class KafkaOutboxDispatcherTest {
         IntegrationEventLogService logs = mock(IntegrationEventLogService.class);
         KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(repository, mock(NotificationRepository.class), kafka, new ObjectMapper(), logs);
         KafkaOutboxEvent event = new KafkaOutboxEvent("topic", "room", KafkaOutboxPayloadType.CHAT_MESSAGE, "{}");
-        when(repository.findNextBatchForUpdate(any(), any())).thenReturn(List.of(event));
+        when(repository.findForUpdateByDeadLetteredFalseAndNextAttemptAtIsNullOrDeadLetteredFalseAndNextAttemptAtLessThanEqualOrderByIdAsc(any(), any())).thenReturn(List.of(event));
         when(kafka.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.completedFuture(null));
         assertFalse(dispatcher.publishPendingEvents().failed());
         var order = org.mockito.Mockito.inOrder(kafka, logs, repository);
@@ -52,7 +52,7 @@ class KafkaOutboxDispatcherTest {
         KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(repository, mock(NotificationRepository.class), kafka, new ObjectMapper(), logs);
         KafkaOutboxEvent event = new KafkaOutboxEvent("topic", "room", KafkaOutboxPayloadType.CHAT_MESSAGE, "{}");
         for (int i = 0; i < 9; i++) event.recordFailure("failed", LocalDateTime.now());
-        when(repository.findNextBatchForUpdate(any(), any())).thenReturn(List.of(event));
+        when(repository.findForUpdateByDeadLetteredFalseAndNextAttemptAtIsNullOrDeadLetteredFalseAndNextAttemptAtLessThanEqualOrderByIdAsc(any(), any())).thenReturn(List.of(event));
         RuntimeException failure = new IllegalStateException("Kafka down");
         when(kafka.send(any(ProducerRecord.class))).thenThrow(failure);
         assertTrue(dispatcher.publishPendingEvents().failed());
@@ -68,7 +68,7 @@ class KafkaOutboxDispatcherTest {
         KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(repository, notificationRepository, kafkaTemplate, new ObjectMapper(), logs);
         KafkaOutboxEvent event = new KafkaOutboxEvent("topic", "room-1", KafkaOutboxPayloadType.CHAT_MESSAGE, "{}");
         LocalDateTime beforeDispatch = LocalDateTime.now();
-        when(repository.findNextBatchForUpdate(any(LocalDateTime.class), any(Pageable.class))).thenReturn(List.of(event));
+        when(repository.findForUpdateByDeadLetteredFalseAndNextAttemptAtIsNullOrDeadLetteredFalseAndNextAttemptAtLessThanEqualOrderByIdAsc(any(LocalDateTime.class), any(Pageable.class))).thenReturn(List.of(event));
         IllegalStateException failure = new IllegalStateException("Kafka unavailable");
         when(kafkaTemplate.send(any(ProducerRecord.class))).thenThrow(failure);
 
