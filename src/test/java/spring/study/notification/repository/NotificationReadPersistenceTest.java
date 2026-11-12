@@ -28,7 +28,7 @@ class NotificationReadPersistenceTest {
     void bulkReadsRespectTargetAndDoNotReadMessagesNewerThanTheWatermark() {
         Member member = members.saveAndFlush(Member.builder().email("read@example.test").pwd("unused")
                 .name("member").role(Role.USER).phone("01011112222").birth("20000101").profile("profile.png").build());
-        var cutoff = LocalDateTime.now();
+        LocalDateTime cutoff = LocalDateTime.now();
         Notification old = create(member, "room-a", cutoff.minusMinutes(1));
         Notification anotherRoom = create(member, "room-b", cutoff.minusMinutes(1));
         Notification newer = create(member, "room-a", cutoff.plusMinutes(1));

@@ -28,7 +28,7 @@ public interface KafkaDeadLetterRepository extends JpaRepository<KafkaDeadLetter
 
     @Modifying
     @Query("delete from KafkaDeadLetter e where e.status = :status and e.replayedAt < :cutoff")
-    int deleteReplayedBefore(@Param("status") KafkaDeadLetterStatus status, @Param("cutoff") LocalDateTime cutoff);
+    void deleteReplayedBefore(@Param("status") KafkaDeadLetterStatus status, @Param("cutoff") LocalDateTime cutoff);
 
     @Transactional(readOnly = true)
     boolean existsBySourceTopicAndSourcePartitionAndSourceOffset(String topic, int partition, long offset);

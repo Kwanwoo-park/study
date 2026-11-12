@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="same-origin">
+    <title>메모장 · Kwanwoo Admin</title>
+    <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/memo/memos.css?v=20261112">
+</head>
+<body class="memo-page">
+<script src="/js/common/theme.js"></script>
+<svg class="memo-symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="memo-icon-note" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"/></symbol>
+    <symbol id="memo-icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="memo-icon-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="memo-icon-pin" viewBox="0 0 24 24"><path d="m16 3 5 5-4 1-3 5v3l-2 2-3-4-4-3 2-2h3l5-3zM8 16l-5 5"/></symbol>
+    <symbol id="memo-icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></symbol>
+    <symbol id="memo-icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="memo-icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6 6a8 8 0 0 1 13 2M5 16a8 8 0 0 0 13 2"/></symbol>
+    <symbol id="memo-icon-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 0 1 11 3a9 9 0 1 0 10 10Z"/></symbol>
+    <symbol id="memo-icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+    <symbol id="memo-icon-arrow" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></symbol>
+    <symbol id="memo-icon-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5ZM20 2v4M18 4h4"/></symbol>
+</svg>
+<main class="memo-shell" id="memo-app">
+    <header class="memo-topbar">
+        <div class="memo-brand">
+            <span class="memo-brand-mark"><svg aria-hidden="true"><use href="#memo-icon-note"/></svg></span>
+            <div><strong>메모장<span class="memo-admin-badge">ADMIN</span></strong><small>나만의 작은 작업실</small></div>
+        </div>
+        <div class="memo-top-actions">
+            <button type="button" class="memo-icon-button" id="memo-theme" aria-label="다크 모드 전환" aria-pressed="false"><svg aria-hidden="true"><use href="#memo-icon-moon"/></svg></button>
+            <button type="button" class="memo-button memo-button-primary" id="memo-new"><svg aria-hidden="true"><use href="#memo-icon-plus"/></svg>새 메모</button>
+        </div>
+    </header>
+    <section class="memo-intro" aria-labelledby="memo-heading">
+        <div>
+            <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
+            <p class="memo-eyebrow">A LITTLE SPACE FOR BIG IDEAS</p>
+            <h1 id="memo-heading">머릿속에서, <span>메모장으로.</span></h1>
+            <p class="memo-intro-description">운영 노트부터 다음 아이디어까지. 잊기 전에 가볍게 남겨두세요.</p>
+        </div>
+        <div class="memo-stats" aria-label="내 메모 현황">
+            <div><span>전체 메모</span><strong id="memo-total">—</strong></div>
+            <div><span>고정한 메모</span><strong id="memo-pinned-total">—</strong></div>
+            <span class="memo-private"><svg aria-hidden="true"><use href="#memo-icon-lock"/></svg>나만 볼 수 있어요</span>
+        </div>
+    </section>
+    <div class="memo-workspace" id="memo-workspace">
+        <aside class="memo-sidebar" aria-label="메모 목록">
+            <div class="memo-sidebar-controls">
+                <label class="memo-search"><svg aria-hidden="true"><use href="#memo-icon-search"/></svg><input type="search" id="memo-search" maxlength="200" placeholder="제목이나 내용으로 찾기" autocomplete="off" aria-label="메모 검색"></label>
+                <div class="memo-filter-row">
+                    <div class="memo-filters" role="group" aria-label="메모 필터"><button type="button" id="memo-filter-all" class="is-active" aria-pressed="true">모든 메모</button><button type="button" id="memo-filter-pinned" aria-pressed="false"><svg aria-hidden="true"><use href="#memo-icon-pin"/></svg>고정됨</button></div>
+                    <button type="button" class="memo-icon-button" id="memo-refresh" aria-label="메모 목록 새로고침"><svg aria-hidden="true"><use href="#memo-icon-refresh"/></svg></button>
+                </div>
+                <div class="memo-list-heading"><span>MY NOTES</span><span id="memo-results">불러오는 중</span></div>
+            </div>
+            <div class="memo-list" id="memo-list" aria-busy="true"><p class="memo-list-empty">메모를 불러오고 있어요…</p></div>
+            <nav class="memo-pagination" aria-label="메모 목록 페이지"><button type="button" id="memo-prev" disabled>이전</button><span id="memo-page-number">1 / 1</span><button type="button" id="memo-next" disabled>다음</button></nav>
+        </aside>
+        <section class="memo-editor-panel" aria-label="메모 편집">
+            <div class="memo-welcome" id="memo-welcome">
+                <div class="memo-paper-art" aria-hidden="true"><span class="memo-paper-back"></span><div class="memo-paper-front"><svg><use href="#memo-icon-spark"/></svg><i></i><i></i><i></i></div><span class="memo-art-dot"></span></div>
+                <p class="memo-eyebrow">YOUR NEXT GOOD IDEA STARTS HERE</p>
+                <h2>생각을 펼쳐볼까요?</h2>
+                <p>왼쪽에서 메모를 고르거나<br>새로운 페이지를 열어보세요.</p>
+                <button type="button" class="memo-button memo-button-soft" id="memo-welcome-new"><svg aria-hidden="true"><use href="#memo-icon-plus"/></svg>첫 문장 남기기</button>
+                <span class="memo-welcome-tip">중요한 메모는 고정하고, 색상으로 구분할 수 있어요.</span>
+            </div>
+            <form class="memo-editor" id="memo-form" hidden autocomplete="off">
+                <div class="memo-editor-toolbar">
+                    <div class="memo-editor-state"><button type="button" class="memo-icon-button memo-mobile-back" id="memo-editor-back" aria-label="메모 목록으로"><svg aria-hidden="true"><use href="#memo-icon-arrow"/></svg></button><span class="memo-edit-dot" id="memo-edit-dot"></span><span id="memo-save-state">새 메모</span></div>
+                    <div class="memo-editor-tools"><button type="button" class="memo-tool-button" id="memo-pin" aria-pressed="false"><svg aria-hidden="true"><use href="#memo-icon-pin"/></svg><span id="memo-pin-label">상단 고정</span></button><button type="button" class="memo-icon-button memo-danger" id="memo-delete" aria-label="메모 삭제" disabled><svg aria-hidden="true"><use href="#memo-icon-trash"/></svg></button></div>
+                </div>
+                <div class="memo-writing-area">
+                    <fieldset class="memo-colors"><legend>메모 색상</legend><button type="button" class="memo-color" data-color="LAVENDER" aria-label="라벤더" aria-pressed="true"></button><button type="button" class="memo-color" data-color="MINT" aria-label="민트" aria-pressed="false"></button><button type="button" class="memo-color" data-color="AMBER" aria-label="앰버" aria-pressed="false"></button><button type="button" class="memo-color" data-color="ROSE" aria-label="로즈" aria-pressed="false"></button></fieldset>
+                    <label class="memo-sr-only" for="memo-title">메모 제목</label><input type="text" id="memo-title" class="memo-title-input" maxlength="120" placeholder="제목 없는 메모" aria-describedby="memo-editor-meta">
+                    <p class="memo-editor-meta" id="memo-editor-meta">아직 저장하지 않은 메모입니다.</p>
+                    <label class="memo-sr-only" for="memo-content">메모 내용</label><textarea id="memo-content" class="memo-content-input" maxlength="20000" placeholder="여기에 생각을 적어보세요.&#10;&#10;해야 할 일, 해결한 문제, 문득 떠오른 아이디어…&#10;어떤 이야기든 좋아요." spellcheck="false"></textarea>
+                </div>
+                <footer class="memo-editor-footer"><div><span id="memo-character-count">0 / 20,000자</span><small>⌘ / Ctrl + S로 저장</small></div><div class="memo-save-actions"><button type="button" class="memo-tool-button" id="memo-reload" hidden>저장본 다시 열기</button><button type="submit" class="memo-button memo-button-primary" id="memo-save" disabled><svg aria-hidden="true"><use href="#memo-icon-check"/></svg><span id="memo-save-label">메모 저장</span></button></div></footer>
+            </form>
+        </section>
+    </div>
+    <p class="memo-status" id="memo-status" role="status" aria-live="polite">관리자 본인이 작성한 메모만 표시됩니다.</p>
+</main>
+<script src="/js/memo/memos.js?v=20261112" defer></script>
+</body>
+</html>

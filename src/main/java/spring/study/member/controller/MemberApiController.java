@@ -16,7 +16,6 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.PasswordVerificationRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
-import spring.study.member.facade.MemberAuthFacade;
 
 @RequiredArgsConstructor
 @RestController
@@ -26,7 +25,6 @@ public class MemberApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final MemberFacade memberFacade;
-    private final MemberAuthFacade memberAuthFacade;
 
     @PatchMapping("/login")
     public ResponseEntity<?> loginAction(@RequestBody MemberRequestDto dto, HttpServletRequest request, HttpServletResponse response) {
@@ -35,7 +33,7 @@ public class MemberApiController {
 
     @GetMapping("/logout")
     public ResponseEntity<?> logoutAction(HttpServletRequest request, HttpServletResponse response) {
-        return memberAuthFacade.logout(jwtManager.getLoginMember(request), request, response);
+        return memberFacade.logout(jwtManager.getLoginMember(request), request, response);
     }
 
     @PostMapping("/register")
@@ -68,7 +66,7 @@ public class MemberApiController {
 
     @PatchMapping("/updatePassword")
     public ResponseEntity<?> updatePasswordAction(@RequestBody MemberRequestDto memberUpdateDto, HttpServletRequest request, HttpServletResponse response) {
-        return memberAuthFacade.recoverPassword(memberUpdateDto, jwtManager.getLoginMember(request));
+        return memberFacade.recoverPassword(memberUpdateDto, jwtManager.getLoginMember(request));
     }
 
     @PostMapping("/password-verification/send")
@@ -76,7 +74,7 @@ public class MemberApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return memberAuthFacade.sendPasswordVerification(member);
+        return memberFacade.sendPasswordVerification(member);
     }
 
     @PostMapping("/password-verification/verify")
@@ -89,7 +87,7 @@ public class MemberApiController {
         if (member == null) return commonFacade.unauthorized();
         if (bindingResult.hasErrors()) return commonFacade.validationFailure(bindingResult, "인증번호를 확인해주세요");
 
-        return memberAuthFacade.verifyPasswordChange(verificationRequest.getCode(), member);
+        return memberFacade.verifyPasswordChange(verificationRequest.getCode(), member);
     }
 
     @PatchMapping("/updatePassword/authenticated")
@@ -101,7 +99,7 @@ public class MemberApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return memberAuthFacade.updateAuthenticatedPassword(memberUpdateDto.getPassword(), member, request, response);
+        return memberFacade.updateAuthenticatedPassword(memberUpdateDto.getPassword(), member, request, response);
     }
 
     @PatchMapping("/updatePhone")
@@ -130,6 +128,6 @@ public class MemberApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return memberAuthFacade.withdraw(member, request, response);
+        return memberFacade.withdraw(member, request, response);
     }
 }

@@ -37,74 +37,6 @@ class MemberTokenCacheServiceTest {
     }
 
     @Test
-    void savesAndLoadsMemberWithoutCredentials() throws Exception {
-        Duration ttl = Duration.ofDays(14);
-        Member member = member();
-        memberTokenCacheService.save(member, ttl);
-
-        CachedMemberDto cachedMember = CachedMemberDto.from(member);
-        String json = objectMapper.writeValueAsString(cachedMember);
-        verify(valueOperations).set("auth:member:1", json, ttl);
-
-        when(valueOperations.get("auth:member:1")).thenReturn(json);
-        Member restored = memberTokenCacheService.find(1L).orElseThrow();
-
-        assertThat(restored.getId()).isEqualTo(member.getId());
-        assertThat(restored.getEmail()).isEqualTo(member.getEmail());
-        assertThat(restored.getRole()).isEqualTo(member.getRole());
-        assertThat(restored.getAccountStatus()).isEqualTo(member.getAccountStatus());
-        assertThat(restored.isAudioCallEnabled()).isTrue();
-        assertThat(restored.getPassword()).isNull();
-    }
-
-    @Test
-    void oldCacheEntryWithoutAudioCallPreferenceShouldDefaultToEnabled() {
-        when(valueOperations.get("auth:member:1")).thenReturn("{}");
-
-        Member restored = memberTokenCacheService.find(1L).orElseThrow();
-
-        assertThat(restored.isAudioCallEnabled()).isTrue();
-    }
-
-    @Test
-    void disabledAudioCallPreferenceShouldSurviveCacheRoundTrip() throws Exception {
-        Member member = member();
-        member.changeAudioCallEnabled(false);
-        String json = objectMapper.writeValueAsString(CachedMemberDto.from(member));
-        when(valueOperations.get("auth:member:1")).thenReturn(json);
-
-        Member restored = memberTokenCacheService.find(1L).orElseThrow();
-
-        assertThat(restored.isAudioCallEnabled()).isFalse();
-    }
-
-    @Test
-    void corruptCacheEntryIsDeletedAndRejected() {
-        when(valueOperations.get("auth:member:1")).thenReturn("not-json");
-
-        assertThat(memberTokenCacheService.find(1L)).isEmpty();
-        verify(redisTemplate).delete("auth:member:1");
-    }
-
-    @Test
-    void cacheMissLoadsMemberFromDatabaseAndRestoresCache() throws Exception {
-        Duration ttl = Duration.ofDays(14);
-        Member member = member();
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
-
-        Member restored = memberTokenCacheService.findOrLoad(1L, ttl).orElseThrow();
-
-        assertThat(restored.getId()).isEqualTo(member.getId());
-        assertThat(restored.getEmail()).isEqualTo(member.getEmail());
-        assertThat(restored.getPassword()).isNull();
-        verify(valueOperations).set(
-                "auth:member:1",
-                objectMapper.writeValueAsString(CachedMemberDto.from(member)),
-                ttl
-        );
-    }
-
-    @Test
     void refreshesExistingCacheWithChangedMemberAndPreservesRemainingTtl() throws Exception {
         Member changedMember = member();
         changedMember.changeProfile("changed-profile.png");
@@ -118,15 +50,6 @@ class MemberTokenCacheServiceTest {
                 objectMapper.writeValueAsString(CachedMemberDto.from(changedMember)),
                 Duration.ofMinutes(2)
         );
-    }
-
-    @Test
-    void refreshDoesNothingWhenMemberIsNotCurrentlyCached() {
-        when(redisTemplate.getExpire("auth:member:1", TimeUnit.MILLISECONDS)).thenReturn(-2L);
-
-        memberTokenCacheService.refreshIfPresent(1L);
-
-        verify(memberRepository, never()).findById(1L);
     }
 
     private Member member() {

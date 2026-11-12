@@ -23,6 +23,7 @@ public final class KafkaTopics {
 
         throw new IllegalArgumentException("Unknown dead-letter topic");
     }
+
     public static String payloadClass(String topic) {
         if (CHAT.equals(topic))
             return ChatMessageRequestDto.class.getName();

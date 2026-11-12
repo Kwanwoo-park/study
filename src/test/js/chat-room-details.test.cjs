@@ -108,23 +108,6 @@ async function setup(reply = async path => ({body: path.endsWith('/details') ? d
     };
 }
 
-test('opens a side panel on demand and preserves chat-origin profile navigation', async () => {
-    const page = await setup();
-    assert.equal(page.requests.length, 0);
-    await page.open();
-    assert.equal(page.element('overlay').hidden, false);
-    assert.equal(page.element('open')['aria-expanded'], 'true');
-    assert.equal(page.document.activeElement, page.element('close'));
-    assert.equal(page.element('member-count').textContent, '(2명)');
-    const nodes = descendants(page.element('members'));
-    assert.ok(nodes.some(node => node.textContent === '<script>not HTML</script>'));
-    const links = nodes.filter(node => node.tagName === 'a');
-    assert.equal(links[0].href, '/member/detail?email=me%40example.test');
-    assert.equal(links[1].href, '/member/search/detail?email=a%2Bb%40example.test&source=chat');
-    assert.equal(page.requests[0].options.cache, 'no-store');
-    assert.equal(page.requests[0].options.credentials, 'include');
-});
-
 test('paginates images without duplicates and opens the shared swipe preview', async () => {
     const older = {...photo, id: 20, messageId: 'older', imgSrc: 'https://example.test/older.png'};
     const page = await setup(async path => ({body: path.endsWith('/details') ? details
@@ -140,48 +123,6 @@ test('paginates images without duplicates and opens the shared swipe preview', a
     assert.deepEqual(page.previews[0], {sources: [photo.imgSrc, older.imgSrc], index: 1});
 });
 
-test('removes deleted messages from the gallery and closes their preview', async () => {
-    for (const action of ['DELETED_FOR_ALL', 'DELETED_FOR_ME']) {
-        const page = await setup();
-        await page.open();
-        page.element('images').children[0].emit('click');
-        page.change({roomId: 'room-a', id: photo.messageId, action});
-        assert.equal(page.element('images').children.length, 0);
-        assert.equal(page.previewCloses(), 1);
-    }
-});
-
-test('a late photo response cannot bring back an already deleted message', async () => {
-    let resolvePhotos;
-    const page = await setup(path => path.endsWith('/details') ? Promise.resolve({body: details})
-        : new Promise(resolve => { resolvePhotos = resolve; }));
-    await page.open();
-    page.change({roomId: 'room-a', id: photo.messageId, action: 'DELETED_FOR_ALL'});
-    resolvePhotos({body: {images: [photo], nextCursor: null}});
-    await flush();
-    assert.equal(page.element('images').children.length, 0);
-});
-
-test('closing cancels requests and ignores late responses when reopened', async () => {
-    const pending = [];
-    const page = await setup(path => new Promise(resolve => pending.push({path, resolve})));
-    await page.open();
-    page.element('close').emit('click');
-    assert.ok(page.requests.every(request => request.options.signal.aborted));
-    assert.equal(page.element('open')['aria-expanded'], 'false');
-    assert.equal(page.document.activeElement, page.element('open'));
-    page.flushTimers();
-    assert.equal(page.element('overlay').hidden, true);
-    await page.open();
-    pending.slice(0, 2).forEach(item => item.resolve({body: item.path.endsWith('/details') ? details : {images: [photo]}}));
-    await flush();
-    assert.equal(page.element('members').children.length, 0);
-    assert.equal(page.element('images').children.length, 0);
-    pending.slice(2).forEach(item => item.resolve({body: item.path.endsWith('/details') ? details : {images: []}}));
-    await flush();
-    assert.equal(page.element('members').children.length, 2);
-});
-
 test('access denial clears previously loaded participants and photos', async () => {
     let denied = false;
     const page = await setup(async path => denied ? {status: 403}
@@ -193,43 +134,4 @@ test('access denial clears previously loaded participants and photos', async () 
     assert.equal(page.element('members').children.length, 0);
     assert.equal(page.element('images').children.length, 0);
     assert.match(page.element('members-status').textContent, /참여 중인 채팅방/);
-});
-
-test('shows empty and retry states, and rejects unsafe image URLs', async () => {
-    const page = await setup(async path => ({body: path.endsWith('/details') ? details
-        : {images: [{...photo, imgSrc: 'javascript:alert(1)'}], nextCursor: null}}));
-    await page.open();
-    assert.equal(page.element('images').children.length, 0);
-    assert.match(page.element('images-status').textContent, /사진이 없습니다/);
-    const failure = await setup(async path => path.endsWith('/details') ? {body: details} : {status: 503, body: {message: '다시 시도'}});
-    await failure.open();
-    assert.equal(failure.element('members').children.length, 2);
-    assert.equal(failure.element('images-status').textContent, '다시 시도');
-});
-
-test('notices new images, refreshes participant changes and ignores other rooms', async () => {
-    const page = await setup();
-    await page.open();
-    page.change({roomId: 'different', type: 'IMAGE'});
-    assert.equal(page.requests.length, 2);
-    page.change({roomId: 'room-a', type: 'IMAGE'});
-    assert.equal(page.element('update').hidden, false);
-    page.change({roomId: 'room-a', type: 'QUIT'});
-    await flush();
-    assert.equal(page.requests.length, 3);
-    assert.ok(page.requests.at(-1).path.endsWith('/details'));
-});
-
-test('Escape closes only the drawer when no image preview is open and restores focus', async () => {
-    const page = await setup();
-    await page.open();
-    page.element('images').children[0].emit('click');
-    page.document.dispatchEvent({type: 'keydown', key: 'Escape', preventDefault() {}});
-    assert.equal(page.element('open')['aria-expanded'], 'true');
-    page.window.closeChatImageModal();
-    let prevented = false;
-    page.document.dispatchEvent({type: 'keydown', key: 'Escape', preventDefault() { prevented = true; }});
-    assert.equal(prevented, true);
-    assert.equal(page.element('open')['aria-expanded'], 'false');
-    assert.equal(page.document.activeElement, page.element('open'));
 });

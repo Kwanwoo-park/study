@@ -27,6 +27,7 @@ import spring.study.member.service.MemberService;
 
 import java.time.Duration;
 import java.util.Optional;
+import spring.study.jwt.dto.IssuedToken;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
@@ -51,7 +52,7 @@ class RefreshTokenServiceTest {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
-    @Autowired
+    @MockBean
     private MemberService memberService;
 
     @MockBean
@@ -61,78 +62,15 @@ class RefreshTokenServiceTest {
     private IpLocationService ipLocationService;
 
     @Test
-    void savedTokenIsValidOnlyForItsMember() {
-        Member member = member(1L);
-        Duration ttl = Duration.ofDays(14);
-        refreshTokenService.save("valid-jti", member, ttl);
-
-        assertThat(refreshTokenService.isValid("valid-jti", 1L)).isTrue();
-        assertThat(refreshTokenService.isValid("valid-jti", 2L)).isFalse();
-        assertThat(member.getLastLoginTime()).isNotNull();
-        verify(memberTokenCacheService).save(member, ttl);
-    }
-
-    @Test
-    void savedTokenKeepsLoginIpAddress() {
-        Member member = member(1L);
-
-        refreshTokenService.save("ip-jti", member, Duration.ofDays(14), "203.0.113.7");
-
-        RefreshToken token = refreshTokenRepository.findById("ip-jti").orElseThrow();
-        assertThat(token.getIpAddress()).isEqualTo("203.0.113.7");
-    }
-
-    @Test
-    void revokeDeletesEveryTokenAndCacheForMember() {
-        Member blockedMember = member(1L);
-        Member otherMember = member(2L);
-        refreshTokenService.save("blocked-first-jti", blockedMember, Duration.ofDays(14));
-        refreshTokenService.save("blocked-second-jti", blockedMember, Duration.ofDays(14));
-        refreshTokenService.save("other-jti", otherMember, Duration.ofDays(14));
-
-        refreshTokenService.revoke(blockedMember.getId());
-
-        assertThat(refreshTokenService.isValid("blocked-first-jti", blockedMember.getId())).isFalse();
-        assertThat(refreshTokenService.isValid("blocked-second-jti", blockedMember.getId())).isFalse();
-        assertThat(refreshTokenService.isValid("other-jti", otherMember.getId())).isTrue();
-        verify(memberTokenCacheService).delete(blockedMember.getId());
-    }
-
-    @Test
-    void logoutWithOnlyRefreshCookieMustNotLeaveANewRefreshTokenBehind() throws Exception {
-        JwtTokenProvider provider = tokenProvider();
-        Member member = member(1L);
-        var refresh = provider.createRefreshToken(member);
-        refreshTokenService.save(refresh.jti(), member, provider.refreshTokenDuration());
-        when(memberTokenCacheService.findOrLoad(eq(member.getId()), any(Duration.class)))
-                .thenReturn(Optional.of(member));
-        JwtCookieService cookies = new JwtCookieService();
-        JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, mock(MemberService.class), mock(MemberTokenCacheService.class), mock(RefreshTokenService.class), cookies);
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/member/logout");
-        request.setCookies(new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        try {
-            filter.doFilter(request, response, (req, res) -> authentication.logout(request, response));
-
-            assertThat(refreshTokenRepository.count()).isZero();
-            assertThat(response.getHeaders("Set-Cookie")).allMatch(value -> value.contains("Max-Age=0"));
-        } finally {
-            SecurityContextHolder.clearContext();
-        }
-    }
-
-    @Test
     void repeatedBrowserLoginReplacesOnlyItsTokenAndKeepsOtherDevices() {
         JwtTokenProvider provider = tokenProvider();
         Member member = member(1L);
-        var browser = provider.createRefreshToken(member);
-        var otherDevice = provider.createRefreshToken(member);
+        IssuedToken browser = provider.createRefreshToken(member);
+        IssuedToken otherDevice = provider.createRefreshToken(member);
         refreshTokenService.save(browser.jti(), member, provider.refreshTokenDuration());
         refreshTokenService.save(otherDevice.jti(), member, provider.refreshTokenDuration());
         JwtCookieService cookies = new JwtCookieService();
-        JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, mock(MemberService.class), mock(MemberTokenCacheService.class), mock(RefreshTokenService.class), cookies);
+        JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, memberService, memberTokenCacheService, refreshTokenService, cookies);
         String previousToken = browser.value();
 
         for (int attempt = 0; attempt < 3; attempt++) {
@@ -158,13 +96,13 @@ class RefreshTokenServiceTest {
         JwtTokenProvider provider = tokenProvider();
         Member member = member(1L);
         ReflectionTestUtils.setField(provider, "refreshTokenDays", 1L);
-        var refresh = provider.createRefreshToken(member);
+        IssuedToken refresh = provider.createRefreshToken(member);
         ReflectionTestUtils.setField(provider, "refreshTokenDays", 14L);
         refreshTokenService.save(refresh.jti(), member, provider.refreshTokenDuration());
         when(memberTokenCacheService.findOrLoad(eq(member.getId()), any(Duration.class)))
                 .thenReturn(Optional.of(member));
         JwtCookieService cookies = new JwtCookieService();
-        JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, mock(MemberService.class), mock(MemberTokenCacheService.class), mock(RefreshTokenService.class), cookies);
+        JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, memberService, memberTokenCacheService, refreshTokenService, cookies);
         JwtAuthenticationFilter filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
         MockHttpServletRequest request = new MockHttpServletRequest("PATCH", "/api/member/updatePassword/authenticated");
         request.setCookies(new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));

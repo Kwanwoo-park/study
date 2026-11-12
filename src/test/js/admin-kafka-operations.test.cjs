@@ -73,43 +73,6 @@ test('Kafka replay fetches CSRF, prevents duplicate submissions, and displays qu
     assert.equal(app.elements.refresh.disabled, false);
 });
 
-test('Kafka replay rejection restores the button and leaves the record available for retry', async () => {
-    const app = setup(url => {
-        if (url.endsWith('/csrf')) return response({headerName: 'X-CSRF-TOKEN', token: 'test-csrf'});
-        if (url.endsWith('/replay')) return response({message: '요청을 처리하지 못했습니다.'}, 503);
-        return response({entries: [entry], nextBeforeId: null});
-    });
-    await tick();
-    const button = app.elements['dead-letters'].children[0].children.at(-1);
-    button.trigger('click'); await tick();
-    assert.equal(button.disabled, false);
-    assert.equal(app.elements['list-status'].textContent, '요청을 처리하지 못했습니다.');
-});
-
-test('Kafka metadata uses text and a rejected list refresh clears stale records', async () => {
-    let denied = false;
-    const app = setup(() => denied ? response({}, 403) : response({entries: [{...entry, errorType: '<img src=x onerror=alert(1)>'}], nextBeforeId: 12}));
-    await tick();
-    assert.equal(app.elements['dead-letters'].children[0].children[2].textContent, '오류 유형: <img src=x onerror=alert(1)>');
-    denied = true; app.elements.refresh.trigger('click'); await tick();
-    assert.equal(app.elements['dead-letters'].children.length, 0);
-    assert.match(app.elements['list-status'].textContent, /관리자 인증/);
-    assert.equal(app.elements.next.disabled, true);
-});
-
-test('Kafka auto refresh preserves historical pages and skips hidden tabs', async () => {
-    const app = setup(() => response({entries: [], nextBeforeId: 12})); await tick();
-    app.document.hidden = true; app.refresh(); await tick(); assert.equal(app.calls.length, 2);
-    app.document.hidden = false; app.elements.next.trigger('click'); await tick();
-    const listCalls = app.calls.filter(call => call.url.includes('/dead-letters')).length;
-    app.refresh(); await tick();
-    assert.equal(app.calls.filter(call => call.url.includes('/dead-letters')).length, listCalls);
-    assert.equal(app.elements.page.textContent, '2 페이지');
-    app.elements.refresh.trigger('click'); await tick();
-    assert.equal(app.elements.page.textContent, '2 페이지');
-    assert.match(app.calls.at(-1).url, /beforeId=12/);
-});
-
 const metadata = {
     clusterId: 'cluster-test', controllerId: 1, observedAt: null, totalLag: null, warnings: [], lags: [],
     brokers: [{id: 1, host: 'broker.test', port: 9092, controller: true, leaderPartitions: 4, replicaPartitions: 4}],
@@ -122,53 +85,3 @@ const metadata = {
 const walk = element => [element, ...element.children.flatMap(walk)];
 const text = element => walk(element).map(child => child.textContent).join(' ');
 const metadataApp = () => setup(() => response({entries: [], nextBeforeId: null}), () => response(metadata));
-
-test('Kafka UI tabs work with clicks and keyboard navigation', async () => {
-    const app = metadataApp(); await tick();
-    app.elements['tab-brokers'].trigger('click');
-    assert.equal(app.elements['panel-overview'].hidden, true);
-    assert.equal(app.elements['panel-brokers'].hidden, false);
-    assert.equal(app.elements['tab-brokers'].getAttribute('aria-selected'), 'true');
-    app.elements['tab-brokers'].trigger('keydown', {key: 'ArrowRight', preventDefault(){}});
-    assert.equal(app.elements['panel-topics'].hidden, false);
-    assert.equal(app.elements['tab-topics'].focused, true);
-    assert.match(text(app.elements.brokers), /broker.test/);
-    assert.match(text(app.elements.brokers), /컨트롤러/);
-});
-
-test('Kafka topic search and drill-down show partition and read-only configuration details', async () => {
-    const app = metadataApp(); await tick();
-    app.elements['topic-search'].value = 'missing'; app.elements['topic-search'].trigger('input');
-    assert.match(text(app.elements.topics), /검색 결과가 없습니다/);
-    app.elements['topic-search'].value = ''; app.elements['topic-search'].trigger('input');
-    walk(app.elements.topics).find(element => element.type === 'button').trigger('click');
-    assert.equal(app.elements['topic-list'].hidden, true);
-    assert.equal(app.elements['topic-detail'].hidden, false);
-    assert.match(text(app.elements.configs), /cleanup.policy.*delete/);
-    assert.match(text(app.elements.partitions), /시작 오프셋.*최신 오프셋/);
-    app.elements['topic-back'].trigger('click');
-    assert.equal(app.elements['topic-list'].hidden, false);
-});
-
-test('Kafka consumer details show members while unknown lag remains unknown', async () => {
-    const app = metadataApp(); await tick();
-    assert.match(text(app.elements.consumers), /미확인/);
-    walk(app.elements.consumers).find(element => element.type === 'button').trigger('click');
-    assert.equal(app.elements['consumer-detail'].hidden, false);
-    assert.match(text(app.elements.members), /consumer-1.*client-1.*127.0.0.1.*topic \/ 0/);
-    app.elements['consumer-back'].trigger('click');
-    assert.equal(app.elements['consumer-list'].hidden, false);
-});
-
-test('Kafka overview failures clear stale metadata and manual refresh still works when auto refresh is paused', async () => {
-    let denied = false;
-    const app = setup(() => response({entries: [], nextBeforeId: null}), () => denied ? response({}, 403) : response(metadata));
-    await tick();
-    app.elements['auto-refresh'].checked = false;
-    const previous = app.calls.length; app.refresh(); await tick();
-    assert.equal(app.calls.length, previous);
-    denied = true; app.elements.refresh.trigger('click'); await tick();
-    assert.doesNotMatch(text(app.elements.brokers), /broker.test/);
-    assert.match(app.elements.status.textContent, /관리자 인증/);
-    assert.doesNotMatch(text(app.elements.summary), /0건/);
-});

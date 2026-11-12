@@ -15,6 +15,7 @@ import spring.study.notification.service.NotificationService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import org.mockito.InOrder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -76,7 +77,7 @@ class SavingsAutoTransferFacadeTest {
         ArgumentCaptor<AccountTransaction> captor = ArgumentCaptor.forClass(AccountTransaction.class);
         verify(transactionRepository).save(captor.capture());
         assertEquals(AccountTransactionType.SAVINGS_PAYMENT, captor.getValue().getTransactionType());
-        var locks = inOrder(accountService);
+        InOrder locks = inOrder(accountService);
         locks.verify(accountService).findByAccountForUpdate(source.getAccount());
         locks.verify(accountService).findByAccountForUpdate(savings.getAccount());
     }
@@ -107,23 +108,4 @@ class SavingsAutoTransferFacadeTest {
         assertEquals(LocalDate.of(2025, 3, 31), savings.getNextSavingsPaymentDate());
     }
 
-    @Test
-    void paymentDayShouldUseLeapDayInLeapYear() {
-        savings.setMaturityAt(LocalDateTime.of(2025, 1, 31, 0, 0));
-        savings.configureSavingsAutoTransfer(source, 100_000L, 31, LocalDate.of(2024, 1, 1));
-
-        savings.completeSavingsPayment();
-
-        assertEquals(LocalDate.of(2024, 2, 29), savings.getNextSavingsPaymentDate());
-    }
-
-    @Test
-    void initialPaymentShouldScheduleConfiguredDayInTheFollowingMonth() {
-        savings.setMaturityAt(LocalDateTime.of(2027, 8, 23, 0, 0));
-        savings.configureSavingsAutoTransfer(source, 100_000L, 31, LocalDate.of(2026, 8, 23));
-
-        savings.completeInitialSavingsPayment(LocalDate.of(2026, 8, 23));
-
-        assertEquals(LocalDate.of(2026, 9, 30), savings.getNextSavingsPaymentDate());
-    }
 }

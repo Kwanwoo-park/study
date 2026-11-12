@@ -3,6 +3,7 @@ package spring.study.jwt.component;
 import org.junit.jupiter.api.Test;
 import spring.study.jwt.facade.RefreshTokenFacade;
 import spring.study.jwt.service.RefreshTokenService;
+import org.mockito.InOrder;
 
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -16,7 +17,7 @@ class RefreshTokenCleanupSchedulerTest {
 
         scheduler.cleanup();
 
-        var order = inOrder(facade);
+        InOrder order = inOrder(facade);
         order.verify(facade).cleanUp();
     }
 }

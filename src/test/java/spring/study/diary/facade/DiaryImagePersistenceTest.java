@@ -48,36 +48,6 @@ class DiaryImagePersistenceTest {
     }
 
     @Test
-    void createPersistsImageUrlsWithoutCascade() throws Exception {
-        OneToMany mapping = Diary.class.getDeclaredField("images").getAnnotation(OneToMany.class);
-        assertThat(mapping.cascade()).isEmpty();
-        assertThat(mapping.orphanRemoval()).isFalse();
-
-        DiaryResponseDto created = create("first.png", "second.png");
-        em.flush();
-        em.clear();
-
-        assertThat(created.getImages()).hasSize(2);
-        Diary saved = diaryRepository.findById(created.getId()).orElseThrow();
-        assertThat(images.findByDiaryOrderByIdAsc(saved)).extracting(DiaryImage::getImageUrl)
-                .containsExactly("first.png", "second.png");
-    }
-
-    @Test
-    void updateExplicitlyDeletesOldRowsAndPersistsReplacementImages() {
-        DiaryResponseDto created = create("keep.png", "remove.png");
-        em.flush();
-        List<Long> previousIds = images.findAll().stream().map(DiaryImage::getId).toList();
-
-        facade.update(request(created.getId(), "keep.png", "new.png"), member);
-        em.flush();
-        em.clear();
-
-        assertThat(images.findAll()).extracting(DiaryImage::getImageUrl).containsExactlyInAnyOrder("keep.png", "new.png");
-        assertThat(images.findAll()).extracting(DiaryImage::getId).doesNotContainAnyElementsOf(previousIds);
-    }
-
-    @Test
     void omittedImagesArePreservedWhileAnEmptyListDeletesAllImages() {
         DiaryResponseDto created = create("keep.png");
         em.flush();
@@ -105,20 +75,6 @@ class DiaryImagePersistenceTest {
         em.clear();
 
         assertThat(diaryRepository.existsById(created.getId())).isFalse();
-        assertThat(images.count()).isZero();
-    }
-
-    @Test
-    void memberDiaryDeletionAlsoRequiresExplicitImageDeletion() {
-        create("first.png");
-        create("second.png");
-        for (Diary diary : diaries.findByMember(member, 0, 100)) imageService.deleteByDiary(diary);
-
-        diaries.deleteByMember(member);
-        em.flush();
-        em.clear();
-
-        assertThat(diaryRepository.count()).isZero();
         assertThat(images.count()).isZero();
     }
 

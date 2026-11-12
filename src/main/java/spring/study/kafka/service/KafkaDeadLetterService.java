@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import spring.study.kafka.config.KafkaOperationsProperties;
 import spring.study.kafka.config.KafkaTopics;
 import spring.study.kafka.entity.KafkaDeadLetter;
 import spring.study.kafka.entity.KafkaDeadLetterStatus;
@@ -18,12 +19,14 @@ import spring.study.kafka.dto.KafkaDeadLetterListing;
 import spring.study.kafka.dto.KafkaDeadLetterMetadataDto;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class KafkaDeadLetterService {
     private final KafkaDeadLetterRepository repository;
+    private final KafkaOperationsProperties properties;
 
     @Transactional
     public void archive(ConsumerRecord<String, byte[]> record) {
@@ -73,6 +76,21 @@ public class KafkaDeadLetterService {
         }
 
         return entry;
+    }
+
+    @Transactional(readOnly = true)
+    public List<KafkaDeadLetter> findEntries() {
+        return repository.findForUpdateByStatusAndNextAttemptAtLessThanEqualOrderByIdAsc(KafkaDeadLetterStatus.REPLAY_PENDING, LocalDateTime.now(), PageRequest.of(0, 10));
+    }
+
+    @Transactional
+    public void cleanup() {
+        repository.deleteReplayedBefore(KafkaDeadLetterStatus.REPLAYED, LocalDateTime.now().minusDays(properties.getReplayHistoryDays()));
+    }
+
+    @Transactional(readOnly = true)
+    public long countByStatusIn(List<KafkaDeadLetterStatus> list) {
+        return repository.countByStatusIn(list);
     }
 
     private byte[] header(ConsumerRecord<?, ?> record, String name) {

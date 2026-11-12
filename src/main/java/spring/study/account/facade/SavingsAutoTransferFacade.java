@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import spring.study.account.dto.AccountSettlementResult;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +54,7 @@ public class SavingsAutoTransferFacade {
         LocalDate terminationDate = dueDate.plusDays(PAYMENT_GRACE_DAYS);
 
         if (!processingDate.isBefore(terminationDate)) {
-            var settlement = accountService.terminateInterestAccount(savings, source, savings.getMember(), processingTime);
+            AccountSettlementResult settlement = accountService.terminateInterestAccount(savings, source, savings.getMember(), processingTime);
             accountTransactionService.recordSettlement(savings, source, settlement, processingTime)
                     .forEach(this::notifyMember);
             notificationService.createNotification(savings.getMember(),

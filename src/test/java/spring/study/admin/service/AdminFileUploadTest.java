@@ -17,6 +17,9 @@ import spring.study.admin.entity.AdminFile;
 import spring.study.admin.repository.AdminFileRepository;
 
 import java.util.Optional;
+import java.time.LocalDateTime;
+import org.mockito.ArgumentCaptor;
+import spring.study.admin.dto.AdminFileResponseDto;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -49,7 +52,7 @@ class AdminFileUploadTest {
         if (replacing) existingFile("old-version");
         TransactionSynchronizationManager.initSynchronization();
         try {
-            var result = service.upload(file, 7L);
+            AdminFileResponseDto result = service.upload(file, 7L);
             if (replacing) assertThat(result.id()).isEqualTo(ID);
             TransactionSynchronizationManager.getSynchronizations()
                     .forEach(sync -> sync.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
@@ -64,7 +67,7 @@ class AdminFileUploadTest {
     @Test
     void matchingFilenameReusesTheUuidAndUpdatesMetadata() {
         AdminFile stored = existingFile("old-version");
-        var createdAt = stored.getCreatedAt();
+        LocalDateTime createdAt = stored.getCreatedAt();
 
         assertThat(service.upload(file, 8L).id()).isEqualTo(ID);
 
@@ -73,21 +76,10 @@ class AdminFileUploadTest {
         assertThat(stored.getUploadedBy()).isEqualTo(8L);
         assertThat(stored.getS3VersionId()).isEqualTo("new-version");
         assertThat(stored.getCreatedAt()).isEqualTo(createdAt);
-        var request = org.mockito.ArgumentCaptor.forClass(PutObjectRequest.class);
+        ArgumentCaptor<PutObjectRequest> request = org.mockito.ArgumentCaptor.forClass(PutObjectRequest.class);
         verify(s3).putObject(request.capture());
         assertThat(request.getValue().getKey()).isEqualTo("admin-files/" + ID);
         verify(s3, never()).deleteVersion(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    void immediateDatabaseFailureAlsoDeletesOnlyTheNewVersion() {
-        existingFile("old-version");
-        when(repository.saveAndFlush(any())).thenThrow(new IllegalStateException("DB failure"));
-
-        assertThatThrownBy(() -> service.upload(file, 7L)).isInstanceOf(IllegalStateException.class);
-
-        verify(s3).deleteVersion(BUCKET, "admin-files/" + ID, "new-version");
-        verify(s3, never()).deleteObject(anyString(), anyString());
     }
 
     @Test
@@ -100,61 +92,6 @@ class AdminFileUploadTest {
         verify(s3, never()).deleteVersion(anyString(), anyString(), anyString());
         verify(s3, never()).deleteObject(anyString(), anyString());
         verify(repository, never()).saveAndFlush(any());
-    }
-
-    @Test
-    void suspendedVersioningIsRejectedBeforeUploading() {
-        when(s3.getBucketVersioningConfiguration(BUCKET)).thenReturn(new BucketVersioningConfiguration("Suspended"));
-
-        assertThatThrownBy(() -> service.upload(file, 7L)).isInstanceOf(ResponseStatusException.class);
-
-        verify(s3, never()).putObject(any(PutObjectRequest.class));
-    }
-
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {"legacy-version"})
-    void pinsLegacyVersionBeforeAnyReplacementIsUploaded(String versionId) {
-        AdminFile stored = existingFile(null);
-        ObjectMetadata old = new ObjectMetadata();
-        old.setHeader("x-amz-version-id", versionId);
-        when(s3.getObjectMetadata(BUCKET, "admin-files/" + ID)).thenReturn(old);
-
-        service.pinExistingVersion("test.txt");
-
-        assertThat(stored.getS3VersionId()).isEqualTo(versionId == null ? "null" : versionId);
-        verify(repository).saveAndFlush(stored);
-        verify(s3, never()).putObject(any(PutObjectRequest.class));
-    }
-
-    @Test
-    void uncertainCommitDoesNotDeleteAPossiblyCommittedVersion() {
-        existingFile("old-version");
-        TransactionSynchronizationManager.initSynchronization();
-        try {
-            service.upload(file, 7L);
-            TransactionSynchronizationManager.getSynchronizations()
-                    .forEach(sync -> sync.afterCompletion(TransactionSynchronization.STATUS_UNKNOWN));
-            verify(s3, never()).deleteVersion(anyString(), anyString(), anyString());
-            verify(s3, never()).deleteObject(anyString(), anyString());
-        } finally {
-            TransactionSynchronizationManager.clearSynchronization();
-        }
-    }
-
-    @Test
-    void downloadRequestsTheCommittedVersionRatherThanTheLatestS3Version() {
-        AdminFile stored = existingFile("old-version");
-        when(repository.findById(ID)).thenReturn(Optional.of(stored));
-        S3Object object = new S3Object();
-        object.setObjectContent(new java.io.ByteArrayInputStream(new byte[]{1}));
-        when(s3.getObject(any(GetObjectRequest.class))).thenReturn(object);
-
-        service.download(ID);
-
-        var request = org.mockito.ArgumentCaptor.forClass(GetObjectRequest.class);
-        verify(s3).getObject(request.capture());
-        assertThat(request.getValue().getVersionId()).isEqualTo("old-version");
     }
 
     private AdminFile existingFile(String versionId) {

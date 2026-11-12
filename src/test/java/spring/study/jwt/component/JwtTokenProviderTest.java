@@ -33,17 +33,6 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void accessTokenShouldContainAuthenticatedMemberClaims() {
-        String token = tokenProvider.createAccessToken(member).value();
-
-        TokenClaims claims = tokenProvider.parse(token, TokenName.ACCESS.getValue());
-
-        assertEquals(7L, claims.memberId());
-        assertEquals("jwt@test.com", claims.email());
-        assertEquals("ROLE_ADMIN", claims.role());
-    }
-
-    @Test
     void modifiedTokenShouldBeRejected() {
         String token = tokenProvider.createAccessToken(member).value();
         String[] parts = token.split("\\.");

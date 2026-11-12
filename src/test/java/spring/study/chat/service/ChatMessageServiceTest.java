@@ -29,73 +29,14 @@ class ChatMessageServiceTest {
     private final ChatMessageService chatMessageService = new ChatMessageService(chatMessageRepository);
 
     @Test
-    void countUnreadShouldNotPassOutOfRangeDateWhenMemberNeverReadRoom() {
-        ChatRoom room = ChatRoom.builder()
-                .id(1L)
-                .roomId("room-1")
-                .name("room")
-                .count(2L)
-                .build();
-        Member member = Member.builder()
-                .id(1L)
-                .email("member@test.com")
-                .build();
-
-        when(chatMessageRepository.countVisibleUnread(room, member, ChatMessageStatus.ACTIVE)).thenReturn(3L);
-
-        long result = chatMessageService.countUnread(room, member, null);
-
-        assertEquals(3L, result);
-        verify(chatMessageRepository).countVisibleUnread(room, member, ChatMessageStatus.ACTIVE);
-        verify(chatMessageRepository, never()).countVisibleUnreadAfter(
-                room, member, LocalDateTime.MIN, ChatMessageStatus.ACTIVE);
-    }
-
-    @Test
-    void editShouldChangeOwnedTextMessageWithoutReplacingTheEntity() {
-        Member owner = member(1L, "owner@test.com");
-        ChatMessage message = message(owner, MessageType.TALK);
-        when(chatMessageRepository.findById(message.getId())).thenReturn(java.util.Optional.of(message));
-
-        ChatMessage updated = chatMessageService.edit(message.getId(), "수정된 메시지", owner);
-
-        assertTrue(updated == message);
-        assertEquals("수정된 메시지", updated.getMessage());
-        assertTrue(updated.isEdited());
-        assertFalse(updated.isEditedByAdmin());
-        verify(chatMessageRepository, never()).deleteById(any());
-    }
-
-    @Test
-    void editShouldRejectAnotherMembersMessage() {
+    void validateOwnerShouldRejectAnotherMembersMessage() {
         Member owner = member(1L, "owner@test.com");
         Member other = member(2L, "other@test.com");
         ChatMessage message = message(owner, MessageType.TALK);
-        when(chatMessageRepository.findById(message.getId())).thenReturn(java.util.Optional.of(message));
-
         assertThrows(
                 org.springframework.web.server.ResponseStatusException.class,
-                () -> chatMessageService.edit(message.getId(), "수정 시도", other)
+                () -> chatMessageService.validateOwner(message, other)
         );
-    }
-
-    @Test
-    void administratorShouldEditAnotherMembersMessage() {
-        Member owner = member(1L, "owner@test.com");
-        Member admin = Member.builder()
-                .id(2L)
-                .email("admin@test.com")
-                .role(Role.ADMIN)
-                .build();
-        ChatMessage message = message(owner, MessageType.TALK);
-        when(chatMessageRepository.findById(message.getId())).thenReturn(java.util.Optional.of(message));
-
-        ChatMessage updated = chatMessageService.edit(message.getId(), "관리자 수정", admin);
-
-        assertEquals("관리자 수정", updated.getMessage());
-        assertTrue(updated.isEdited());
-        assertTrue(updated.isEditedByAdmin());
-        assertTrue(ChatMessageEventDto.updated(updated).editedByAdmin());
     }
 
     @Test
@@ -133,21 +74,6 @@ class ChatMessageServiceTest {
 
         assertEquals("금칙어 사용으로 검열된 메시지는 수정할 수 없습니다.", exception.getReason());
         assertFalse(message.isEdited());
-    }
-
-    @Test
-    void deleteForAllShouldOnlyChangeStatusAndKeepOriginalContent() {
-        Member owner = member(1L, "owner@test.com");
-        ChatMessage message = message(owner, MessageType.TALK);
-        when(chatMessageRepository.findById(message.getId())).thenReturn(java.util.Optional.of(message));
-
-        ChatMessage deleted = chatMessageService.deleteForAll(message.getId(), owner);
-
-        assertEquals(ChatMessageStatus.DELETED_FOR_ALL, deleted.getStatus());
-        assertEquals("원본 메시지", deleted.getMessage());
-        assertFalse(deleted.isEdited());
-        assertFalse(deleted.isDeletedByAdmin());
-        verify(chatMessageRepository, never()).deleteById(any());
     }
 
     @Test

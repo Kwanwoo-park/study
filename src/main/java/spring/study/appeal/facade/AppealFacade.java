@@ -8,7 +8,8 @@ import spring.study.appeal.dto.AppealRequestDto;
 import spring.study.appeal.dto.AppealResponseDto;
 import spring.study.appeal.dto.AppealVerificationConfirmRequest;
 import spring.study.appeal.service.AppealService;
-import spring.study.appeal.service.AppealVerificationService;
+import spring.study.mail.service.EmailVerificationService;
+import spring.study.mail.entity.EmailVerificationPurpose;
 import spring.study.member.entity.Member;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AppealFacade {
     private final AppealService appealService;
-    private final AppealVerificationService appealVerificationService;
+    private final EmailVerificationService verificationService;
     private final MemberService memberService;
     private final MemberSanctionService memberSanctionService;
     private final NotificationService notificationService;
@@ -46,7 +47,10 @@ public class AppealFacade {
 
     public ResponseEntity<?> sendVerificationCode(String email) {
         try {
-            appealVerificationService.sendCode(email);
+            Member member = findAppealMemberOrNull(email);
+            if (member != null) {
+                verificationService.send(EmailVerificationPurpose.APPEAL, member.getId().toString(), member.getEmail());
+            }
 
             return ResponseEntity.ok(Map.of(
                     "result", 1L,
@@ -60,7 +64,8 @@ public class AppealFacade {
 
     public ResponseEntity<?> verifyEmail(AppealVerificationConfirmRequest request) {
         try {
-            String verificationToken = appealVerificationService.verifyCode(request.email(), request.code());
+            Member member = findAppealMember(request.email());
+            String verificationToken = verificationService.verify(EmailVerificationPurpose.APPEAL, member.getId().toString(), request.code());
 
             return ResponseEntity.ok(Map.of(
                     "result", 1L,
@@ -113,7 +118,15 @@ public class AppealFacade {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비로그인 상소는 이메일 인증이 필요합니다");
         }
 
-        return appealVerificationService.consumeVerification(requestDto.getEmail(), requestDto.getVerificationToken());
+        String token = requestDto.getVerificationToken();
+        if (token == null || token.isBlank()) {
+            throw appealVerificationRequired();
+        }
+        Member member = findAppealMember(requestDto.getEmail());
+        if (!verificationService.consume(EmailVerificationPurpose.APPEAL, member.getId().toString(), token)) {
+            throw appealVerificationRequired();
+        }
+        return member;
     }
 
     private void notifyAdministrators(Appeal appeal) {
@@ -127,4 +140,21 @@ public class AppealFacade {
                 notificationService.createNotification(admin, message, Group.ADMIN, url)
         );
     }
+
+    private Member findAppealMemberOrNull(String email) {
+        return email == null || email.isBlank() ? null : memberService.findMemberOrNull(email.trim());
+    }
+
+    private Member findAppealMember(String email) {
+        Member member = findAppealMemberOrNull(email);
+        if (member == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증번호가 만료되었거나 올바르지 않습니다");
+        }
+        return member;
+    }
+
+    private ResponseStatusException appealVerificationRequired() {
+        return new ResponseStatusException(HttpStatus.FORBIDDEN, "5분 이내에 이메일 인증을 완료한 후 상소문을 제출해주세요");
+    }
+
 }

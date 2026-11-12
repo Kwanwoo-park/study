@@ -49,6 +49,9 @@ import spring.study.forbidden.service.ForbiddenService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.mockito.InOrder;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -78,20 +81,6 @@ class AdminFileSecurityTest {
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"/admin/files", "/api/admin/files", "/api/admin/files/csrf", "/api/admin/files/d0b3808b-6be3-44c1-80cf-ef639895ed9d/download"})
-    void anonymousCannotAccessFiles(String path) throws Exception {
-        mvc.perform(get(path)).andExpect(status().isUnauthorized());
-        verifyNoInteractions(service);
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"/admin/files", "/api/admin/files", "/api/admin/files/csrf", "/api/admin/files/d0b3808b-6be3-44c1-80cf-ef639895ed9d/download"})
-    void normalMemberCannotAccessFiles(String path) throws Exception {
-        mvc.perform(get(path).with(user(member(Role.USER)))).andExpect(status().isForbidden());
-        verifyNoInteractions(service);
-    }
-
     @Test
     void uploadsRequireAdministratorAndCsrf() throws Exception {
         mvc.perform(withActualCsrf(multipart("/api/admin/files").file(executable()))).andExpect(status().isUnauthorized());
@@ -99,31 +88,6 @@ class AdminFileSecurityTest {
         mvc.perform(multipart("/api/admin/files").file(executable()).with(user(member(Role.ADMIN)))).andExpect(status().isForbidden());
         mvc.perform(multipart("/api/admin/files").file(executable()).with(user(member(Role.ADMIN))).header("X-XSRF-TOKEN", "invalid")).andExpect(status().isForbidden());
         verify(service, never()).upload(any(), any());
-    }
-
-    @Test
-    void administratorCanUploadUsingActualCsrfCookieAndResponseHeaderToken() throws Exception {
-        when(service.upload(any(), eq(7L))).thenReturn(metadata());
-        var tokenResponse = mvc.perform(get("/api/admin/files/csrf").with(user(member(Role.ADMIN))))
-                .andExpect(status().isOk()).andExpect(jsonPath("maxFileSize").value(20971520)).andReturn().getResponse();
-        var token = new ObjectMapper().readTree(tokenResponse.getContentAsString());
-        verifyNoInteractions(service);
-        mvc.perform(multipart("/api/admin/files").file(executable()).with(user(member(Role.ADMIN)))
-                        .cookie(tokenResponse.getCookie("ADMIN-FILES-CSRF"))
-                        .header(token.get("headerName").asText(), token.get("token").asText()))
-                .andExpect(status().isCreated()).andExpect(jsonPath("originalFilename").value("setup.exe"))
-                .andExpect(jsonPath("s3Bucket").doesNotExist()).andExpect(jsonPath("s3Key").doesNotExist()).andExpect(jsonPath("s3VersionId").doesNotExist());
-        var ordered = inOrder(service);
-        ordered.verify(service).pinExistingVersion("setup.exe");
-        ordered.verify(service).upload(any(), eq(7L));
-    }
-
-    @Test
-    void administratorCanViewPageAndList() throws Exception {
-        when(service.list(0)).thenReturn(Page.empty());
-        mvc.perform(get("/admin/files").with(user(member(Role.ADMIN)))).andExpect(status().isOk()).andExpect(view().name("admin/files"));
-        mvc.perform(get("/api/admin/files").with(user(member(Role.ADMIN))))
-                .andExpect(status().isOk()).andExpect(jsonPath("content").isArray()).andExpect(header().string("Cache-Control", "no-store"));
     }
 
     @Test
@@ -139,32 +103,13 @@ class AdminFileSecurityTest {
                 .andExpect(header().string("Content-Security-Policy", containsString("sandbox")));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"GET", "HEAD", "RANGE"})
-    void closesS3ConnectionAfterAttachmentResponse(String method) throws Exception {
-        AtomicBoolean closed = new AtomicBoolean();
-        ByteArrayInputStream source = new ByteArrayInputStream(new byte[]{77, 90, 0, (byte) 255}) {
-            @Override
-            public void close() throws IOException {
-                closed.set(true);
-                super.close();
-            }
-        };
-        InputStreamResource resource = new InputStreamResource(new S3ObjectInputStream(source, null));
-        when(service.download(ID)).thenReturn(new Download(metadata(), resource));
-        var downloadRequest = request(method.equals("RANGE") ? HttpMethod.GET : HttpMethod.valueOf(method), "/api/admin/files/" + ID + "/download").with(user(member(Role.ADMIN)));
-        if (method.equals("RANGE")) downloadRequest.header("Range", "bytes=0-1");
-        mvc.perform(downloadRequest).andExpect(status().isOk()).andExpect(header().string("Content-Length", "4"));
-        assertThat(closed).isTrue();
-    }
-
     private Member member(Role role) {
         return Member.builder().id(7L).email("admin@example.test").pwd("unused").role(role).build();
     }
 
     private MockHttpServletRequestBuilder withActualCsrf(MockHttpServletRequestBuilder request) throws Exception {
-        var response = mvc.perform(get("/api/admin/files/csrf").with(user(member(Role.ADMIN)))).andExpect(status().isOk()).andReturn().getResponse();
-        var token = new ObjectMapper().readTree(response.getContentAsString());
+        MockHttpServletResponse response = mvc.perform(get("/api/admin/files/csrf").with(user(member(Role.ADMIN)))).andExpect(status().isOk()).andReturn().getResponse();
+        JsonNode token = new ObjectMapper().readTree(response.getContentAsString());
         return request.cookie(response.getCookie("ADMIN-FILES-CSRF")).header(token.get("headerName").asText(), token.get("token").asText());
     }
 

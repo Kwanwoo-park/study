@@ -1,12 +1,14 @@
 package spring.study.notification.service;
 
+import spring.study.notification.component.NotificationReadStateCoordinator;
+
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import spring.study.chat.entity.ChatRoomMember;
-import spring.study.kafka.service.MessageProducer;
+import spring.study.kafka.component.MessageProducer;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
@@ -25,7 +27,7 @@ import org.springframework.data.domain.PageRequest;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final MessageProducer producer;
-    private final NotificationReadStateService readStateService;
+    private final NotificationReadStateCoordinator readStateCoordinator;
 
     @Transactional
     public Notification createNotification(Member member, String message, Group group) {
@@ -88,7 +90,7 @@ public class NotificationService {
     public int updateAllRead(Member member) {
         LocalDateTime readBefore = LocalDateTime.now();
         int updated = notificationRepository.updateAll(member.getId(), Status.READ, readBefore);
-        readStateService.afterCommit(new NotificationReadState(member.getId(), null, null, null, readBefore));
+        readStateCoordinator.afterCommit(new NotificationReadState(member.getId(), null, null, null, readBefore));
         return updated;
     }
 
@@ -107,7 +109,7 @@ public class NotificationService {
                 Status.READ,
                 readBefore
         );
-        readStateService.afterCommit(new NotificationReadState(member.getId(), null, group.name(), url, readBefore));
+        readStateCoordinator.afterCommit(new NotificationReadState(member.getId(), null, group.name(), url, readBefore));
         return updated;
     }
 
@@ -142,7 +144,7 @@ public class NotificationService {
         LocalDateTime revision = notification.getUpdateTime() == null ? notification.getRegisterTime() : notification.getUpdateTime();
         if (revision != null && revision.isAfter(readBefore)) readBefore = revision;
         notification.changeToRead();
-        readStateService.afterCommit(new NotificationReadState(
+        readStateCoordinator.afterCommit(new NotificationReadState(
                 notification.getMember().getId(), notification.getId(), null, null, readBefore));
     }
 

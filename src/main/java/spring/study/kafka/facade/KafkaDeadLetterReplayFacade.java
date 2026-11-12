@@ -11,7 +11,7 @@ import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.kafka.config.KafkaTopics;
 import spring.study.kafka.entity.KafkaDeadLetter;
 import spring.study.kafka.entity.KafkaDeadLetterStatus;
-import spring.study.kafka.service.KafkaDeadLetterReplayService;
+import spring.study.kafka.service.KafkaDeadLetterService;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -19,18 +19,18 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class KafkaDeadLetterReplayFacade {
-    private final KafkaDeadLetterReplayService replayService;
+    private final KafkaDeadLetterService deadLetterService;
     private final IntegrationEventLogService logService;
     private final KafkaTemplate<String, Object> template;
 
-    public KafkaDeadLetterReplayFacade (KafkaDeadLetterReplayService replayService, IntegrationEventLogService logService, @Qualifier("kafkaRecoveryTemplate") KafkaTemplate<String, Object> template) {
-        this.replayService = replayService;
+    public KafkaDeadLetterReplayFacade (KafkaDeadLetterService deadLetterService, IntegrationEventLogService logService, @Qualifier("kafkaRecoveryTemplate") KafkaTemplate<String, Object> template) {
+        this.deadLetterService = deadLetterService;
         this.logService = logService;
         this.template = template;
     }
 
     public void publishPending() {
-        List<KafkaDeadLetter> entries = replayService.findEntries();
+        List<KafkaDeadLetter> entries = deadLetterService.findEntries();
 
         for (KafkaDeadLetter entry : entries) {
             try {
@@ -47,16 +47,20 @@ public class KafkaDeadLetterReplayFacade {
                 logService.afterCommit(IntegrationEventLogRoute.kafka(entry.getSourceTopic()), IntegrationEventLogOperation.REPLAY, IntegrationEventLogOutcome.SUCCESS, entry.getId(), 1, entry.getAttemptCount(), null);
             } catch (Exception e) {
                 entry.replayFailed(e);
+
                 logService.afterCommit(IntegrationEventLogRoute.kafka(entry.getSourceTopic()), IntegrationEventLogOperation.REPLAY,
                         entry.getStatus() == KafkaDeadLetterStatus.REPLAY_FAILED ? IntegrationEventLogOutcome.FAILED : IntegrationEventLogOutcome.RETRY_SCHEDULED,
                         entry.getId(), 1, entry.getAttemptCount(), e);
-                if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+
+                if (e instanceof InterruptedException)
+                    Thread.currentThread().interrupt();
+
                 break;
             }
         }
     }
 
     public void cleanup() {
-        replayService.cleanup();
+        deadLetterService.cleanup();
     }
 }

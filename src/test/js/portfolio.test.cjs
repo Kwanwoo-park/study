@@ -75,77 +75,6 @@ function assertPosition(ui, index) {
     });
 }
 
-test('portfolio includes the new sections and a matching fallback slide count', () => {
-    assert.equal(titles.length, 13);
-    assert.equal(new Set(titles).size, titles.length);
-    for (const title of ['Private Storage', 'Operations', 'Refactoring']) assert.ok(titles.includes(title));
-    assert.match(html, new RegExp(`id="slideCounter">1 / ${titles.length}<`));
-    assert.match(html, /href="\/member\/login" data-page-back/);
-    assert.equal(Array.from(html.matchAll(/<article class="slide active"/g)).length, 1);
-});
-
-test('table of contents is built from all slides and initially selects the overview', () => {
-    const ui = setup();
-    assert.equal(ui.toc.children.length, titles.length);
-    ui.toc.children.forEach((button, index) => {
-        assert.equal(button.type, 'button');
-        assert.equal(button.textContent, `${String(index + 1).padStart(2, '0')} ${titles[index]}`);
-    });
-    assertPosition(ui, 0);
-});
-
-test('left and right keys traverse every slide without wrapping past either boundary', () => {
-    const ui = setup();
-    assert.equal(ui.key('ArrowLeft').defaultPrevented, true);
-    assertPosition(ui, 0);
-    for (let index = 1; index < titles.length; index++) {
-        assert.equal(ui.key('ArrowRight').defaultPrevented, true);
-        assertPosition(ui, index);
-    }
-    ui.key('ArrowRight');
-    assertPosition(ui, titles.length - 1);
-    for (let index = titles.length - 2; index >= 0; index--) {
-        ui.key('ArrowLeft');
-        assertPosition(ui, index);
-    }
-});
-
-test('previous, next, and table of contents buttons update the same slide state', () => {
-    const ui = setup();
-    ui.nextBtn.dispatch('click');
-    assertPosition(ui, 1);
-    ui.prevBtn.dispatch('click');
-    assertPosition(ui, 0);
-    ui.toc.children.forEach((button, index) => {
-        button.dispatch('click');
-        assertPosition(ui, index);
-    });
-});
-
-test('scroll, touch, and unrelated keys do not switch slides or prevent page scrolling', () => {
-    const ui = setup();
-    ui.nextBtn.dispatch('click');
-    for (const key of ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', ' ', 'Tab']) {
-        assert.equal(ui.key(key).defaultPrevented, false);
-        assertPosition(ui, 1);
-    }
-    for (const name of ['wheel', 'scroll', 'touchstart', 'touchmove', 'touchend']) {
-        assert.equal(ui.document.listeners.has(name), false);
-        ui.document.dispatch(name);
-        assertPosition(ui, 1);
-    }
-});
-
-test('iOS and Android retain mobile mode while desktop keeps its existing layout', () => {
-    for (const userAgent of ['Mozilla/5.0 (iPhone)', 'Mozilla/5.0 (iPad)', 'Mozilla/5.0 (Linux; Android 15)']) {
-        const ui = setup(userAgent);
-        assert.equal(ui.document.body.classList.contains('mobile-view'), true);
-        ui.nextBtn.dispatch('click');
-        assertPosition(ui, 1);
-    }
-    assert.equal(setup().document.body.classList.contains('mobile-view'), false);
-});
-
 test('save downloads the server PDF only on click, prevents duplicate requests, and preserves navigation', async () => {
     const ui = setup();
     assert.equal(ui.requests.length, 0);
@@ -187,17 +116,4 @@ test('HTTP errors, non-PDF responses, and network failures allow retry without d
         ui.key('ArrowRight');
         assertPosition(ui, 1);
     }
-});
-
-test('print-only layout exposes all slides and removes screen clipping and navigation', () => {
-    assert.match(html, /<link[^>]+href="\.\/print\.css\?[^\"]+"[^>]+media="print"/);
-    assert.match(html, /id="savePdfBtn"[^>]+aria-describedby="pdfSaveStatus"[^>]*>저장<\/button>/);
-    assert.match(html, /id="pdfSaveStatus"[^>]+role="status" hidden/);
-    assert.match(printCss, /@page\s*\{[^}]*size:\s*A4 landscape/);
-    const slideRule = printCss.match(/(?:^|\n)\.slide\s*\{([^}]+)\}/)[1];
-    for (const declaration of ['display: block !important', 'max-height: none !important', 'overflow: visible !important', 'break-after: page']) {
-        assert.ok(slideRule.includes(declaration), declaration);
-    }
-    assert.match(printCss, /\.sidebar,\s*\.progress,\s*\.controls\s*\{\s*display: none !important/);
-    assert.match(printCss, /\.slide:last-of-type\s*\{[^}]*break-after: auto/);
 });

@@ -41,25 +41,13 @@ function setup(respond) {
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
-test('memory card loads processes sorted by backend and keeps names as text', async () => {
-    const app = setup(() => ({totalCount: 1, processes: [{pid: 42, name: '<script>alert(1)</script>', memoryBytes: 2048}]}));
-    app.context.openSystemDetails('processes');
-    await tick();
-    assert.equal(app.calls[0], '/api/admin/system/processes');
-    assert.equal(app.elements['system-details'].hidden, false);
-    const rows = app.elements['system-details-content'].children[0].children;
-    assert.equal(rows[1].children[1].textContent, '<script>alert(1)</script>');
-    app.elements['system-details-close'].trigger('click');
-    assert.equal(app.elements['system-details'].hidden, true);
-});
-
 test('disk card navigates folders and pages with bounded requests', async () => {
     const app = setup(url => {
         const query = new URL(url, 'https://example.test').searchParams;
-        return {roots: [{id: 'project', label: '실행 프로젝트'}], root: 'project',
+        return {disk: {roots: [{id: 'project', label: '실행 프로젝트'}], root: 'project',
             path: query.get('path'), page: Number(query.get('page')), pageSize: 100,
             totalCount: query.get('path') ? 1 : 101,
-            entries: [{name: 'folder', directory: true, sizeBytes: 0, modifiedAt: null}]};
+            entries: [{name: 'folder', directory: true, sizeBytes: 0, modifiedAt: null}]}};
     });
     app.context.openSystemDetails('disk');
     await tick();

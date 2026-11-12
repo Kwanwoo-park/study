@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.account.service.AccountService;
+import spring.study.memo.service.AdminMemoService;
 import spring.study.appeal.service.AppealService;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.board.entity.Board;
@@ -23,6 +24,7 @@ import spring.study.collection.entity.Collection;
 import spring.study.collection.service.CollectionService;
 import spring.study.comment.service.CommentService;
 import spring.study.common.entity.CommonVisibility;
+import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.diary.entity.Diary;
 import spring.study.diary.entity.DiaryImage;
 import spring.study.favorite.service.FavoriteService;
@@ -32,16 +34,28 @@ import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
-import spring.study.jwt.facade.JwtAuthenticationFacade;
+import spring.study.jwt.component.JwtTokenProvider;
+import spring.study.jwt.dto.AuthenticationTokens;
+import spring.study.jwt.dto.IssuedToken;
+import spring.study.jwt.dto.TokenClaims;
+import spring.study.jwt.entity.RefreshToken;
+import spring.study.jwt.entity.TokenName;
+import spring.study.jwt.service.JwtCookieService;
+import spring.study.jwt.service.MemberTokenCacheService;
+import spring.study.jwt.service.RefreshTokenService;
+import spring.study.common.exception.JwtValidationException;
+import spring.study.common.component.TransactionRunner;
+import org.springframework.security.core.context.SecurityContextHolder;
+import java.time.Instant;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
 import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 import spring.study.report.service.ReportService;
 import spring.study.reply.service.ReplyService;
-import spring.study.sanction.entity.MemberSanction;
 import spring.study.todo.service.TodoService;
 import spring.study.mail.service.EmailVerificationService;
+import spring.study.mail.entity.EmailVerificationPurpose;
 import spring.study.diary.service.DiaryService;
 import spring.study.diary.service.DiaryImageService;
 import spring.study.sanction.service.MemberSanctionService;
@@ -54,6 +68,7 @@ import java.util.Map;
 @Slf4j
 public class MemberFacade {
     private final MemberService memberService;
+    private final VisibilityAccessPolicy visibilityAccessPolicy;
     private final BoardService boardService;
     private final BoardImgService boardImgService;
     private final CommentService commentService;
@@ -72,8 +87,13 @@ public class MemberFacade {
     private final BookReviewService bookReviewService;
     private final ImageS3Service imageS3Service;
     private final BCryptPasswordEncoder encoder;
-    private final JwtAuthenticationFacade jwtAuthenticationService;
+    private final JwtTokenProvider tokenProvider;
+    private final MemberTokenCacheService memberTokenCacheService;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtCookieService cookieService;
+    private final TransactionRunner transactions;
     private final TodoService todoService;
+    private final AdminMemoService adminMemoService;
     private final EmailVerificationService emailVerificationService;
     private final DiaryService diaryService;
     private final DiaryImageService diaryImageService;
@@ -127,7 +147,7 @@ public class MemberFacade {
 
         member = memberService.updateLastLoginTime(member.getId());
 
-        jwtAuthenticationService.login(member, request, response, ipAddress);
+        establishSession(member, request, response, ipAddress);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId(),
@@ -189,7 +209,7 @@ public class MemberFacade {
             ));
         }
 
-        if (!emailVerificationService.consume(dto.getEmail(), dto.getVerificationToken())) {
+        if (!emailVerificationService.consume(EmailVerificationPurpose.EMAIL, dto.getEmail(), dto.getVerificationToken())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "result", -403L, "message", "5분 이내에 이메일 인증을 완료한 후 가입해 주세요"
             ));
@@ -398,7 +418,9 @@ public class MemberFacade {
 
         return ResponseEntity.ok(Map.of(
                 "result", 10L,
-                "list", memberService.findName(name.trim(), viewer)
+                "list", memberService.findMembersByName(name.trim()).stream()
+                        .filter(member -> visibilityAccessPolicy.canViewMember(member, viewer))
+                        .map(MemberResponseDto::new).toList()
         ));
     }
 
@@ -459,6 +481,7 @@ public class MemberFacade {
 
         diaryService.deleteByMember(member);
         todoService.deleteByMember(member);
+        adminMemoService.deleteByMember(member);
 
         imageS3Service.deleteImage(member.getProfile());
         memberService.deleteById(member.getId());
@@ -499,4 +522,114 @@ public class MemberFacade {
         else if (dto.getBirth() == null || dto.getBirth().isBlank()) return -3;
         else return 0;
     }
+
+    public ResponseEntity<?> logout(Member member, HttpServletRequest request, HttpServletResponse response) {
+        clearSession(request, response);
+
+        return ResponseEntity.ok(Map.of(
+                "result", member == null ? 0L : member.getId()
+        ));
+    }
+
+    public ResponseEntity<?> recoverPassword(MemberRequestDto requestDto, Member loginMember) {
+        if (loginMember != null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "result", -10L,
+                    "message", "회원 설정의 비밀번호 변경 절차를 이용해주세요"
+            ));
+        }
+
+        Member member = memberService.findMember(requestDto.getEmail());
+        if (requestDto.getPassword() == null || requestDto.getPassword().isBlank()) {
+            return updatePassword(requestDto.getPassword(), member);
+        }
+        if (!emailVerificationService.consume(EmailVerificationPurpose.EMAIL, requestDto.getEmail(), requestDto.getVerificationToken())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -403L, "message", "5분 이내에 이메일 인증을 완료한 후 비밀번호를 변경해 주세요"
+            ));
+        }
+
+        return updatePassword(requestDto.getPassword(), member);
+    }
+
+    public ResponseEntity<?> sendPasswordVerification(Member member) {
+        emailVerificationService.send(EmailVerificationPurpose.PASSWORD_CHANGE, member.getId().toString(), member.getEmail());
+
+        return ResponseEntity.ok(Map.of(
+                "result", member.getId(),
+                "message", "인증번호를 이메일로 발송했습니다"
+        ));
+    }
+
+    public ResponseEntity<?> verifyPasswordChange(String code, Member member) {
+        emailVerificationService.verifyPasswordChange(member.getId().toString(), code);
+
+        return ResponseEntity.ok(Map.of(
+                "result", member.getId(),
+                "message", "이메일 인증이 완료되었습니다"
+        ));
+    }
+
+    public ResponseEntity<?> updateAuthenticatedPassword(String password, Member member,
+                                                        HttpServletRequest request, HttpServletResponse response) {
+        if (password == null || password.isBlank()) {
+            return updatePassword(password, member);
+        } else if (!emailVerificationService.consumePasswordChange(member.getId().toString())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -10L,
+                    "message", "이메일 인증 후 비밀번호를 변경할 수 있습니다"
+            ));
+        }
+
+        ResponseEntity<?> result = updatePassword(password, member);
+        if (result.getStatusCode().is2xxSuccessful()) {
+            clearSession(request, response);
+        }
+
+        return result;
+    }
+
+    public ResponseEntity<?> withdraw(Member member, HttpServletRequest request, HttpServletResponse response) {
+        ResponseEntity<?> result = transactions.write(() -> deleteMember(member));
+        clearSession(request, response);
+
+        return result;
+    }
+
+    private void establishSession(Member member, HttpServletRequest request, HttpServletResponse response, String ipAddress) {
+        IssuedToken accessToken = tokenProvider.createAccessToken(member);
+        IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
+        refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress);
+        memberTokenCacheService.save(member, tokenProvider.refreshTokenDuration());
+        AuthenticationTokens tokens = new AuthenticationTokens(accessToken.value(), refreshToken.value(), accessToken.expiresAt(), refreshToken.expiresAt());
+        if (request != null) {
+            revokeSessionRefreshToken(cookieService.readCurrentRefreshToken(request));
+            cookieService.rememberRefreshToken(request, tokens.refreshToken());
+        }
+        cookieService.writeAccessToken(response, tokens.accessToken(), tokenProvider.accessTokenDuration());
+        cookieService.writeRefreshToken(response, tokens.refreshToken(), tokenProvider.refreshTokenDuration());
+    }
+
+    private void clearSession(HttpServletRequest request, HttpServletResponse response) {
+        revokeSessionRefreshToken(cookieService.readCurrentRefreshToken(request));
+        cookieService.clearAuthenticationCookies(response);
+        SecurityContextHolder.clearContext();
+    }
+
+    private void revokeSessionRefreshToken(String tokenValue) {
+        if (tokenValue == null || tokenValue.isBlank()) return;
+        try {
+            TokenClaims claims = tokenProvider.parse(tokenValue, TokenName.REFRESH.getValue());
+            RefreshToken oldToken = refreshTokenService.findOldToken(claims.jti());
+            if (oldToken != null) {
+                refreshTokenService.deleteOldToken(oldToken);
+                if (!refreshTokenService.existsByMemberIdAndExpiresAtAfter(oldToken.getMemberId(), Instant.now())) {
+                    memberTokenCacheService.delete(oldToken.getMemberId());
+                }
+            }
+        } catch (JwtValidationException ignored) {
+            // Logout remains idempotent for expired or malformed client tokens.
+        }
+    }
+
 }

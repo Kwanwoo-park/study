@@ -21,7 +21,6 @@ import spring.study.member.entity.Role;
 import spring.study.member.event.MemberChangedEvent;
 import spring.study.member.event.MemberDeletedEvent;
 import spring.study.common.entity.CommonVisibility;
-import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.member.repository.MemberRepository;
 import spring.study.common.dto.EntityIdProjection;
 
@@ -38,7 +37,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
-    private final VisibilityAccessPolicy visibilityAccessPolicy;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -75,11 +73,8 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    public List<MemberResponseDto> findName(String name, Member viewer) {
-        return memberRepository.findByNameContaining(name).stream()
-                .filter(member -> visibilityAccessPolicy.canViewMember(member, viewer))
-                .map(MemberResponseDto::new)
-                .toList();
+    public List<Member> findMembersByName(String name) {
+        return memberRepository.findByNameContaining(name);
     }
 
     @Transactional(readOnly = true)
@@ -91,6 +86,11 @@ public class MemberService implements UserDetailsService {
     public Member findMember(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
+    }
+
+    @Transactional(readOnly = true)
+    public Member findMemberOrNull(String email) {
+        return memberRepository.findByEmail(email).orElse(null);
     }
 
     @Transactional(readOnly = true)

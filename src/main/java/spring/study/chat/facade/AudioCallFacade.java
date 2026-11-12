@@ -107,6 +107,11 @@ public class AudioCallFacade {
         forwardToAvailableParticipants(call, null, AudioCallSignalResponse.adminTerminated(call.callId(), call.roomId()));
     }
 
+    public ResponseEntity<?> forceTerminateForAdmin(String callId) {
+        forceTerminate(callId);
+        return ResponseEntity.ok(Map.of("result", 1L, "message", "통화를 강제로 종료했습니다"));
+    }
+
     public ResponseEntity<?> iceServers(Member member) {
         return ResponseEntity.ok(Map.of("iceServers", iceServerService.createIceServers(member)));
     }

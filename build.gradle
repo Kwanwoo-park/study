@@ -54,9 +54,20 @@ tasks.withType(Test).configureEach {
 	systemProperty 'spring.jpa.properties.hibernate.dialect', 'org.hibernate.dialect.H2Dialect'
 }
 
-tasks.register('regressionTest', Test) {
+tasks.register('jsTest', Exec) {
 	group = 'verification'
-	description = 'Runs regression test classes.'
-	include '**/*RegressionTest.class'
-	shouldRunAfter tasks.named('test')
+	description = 'Runs the essential JavaScript tests using built-in Node.js tools.'
+	workingDir rootProject.projectDir
+	def scripts = fileTree('src/test/js').matching { include '**/*.test.cjs' }.files.sort()
+	commandLine([providers.gradleProperty('nodeExecutable').getOrElse('node'), '--test'] + scripts.collect { it.absolutePath })
+}
+
+tasks.named('test') {
+	dependsOn tasks.named('jsTest')
+}
+
+tasks.register('regressionTest') {
+	group = 'verification'
+	description = 'Compatibility alias for the essential Java and JavaScript suite.'
+	dependsOn tasks.named('test')
 }

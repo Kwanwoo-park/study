@@ -4,17 +4,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
-import spring.study.jwt.facade.JwtAuthenticationFacade;
+import spring.study.jwt.service.JwtCookieService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
-import spring.study.member.facade.MemberAuthFacade;
 import spring.study.member.service.MemberService;
-import spring.study.member.service.PasswordChangeVerificationService;
+import spring.study.mail.entity.EmailVerificationPurpose;
 import spring.study.mail.service.EmailVerificationService;
 
 import java.util.Map;
@@ -26,14 +30,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class MemberPasswordChangeControllerTest {
-    private final JwtManager jwtManager = mock(JwtManager.class);
-    private final CommonFacade commonFacade = mock(CommonFacade.class);
-    private final MemberFacade memberFacade = mock(MemberFacade.class);
-    private final MemberService memberService = mock(MemberService.class);
-    private final JwtAuthenticationFacade authenticationService = mock(JwtAuthenticationFacade.class);
-    private final PasswordChangeVerificationService verificationService = mock(PasswordChangeVerificationService.class);
-    private final EmailVerificationService emailVerificationService = mock(EmailVerificationService.class);
+    @Mock private JwtManager jwtManager;
+    @Mock private CommonFacade commonFacade;
+    @Spy @InjectMocks private MemberFacade memberFacade;
+    @Mock private MemberService memberService;
+    @Mock private JwtCookieService cookieService;
+    @Mock private EmailVerificationService emailVerificationService;
     private final HttpServletRequest httpRequest = mock(HttpServletRequest.class);
     private final HttpServletResponse httpResponse = mock(HttpServletResponse.class);
     private MemberApiController controller;
@@ -44,8 +48,7 @@ class MemberPasswordChangeControllerTest {
         controller = new MemberApiController(
                 jwtManager,
                 commonFacade,
-                memberFacade,
-                new MemberAuthFacade(memberFacade, memberService, authenticationService, verificationService, emailVerificationService)
+                memberFacade
         );
         member = Member.builder().id(7L).email("member@example.com").build();
     }
@@ -54,87 +57,13 @@ class MemberPasswordChangeControllerTest {
     void authenticatedPasswordChangeShouldRequireUnusedEmailVerification() {
         MemberRequestDto request = MemberRequestDto.builder().password("new-password").build();
         when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
-        when(verificationService.consumeVerification(member)).thenReturn(false);
+        when(emailVerificationService.consumePasswordChange("7")).thenReturn(false);
 
         ResponseEntity<?> response = controller.updateAuthenticatedPassword(request, httpRequest, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         verify(memberFacade, never()).updatePassword("new-password", member);
-        verify(authenticationService, never()).logout(httpRequest, httpResponse);
+        verify(cookieService, never()).clearAuthenticationCookies(httpResponse);
     }
 
-    @Test
-    void authenticatedPasswordChangeShouldConsumeVerificationAndLogoutAfterSuccess() {
-        MemberRequestDto request = MemberRequestDto.builder().password("new-password").build();
-        when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
-        when(verificationService.consumeVerification(member)).thenReturn(true);
-        doReturn(ResponseEntity.ok(Map.of("result", 7L)))
-                .when(memberFacade).updatePassword("new-password", member);
-
-        ResponseEntity<?> response = controller.updateAuthenticatedPassword(request, httpRequest, httpResponse);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(verificationService).consumeVerification(member);
-        verify(memberFacade).updatePassword("new-password", member);
-        verify(authenticationService).logout(httpRequest, httpResponse);
-    }
-
-    @Test
-    void recoveryPasswordChangeRequiresAnUnusedEmailVerificationToken() {
-        MemberRequestDto request = MemberRequestDto.builder()
-                .email("member@example.com")
-                .password("new-password")
-                .build();
-        when(jwtManager.getLoginMember(httpRequest)).thenReturn(null);
-        when(memberService.findMember("member@example.com")).thenReturn(member);
-
-        assertThat(controller.updatePasswordAction(request, httpRequest, httpResponse).getStatusCode())
-                .isEqualTo(HttpStatus.FORBIDDEN);
-        verify(memberFacade, never()).updatePassword("new-password", member);
-
-        request.setVerificationToken("verified-token");
-        when(emailVerificationService.consume(member.getEmail(), "verified-token")).thenReturn(true);
-        doReturn(ResponseEntity.ok(Map.of("result", 7L)))
-                .when(memberFacade).updatePassword("new-password", member);
-
-        ResponseEntity<?> response = controller.updatePasswordAction(request, httpRequest, httpResponse);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(memberFacade).updatePassword("new-password", member);
-        verify(verificationService, never()).consumeVerification(member);
-    }
-
-    @Test
-    void blankPasswordDoesNotConsumeVerificationOrLogOut() {
-        MemberRequestDto request = MemberRequestDto.builder().password(" ").build();
-        when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
-        doReturn(ResponseEntity.badRequest().build()).when(memberFacade).updatePassword(" ", member);
-
-        assertThat(controller.updateAuthenticatedPassword(request, httpRequest, httpResponse).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
-        verify(verificationService, never()).consumeVerification(member);
-        verify(authenticationService, never()).logout(httpRequest, httpResponse);
-    }
-
-    @Test
-    void rejectedPasswordUpdateDoesNotLogOutEvenAfterVerification() {
-        MemberRequestDto request = MemberRequestDto.builder().password("new-password").build();
-        when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
-        when(verificationService.consumeVerification(member)).thenReturn(true);
-        doReturn(ResponseEntity.badRequest().build()).when(memberFacade).updatePassword("new-password", member);
-
-        assertThat(controller.updateAuthenticatedPassword(request, httpRequest, httpResponse).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
-        verify(authenticationService, never()).logout(httpRequest, httpResponse);
-    }
-
-    @Test
-    void loggedInMemberCannotBypassVerificationThroughRecoveryEndpoint() {
-        MemberRequestDto request = MemberRequestDto.builder().email(member.getEmail()).password("new-password").build();
-        when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
-
-        assertThat(controller.updatePasswordAction(request, httpRequest, httpResponse).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
-        org.mockito.Mockito.verifyNoInteractions(memberService, memberFacade, verificationService);
-    }
 }

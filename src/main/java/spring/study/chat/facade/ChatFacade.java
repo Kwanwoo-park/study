@@ -1,5 +1,17 @@
 package spring.study.chat.facade;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import org.springframework.security.core.context.SecurityContextHolder;
+import spring.study.common.service.ModerationService;
+import spring.study.forbidden.entity.Status;
+import spring.study.forbidden.service.ForbiddenService;
+import spring.study.jwt.service.JwtCookieService;
+import spring.study.jwt.service.MemberTokenCacheService;
+import spring.study.jwt.service.RefreshTokenService;
+import spring.study.notification.entity.Group;
+import spring.study.notification.service.NotificationService;
+
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +33,6 @@ import spring.study.chat.entity.MessageType;
 import spring.study.chat.entity.ChatMessageDeleteScope;
 import spring.study.chat.entity.ChatMessageStatus;
 import spring.study.chat.service.*;
-import spring.study.common.facade.ModerationFacade;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -33,13 +44,19 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatFacade {
+    private static final DateTimeFormatter SANCTION_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private final ForbiddenService forbiddenService;
+    private final NotificationService notificationService;
+    private final MemberTokenCacheService tokenCacheService;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtCookieService jwtCookieService;
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
     private final ChatMessageHiddenService messageHiddenService;
     private final ChatMessageImgService messageImgService;
     private final MemberService memberService;
-    private final ModerationFacade moderationService;
+    private final ModerationService moderationService;
     private final ImageS3Service imageS3Service;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -133,7 +150,7 @@ public class ChatFacade {
     }
 
     public ResponseEntity<?> messageCheck(String message, Member member, HttpServletResponse response) {
-        int risk = moderationService.validate(message, member, response);
+        int risk = validateModeratedContent(message, member, response);
 
         if (risk != 0) {
             if (risk == -99) {
@@ -214,7 +231,7 @@ public class ChatFacade {
         messageService.validateOwner(originalMessage, member);
 
         String content = requestDto.getMessage();
-        int risk = moderationService.validate(content, member, response);
+        int risk = validateModeratedContent(content, member, response);
 
         if (risk != 0) {
             if (risk == -99) {
@@ -299,4 +316,61 @@ public class ChatFacade {
     private void broadcast(ChatMessageEventDto event) {
         messagingTemplate.convertAndSend("/sub/chat/room/" + event.roomId(), event);
     }
+
+    private int validateModeratedContent(String checkStr, Member member, HttpServletResponse response) {
+        int risk = evaluateModeration(checkStr, member);
+        return risk == 3 ? handleModerationBlockRisk(member, response) : risk;
+    }
+
+    private int evaluateModeration(String content, Member member) {
+        if (content == null || content.isBlank())
+            return -99;
+
+        int risk = forbiddenService.findWordList(Status.APPROVAL, content);
+
+        if (risk == 3 || risk == 0)
+            return risk;
+
+        return moderationService.evaluate(member, risk);
+    }
+
+    private int handleModerationBlockRisk(Member member, HttpServletResponse response) {
+        if (member.getRole() == Role.ADMIN) {
+            notificationService.createNotification(
+                    member,
+                    "경고일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " / 사유: 금칙어 사용 (관리자 계정 정지 제외)",
+                    Group.ADMIN
+            );
+            moderationService.clear(member);
+
+            return 1;
+        }
+
+        blockModeratedMember(member, response);
+        return 3;
+    }
+
+    private void blockModeratedMember(Member member, HttpServletResponse response) {
+        notificationService.createNotification(
+                member,
+                "금지일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " (영구) / 사유: 금칙어 사용",
+                Group.ADMIN
+        );
+
+        notificationService.createNotification(
+                memberService.findAdministrator(),
+                member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
+                Group.ADMIN
+        );
+
+        memberService.updateRole(member.getId(), Role.DENIED);
+
+        refreshTokenService.revoke(member.getId());
+        tokenCacheService.delete(member.getId());
+        jwtCookieService.clearAuthenticationCookies(response);
+        SecurityContextHolder.clearContext();
+
+        moderationService.clear(member);
+    }
+
 }

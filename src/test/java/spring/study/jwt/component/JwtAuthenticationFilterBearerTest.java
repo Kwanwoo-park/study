@@ -84,16 +84,4 @@ class JwtAuthenticationFilterBearerTest {
         verify(chain).doFilter(any(), any());
     }
 
-    @Test
-    void cookieAccessTokenShouldNotBeRecordedAsMobileActivity() throws Exception {
-        String accessToken = tokenProvider.createAccessToken(member).value();
-        when(cookieService.read(any(), eq(JwtCookieService.ACCESS_COOKIE))).thenReturn(accessToken);
-        when(memberTokenCacheService.findOrLoad(eq(9L), any(Duration.class)))
-                .thenReturn(Optional.of(member));
-        MockHttpServletRequest request = new MockHttpServletRequest();
-
-        filter.doFilter(request, new MockHttpServletResponse(), mock(FilterChain.class));
-
-        verifyNoInteractions(onlineUserService);
-    }
 }

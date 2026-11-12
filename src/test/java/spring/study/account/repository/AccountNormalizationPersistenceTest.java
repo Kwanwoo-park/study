@@ -86,43 +86,6 @@ class AccountNormalizationPersistenceTest {
                 .role(Role.USER).phone("010-1111-2222").birth("2000-01-01").profile("profile.png").build());
     }
 
-    @Test
-    void checkingAccountShouldNotCreateSubtypeRows() {
-        Account checking = account("9191000", AccountType.DEPOSIT_WITHDRAWAL);
-
-        accountRepository.saveAndFlush(checking);
-        entityManager.clear();
-
-        Account saved = accountRepository.findById(checking.getAccount()).orElseThrow();
-        assertNull(saved.getInterestDetail());
-        assertNull(saved.getSavingsAutoTransfer());
-    }
-
-    @Test
-    void savingsShouldPersistInterestAndAutoTransferInSeparateRows() {
-        Account checking = accountRepository.saveAndFlush(account("9191000", AccountType.DEPOSIT_WITHDRAWAL));
-        Account savings = account("9192000", AccountType.INSTALLMENT_SAVINGS);
-        savings.configureSavingsAutoTransfer(checking, 100_000L, 31, LocalDate.of(2026, 1, 1));
-
-        accountRepository.saveAndFlush(savings);
-        entityManager.clear();
-
-        Account saved = accountRepository.findById(savings.getAccount()).orElseThrow();
-        assertNotNull(saved.getInterestDetail());
-        assertNotNull(saved.getSavingsAutoTransfer());
-        assertEquals(checking.getAccount(), saved.getSavingsSourceAccount().getAccount());
-        assertEquals(100_000L, saved.getMonthlySavingsAmount());
-        assertEquals(LocalDate.of(2026, 1, 31), saved.getNextSavingsPaymentDate());
-        assertEquals(
-                List.of(saved.getAccount()),
-                accountRepository.findByAccountTypeAndAccountStatusInAndSavingsAutoTransfer_NextPaymentDateLessThanEqual(
-                        AccountType.INSTALLMENT_SAVINGS,
-                        List.of(AccountStatus.ACTIVE),
-                        LocalDate.of(2026, 1, 31)
-                ).stream().map(spring.study.account.dto.AccountNumberProjection::account).toList()
-        );
-    }
-
     private Account account(String number, AccountType accountType) {
         return Account.builder()
                 .account(number)

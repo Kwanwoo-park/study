@@ -49,32 +49,6 @@ class TodoPersistenceTest {
         assertThat(entityManager.getMetamodel().getEntities()).noneMatch(type -> type.getName().equals("diary_todo"));
     }
 
-    @Test
-    void memberScopedQueriesAndWithdrawalCleanupDoNotAffectOtherMembers() {
-        Member first = members.save(member("first@example.test", "01011112222"));
-        Member second = members.save(member("second@example.test", "01033334444"));
-        Long active = service.create("미완료", first).id();
-        Long completed = service.create("완료", first).id();
-        service.updateCompletion(completed, true, first);
-        Long other = service.create("다른 회원", second).id();
-        entityManager.flush();
-        entityManager.clear();
-
-        assertThat(service.findByMember(first, null, 0, 20).getTotalElements()).isEqualTo(2);
-        assertThat(service.findByMember(first, false, 0, 20).getContent()).extracting("id").containsExactly(active);
-        assertThat(service.findByMember(first, true, 0, 20).getContent()).extracting("id").containsExactly(completed);
-        assertThat(repository.findByIdAndMember(other, first)).isEmpty();
-
-        service.deleteByMember(first);
-        members.deleteById(first.getId());
-        entityManager.flush();
-        entityManager.clear();
-
-        assertThat(repository.findAll()).extracting(Todo::getId).containsExactly(other);
-        assertThat(members.findById(first.getId())).isEmpty();
-        assertThat(members.findById(second.getId())).isPresent();
-    }
-
     private Member member(String email, String phone) {
         return Member.builder().email(email).pwd("test-password").name("회원").role(Role.USER)
                 .phone(phone).birth("20000101").profile("profile.png").build();

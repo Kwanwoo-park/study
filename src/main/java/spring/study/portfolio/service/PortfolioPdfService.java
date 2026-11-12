@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.server.ResponseStatusException;
+import spring.study.portfolio.component.PortfolioPdfRenderer;
 
 import java.io.IOException;
 import java.io.InputStream;

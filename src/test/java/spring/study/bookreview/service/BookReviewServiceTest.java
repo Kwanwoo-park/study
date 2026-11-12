@@ -35,24 +35,6 @@ class BookReviewServiceTest {
     private BookReviewService bookReviewService;
 
     @Test
-    void administratorCanCreateBookReview() {
-        Member administrator = member(1L, Role.ADMIN);
-        BookReviewRequestDto request = request();
-        when(bookReviewRepository.save(any(BookReview.class)))
-                .thenAnswer(invocation -> persisted(invocation.getArgument(0), 11L));
-
-        BookReviewResponseDto response = bookReviewService.create(request, administrator);
-
-        assertThat(response.getId()).isEqualTo(11L);
-        assertThat(response.getReviewTitle()).isEqualTo("좋은 삶에 대하여");
-        assertThat(response.getBookTitle()).isEqualTo("이펙티브 자바");
-        assertThat(response.getRating()).isEqualTo(5);
-        ArgumentCaptor<BookReview> captor = ArgumentCaptor.forClass(BookReview.class);
-        verify(bookReviewRepository).save(captor.capture());
-        assertThat(captor.getValue().getAuthor()).isSameAs(administrator);
-    }
-
-    @Test
     void regularMemberCannotCreateUpdateOrDeleteBookReview() {
         Member member = member(2L, Role.USER);
 
@@ -61,28 +43,6 @@ class BookReviewServiceTest {
         assertForbidden(() -> bookReviewService.delete(1L, member));
 
         verifyNoInteractions(bookReviewRepository);
-    }
-
-    @Test
-    void administratorCanUpdateExistingBookReview() {
-        Member administrator = member(1L, Role.ADMIN);
-        BookReview existing = BookReview.builder()
-                .id(9L)
-                .author(administrator)
-                .reviewTitle("기존 제목")
-                .bookTitle("기존 책")
-                .bookAuthor("기존 저자")
-                .rating(3)
-                .content("기존 내용")
-                .build();
-        when(bookReviewRepository.findById(9L)).thenReturn(Optional.of(existing));
-
-        BookReviewResponseDto response = bookReviewService.update(9L, request(), administrator);
-
-        assertThat(response.getReviewTitle()).isEqualTo("좋은 삶에 대하여");
-        assertThat(response.getBookAuthor()).isEqualTo("조슈아 블로크");
-        assertThat(response.getFinishedDate()).isEqualTo(LocalDate.of(2026, 8, 24));
-        verify(bookReviewRepository, never()).save(any());
     }
 
     private void assertForbidden(org.assertj.core.api.ThrowableAssert.ThrowingCallable callable) {

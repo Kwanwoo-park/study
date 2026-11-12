@@ -16,7 +16,7 @@ import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
-import spring.study.kafka.service.MessageProducer;
+import spring.study.kafka.component.MessageProducer;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
 import spring.study.notification.entity.Group;

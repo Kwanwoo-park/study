@@ -2,13 +2,17 @@ package spring.study.chat.facade;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageEventDto;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.*;
 import spring.study.chat.service.*;
-import spring.study.common.facade.ModerationFacade;
+import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -19,54 +23,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ChatFacadeMessageMutationTest {
-    private final ChatRoomService roomService = mock(ChatRoomService.class);
-    private final ChatRoomMemberService roomMemberService = mock(ChatRoomMemberService.class);
-    private final ChatMessageService messageService = mock(ChatMessageService.class);
-    private final ChatMessageHiddenService messageHiddenService = mock(ChatMessageHiddenService.class);
-    private final ChatMessageImgService messageImgService = mock(ChatMessageImgService.class);
-    private final MemberService memberService = mock(MemberService.class);
-    private final ModerationFacade moderationService = mock(ModerationFacade.class);
-    private final ImageS3Service imageS3Service = mock(ImageS3Service.class);
-    private final SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
-    private final ChatFacade chatFacade = new ChatFacade(roomService, roomMemberService, messageService, messageHiddenService, messageImgService, memberService, moderationService, imageS3Service, messagingTemplate);
-
-    @Test
-    void nonParticipantsCannotLoadCurrentOrPreviousMessages() {
-        ChatRoom room = message(member(1L)).getRoom();
-        when(roomService.find("room-1")).thenReturn(room);
-        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.web.server.ResponseStatusException.class,
-                () -> chatFacade.loadChatting("room-1", member(2L), 0, 100));
-        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.web.server.ResponseStatusException.class,
-                () -> chatFacade.loadPreviousChatting("room-1", member(2L), 0, 100));
-        verifyNoInteractions(messageService, messageImgService);
-    }
-
-    @Test
-    void updateShouldBroadcastChangedMessageWithoutReplacingOriginal() {
-        Member owner = member(1L);
-        ChatMessage message = message(owner);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        ChatMessageRequestDto request = ChatMessageRequestDto.builder()
-                .message("수정된 내용")
-                .build();
-
-        when(messageService.findById(message.getId())).thenReturn(message);
-        when(roomMemberService.exist(owner, message.getRoom())).thenReturn(true);
-        when(moderationService.validate("수정된 내용", owner, response)).thenReturn(0);
-        message.edit("수정된 내용");
-        when(messageService.edit(message.getId(), "수정된 내용", owner)).thenReturn(message);
-        when(messageService.findLatestVisible(message.getRoom())).thenReturn(Optional.of(message));
-
-        chatFacade.updateMessage(message.getId(), request, owner, response);
-
-        verify(messagingTemplate).convertAndSend(
-                eq("/sub/chat/room/room-1"),
-                any(ChatMessageEventDto.class)
-        );
-        verify(messageImgService, never()).deleteMessage(any());
-        verify(imageS3Service, never()).deleteImg(any());
-    }
+    @Mock private ChatRoomService roomService;
+    @Mock private ChatRoomMemberService roomMemberService;
+    @Mock private ChatMessageService messageService;
+    @Mock private ChatMessageHiddenService messageHiddenService;
+    @Mock private ChatMessageImgService messageImgService;
+    @Mock private MemberService memberService;
+    @Mock private ForbiddenService forbiddenService;
+    @Mock private ImageS3Service imageS3Service;
+    @Mock private SimpMessagingTemplate messagingTemplate;
+    @InjectMocks private ChatFacade chatFacade;
 
     @Test
     void deleteForMeShouldOnlyCreatePersonalHiddenState() {

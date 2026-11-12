@@ -388,14 +388,13 @@ JAR 외에 `tools/portfolio-pdf` 디렉터리와 설치된 `node_modules`도 서
 
 PDF에는 로컬 Noto Sans KR 폰트를 포함합니다. 렌더러는 외부 사이트나 사용자가 지정한 URL에 접근하지 않고 배포된 포트폴리오 파일만 처리하며, 페이지 수와 본문 누락을 검증한 PDF만 캐시에 반영합니다.
 
-수동 PDF 확인 및 실제 Chromium 통합 테스트(도구 설치 후):
+수동 PDF 확인(도구 설치 후, 기본 테스트와 별도):
 
 ```bash
 node tools/portfolio-pdf/generate.mjs
-PORTFOLIO_PDF_INTEGRATION=true ./gradlew test --tests 'spring.study.portfolio.*' --rerun-tasks
 ```
 
-수동 생성 결과는 `output/pdf/portfolio.pdf`입니다. PowerShell의 통합 테스트 환경 변수는 `$env:PORTFOLIO_PDF_INTEGRATION = 'true'`로 설정합니다. 프록시를 사용한다면 첫 생성 요청을 위해 읽기 제한 시간을 60초 이상으로 두세요.
+수동 생성 결과는 `output/pdf/portfolio.pdf`입니다. 프록시를 사용한다면 첫 생성 요청을 위해 읽기 제한 시간을 60초 이상으로 두세요.
 
 ## TURN 배포 설정
 
@@ -423,19 +422,27 @@ STUN만으로는 대칭 NAT, 회사/통신사 방화벽 등 일부 네트워크�
 
 ## 테스트
 
-전체 테스트:
+핵심 테스트는 **Java 77건 + JavaScript 23건 = 총 100건**입니다. 파라미터별 실행을 포함한 개수이며, 실행 제외 설정 없이 실제 테스트 코드를 핵심 사례로 정리했습니다. JDK 17과 Node.js 22.13 이상이 필요합니다. JS 테스트는 Node 기본 모듈만 사용하므로 별도 npm 설치는 필요 없습니다.
+
+Java와 JS 함께 실행 (`build`에도 동일하게 포함):
 
 ```bash
 ./gradlew test
 ```
 
-회귀 테스트:
+JS만 실행:
+
+```bash
+./gradlew jsTest
+```
+
+기존 회귀 테스트 명령도 같은 핵심 테스트 구성을 실행합니다:
 
 ```bash
 ./gradlew regressionTest
 ```
 
-주요 테스트 범위는 계좌 상품·이자·자동이체, 신고·상소, JWT와 비밀번호 변경 인증, Kafka outbox, 채팅 batch 저장, 음성 통화 signaling/Redis 상태, API security, template/static JavaScript 회귀입니다.
+주요 범위는 인증·이메일 인증, 계좌 잔액·거래 권한·이자·자동이체, 채팅 수정/삭제·음성 통화, 신고·상소, Kafka outbox 재시도, 알림 읽음 동기화, 관리자 파일·메모 접근 제어, 모바일 이미지 업로드입니다. 선택 기준과 분야별 개수는 [핵심 테스트 구성](docs/testing.md)을 참고하세요. Node 실행 경로가 별도라면 `./gradlew test -PnodeExecutable=/절대경로/node`로 지정할 수 있습니다.
 
 ## 주요 경로
 

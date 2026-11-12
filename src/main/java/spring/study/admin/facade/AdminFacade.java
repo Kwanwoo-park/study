@@ -18,12 +18,11 @@ import spring.study.board.service.BoardService;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.service.ChatMessageService;
-import spring.study.chat.facade.AudioCallFacade;
 import spring.study.chat.service.ChatPresenceService;
 import spring.study.common.service.IpLocationService;
 import spring.study.jwt.dto.AdminTokenSessionResponse;
 import spring.study.jwt.entity.RefreshToken;
-import spring.study.kafka.service.KafkaQueueQueryService;
+import spring.study.kafka.service.KafkaOutboxEventService;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -55,11 +54,10 @@ public class AdminFacade {
     private final AppealService appealService;
     private final ChatMessageService chatMessageService;
     private final SystemIncidentService systemIncidentService;
-    private final AudioCallFacade audioCallFacade;
     private final OnlineUserService onlineUserService;
     private final RefreshTokenService refreshTokenService;
     private final ChatPresenceService chatPresenceService;
-    private final KafkaQueueQueryService kafkaQueueQueryService;
+    private final KafkaOutboxEventService outboxEventService;
     private final SystemDiagnosticsService systemDiagnosticsService;
     private final NotificationService notificationService;
 
@@ -203,14 +201,6 @@ public class AdminFacade {
         ));
     }
 
-    public ResponseEntity<?> forceTerminateAudioCall(String callId) {
-        audioCallFacade.forceTerminate(callId);
-        return ResponseEntity.ok(Map.of(
-                "result", 1L,
-                "message", "통화를 강제로 종료했습니다"
-        ));
-    }
-
     public ResponseEntity<?> memberPermit(MemberRequestDto requestDto) {
         Long targetMemberId = requestDto.getId();
 
@@ -326,7 +316,7 @@ public class AdminFacade {
     }
 
     private Map<String, Object> KafkaQueue() {
-        KafkaQueueCounts kafka = kafkaQueueQueryService.counts();
+        KafkaQueueCounts kafka = outboxEventService.counts();
 
         return Map.of(
                 "kafkaPending", kafka.pending(),

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.admin.facade.AdminFacade;
+import spring.study.chat.facade.AudioCallFacade;
 import spring.study.appeal.entity.AppealStatus;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
@@ -30,6 +31,7 @@ public class AdminApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final AdminFacade adminFacade;
+    private final AudioCallFacade audioCallFacade;
     private final MemberFacade memberFacade;
     private final ForbiddenFacade forbiddenFacade;
     private final ReportFacade reportFacade;
@@ -367,6 +369,6 @@ public class AdminApiController {
             return commonFacade.wrongAccess();
         }
 
-        return adminFacade.forceTerminateAudioCall(callId);
+        return audioCallFacade.forceTerminateForAdmin(callId);
     }
 }

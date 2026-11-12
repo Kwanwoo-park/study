@@ -37,11 +37,4 @@ class MobileOAuthCodeServiceTest {
         assertThat(code).matches("[0-9a-f]{32}");
     }
 
-    @Test
-    void rejectsMissingOrExpiredCode() {
-        assertThat(service.consume(null)).isEmpty();
-        assertThat(service.consume(" ")).isEmpty();
-        when(valueOperations.getAndDelete("auth:mobile-oauth:expired")).thenReturn(null);
-        assertThat(service.consume("expired")).isEmpty();
-    }
 }

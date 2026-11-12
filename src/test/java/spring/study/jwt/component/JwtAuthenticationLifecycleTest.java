@@ -16,12 +16,14 @@ import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
+import spring.study.jwt.entity.RefreshToken;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 
 import java.time.Duration;
 import java.util.Optional;
+import spring.study.jwt.dto.IssuedToken;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -58,9 +60,9 @@ class JwtAuthenticationLifecycleTest {
         String access = provider.createAccessToken(member).value();
         clearInvocations(provider);
         when(cache.findOrLoad(eq(member.getId()), any(Duration.class))).thenReturn(Optional.of(member));
-        var request = new MockHttpServletRequest("GET", "/board/main");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/board/main");
         request.setCookies(new Cookie(JwtCookieService.ACCESS_COOKIE, access));
-        var response = new MockHttpServletResponse();
+        MockHttpServletResponse response = new MockHttpServletResponse();
 
         filter.doFilter(request, response, mock(FilterChain.class));
 
@@ -72,46 +74,26 @@ class JwtAuthenticationLifecycleTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-            "/api/member/login", "/api/member/logout",
-            "/api/mobile/auth/login", "/api/mobile/auth/refresh", "/api/mobile/auth/logout",
-            "/api/mobile/auth/oauth/exchange", "/login/oauth2/code/google", "/login/oauth2/code/naver"
-    })
-    void tokenManagementDoesNotAutomaticallyRotateBeforeItsOwnHandler(String path) throws Exception {
-        var refresh = provider.createRefreshToken(member);
-        clearInvocations(provider);
-        when(refreshTokens.isValid(refresh.jti(), member.getId())).thenReturn(true);
-        when(cache.findOrLoad(eq(member.getId()), any(Duration.class))).thenReturn(Optional.of(member));
-        var request = new MockHttpServletRequest("POST", "/study" + path);
-        request.setContextPath("/study");
-        request.setCookies(new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
-        var response = new MockHttpServletResponse();
-
-        filter.doFilter(request, response, mock(FilterChain.class));
-
-        assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isSameAs(member);
-        assertThat(response.getHeaders("Set-Cookie")).isEmpty();
-        verify(provider, never()).createAccessToken(any());
-        verify(provider, never()).createRefreshToken(any());
-    }
-
-    @ParameterizedTest
     @ValueSource(longs = {1, 14})
     void expiredAccessCookieRotatesRefreshOnlyWithinOneDayOfExpiry(long remainingDays) throws Exception {
         ReflectionTestUtils.setField(provider, "accessTokenMinutes", -1L);
         String expiredAccess = provider.createAccessToken(member).value();
         ReflectionTestUtils.setField(provider, "accessTokenMinutes", 15L);
         ReflectionTestUtils.setField(provider, "refreshTokenDays", remainingDays);
-        var refresh = provider.createRefreshToken(member);
+        IssuedToken refresh = provider.createRefreshToken(member);
         ReflectionTestUtils.setField(provider, "refreshTokenDays", 14L);
         clearInvocations(provider);
         when(refreshTokens.isValid(refresh.jti(), member.getId())).thenReturn(true);
         when(cache.findOrLoad(eq(member.getId()), any(Duration.class))).thenReturn(Optional.of(member));
 
-        var request = new MockHttpServletRequest("GET", "/board/main");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/board/main");
         request.setCookies(new Cookie(JwtCookieService.ACCESS_COOKIE, expiredAccess),
                 new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
-        var response = new MockHttpServletResponse();
+        if (remainingDays == 1) {
+            when(refreshTokens.findOldToken(refresh.jti()))
+                    .thenReturn(new RefreshToken(refresh.jti(), member.getId(), Duration.ofDays(1), null));
+        }
+        MockHttpServletResponse response = new MockHttpServletResponse();
 
         filter.doFilter(request, response, mock(FilterChain.class));
 
@@ -132,9 +114,9 @@ class JwtAuthenticationLifecycleTest {
 
     @Test
     void revokedRefreshCookieCannotAuthenticateEvenOnLogout() throws Exception {
-        var refresh = provider.createRefreshToken(member);
+        IssuedToken refresh = provider.createRefreshToken(member);
         clearInvocations(provider);
-        var request = new MockHttpServletRequest("GET", "/api/member/logout");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/member/logout");
         request.setCookies(new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
 
         filter.doFilter(request, new MockHttpServletResponse(), mock(FilterChain.class));

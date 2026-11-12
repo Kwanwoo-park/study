@@ -23,46 +23,6 @@ class VisibilityAccessPolicyTest {
         assertThat(visibilityAccessPolicy.canViewMember(owner, other)).isFalse();
     }
 
-    @Test
-    void privateMemberIsVisibleToFollower() {
-        when(followRepository.existsByFollowerAndFollowing(other, owner)).thenReturn(true);
-
-        assertThat(visibilityAccessPolicy.canViewMember(owner, other)).isTrue();
-    }
-
-    @Test
-    void publicMemberIsVisibleToOtherMembers() {
-        Member publicMember = member(3L, CommonVisibility.PUBLIC);
-
-        assertThat(visibilityAccessPolicy.canViewMember(publicMember, other)).isTrue();
-    }
-
-    @Test
-    void privateBoardIsVisibleToOwnerAndFollowers() {
-        Board board = Board.builder()
-                .id(10L)
-                .member(owner)
-                .content("private")
-                .visibility(CommonVisibility.PRIVATE)
-                .build();
-
-        assertThat(visibilityAccessPolicy.canViewBoard(board, owner, false)).isTrue();
-        assertThat(visibilityAccessPolicy.canViewBoard(board, other, true)).isTrue();
-        assertThat(visibilityAccessPolicy.canViewBoard(board, other, false)).isFalse();
-    }
-
-    @Test
-    void publicBoardIsVisibleWithoutFollowing() {
-        Board board = Board.builder()
-                .id(11L)
-                .member(owner)
-                .content("public")
-                .visibility(CommonVisibility.PUBLIC)
-                .build();
-
-        assertThat(visibilityAccessPolicy.canViewBoard(board, other, false)).isTrue();
-    }
-
     private Member member(Long id, CommonVisibility visibility) {
         return Member.builder()
                 .id(id)

@@ -13,7 +13,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.ChannelTopic;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.notification.component.NotificationRealtimeSubscriber;
-import spring.study.notification.service.NotificationRealtimePublisher;
+import spring.study.notification.component.NotificationRealtimePublisher;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Configuration

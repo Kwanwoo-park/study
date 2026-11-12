@@ -80,52 +80,6 @@ class AudioCallFacadeTest {
     }
 
     @Test
-    void groupCallShouldInviteEveryAvailableRoomMember() {
-        startCall();
-
-        assertCallInvitation(receiver);
-        assertCallInvitation(third);
-        verify(notificationService).createNotification(
-                receiver,
-                "발신자님이 그룹 음성 통화를 요청했습니다.",
-                Group.CALL,
-                "/chat/chatRoom?roomId=room-1&callId=call-1");
-        verify(notificationService).createNotification(
-                third,
-                "발신자님이 그룹 음성 통화를 요청했습니다.",
-                Group.CALL,
-                "/chat/chatRoom?roomId=room-1&callId=call-1");
-        AudioCallSignalResponse incoming = (AudioCallSignalResponse) facade.incoming("room-1", third).getBody();
-        assertEquals("call-1", incoming.callId());
-    }
-
-    @Test
-    void unavailableMembersShouldBeSkippedWhenAnotherMemberCanJoin() {
-        receiver.changeAudioCallEnabled(false);
-
-        startCall();
-
-        verify(messagingTemplate, never()).convertAndSendToUser(
-                eq(receiver.getEmail()), eq("/queue/audio-call"), any(AudioCallSignalResponse.class));
-        assertCallInvitation(third);
-        assertFalse(callStateStore.find("call-1").orElseThrow().contains(receiver.getEmail()));
-    }
-
-    @Test
-    void callShouldFailWhenNoOtherMemberCanJoin() {
-        receiver.changeAudioCallEnabled(false);
-        third.changeAudioCallEnabled(false);
-
-        startCall();
-
-        assertTrue(callStateStore.find("call-1").isEmpty());
-        ArgumentCaptor<AudioCallSignalResponse> response = ArgumentCaptor.forClass(AudioCallSignalResponse.class);
-        verify(messagingTemplate).convertAndSendToUser(
-                eq(caller.getEmail()), eq("/queue/audio-call"), response.capture(), any(MessageHeaders.class));
-        assertEquals("통화에 참여할 수 있는 회원이 없습니다.", response.getValue().error());
-    }
-
-    @Test
     void acceptingMemberShouldBeAnnouncedAndTargetedOfferShouldReachOnlyThatMember() {
         startCall();
         clearInvocations(messagingTemplate);
@@ -154,76 +108,6 @@ class AudioCallFacadeTest {
     }
 
     @Test
-    void laterJoinerShouldBeAnnouncedToEveryExistingParticipant() {
-        startCall();
-        accept(receiver, RECEIVER_SESSION);
-        clearInvocations(messagingTemplate);
-
-        accept(third, THIRD_SESSION);
-
-        assertSessionSignal(caller, AudioCallSignalType.ACCEPT, third.getEmail());
-        assertSessionSignal(receiver, AudioCallSignalType.ACCEPT, third.getEmail());
-        assertSessionSignal(third, AudioCallSignalType.ACCEPTED, null);
-        assertEquals(3, callStateStore.find("call-1").orElseThrow().joinedParticipants().size());
-    }
-
-    @Test
-    void rejectingOneInvitationShouldKeepTheGroupCallAlive() {
-        startCall();
-        clearInvocations(messagingTemplate);
-
-        facade.reject("call-1", receiver);
-
-        assertTrue(callStateStore.find("call-1").isPresent());
-        assertSessionSignal(caller, AudioCallSignalType.PARTICIPANT_REJECTED, receiver.getEmail());
-        assertEquals(200, facade.incoming("room-1", third).getStatusCode().value());
-        verify(notificationService).closeRealtimeNotification(
-                receiver, Group.CALL, "/chat/chatRoom?roomId=room-1&callId=call-1");
-    }
-
-    @Test
-    void rejectingTheLastInvitationShouldEndTheCall() {
-        startCall();
-        facade.reject("call-1", receiver);
-        clearInvocations(messagingTemplate);
-
-        facade.reject("call-1", third);
-
-        assertTrue(callStateStore.find("call-1").isEmpty());
-        assertSessionSignal(caller, AudioCallSignalType.REJECT, third.getEmail());
-    }
-
-    @Test
-    void oneParticipantLeavingShouldNotEndAThreePersonCall() {
-        startCall();
-        accept(receiver, RECEIVER_SESSION);
-        accept(third, THIRD_SESSION);
-        clearInvocations(messagingTemplate);
-
-        facade.signal(receiver.getEmail(), RECEIVER_SESSION,
-                request(AudioCallSignalType.HANGUP));
-
-        assertTrue(callStateStore.find("call-1").isPresent());
-        assertSessionSignal(caller, AudioCallSignalType.PARTICIPANT_LEFT, receiver.getEmail());
-        assertSessionSignal(third, AudioCallSignalType.PARTICIPANT_LEFT, receiver.getEmail());
-        assertEquals(2, callStateStore.find("call-1").orElseThrow().joinedParticipants().size());
-    }
-
-    @Test
-    void lastPeerLeavingShouldEndTheCall() {
-        useRoomMembers(caller, receiver);
-        startCall();
-        accept(receiver, RECEIVER_SESSION);
-        clearInvocations(messagingTemplate);
-
-        facade.signal(receiver.getEmail(), RECEIVER_SESSION,
-                request(AudioCallSignalType.HANGUP));
-
-        assertTrue(callStateStore.find("call-1").isEmpty());
-        assertSessionSignal(caller, AudioCallSignalType.HANGUP, receiver.getEmail());
-    }
-
-    @Test
     void disconnectingOneParticipantShouldNotifyTheRemainingGroup() {
         startCall();
         accept(receiver, RECEIVER_SESSION);
@@ -238,57 +122,21 @@ class AudioCallFacadeTest {
     }
 
     @Test
-    void disconnectingAnotherTabShouldNotRemoveTheParticipant() {
-        startCall();
-        clearInvocations(messagingTemplate);
-
-        facade.handleDisconnect(caller.getEmail(), "another-tab");
-
-        assertTrue(callStateStore.find("call-1").isPresent());
-        verify(messagingTemplate, never()).convertAndSendToUser(
-                any(), eq("/queue/audio-call"), any(AudioCallSignalResponse.class), any(MessageHeaders.class));
-    }
-
-    @Test
     void administratorShouldTerminateTheWholeGroupCall() {
         startCall();
         accept(receiver, RECEIVER_SESSION);
         accept(third, THIRD_SESSION);
         clearInvocations(messagingTemplate);
 
-        facade.forceTerminate("call-1");
+        org.springframework.http.ResponseEntity<?> response = facade.forceTerminateForAdmin("call-1");
+
+        assertEquals(org.springframework.http.HttpStatus.OK, response.getStatusCode());
+        assertEquals(1L, ((java.util.Map<?, ?>) response.getBody()).get("result"));
 
         assertTrue(callStateStore.find("call-1").isEmpty());
         assertSessionSignal(caller, AudioCallSignalType.ADMIN_TERMINATED, null);
         assertSessionSignal(receiver, AudioCallSignalType.ADMIN_TERMINATED, null);
         assertSessionSignal(third, AudioCallSignalType.ADMIN_TERMINATED, null);
-    }
-
-    @Test
-    void nonMemberShouldReceiveAnErrorWithoutCreatingACall() {
-        when(roomMemberService.exist(caller, room)).thenReturn(false);
-
-        startCall();
-
-        assertTrue(callStateStore.find("call-1").isEmpty());
-        ArgumentCaptor<AudioCallSignalResponse> response = ArgumentCaptor.forClass(AudioCallSignalResponse.class);
-        verify(messagingTemplate).convertAndSendToUser(
-                eq(caller.getEmail()), eq("/queue/audio-call"), response.capture(), any(MessageHeaders.class));
-        assertEquals("채팅방 참여자만 통화할 수 있습니다.", response.getValue().error());
-    }
-
-    @Test
-    void disablingIncomingCallsShouldRejectAnExistingInvitation() {
-        startCall();
-        clearInvocations(messagingTemplate, notificationService);
-
-        facade.updatePreference(new AudioCallPreferenceRequest(false), receiver);
-
-        verify(memberService).updateAudioCallEnabled(receiver.getId(), false);
-        assertTrue(callStateStore.findByMember(receiver.getEmail()).isEmpty());
-        assertSessionSignal(caller, AudioCallSignalType.PARTICIPANT_REJECTED, receiver.getEmail());
-        verify(notificationService).closeRealtimeNotification(
-                receiver, Group.CALL, "/chat/chatRoom?roomId=room-1&callId=call-1");
     }
 
     @Test

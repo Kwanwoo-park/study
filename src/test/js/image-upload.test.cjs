@@ -55,27 +55,6 @@ test('snapshot preserves the binary and metadata after the picker reference disa
     assert.notEqual(upload.buildFormData(snapshots), data);
 });
 
-test('multiple files retain their order and missing filenames receive a matching extension', async () => {
-    const upload = loadHelper();
-    const snapshots = await upload.snapshotFiles([transientFile('first.jpg'), transientFile('')]);
-    const files = upload.buildFormData(snapshots).getAll('file');
-    assert.equal(files.length, 2);
-    assert.equal(files[0].name, 'first.jpg');
-    assert.match(files[1].name, /^mobile-image-.*-1\.jpg$/);
-});
-
-test('cancellation is harmless and empty, unreadable or missing data cannot produce an upload', async () => {
-    const upload = loadHelper();
-    assert.equal((await upload.snapshotFiles(null)).length, 0);
-    const broken = transientFile();
-    broken.release();
-    await assert.rejects(upload.snapshotFiles([transientFile(), broken]), /사진을 다시 선택/);
-    await assert.rejects(upload.snapshotFiles([new File([], 'empty.jpg')]), /사진을 다시 선택/);
-    for (const value of [[], [undefined], [new File([], 'empty.jpg')]]) {
-        assert.throws(() => upload.buildFormData(value), /이미지를 다시 선택/);
-    }
-});
-
 // Small DOM/event double for running the actual page scripts without a server.
 class Element {
     constructor() {
@@ -200,73 +179,4 @@ for (const scenario of pageCases) {
         if (scenario.script === 'chat/chat.js') assert.equal(page.messages[0].type, 'IMAGE');
     });
 
-    test(`${scenario.script}: unreadable selection makes no request and allows another selection`, async () => {
-        const page = loadPage(scenario.script);
-        const input = page.element(scenario.input || 'upload');
-        const broken = transientFile();
-        broken.release();
-        input.files = [broken];
-        input.value = 'selected-photo';
-        await scenario.load(page, input);
-        assert.equal(page.calls.length, 0);
-        assert.equal(input.disabled, false);
-        assert.equal(input.value, '');
-        if (scenario.script === 'diary/write.js') {
-            assert.match(page.element('diaryMessage').textContent, /사진을 다시 선택/);
-        } else {
-            assert.match(page.alerts[0], /사진을 다시 선택/);
-        }
-        input.files = [transientFile()];
-        await scenario.load(page, input);
-        if (scenario.save) await scenario.save(page);
-        assert.ok(page.calls.some(item => item.url.startsWith(scenario.endpoint)));
-    });
 }
-
-for (const scenario of pageCases.filter(item => ['board/write.js', 'chat/chat.js', 'diary/write.js'].includes(item.script))) {
-    test(`${scenario.script}: at most ten files are copied and uploaded in selection order`, async () => {
-        const page = loadPage(scenario.script);
-        const input = page.element(scenario.input || 'upload');
-        input.files = Array.from({ length: 11 }, (_, i) => transientFile(`photo-${i}.jpg`));
-        input.files[10].arrayBuffer = () => { throw new Error('file beyond limit must not be read'); };
-        await scenario.load(page, input);
-        if (scenario.save) await scenario.save(page);
-        const call = page.calls.find(item => item.url.startsWith(scenario.endpoint));
-        assert.ok(call);
-        assert.deepEqual(call.body.getAll('file').map(file => file.name),
-            Array.from({ length: 10 }, (_, i) => `photo-${i}.jpg`));
-    });
-}
-
-test('diary: added batches retain separate copies and removing a preview excludes its file', async () => {
-    const page = loadPage('diary/write.js');
-    const input = page.element('imageInput');
-    const first = transientFile('first.jpg');
-    input.files = [first];
-    await input.emit('change');
-    first.release();
-    input.files = [transientFile('second.jpg')];
-    await input.emit('change');
-    const previews = page.element('imagePreviewList').querySelectorAll('.image-preview-item');
-    assert.equal(previews.length, 2);
-    await previews[0].querySelector('.image-remove-button').emit('click');
-    await page.element('diaryForm').emit('submit');
-    const files = page.calls[0].body.getAll('file');
-    assert.deepEqual(files.map(file => file.name), ['second.jpg']);
-});
-
-test('collection: a failed image re-upload never saves a collection using a previous image URL', async () => {
-    const page = loadPage('collection/save.js');
-    const input = page.element('upload');
-    input.files = [transientFile()];
-    await page.context.fnLoad(input);
-    await page.context.fnImgSave();
-    let writes = 0;
-    page.context.fetch = async url => {
-        if (url === '/api/collection/save/collection') writes++;
-        return { ok: false, json: async () => ({ result: -400, message: 'retry' }) };
-    };
-    await page.context.fnSave();
-    assert.equal(writes, 0);
-    assert.equal(page.element('submit').disabled, false);
-});

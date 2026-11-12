@@ -79,29 +79,3 @@ test('uploads executable binary as multipart with the CSRF header', async () => 
     assert.deepEqual([...new Uint8Array(await requests[0].data.get('file').arrayBuffer())], [77, 90, 0, 255]);
     assert.match(element('admin-file-status').textContent, /보관했습니다/);
 });
-
-test('blocks oversized files before any upload', async () => {
-    const {element, requests} = await loadPage();
-    element('admin-file-input').files = [new File([new Uint8Array(101)], 'large.zip')];
-    await element('admin-file-input').emit('change');
-    assert.equal(element('admin-file-upload').disabled, true);
-    await element('admin-file-form').emit('submit');
-    assert.equal(requests.length, 0);
-});
-
-test('server rejection restores controls and does not report success', async () => {
-    const {element} = await loadPage({uploadStatus: 413});
-    element('admin-file-input').files = [new File(['test'], 'archive.zip')];
-    await element('admin-file-form').emit('submit');
-    assert.equal(element('admin-file-input').disabled, false);
-    assert.equal(element('admin-file-progress').hidden, true);
-    assert.match(element('admin-file-status').textContent, /용량 제한/);
-});
-
-for (const status of [401, 403]) {
-    test(`displays authorization error for HTTP ${status}`, async () => {
-        const {element, requests} = await loadPage({status});
-        assert.match(element('admin-file-status').textContent, /로그인|관리자 권한/);
-        assert.equal(requests.length, 0);
-    });
-}

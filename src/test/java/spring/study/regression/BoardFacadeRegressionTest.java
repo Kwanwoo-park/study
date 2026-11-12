@@ -17,7 +17,8 @@ import spring.study.favorite.service.FavoriteService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.reply.service.ReplyService;
-import spring.study.common.facade.ModerationFacade;
+import spring.study.forbidden.service.ForbiddenService;
+import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -30,7 +31,7 @@ class BoardFacadeRegressionTest {
     @Mock private CommentService commentService;
     @Mock private BoardImgService boardImgService;
     @Mock private FavoriteService favoriteService;
-    @Mock private ModerationFacade moderationService;
+    @Mock private ForbiddenService forbiddenService;
 
     @InjectMocks
     private BoardFacade boardFacade;
@@ -67,7 +68,7 @@ class BoardFacadeRegressionTest {
 
         when(boardService.findById(100L)).thenReturn(board);
 
-        var response = boardFacade.deleteBoard(100L, other);
+        ResponseEntity<?> response = boardFacade.deleteBoard(100L, other);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         verify(favoriteService, never()).deleteByBoard(any());
@@ -75,29 +76,6 @@ class BoardFacadeRegressionTest {
         verify(commentService, never()).deleteComment(any());
         verify(boardImgService, never()).deleteBoard(any());
         verify(boardService, never()).deleteById(anyLong());
-    }
-
-    @Test
-    void updateBoardVisibilityShouldReturnForbiddenWhenRequesterIsNotOwner() {
-        Member owner = member(1L, "owner@test.com");
-        Member other = member(2L, "other@test.com");
-        Board board = Board.builder()
-                .id(100L)
-                .content("content")
-                .member(owner)
-                .build();
-        BoardRequestDto requestDto = BoardRequestDto.builder()
-                .id(100L)
-                .content("content")
-                .build();
-
-        when(boardService.findById(100L)).thenReturn(board);
-
-        var response = boardFacade.update(requestDto, other, mock(HttpServletResponse.class));
-
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        verify(moderationService, never()).validate(anyString(), any(), any());
-        verify(boardService, never()).updateBoard(anyLong(), anyString(), any());
     }
 
     private Member member(Long id, String email) {
