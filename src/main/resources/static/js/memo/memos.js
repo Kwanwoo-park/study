@@ -1,15 +1,28 @@
 (() => {
     'use strict';
 
-    const api = '/api/admin/memos';
+    const api = '/api/memos';
     const byId = id => document.getElementById(`memo-${id}`);
     const form = byId('form');
     const title = byId('title');
     const content = byId('content');
     const colors = [...document.querySelectorAll('.memo-color')];
     let active = null;
-    let baseline = '';
+    let baseline = null;
     let busy = false;
+    let saving = false;
+    let saveMode = '';
+    let autosaveTimer;
+    let statusTimer;
+    let firstDirtyAt = 0;
+    let lastInputAt = 0;
+    let composing = false;
+    let blocked = false;
+    let retryAttempt = 0;
+    let retryRequest = null;
+    let forceSave = false;
+    let csrfPromise = null;
+    let listedMemos = [];
     let page = 0;
     let totalPages = 0;
     let query = '';
@@ -19,17 +32,15 @@
     let allowLeave = false;
 
     function values() {
-        return {title: title.value, content: content.value, color: active.color, pinned: active.pinned, version: active.version};
+        return {title: title.value, content: content.value, color: active.color, pinned: active.pinned, version: active.version, creationKey: active.creationKey};
     }
 
-    function fingerprint() {
-        if (!active) return '';
-        const draft = values();
+    function fingerprint(draft) {
         return JSON.stringify([draft.title, draft.content, draft.color, draft.pinned]);
     }
 
     function dirty() {
-        return active !== null && fingerprint() !== baseline;
+        return active !== null && fingerprint(values()) !== fingerprint(baseline);
     }
 
     function status(message, error = false) {
@@ -56,40 +67,54 @@
 
     function updateControls() {
         const changed = dirty();
-        byId('save').disabled = busy || !active || !changed || !(title.value.trim() || content.value.trim());
-        byId('save-label').textContent = busy ? '처리 중…' : '메모 저장';
-        byId('delete').disabled = busy || !active?.id;
-        byId('pin').disabled = busy;
+        const locked = busy || saving || Boolean(blocked);
+        byId('save').disabled = locked || !active || (!changed && !active.pending);
+        byId('save-label').textContent = busy || saving ? '처리 중…' : 'DB에 지금 저장';
+        byId('delete').disabled = busy || saving || !active?.id;
+        byId('pin').disabled = locked || Boolean(retryRequest);
         byId('pin').setAttribute('aria-pressed', String(Boolean(active?.pinned)));
         byId('pin-label').textContent = active?.pinned ? '고정됨' : '상단 고정';
-        byId('new').disabled = busy;
-        byId('welcome-new').disabled = busy;
+        byId('new').disabled = busy || saving;
+        byId('welcome-new').disabled = busy || saving;
         title.disabled = busy;
         content.disabled = busy;
         for (const color of colors) {
-            color.disabled = busy;
+            color.disabled = locked || Boolean(retryRequest);
             color.setAttribute('aria-pressed', String(color.dataset.color === active?.color));
         }
         byId('edit-dot').classList.toggle('is-dirty', changed);
-        byId('save-state').textContent = busy ? '처리하고 있어요…' : changed ? '저장하지 않은 변경사항' : active?.id ? '모든 변경사항 저장됨' : '새 메모';
+        byId('save-state').textContent = busy ? '처리하고 있어요…' : saving ? saveMode === 'draft' ? '임시 저장 중…' : 'DB 저장 중…'
+            : active?.conflicted || blocked ? '저장 확인 필요 · 내용은 유지됩니다' : changed ? '자동 저장 대기 중'
+            : active?.pending ? '임시 저장됨 · DB 반영 대기' : active?.id ? 'DB 저장 완료' : '새 메모';
         byId('character-count').textContent = `${content.value.length.toLocaleString('ko-KR')} / 20,000자`;
     }
 
     function select(memo) {
+        clearTimeout(autosaveTimer);
+        clearTimeout(statusTimer);
+        firstDirtyAt = 0;
+        blocked = false;
+        retryRequest = null;
+        retryAttempt = 0;
         active = {...memo};
         title.value = memo.title || '';
         content.value = memo.content || '';
-        baseline = fingerprint();
+        baseline = values();
         byId('welcome').hidden = true;
         form.hidden = false;
         byId('workspace').classList.add('is-editing');
         byId('app').classList.add('is-editing');
         byId('reload').hidden = true;
+        updateEditorMeta(memo);
+        markSelection();
+        updateControls();
+        scheduleStatus();
+    }
+
+    function updateEditorMeta(memo) {
         byId('editor-meta').textContent = memo.id
             ? `작성 ${date(memo.createdAt)} · 최근 저장 ${date(memo.updatedAt || memo.createdAt)}`
             : '아직 저장하지 않은 메모입니다.';
-        markSelection();
-        updateControls();
     }
 
     function markSelection() {
@@ -101,8 +126,11 @@
     }
 
     function clearEditor() {
+        clearTimeout(autosaveTimer);
+        clearTimeout(statusTimer);
+        retryRequest = null;
         active = null;
-        baseline = '';
+        baseline = null;
         form.hidden = true;
         byId('welcome').hidden = false;
         byId('workspace').classList.remove('is-editing');
@@ -112,29 +140,31 @@
     }
 
     function canDiscard() {
-        if (busy) return false;
+        if (busy || saving) return false;
         return !dirty() || window.confirm('저장하지 않은 변경사항이 있어요. 저장하지 않고 이동할까요?');
     }
 
     function createDraft() {
         if (!canDiscard()) return;
-        select({id: null, title: '', content: '', color: 'LAVENDER', pinned: false, version: null});
+        select({id: null, title: '', content: '', color: 'LAVENDER', pinned: false, version: null, creationKey: crypto.randomUUID()});
         title.focus();
-        status('새로운 페이지가 열렸어요. 작성 후 저장을 눌러주세요.');
+        status('입력을 1초 멈추면 임시 저장됩니다. DB에 지금 저장 버튼으로 즉시 저장할 수도 있어요.');
     }
 
     async function request(path = '', options = {}) {
         const headers = {Accept: 'application/json', ...options.headers};
         if (options.method && options.method !== 'GET') {
-            const csrf = await request('/csrf');
+            csrfPromise ||= request('/csrf').catch(error => { csrfPromise = null; throw error; });
+            const csrf = await csrfPromise;
             headers[csrf.headerName] = csrf.token;
         }
         const response = await fetch(api + path, {credentials: 'same-origin', cache: 'no-store', ...options, headers});
         if (response.status === 204) return null;
         const body = await response.json().catch(() => null);
         if (!response.ok || !body) {
-            const message = response.status === 401 ? '로그인이 만료되었습니다. 관리자 계정으로 다시 로그인해 주세요.'
-                : response.status === 403 ? '관리자 권한 또는 요청 인증을 확인할 수 없습니다. 페이지를 새로고침해 주세요.'
+            if (response.status === 403) csrfPromise = null;
+            const message = response.status === 401 ? '로그인이 만료되었습니다. 다시 로그인해 주세요. 작성 내용은 복사해서 보관해 주세요.'
+                : response.status === 403 ? '사용 권한 또는 요청 인증을 확인할 수 없습니다. 작성 내용을 보관한 뒤 새로고침해 주세요.'
                 : body?.message || '요청을 처리하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.';
             const error = new Error(message);
             error.status = response.status;
@@ -144,6 +174,9 @@
     }
 
     function renderList(notes) {
+        notes = notes.map(note => note.id === active?.id && active.version > note.version
+            ? {...note, title: active.title, preview: active.content.slice(0, 160), color: active.color, pinned: active.pinned, version: active.version} : note);
+        listedMemos = notes;
         const list = byId('list');
         list.replaceChildren();
         for (const memo of notes) {
@@ -214,12 +247,17 @@
 
     async function openMemo(id, reload = false) {
         if (active?.id === id && !reload || !canDiscard()) return;
+        if (reload && active?.conflicted && !window.confirm('현재 내용을 복사해 두셨나요? 저장본을 다시 열면 화면의 내용과 충돌한 초안이 교체됩니다.')) return;
         busy = true;
         updateControls();
         try {
-            const memo = await request(`/${encodeURIComponent(id)}`);
+            const memo = reload && active?.conflicted
+                ? await request(`/${encodeURIComponent(id)}/reload?version=${encodeURIComponent(active.version)}`, {method: 'POST'})
+                : await request(`/${encodeURIComponent(id)}`);
             select(memo);
-            status('메모를 열었어요. 변경사항은 저장 버튼으로 보관해 주세요.');
+            status(memo.conflicted ? 'DB 저장 충돌이 있습니다. 내용을 복사한 뒤 저장본을 다시 열어 주세요.'
+                : '제목·본문은 자동 임시 저장되며, 10초간 갱신이 없으면 DB에 반영됩니다.');
+            if (memo.conflicted) { blocked = true; byId('reload').hidden = false; }
         } catch (error) {
             status(error.message, true);
         } finally {
@@ -228,36 +266,145 @@
         }
     }
 
-    async function saveMemo(event) {
+    function normalizedTitle(value) { return value.trim() || '제목 없는 메모'; }
+
+    function inputChanged() {
+        if (blocked === 400) blocked = false;
+        lastInputAt = Date.now();
+        if (!firstDirtyAt) firstDirtyAt = lastInputAt;
+        updateControls();
+        scheduleAutosave();
+    }
+
+    function scheduleAutosave() {
+        if (retryRequest) return;
+        clearTimeout(autosaveTimer);
+        if (!active || blocked || composing || !dirty() || retryRequest) return;
+        const now = Date.now();
+        firstDirtyAt ||= now;
+        const delay = Math.max(0, Math.min(1000 - (now - lastInputAt), 5000 - (now - firstDirtyAt)));
+        autosaveTimer = setTimeout(() => performSave('draft'), delay);
+    }
+
+    function saveMemo(event) {
         event?.preventDefault();
-        if (busy || !active || !dirty() || !(title.value.trim() || content.value.trim())) return;
+        if (saving) { forceSave = true; return; }
+        if (retryRequest) { forceSave = true; return executeSave(retryRequest); }
+        return performSave('manual');
+    }
+
+    async function performSave(mode) {
+        if (busy || saving || blocked || !active) return false;
+        if (retryRequest) return executeSave(retryRequest);
+        if (!dirty() && (mode === 'draft' || !active.pending)) return false;
         if (title.value.length > 120 || content.value.length > 20000) {
             status('제목은 120자, 내용은 20,000자 이내로 작성해 주세요.', true);
-            return;
+            return false;
         }
+        const snapshot = values();
         const isNew = !active.id;
-        const payload = values();
-        payload.title = payload.title.trim() || '제목 없는 메모';
-        busy = true;
+        const operationKey = crypto.randomUUID();
+        const payload = isNew || mode === 'manual' ? {...snapshot, title: normalizedTitle(snapshot.title), operationKey}
+            : mode === 'settings' ? {color: snapshot.color, pinned: snapshot.pinned, version: snapshot.version, operationKey}
+            : {title: normalizedTitle(snapshot.title), content: snapshot.content, version: snapshot.version, operationKey};
+        const path = isNew ? mode === 'draft' ? '?draft=true' : ''
+            : `/${encodeURIComponent(active.id)}${mode === 'draft' ? '/draft' : mode === 'settings' ? '/settings' : ''}`;
+        return executeSave({mode, snapshot, payload, path, isNew, method: isNew ? 'POST' : mode === 'manual' ? 'PUT' : 'PATCH'});
+    }
+
+    async function executeSave(operation) {
+        if (busy || saving || blocked || !active) return false;
+        saving = true;
+        saveMode = operation.mode;
+        clearTimeout(autosaveTimer);
+        clearTimeout(statusTimer);
+        firstDirtyAt = 0;
         updateControls();
         try {
-            const memo = await request(isNew ? '' : `/${encodeURIComponent(active.id)}`, {
-                method: isNew ? 'POST' : 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
+            const data = await request(operation.path, {
+                method: operation.method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(operation.payload),
             });
-            select(memo);
-            const listed = await loadList(isNew ? 0 : page);
-            status(listed ? '메모를 안전하게 저장했어요.' : '메모는 저장됐지만 목록을 불러오지 못했어요. 목록을 새로고침해 주세요.', !listed);
+            const memo = !operation.isNew && operation.mode === 'draft'
+                ? {...active, ...data, title: operation.payload.title, content: operation.payload.content} : data;
+            Object.assign(active, memo);
+            // A response acknowledges its snapshot, never text entered while that request was in flight.
+            baseline = operation.mode === 'settings' && !operation.isNew
+                ? {...baseline, color: memo.color, pinned: memo.pinned}
+                : {...operation.snapshot, title: normalizedTitle(operation.snapshot.title) === memo.title ? operation.snapshot.title : memo.title,
+                    content: memo.content, color: memo.color, pinned: memo.pinned};
+            retryRequest = null;
+            retryAttempt = 0;
+            blocked = memo.conflicted ? 409 : false;
+            updateEditorMeta(memo);
+            byId('reload').hidden = !memo.conflicted;
+            updateLocalCard(memo);
+            // Creating a row or changing list ordering is exceptional; body autosaves never reload the list.
+            if (operation.isNew || operation.mode === 'settings') loadList(operation.isNew ? 0 : page);
+            status(memo.pending ? 'Redis에 임시 저장됐어요. DB 반영은 서버에서 이어서 처리합니다.' : 'DB에 저장했어요.');
+            return true;
         } catch (error) {
             status(error.message, true);
-            if (error.status === 409) byId('reload').hidden = false;
+            blocked = [400, 401, 403, 404, 409].includes(error.status) ? error.status : false;
+            if (error.status === 409) { active.conflicted = true; byId('reload').hidden = false; }
+            if (!blocked) { retryRequest = operation; retryAttempt++; }
+            return false;
         } finally {
-            busy = false;
+            saving = false;
             updateControls();
+            if (retryRequest) {
+                const delay = Math.min(60000, 1000 * 2 ** Math.min(retryAttempt - 1, 6));
+                autosaveTimer = setTimeout(() => retryRequest && executeSave(retryRequest), delay);
+            } else if (forceSave && !blocked) {
+                forceSave = false;
+                performSave('manual');
+            } else scheduleAutosave();
+            scheduleStatus();
         }
+    }
+
+    async function saveSettings(changes) {
+        if (busy || saving || blocked || retryRequest || !active) return;
+        const previous = {color: active.color, pinned: active.pinned};
+        const settings = {...previous, ...changes};
+        if (settings.color === previous.color && settings.pinned === previous.pinned) return;
+        Object.assign(active, settings);
+        const saved = await performSave(active.id ? 'settings' : 'manual');
+        if (!saved && !retryRequest) { Object.assign(active, previous); updateControls(); }
+    }
+
+    function updateLocalCard(memo) {
+        const notes = listedMemos.map(note => note.id === memo.id ? {...note, ...memo, preview: memo.content.slice(0, 160)} : note);
+        renderList(notes);
+    }
+
+    function scheduleStatus() {
+        clearTimeout(statusTimer);
+        if (!active?.id || !active.pending || blocked || dirty() || saving || retryRequest) return;
+        statusTimer = setTimeout(checkStatus, 11000);
+    }
+
+    async function checkStatus() {
+        if (!active?.id || saving || dirty() || blocked) return;
+        const id = active.id;
+        const version = active.version;
+        try {
+            const saved = await request(`/${encodeURIComponent(id)}/status`);
+            if (active?.id !== id || active.version !== version || saving || dirty()) return;
+            if (saved.version !== version || saved.conflicted) {
+                blocked = true;
+                active.conflicted = true;
+                byId('reload').hidden = false;
+                status('다른 저장 내용과 충돌했습니다. 작성 내용을 보관한 뒤 저장본을 다시 열어 주세요.', true);
+            } else {
+                active.pending = saved.pending;
+                if (!saved.pending) status('DB 반영까지 완료됐어요.');
+            }
+        } catch (error) { status(error.message, true); }
+        finally { updateControls(); scheduleStatus(); }
     }
 
     async function deleteMemo() {
-        if (busy || !active?.id) return;
+        if (busy || saving || retryRequest || !active?.id) return;
         if (!window.confirm('이 메모를 영구 삭제할까요? 저장하지 않은 변경사항도 사라지며 복구할 수 없습니다.')) return;
         busy = true;
         updateControls();
@@ -288,18 +435,14 @@
     byId('new').addEventListener('click', createDraft);
     byId('welcome-new').addEventListener('click', createDraft);
     form.addEventListener('submit', saveMemo);
-    title.addEventListener('input', updateControls);
-    content.addEventListener('input', updateControls);
-    byId('pin').addEventListener('click', () => {
-        if (!active || busy) return;
-        active.pinned = !active.pinned;
-        updateControls();
-    });
-    for (const color of colors) color.addEventListener('click', () => {
-        if (!active || busy) return;
-        active.color = color.dataset.color;
-        updateControls();
-    });
+    title.addEventListener('input', inputChanged);
+    content.addEventListener('input', inputChanged);
+    for (const input of [title, content]) {
+        input.addEventListener('compositionstart', () => { composing = true; clearTimeout(autosaveTimer); });
+        input.addEventListener('compositionend', () => { composing = false; inputChanged(); });
+    }
+    byId('pin').addEventListener('click', () => saveSettings({pinned: !active?.pinned}));
+    for (const color of colors) color.addEventListener('click', () => saveSettings({color: color.dataset.color}));
     byId('delete').addEventListener('click', deleteMemo);
     byId('reload').addEventListener('click', () => active?.id && openMemo(active.id, true));
     byId('editor-back').addEventListener('click', () => {
@@ -341,10 +484,13 @@
         } else allowLeave = true;
     }, true);
     window.addEventListener('beforeunload', event => {
-        if (!allowLeave && (busy || dirty())) {
+        if (!allowLeave && (busy || saving || retryRequest || dirty())) {
             event.preventDefault();
             event.returnValue = '';
         }
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && dirty()) performSave('draft');
     });
     loadList(0);
 })();

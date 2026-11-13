@@ -14,15 +14,16 @@ import spring.study.jwt.component.JwtAuthenticationFilter;
 
 @Configuration
 @ConditionalOnWebApplication
-public class AdminMemoSecurityConfig {
+public class MemoSecurityConfig {
     @Bean
     @Order(5)
-    public SecurityFilterChain adminMemoFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
+    public SecurityFilterChain memoFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
         CookieCsrfTokenRepository csrf = new CookieCsrfTokenRepository();
-        csrf.setCookieName("ADMIN-MEMOS-CSRF");
-        csrf.setCookiePath("/api/admin/memos");
-        return http.securityMatcher("/admin/memos", "/admin/memos/**", "/api/admin/memos", "/api/admin/memos/**")
-                .authorizeHttpRequests(authorize -> authorize.anyRequest().hasRole("ADMIN"))
+        csrf.setCookieName("MEMOS-CSRF");
+        csrf.setCookiePath("/api");
+        return http.securityMatcher("/memos", "/memos/**", "/api/memos", "/api/memos/**",
+                        "/admin/memos", "/admin/memos/**", "/api/admin/memos", "/api/admin/memos/**")
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().hasAnyRole("USER", "ADMIN"))
                 .csrf(config -> config.csrfTokenRepository(csrf))
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, error) -> response.sendError(request.getRequestURI().contains("/api/") ? 401 : 404))

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import spring.study.account.service.AccountService;
-import spring.study.memo.service.AdminMemoService;
+import spring.study.memo.service.MemoService;
 import spring.study.appeal.service.AppealService;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.board.entity.Board;
@@ -93,7 +93,7 @@ public class MemberFacade {
     private final JwtCookieService cookieService;
     private final TransactionRunner transactions;
     private final TodoService todoService;
-    private final AdminMemoService adminMemoService;
+    private final MemoService memoService;
     private final EmailVerificationService emailVerificationService;
     private final DiaryService diaryService;
     private final DiaryImageService diaryImageService;
@@ -481,7 +481,7 @@ public class MemberFacade {
 
         diaryService.deleteByMember(member);
         todoService.deleteByMember(member);
-        adminMemoService.deleteByMember(member);
+        memoService.deleteByMember(member);
 
         imageS3Service.deleteImage(member.getProfile());
         memberService.deleteById(member.getId());

@@ -1,17 +1,5 @@
 package spring.study.reply.facade;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import org.springframework.security.core.context.SecurityContextHolder;
-import spring.study.common.service.ModerationService;
-import spring.study.forbidden.entity.Status;
-import spring.study.forbidden.service.ForbiddenService;
-import spring.study.jwt.service.JwtCookieService;
-import spring.study.jwt.service.MemberTokenCacheService;
-import spring.study.jwt.service.RefreshTokenService;
-import spring.study.member.service.MemberService;
-
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,35 +25,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class ReplyFacade {
-    private static final DateTimeFormatter SANCTION_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private final ForbiddenService forbiddenService;
-    private final MemberService memberService;
-    private final MemberTokenCacheService tokenCacheService;
-    private final RefreshTokenService refreshTokenService;
-    private final JwtCookieService jwtCookieService;
     private final CommentService commentService;
     private final ReplyService replyService;
     private final NotificationService notificationService;
-    private final ModerationService moderationService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     @Transactional
-    public ResponseEntity<?> saveReply(ReplyRequestDto dto, Member member, HttpServletResponse response) {
-        int risk = validateModeratedContent(dto.getReply(), member, response);
-
-        if (risk != 0) {
-            if (risk == -99)
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "result", risk,
-                        "message", "답글이 없습니다"
-                ));
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -risk,
-                    "message", "금칙어를 사용하였습니다"
-            ));
-        }
-
+    public ResponseEntity<?> saveReply(ReplyRequestDto dto, Member member) {
         Comment comment = commentService.findById(dto.getId());
         if (!visibilityAccessPolicy.canViewBoard(comment.getBoard(), member)) {
             return forbiddenBoard();
@@ -104,18 +70,16 @@ public class ReplyFacade {
         ));
     }
 
-    public ResponseEntity<?> updateReply(Long id, ReplyRequestDto dto, Member member, HttpServletResponse response) {
+    public ResponseEntity<?> validateUpdate(Long id, Member member) {
         Reply target = replyService.findById(id);
         if (!isOwnerOrAdmin(target, member)) return forbiddenReply();
         if (!visibilityAccessPolicy.canViewBoard(target.getComment().getBoard(), member)) return forbiddenBoard();
+        return null;
+    }
 
-        int risk = validateModeratedContent(dto.getReply(), member, response);
-        if (risk != 0) {
-            return ResponseEntity.status(risk == -99 ? HttpStatus.BAD_REQUEST : HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", risk == -99 ? -10L : -risk,
-                    "message", risk == -99 ? "답글이 없습니다" : "금칙어를 사용하였습니다"
-            ));
-        }
+    public ResponseEntity<?> updateReply(Long id, ReplyRequestDto dto, Member member) {
+        ResponseEntity<?> validation = validateUpdate(id, member);
+        if (validation != null) return validation;
         return ResponseEntity.ok(Map.of("result", replyService.update(id, dto.getReply())));
     }
 
@@ -143,62 +107,6 @@ public class ReplyFacade {
                 "result", -403L,
                 "message", "접근할 수 없는 게시글입니다"
         ));
-    }
-
-    private int validateModeratedContent(String checkStr, Member member, HttpServletResponse response) {
-        int risk = evaluateModeration(checkStr, member);
-        return risk == 3 ? handleModerationBlockRisk(member, response) : risk;
-    }
-
-    private int evaluateModeration(String content, Member member) {
-        if (content == null || content.isBlank())
-            return -99;
-
-        int risk = forbiddenService.findWordList(Status.APPROVAL, content);
-
-        if (risk == 3 || risk == 0)
-            return risk;
-
-        return moderationService.evaluate(member, risk);
-    }
-
-    private int handleModerationBlockRisk(Member member, HttpServletResponse response) {
-        if (member.getRole() == Role.ADMIN) {
-            notificationService.createNotification(
-                    member,
-                    "경고일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " / 사유: 금칙어 사용 (관리자 계정 정지 제외)",
-                    Group.ADMIN
-            );
-            moderationService.clear(member);
-
-            return 1;
-        }
-
-        blockModeratedMember(member, response);
-        return 3;
-    }
-
-    private void blockModeratedMember(Member member, HttpServletResponse response) {
-        notificationService.createNotification(
-                member,
-                "금지일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " (영구) / 사유: 금칙어 사용",
-                Group.ADMIN
-        );
-
-        notificationService.createNotification(
-                memberService.findAdministrator(),
-                member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
-                Group.ADMIN
-        );
-
-        memberService.updateRole(member.getId(), Role.DENIED);
-
-        refreshTokenService.revoke(member.getId());
-        tokenCacheService.delete(member.getId());
-        jwtCookieService.clearAuthenticationCookies(response);
-        SecurityContextHolder.clearContext();
-
-        moderationService.clear(member);
     }
 
 }

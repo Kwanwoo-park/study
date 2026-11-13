@@ -1,6 +1,5 @@
 package spring.study.regression;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,7 +7,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import spring.study.board.entity.Board;
-import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.facade.BoardFacade;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
@@ -17,7 +15,6 @@ import spring.study.favorite.service.FavoriteService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.reply.service.ReplyService;
-import spring.study.forbidden.service.ForbiddenService;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +28,6 @@ class BoardFacadeRegressionTest {
     @Mock private CommentService commentService;
     @Mock private BoardImgService boardImgService;
     @Mock private FavoriteService favoriteService;
-    @Mock private ForbiddenService forbiddenService;
 
     @InjectMocks
     private BoardFacade boardFacade;

@@ -7,12 +7,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/admin/memos")
-@PreAuthorize("hasRole('ADMIN')")
+@RequestMapping
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class MemoViewController {
-    @GetMapping({"", "/"})
+    @GetMapping({"/memos", "/memos/"})
     public String page(HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store");
         return "memo/memos";
     }
+
+    @GetMapping({"/admin/memos", "/admin/memos/"})
+    public String legacy() { return "redirect:/memos"; }
 }

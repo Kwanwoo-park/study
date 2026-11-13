@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,12 +16,14 @@ import spring.study.chat.facade.AudioCallFacade;
 import spring.study.chat.facade.ChatRoomFacade;
 import spring.study.chat.facade.ChatSendFacade;
 import spring.study.common.facade.CommonFacade;
+import spring.study.common.facade.ModerationFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -33,6 +36,7 @@ public class ChatApiController {
     private final ChatSendFacade chatSendFacade;
     private final ChatRoomFacade chatRoomFacade;
     private final AudioCallFacade audioCallFacade;
+    private final ModerationFacade moderationFacade;
 
     @GetMapping("/rooms")
     public ResponseEntity<?> rooms(HttpServletRequest request) {
@@ -122,7 +126,10 @@ public class ChatApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return chatFacade.messageCheck(message, member, response);
+        ResponseEntity<?> validation = validateContent(message, member, response);
+        if (validation != null) return validation;
+
+        return ResponseEntity.ok(Map.of("result", 1L));
     }
 
     @PostMapping("/sendImage")
@@ -151,7 +158,12 @@ public class ChatApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return chatFacade.updateMessage(id, message, member, response);
+        chatFacade.validateMessageUpdate(id, member);
+
+        ResponseEntity<?> validation = validateContent(message.getMessage(), member, response);
+        if (validation != null) return validation;
+
+        return chatFacade.updateMessage(id, message, member);
     }
 
     @DeleteMapping("/message/{id}")
@@ -176,5 +188,15 @@ public class ChatApiController {
         if (member == null) return commonFacade.unauthorized();
 
         return chatRoomFacade.inactive(roomId, member);
+    }
+
+    private ResponseEntity<?> validateContent(String content, Member member, HttpServletResponse response) {
+        int risk = moderationFacade.validate(content, member, response);
+        if (risk == 0) return null;
+
+        return ResponseEntity.status(risk == -99 ? HttpStatus.BAD_REQUEST : HttpStatus.FORBIDDEN).body(Map.of(
+                "result", risk == -99 ? -10L : -risk,
+                "message", risk == -99 ? "메시지가 입력되지 않았습니다" : "금칙어를 사용하였습니다"
+        ));
     }
 }

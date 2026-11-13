@@ -22,6 +22,7 @@
       </button>
       <div id="navSettingsMenu" class="nav-settings-menu" aria-hidden="true">
         <span class="nav-settings-title">개인 설정</span>
+        <button type="button" class="nav-settings-item" onclick="location.replace('/memos')">내 메모</button>
         <button type="button"
                 class="nav-settings-item"
                 sec:authorize="hasAuthority('ROLE_ADMIN')"

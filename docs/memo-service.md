@@ -1,54 +1,94 @@
-# 관리자 개인 메모장
+# 개인 메모와 자동 저장
 
-관리자 메인 화면의 **메모장** 버튼으로 `/admin/memos`에 접근합니다. 작성·수정·삭제, 제목/본문 검색, 상단 고정, 네 가지 색상, 페이지 단위 목록을 지원합니다. PC는 목록/편집창을 함께 표시하고, 모바일은 메모를 열면 편집창으로 전환합니다. 기존 테마 설정을 사용하며 화면 상단에서도 테마를 바꿀 수 있습니다.
+일반 회원과 관리자 모두 `/memos`에서 **본인이 작성한 메모만** 사용할 수 있습니다. 회원 상세 메뉴와 하단 개인 설정 메뉴에 **내 메모**를 추가했습니다. 익명·차단 계정은 사용할 수 없으며, 관리자도 다른 회원의 메모를 조회하거나 수정할 수 없습니다.
 
-메모 전용 코드는 `spring.study.memo` 아래의 `config`, `controller`, `dto`, `entity`, `facade`, `repository`, `service`로 분리되어 있습니다. 화면은 `templates/memo`, 정적 파일은 `static/css/memo`와 `static/js/memo`, 전용 테스트는 `src/test/java/spring/study/memo`에 있습니다. 도메인 분리는 소스 경로만 변경하며 기존 URL, 관리자 권한 제한, `admin_memo` 테이블은 유지합니다.
+`AdminMemo*` 클래스·DTO·enum·테스트 이름은 `Memo*`로 변경했습니다. 기존 데이터를 유지하기 위해 엔티티 `Memo`는 계속 `admin_memo` 테이블을 사용합니다. `/admin/memos`는 `/memos`로 연결하고, `/api/admin/memos`는 기존 클라이언트를 위한 호환 경로로 유지합니다.
 
-## 저장과 접근 범위
+## 저장 흐름
 
-- 관리자라도 본인이 작성한 메모만 볼 수 있습니다. 클라이언트가 전달한 작성자 ID는 사용하지 않습니다.
-- 제목은 최대 120자, 본문은 최대 20,000자입니다. 제목 없이 본문만 저장하면 `제목 없는 메모`라는 제목이 붙습니다.
-- 저장 버튼 또는 `Cmd/Ctrl + S`로 DB에 저장합니다. 자동 저장은 아니며, 저장하지 않은 변경사항이 있으면 이동/종료 시 확인합니다.
-- 다른 탭에서 먼저 변경한 메모를 과거 버전으로 덮어쓰거나 삭제하면 `409 Conflict`로 거절합니다. 작성 중인 내용은 화면에 유지되므로 복사 후 **저장본 다시 열기**를 사용합니다.
-- 삭제는 확인 후 영구 삭제합니다. 회원 탈퇴 시에도 해당 회원의 메모를 함께 삭제합니다.
-- 메모 내용은 브라우저 저장소에 보관하지 않습니다. 화면/API는 관리자 권한으로 보호하고, 쓰기 요청에는 별도 CSRF 토큰을 사용합니다. 응답에는 `Cache-Control: no-store`를 설정합니다.
+1. 제목·본문 입력이 1초 멈추면 최신 초안만 Redis에 전송합니다. 연속 입력 중에도 최대 5초마다 전송하되 한글 조합 중인 문자열은 조합 종료 후 전송합니다. 저장 중에도 입력할 수 있습니다.
+2. Redis에는 메모별 최신 초안 하나와 변경된 메모 ID별 저장 예정 시각만 보관합니다. 메모 이력이나 사용자별 타이머를 쌓지 않고, 변경 없는 입력은 요청하지 않습니다.
+3. 서버가 마지막 초안을 받은 뒤 10초간 갱신이 없으면 DB에 반영합니다. 계속 갱신돼도 최초 미반영 변경부터 60초가 되면 반영 대상으로 삼습니다. 브라우저를 닫아도 서버 작업자가 이어서 처리합니다.
+4. 전용 단일 작업자가 예정 시각이 된 ID만 최대 50개씩 가져옵니다. 기본 조회 주기는 1초이며 다른 도메인의 스케줄러와 실행 스레드를 공유하지 않습니다. 10초/60초는 반영 대상이 되는 기준이며, 부하·장애·대기열에 따라 실제 완료는 지연될 수 있습니다.
+5. 정상 반영은 작성자 ID·기존 버전을 조건으로 하는 부분 UPDATE 한 번입니다. Redis에서 여러 차례 변경된 논리 버전은 DB에 한 번에 반영합니다. DB 쓰기 뒤 Redis 완료 처리가 실패한 경우 같은 스냅샷의 재처리는 멱등적으로 처리합니다.
+
+새 메모는 기존 숫자 ID를 유지하기 위해 식별자용 DB 행을 최초 한 번 생성하고, 자동 저장 본문은 Redis에 먼저 저장합니다. `creationKey`로 최초 요청의 재시도 시 중복 행 생성을 방지합니다. DB 행의 커밋이 끝난 뒤 Redis 작업을 등록하므로 작업자가 아직 커밋되지 않은 행을 삭제된 메모로 판단하지 않습니다. Redis 저장이 실패해 빈 식별자 행만 남아도 같은 키로 재시도하면 이어서 저장합니다.
+
+고정·색상은 버튼 선택 시 즉시 DB 반영을 시도합니다. 먼저 Redis에 받은 본문이 있으면 그 본문까지 같은 버전으로 반영하지만, 아직 전송하지 않은 화면의 제목·본문은 그대로 유지합니다. **DB에 지금 저장** 또는 `Cmd/Ctrl + S`도 즉시 반영을 시도합니다. DB 장애 시에는 Redis에 유지하고 `202 Accepted`와 `pending: true`를 반환해 서버가 재시도하도록 합니다.
+
+## 정합성·실패 처리
+
+- `version`은 DB 반영 횟수가 아니라 메모의 논리적 변경 버전입니다. 본문·고정·색상 모두 같은 버전과 메모별 분산 잠금을 사용합니다. 같은 회원의 다른 탭도 과거 버전으로 덮어쓸 수 없습니다.
+- 클라이언트는 요청을 하나씩 보내고, 응답 유실 시 동일한 `operationKey`와 동일한 스냅샷을 재시도합니다. 전송 중 추가로 입력한 내용은 보존하고 해당 요청 확인 후 다음 스냅샷으로 보냅니다. 인증·입력 오류·충돌은 무한 재시도하지 않습니다.
+- DB 반영 전 초안에는 TTL을 설정하지 않습니다. DB 반영 후에만 기본 10분 TTL을 부여합니다. 최신 초안 조회는 Redis가 우선이고 없으면 소유자 조건으로 DB를 조회합니다. 목록 검색·개수는 DB 기준이므로 미반영 변경은 반영 후 검색됩니다. 현재 편집 중인 카드의 제목·미리보기는 화면에서 갱신합니다.
+- 저장 예정 ID는 Redis Sorted Set으로 관리합니다. 서버 재시작 후에도 대기열을 재사용하고, 전체 Redis 키나 전체 메모 테이블을 주기적으로 순회하지 않습니다.
+- DB 실패 시 초안과 재시도 대상을 보존하고 1초부터 최대 60초까지 재시도 간격을 늘립니다. Redis 장애도 화면/작업자가 재시도 간격을 늘립니다. 자동 저장 때마다 목록·개수 조회나 DB Outbox/이벤트 로그 INSERT를 하지 않습니다.
+- DB 저장 후 Redis 완료 처리에도 잠금 소유권을 확인합니다. 잠금이 만료된 작업자가 새로운 초안을 삭제하거나 완료 처리하지 않습니다. DB 저장 버전이 예상과 다르면 초안을 보존한 채 자동 반영을 중단합니다. 내용을 복사한 후 **저장본 다시 열기**로 충돌을 해결합니다.
+- 삭제 시 먼저 Redis에 삭제 표식을 남깁니다. DB 삭제 실패는 서버가 재시도하고, 그동안 본문 수정은 차단합니다. 회원 탈퇴로 이미 삭제된 행도 작업자가 다시 생성하지 않고 초안을 정리합니다. DB까지 반영된 Redis 캐시는 TTL로 정리됩니다.
+- 제목은 120자, 본문은 20,000자까지이며 브라우저 저장소에는 메모 내용을 쓰지 않습니다. 모든 쓰기 요청에는 CSRF 토큰을 사용하고, 응답은 `Cache-Control: no-store`입니다.
+
+화면은 **전송 대기 / 임시 저장됨 / DB 저장 완료**를 구분합니다. 아직 전송하지 않은 입력, 네트워크 장애 중의 입력, Redis의 디스크 동기화 전에 확인된 최근 데이터는 강제 종료·장애 시 유실될 수 있습니다. 모바일 강제 종료 시 브라우저 이탈 이벤트도 보장되지 않습니다. `everysec` 설정은 마지막 약 1초의 Redis 변경을 잃을 수 있으며, 이 구현이 무손실 저장을 보장하는 것은 아닙니다.
+
+## 운영 Redis 설정 — 배포 전 확인
+
+미반영 초안은 재생성 가능한 캐시가 아니므로, 기본적으로 **AOF 활성화 + `appendfsync everysec` 또는 `always` + `maxmemory-policy noeviction`**이 확인돼야 임시 저장을 받아들입니다. Redis INFO/CONFIG 조회가 제한된 ACL도 확인해야 합니다. 설정이 없으면 서버 전체 기동을 막지 않고 메모 저장 API가 `503`으로 안내합니다. 검증 결과는 최대 60초 캐시합니다.
+
+메모 전용 Redis 인스턴스를 권장합니다. DB 번호만 분리해도 메모리 제한·삭제 정책·AOF는 분리되지 않습니다. 기존 토큰/알림 Redis의 정책을 무작정 바꾸지 마세요. 아래는 전용 인스턴스의 설정 예시이며 메모리 예산은 실제 서버에 맞게 정합니다. 개발 과정에서 운영 Redis 설정은 변경하지 않았습니다.
+
+```conf
+appendonly yes
+appendfsync everysec
+maxmemory 256mb
+maxmemory-policy noeviction
+```
+
+`noeviction`은 메모리 부족 시 초안을 삭제하는 대신 새 저장 요청을 거절합니다. 화면은 완료 표시를 하지 않고 입력을 유지합니다. 미반영 초안에 짧은 TTL을 두거나 메모리 확보 목적으로 삭제하지 말고, 오래된 대기열·실패·Redis 메모리와 AOF 디스크 공간을 운영 모니터링해야 합니다. 메모리에는 최신 초안만 남지만 AOF는 변경을 기록하므로, 디스크 쓰기와 AOF 재작성 부하까지 없어지는 것은 아닙니다. 설정 확인은 한 요청만 수행하고 실패 결과도 10초간 캐시해 장애 시 동시 요청이 Redis 설정 조회로 몰리지 않게 했습니다.
+
+별도 인스턴스는 `memo.redis.host`, `memo.redis.port`, `memo.redis.username`, `memo.redis.password`, `memo.redis.database`로 지정합니다. 생략 시 기존 `spring.data.redis` 연결 위치/인증 정보를 기본값으로 사용합니다. 인증 정보는 환경 변수나 비공개 설정으로 관리합니다. 기존 공통 Redis 연결과 템플릿은 `@Primary`로 유지해 다른 도메인이 메모 전용 Redis로 바뀌지 않게 했습니다.
+
+```properties
+memo.autosave.idle-ms=10000
+memo.autosave.max-dirty-ms=60000
+memo.autosave.poll-ms=1000
+memo.autosave.batch-size=50
+memo.autosave.clean-ttl-seconds=600
+memo.autosave.lock-ms=30000
+memo.autosave.retry-max-ms=60000
+```
+
+`memo.autosave.require-durable-redis=false`는 영속성/삭제 정책 확인을 우회하는 **개발용** 설정입니다. 운영에서 초안을 보호하는 대안이 아닙니다. DB 반영·삭제 트랜잭션 타임아웃은 10초, 기본 잠금 임대는 30초입니다. 극단적인 지연이나 잠금 유실은 버전 검사로 덮어쓰기를 차단하고 초안을 보존합니다.
 
 ## API
 
 | 메서드 | 경로 | 용도 |
 |---|---|---|
-| GET | `/api/admin/memos/csrf` | 쓰기 요청용 `headerName`과 `token` |
-| GET | `/api/admin/memos?query=&pinnedOnly=false&page=0` | 본인 메모 목록, 검색, 고정 필터. 페이지당 18개 |
-| GET | `/api/admin/memos/{id}` | 본인 메모 상세 |
-| POST | `/api/admin/memos` | 메모 작성 |
-| PUT | `/api/admin/memos/{id}` | 내용/색상/고정 상태 수정 |
-| DELETE | `/api/admin/memos/{id}?version=0` | 현재 버전 메모 삭제 |
+| GET | `/api/memos/csrf` | 쓰기 요청용 CSRF 헤더 이름/토큰 |
+| GET | `/api/memos?query=&pinnedOnly=false&page=0` | 본인 메모 검색·목록, 페이지당 18개 |
+| GET | `/api/memos/{id}` | Redis 최신 초안 우선 상세 조회 |
+| GET | `/api/memos/{id}/status` | 본문 없이 버전·반영 대기·충돌 상태만 조회 |
+| POST | `/api/memos?draft=true` | 최초 자동 저장: 식별자 생성 및 Redis 초안 등록 |
+| PATCH | `/api/memos/{id}/draft` | 제목·본문을 Redis에 임시 저장 |
+| PUT | `/api/memos/{id}` | 현재 내용 즉시 DB 반영 시도 |
+| PATCH | `/api/memos/{id}/settings` | 고정·색상 즉시 반영 시도 |
+| POST | `/api/memos/{id}/reload?version=0` | 충돌 초안을 확인 후 DB 저장본으로 다시 열기 |
+| DELETE | `/api/memos/{id}?version=0` | 현재 버전 메모 삭제 |
 
-작성/수정 JSON:
+자동 본문 저장 요청 예시 (`operationKey`는 요청마다 새 UUID이며 재시도 시 재사용):
 
 ```json
-{"title":"운영 노트","content":"다음 배포 전 확인할 내용","color":"MINT","pinned":true,"version":0}
+{"title":"노트","content":"본문","version":3,"operationKey":"00000000-0000-4000-8000-000000000001"}
 ```
 
-색상은 `LAVENDER`, `MINT`, `AMBER`, `ROSE`입니다. 작성 시 `version`은 생략할 수 있으며 수정/삭제 시에는 상세 응답의 최신 값을 사용합니다. 목록 응답에는 본문 전체 대신 최대 160자의 미리보기만 포함합니다.
+응답은 본문 전체를 반복 반환하지 않고 `{id, version, pending, conflicted, updatedAt}`만 반환합니다. 최초 작성/수동 저장/상세 응답은 본문도 포함합니다. 최초 작성에는 별도의 `creationKey` UUID를 보내 같은 메모 생성의 재시도를 식별합니다. 고정/색상 요청은 `{color, pinned, version, operationKey}`입니다. 색상은 `LAVENDER`, `MINT`, `AMBER`, `ROSE`를 지원합니다.
 
-## DB 반영
+## 기존 DB 반영
 
-현재 프로젝트의 `spring.jpa.hibernate.ddl-auto=update` 설정에서는 새 `admin_memo` 테이블을 Hibernate가 생성합니다. Flyway나 기존 데이터를 변경하는 시작 작업은 추가하지 않았습니다. DB를 수동 관리하는 환경에서는 아래 MySQL SQL을 적용 대상 DB에서 실행한 뒤 새 코드를 시작합니다. 개발 중 운영 DB에 이 SQL을 실행하지 않았습니다.
+`spring.jpa.hibernate.ddl-auto=update` 환경에서는 Hibernate가 nullable `creation_key`와 유일 제약을 추가합니다. 기존 `admin_memo` 이름·ID·소유자·본문은 유지하며 Flyway나 데이터 삭제 작업을 추가하지 않았습니다. DB를 수동 관리한다면 컬럼/제약이 **아직 없는 경우에만** 다음을 한 번 적용합니다. 운영 DB에 이 SQL을 실행하지 않았습니다.
 
 ```sql
-CREATE TABLE IF NOT EXISTS admin_memo (
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    owner_id BIGINT NOT NULL,
-    title VARCHAR(120) NOT NULL,
-    content LONGTEXT NOT NULL,
-    color VARCHAR(20) NOT NULL,
-    pinned BIT NOT NULL,
-    version BIGINT NOT NULL DEFAULT 0,
-    register_time DATETIME(6) NULL,
-    update_time DATETIME(6) NULL,
-    PRIMARY KEY (id),
-    INDEX idx_admin_memo_owner_pinned_updated (owner_id, pinned, update_time, id),
-    CONSTRAINT fk_admin_memo_owner FOREIGN KEY (owner_id) REFERENCES member (member_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+ALTER TABLE admin_memo
+    ADD COLUMN creation_key VARCHAR(36) NULL,
+    ADD CONSTRAINT uk_memo_creation_key UNIQUE (creation_key);
 ```
+
+기존 레코드는 `creation_key = NULL`로 보존됩니다. 배포 롤백 전에는 대기 중인 초안을 DB에 반영하고 대기열이 비었는지 확인하세요. 새 자동 저장 경로의 논리 버전과 Redis 초안을 이해하지 못하는 이전 코드와 혼용하면 안 됩니다.

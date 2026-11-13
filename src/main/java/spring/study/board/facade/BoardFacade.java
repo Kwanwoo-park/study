@@ -1,18 +1,5 @@
 package spring.study.board.facade;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import org.springframework.security.core.context.SecurityContextHolder;
-import spring.study.common.service.ModerationService;
-import spring.study.forbidden.entity.Status;
-import spring.study.forbidden.service.ForbiddenService;
-import spring.study.jwt.service.JwtCookieService;
-import spring.study.jwt.service.MemberTokenCacheService;
-import spring.study.jwt.service.RefreshTokenService;
-import spring.study.notification.entity.Group;
-import spring.study.notification.service.NotificationService;
-
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -42,12 +29,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class BoardFacade {
-    private static final DateTimeFormatter SANCTION_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private final ForbiddenService forbiddenService;
-    private final NotificationService notificationService;
-    private final MemberTokenCacheService tokenCacheService;
-    private final RefreshTokenService refreshTokenService;
-    private final JwtCookieService jwtCookieService;
     private final MemberService memberService;
     private final BoardService boardService;
     private final ReplyService replyService;
@@ -56,7 +37,6 @@ public class BoardFacade {
     private final BoardImgService boardImgService;
     private final FavoriteService favoriteService;
     private final ImageS3Service imageS3Service;
-    private final ModerationService moderationService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
 
     public ResponseEntity<?> load(int cursor, int limit, Member member) {
@@ -130,11 +110,7 @@ public class BoardFacade {
         ));
     }
 
-    public ResponseEntity<?> write(BoardRequestDto dto, Member member, HttpServletResponse response) {
-        ResponseEntity<?> validation = validateContent(dto.getContent(), member, response);
-        if (validation != null)
-            return validation;
-
+    public ResponseEntity<?> write(BoardRequestDto dto, Member member) {
         dto.setMember(member);
 
         Board saved = boardService.save(dto);
@@ -151,8 +127,8 @@ public class BoardFacade {
         ));
     }
 
-    public ResponseEntity<?> update(BoardRequestDto dto, Member member, HttpServletResponse response) {
-        Board board = boardService.findById(dto.getId());
+    public ResponseEntity<?> validateUpdate(Long id, Member member) {
+        Board board = boardService.findById(id);
 
         if (!board.getMember().getId().equals(member.getId()) && member.getRole() != Role.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
@@ -161,7 +137,11 @@ public class BoardFacade {
             ));
         }
 
-        ResponseEntity<?> validation = validateContent(dto.getContent(), member, response);
+        return null;
+    }
+
+    public ResponseEntity<?> update(BoardRequestDto dto, Member member) {
+        ResponseEntity<?> validation = validateUpdate(dto.getId(), member);
         if (validation != null)
             return validation;
 
@@ -213,82 +193,6 @@ public class BoardFacade {
                 "result", -1,
                 "message", "비공개 설정으로 조회할 수 없습니다."
         ));
-    }
-
-    private ResponseEntity<?> validateContent(String content, Member member, HttpServletResponse response) {
-        int risk = validateModeratedContent(content, member, response);
-
-        if (risk != 0) {
-            if (risk == -99) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "result", risk,
-                        "message", "게시글 내용이 없습니다"
-                ));
-            }
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -risk,
-                    "message", "금칙어를 사용하였습니다"
-            ));
-        }
-
-        return null;
-    }
-
-    private int validateModeratedContent(String checkStr, Member member, HttpServletResponse response) {
-        int risk = evaluateModeration(checkStr, member);
-        return risk == 3 ? handleModerationBlockRisk(member, response) : risk;
-    }
-
-    private int evaluateModeration(String content, Member member) {
-        if (content == null || content.isBlank())
-            return -99;
-
-        int risk = forbiddenService.findWordList(Status.APPROVAL, content);
-
-        if (risk == 3 || risk == 0)
-            return risk;
-
-        return moderationService.evaluate(member, risk);
-    }
-
-    private int handleModerationBlockRisk(Member member, HttpServletResponse response) {
-        if (member.getRole() == Role.ADMIN) {
-            notificationService.createNotification(
-                    member,
-                    "경고일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " / 사유: 금칙어 사용 (관리자 계정 정지 제외)",
-                    Group.ADMIN
-            );
-            moderationService.clear(member);
-
-            return 1;
-        }
-
-        blockModeratedMember(member, response);
-        return 3;
-    }
-
-    private void blockModeratedMember(Member member, HttpServletResponse response) {
-        notificationService.createNotification(
-                member,
-                "금지일자: " + LocalDateTime.now().format(SANCTION_DATE_FORMAT) + " (영구) / 사유: 금칙어 사용",
-                Group.ADMIN
-        );
-
-        notificationService.createNotification(
-                memberService.findAdministrator(),
-                member.getName() + "님이 금칙어를 사용하여 차단하였습니다",
-                Group.ADMIN
-        );
-
-        memberService.updateRole(member.getId(), Role.DENIED);
-
-        refreshTokenService.revoke(member.getId());
-        tokenCacheService.delete(member.getId());
-        jwtCookieService.clearAuthenticationCookies(response);
-        SecurityContextHolder.clearContext();
-
-        moderationService.clear(member);
     }
 
 }

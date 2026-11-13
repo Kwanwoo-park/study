@@ -1,6 +1,5 @@
 package spring.study.chat.facade;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,10 +8,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageEventDto;
-import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.entity.*;
 import spring.study.chat.service.*;
-import spring.study.forbidden.service.ForbiddenService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -31,7 +28,6 @@ class ChatFacadeMessageMutationTest {
     @Mock private ChatMessageHiddenService messageHiddenService;
     @Mock private ChatMessageImgService messageImgService;
     @Mock private MemberService memberService;
-    @Mock private ForbiddenService forbiddenService;
     @Mock private ImageS3Service imageS3Service;
     @Mock private SimpMessagingTemplate messagingTemplate;
     @InjectMocks private ChatFacade chatFacade;

@@ -36,7 +36,7 @@
 .memo-brand-mark svg { width: 24px; height: 24px; }
 .memo-brand strong { display: flex; align-items: center; gap: 10px; font-size: 19px; letter-spacing: -.6px; }
 .memo-brand small { display: block; margin-top: 4px; font-size: 11px; color: var(--memo-muted); }
-.memo-admin-badge { padding: 3px 5px; border: 1px solid var(--memo-line); border-radius: 4px; color: var(--memo-muted); font-size: 8px; letter-spacing: 1.1px; }
+.memo-private-badge { padding: 3px 5px; border: 1px solid var(--memo-line); border-radius: 4px; color: var(--memo-muted); font-size: 8px; letter-spacing: 1.1px; }
 .memo-top-actions, .memo-button, .memo-editor-tools, .memo-tool-button, .memo-editor-state, .memo-save-actions { display: flex; align-items: center; gap: 8px; }
 .memo-button { justify-content: center; min-height: 42px; border: 0; border-radius: 10px; padding: 10px 17px; font-size: 13px; font-weight: 650; transition: transform .15s ease, box-shadow .15s ease; }
 .memo-button:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 4px 12px #7460c225; }
