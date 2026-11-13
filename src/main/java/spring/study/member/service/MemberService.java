@@ -139,7 +139,7 @@ public class MemberService implements UserDetailsService {
     @Transactional
     public void deleteById(Long id) {
         memberRepository.deleteById(id);
-        eventPublisher.publishEvent(new MemberDeletedEvent(id));
+        publishMemberChanged(id);
     }
 
     @Transactional

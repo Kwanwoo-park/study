@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import spring.study.memo.dto.MemoRequestDto;
 import spring.study.memo.dto.MemoResponseDto;
@@ -28,6 +29,7 @@ class MemoPersistenceTest {
     @Autowired MemoService service;
     @Autowired MemoRepository memos;
     @Autowired MemberRepository members;
+    @Autowired TestEntityManager entityManager;
 
     @Test
     void searchesTitleAndBodyLiterallyAndKeepsEveryResultOwnerScoped() {
@@ -77,7 +79,10 @@ class MemoPersistenceTest {
     @Test
     void settingsAreSavedWithoutChangingTitleOrContent() {
         Member owner = member("owner");
-        MemoResponseDto original = service.create(request("제목", "저장된 본문", false, null), owner);
+        MemoResponseDto created = service.create(request("제목", "저장된 본문", false, null), owner);
+        // Compare DB-rounded timestamps rather than the pre-insert Java nanoseconds.
+        entityManager.clear();
+        MemoResponseDto original = service.find(created.id(), owner);
 
         MemoResponseDto updated = new MemoResponseDto(original.id(), original.title(), original.content(), MemoColor.MINT, true,
                 original.version() + 1, original.createdAt(), LocalDateTime.now().withNano(0));

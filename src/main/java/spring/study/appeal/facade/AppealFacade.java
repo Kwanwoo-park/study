@@ -119,13 +119,17 @@ public class AppealFacade {
         }
 
         String token = requestDto.getVerificationToken();
+
         if (token == null || token.isBlank()) {
             throw appealVerificationRequired();
         }
+
         Member member = findAppealMember(requestDto.getEmail());
+
         if (!verificationService.consume(EmailVerificationPurpose.APPEAL, member.getId().toString(), token)) {
             throw appealVerificationRequired();
         }
+
         return member;
     }
 
