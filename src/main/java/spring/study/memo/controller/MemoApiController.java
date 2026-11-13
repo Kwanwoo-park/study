@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +19,6 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping({"/api/memos", "/api/admin/memos"})
-@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class MemoApiController {
     private final MemoFacade memoFacade;
 
