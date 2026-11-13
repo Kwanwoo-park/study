@@ -36,7 +36,7 @@ class Element {
     }
 }
 
-async function setup({empty = false, patchStatus = 200, dropDraftResponse = false} = {}) {
+async function setup({empty = false, patchStatus = 200, dropDraftResponse = false, csrfFailures = 0, csrfRefreshStatus = 200} = {}) {
     let now = 100000;
     let timerId = 0;
     const timers = new Map();
@@ -67,6 +67,7 @@ async function setup({empty = false, patchStatus = 200, dropDraftResponse = fals
     let lastOperation;
     let holdWrite = false;
     let release;
+    let csrfRequests = 0;
     const saveStatus = () => ({id: stored.id, version: stored.version, pending: stored.pending, conflicted: false});
     const response = (body, status = 200) => ({status, ok: status >= 200 && status < 300, json: async () => body});
     vm.runInNewContext(script, {
@@ -75,9 +76,14 @@ async function setup({empty = false, patchStatus = 200, dropDraftResponse = fals
         fetch: async (url, options) => {
             const payload = options.body ? JSON.parse(options.body) : null;
             requests.push({url, options, payload});
-            if (url.endsWith('/csrf')) return response({headerName: 'X-CSRF-TOKEN', token: 'test-token'});
+            if (url.endsWith('/csrf')) {
+                csrfRequests++;
+                if (csrfRequests > 1 && csrfRefreshStatus !== 200) return response({}, csrfRefreshStatus);
+                return response({headerName: 'X-CSRF-TOKEN', token: csrfRequests === 1 ? 'test-token' : `test-token-${csrfRequests}`});
+            }
             if (options.method) {
-                if (options.method === 'PATCH' && patchStatus !== 200) return response({message: '다른 화면에서 변경된 메모입니다'}, patchStatus);
+                if (csrfFailures > 0) { csrfFailures--; return response({code: 'CSRF_INVALID'}, 403); }
+                if (options.method === 'PATCH' && patchStatus !== 200) return response({code: patchStatus === 403 ? 'FORBIDDEN' : undefined, message: '다른 화면에서 변경된 메모입니다'}, patchStatus);
                 if (payload.operationKey === lastOperation) return response(url.endsWith('/draft') ? saveStatus() : stored);
                 if (options.method !== 'POST' && payload.version !== stored.version) return response({message: '버전 충돌'}, 409);
                 const pending = url.endsWith('/draft') || url.includes('draft=true');
@@ -251,4 +257,71 @@ test('a lost acknowledgement retries the same operation before sending newer inp
     await ui.advance(1000);
     assert.equal(ui.stored().content, '더 최신 입력');
     assert.equal(ui.stored().version, 2);
+});
+
+test('CSRF recovery retries the same create or draft operation once and continues autosaving', async () => {
+    for (const empty of [false, true]) {
+        const ui = await setup({empty, csrfFailures: 1});
+        if (empty) await ui.node('new').emit('click');
+        ui.node('content').value = '인증 갱신 중에도 보존할 본문';
+        await ui.node('content').emit('input');
+        await ui.advance(1000);
+        assert.equal(ui.writes().length, 2);
+        const [first, retried] = ui.writes();
+        assert.equal(first.url, retried.url);
+        assert.equal(first.options.method, retried.options.method);
+        assert.equal(first.options.body, retried.options.body);
+        assert.equal(first.options.headers['X-CSRF-TOKEN'], 'test-token');
+        assert.equal(retried.options.headers['X-CSRF-TOKEN'], 'test-token-2');
+        assert.equal(ui.stored().content, '인증 갱신 중에도 보존할 본문');
+        assert.equal(ui.stored().version, 1);
+        ui.node('content').value += ' · 다음 변경';
+        await ui.node('content').emit('input');
+        await ui.advance(1000);
+        assert.equal(ui.writes().length, 3);
+        assert.equal(ui.stored().version, 2);
+        assert.equal(ui.stored().content, ui.node('content').value);
+    }
+});
+
+test('CSRF recovery stops after one unsuccessful retry and preserves unsaved input', async () => {
+    const ui = await setup({csrfFailures: 3});
+    ui.node('content').value = '보존해야 할 본문';
+    await ui.node('content').emit('input');
+    await ui.advance(1000);
+    assert.equal(ui.writes().length, 2);
+    assert.equal(ui.requests.filter(request => request.url.endsWith('/csrf')).length, 2);
+    assert.equal(ui.node('content').value, '보존해야 할 본문');
+    assert.equal(ui.stored().content, '저장된 본문');
+    assert.equal(ui.node('save').disabled, true);
+    await ui.advance(60000);
+    assert.equal(ui.writes().length, 2);
+});
+
+test('permission denial and authentication expiry never trigger a CSRF retry', async () => {
+    for (const patchStatus of [403, 401]) {
+        const ui = await setup({patchStatus});
+        ui.node('content').value = '권한 오류 시에도 유지할 내용';
+        await ui.node('content').emit('input');
+        await ui.advance(1000);
+        assert.equal(ui.writes().length, 1);
+        assert.equal(ui.requests.filter(request => request.url.endsWith('/csrf')).length, 1);
+        assert.equal(ui.node('content').value, '권한 오류 시에도 유지할 내용');
+        assert.match(ui.node('status').textContent, patchStatus === 401 ? /로그인/ : /권한/);
+        await ui.advance(60000);
+        assert.equal(ui.writes().length, 1);
+    }
+});
+
+test('expired login during CSRF renewal stops the write and retains the draft', async () => {
+    const ui = await setup({csrfFailures: 1, csrfRefreshStatus: 401});
+    ui.node('content').value = '다시 로그인하기 전에 복사할 내용';
+    await ui.node('content').emit('input');
+    await ui.advance(1000);
+    assert.equal(ui.writes().length, 1);
+    assert.equal(ui.requests.filter(request => request.url.endsWith('/csrf')).length, 2);
+    assert.equal(ui.node('content').value, '다시 로그인하기 전에 복사할 내용');
+    assert.match(ui.node('status').textContent, /로그인/);
+    await ui.advance(60000);
+    assert.equal(ui.writes().length, 1);
 });

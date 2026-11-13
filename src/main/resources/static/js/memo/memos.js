@@ -151,9 +151,10 @@
         status('입력을 1초 멈추면 임시 저장됩니다. DB에 지금 저장 버튼으로 즉시 저장할 수도 있어요.');
     }
 
-    async function request(path = '', options = {}) {
+    async function request(path = '', options = {}, csrfRetried = false) {
         const headers = {Accept: 'application/json', ...options.headers};
-        if (options.method && options.method !== 'GET') {
+        const mutation = options.method && options.method !== 'GET';
+        if (mutation) {
             csrfPromise ||= request('/csrf').catch(error => { csrfPromise = null; throw error; });
             const csrf = await csrfPromise;
             headers[csrf.headerName] = csrf.token;
@@ -161,9 +162,15 @@
         const response = await fetch(api + path, {credentials: 'same-origin', cache: 'no-store', ...options, headers});
         if (response.status === 204) return null;
         const body = await response.json().catch(() => null);
+        if (response.status === 403 && mutation && body?.code === 'CSRF_INVALID' && !csrfRetried) {
+            csrfPromise = null;
+            // Reuse the exact URL, body and operationKey; typing during recovery stays in the editor.
+            return request(path, options, true);
+        }
         if (!response.ok || !body) {
             if (response.status === 403) csrfPromise = null;
             const message = response.status === 401 ? '로그인이 만료되었습니다. 다시 로그인해 주세요. 작성 내용은 복사해서 보관해 주세요.'
+                : response.status === 403 && body?.code === 'FORBIDDEN' ? '메모를 사용할 권한이 없습니다. 계정 상태를 확인해 주세요.'
                 : response.status === 403 ? '사용 권한 또는 요청 인증을 확인할 수 없습니다. 작성 내용을 보관한 뒤 새로고침해 주세요.'
                 : body?.message || '요청을 처리하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.';
             const error = new Error(message);
