@@ -260,6 +260,7 @@ public class MemberFacade {
         }
 
         String imageUrl = "", oldProfile;
+
         try {
             imageUrl = imageS3Service.uploadImageToS3(file);
             oldProfile = member.getProfile();
@@ -275,7 +276,8 @@ public class MemberFacade {
             ));
         }
 
-        imageS3Service.deleteImage(oldProfile);
+        if (member.getProfile().equals(imageUrl))
+            imageS3Service.deleteImage(oldProfile);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId()
@@ -393,7 +395,6 @@ public class MemberFacade {
         }
 
         Member member = memberService.findMember(dto.getEmail());
-
         int result = memberService.updatePhoneAndBirth(member.getId(), dto.getPhone(), dto.getBirth());
 
         if (result != -2) {
@@ -443,7 +444,9 @@ public class MemberFacade {
         // the managed aggregate only for this account-deletion operation,
         // which needs the member's lazy associations.
         member = memberService.findById(member.getId());
+
         accountService.deleteByMember(member);
+
         for (Board board : member.getBoard()) {
             imageS3Service.deleteImage(board.getImg());
             boardImgService.deleteBoard(board);
@@ -455,10 +458,14 @@ public class MemberFacade {
         appealService.detachSanctions(member);
         appealService.deleteByMember(member);
         memberSanctionService.deleteByMemberReferences(member);
-        bookReviewService.deleteByAuthor(member);
         reportService.deleteByReporter(member);
+
+        bookReviewService.deleteByAuthor(member);
+
         notificationService.deleteByMember(member);
+
         favoriteService.deleteByMember(member);
+
         replyService.deleteReplay(member.getComment());
         replyService.deleteReply(member);
         commentService.deleteByMember(member);
@@ -472,6 +479,7 @@ public class MemberFacade {
         roomMemberService.delete(member);
 
         imageS3Service.deleteImgSrc(collectionService.findByMember(member).stream().map(Collection::getImgSrc).toList());
+
         collectionService.deleteByMember(member);
 
         for (Diary diary : member.getDiaries()) {
@@ -570,8 +578,7 @@ public class MemberFacade {
         ));
     }
 
-    public ResponseEntity<?> updateAuthenticatedPassword(String password, Member member,
-                                                        HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> updateAuthenticatedPassword(String password, Member member, HttpServletRequest request, HttpServletResponse response) {
         if (password == null || password.isBlank()) {
             return updatePassword(password, member);
         } else if (!emailVerificationService.consumePasswordChange(member.getId().toString())) {
@@ -582,6 +589,7 @@ public class MemberFacade {
         }
 
         ResponseEntity<?> result = updatePassword(password, member);
+
         if (result.getStatusCode().is2xxSuccessful()) {
             clearSession(request, response);
         }
@@ -591,6 +599,7 @@ public class MemberFacade {
 
     public ResponseEntity<?> withdraw(Member member, HttpServletRequest request, HttpServletResponse response) {
         ResponseEntity<?> result = transactions.write(() -> deleteMember(member));
+
         clearSession(request, response);
 
         return result;
@@ -599,30 +608,40 @@ public class MemberFacade {
     private void establishSession(Member member, HttpServletRequest request, HttpServletResponse response, String ipAddress) {
         IssuedToken accessToken = tokenProvider.createAccessToken(member);
         IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
+
         refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress);
         memberTokenCacheService.save(member, tokenProvider.refreshTokenDuration());
+
         AuthenticationTokens tokens = new AuthenticationTokens(accessToken.value(), refreshToken.value(), accessToken.expiresAt(), refreshToken.expiresAt());
+
         if (request != null) {
             revokeSessionRefreshToken(cookieService.readCurrentRefreshToken(request));
             cookieService.rememberRefreshToken(request, tokens.refreshToken());
         }
+
         cookieService.writeAccessToken(response, tokens.accessToken(), tokenProvider.accessTokenDuration());
         cookieService.writeRefreshToken(response, tokens.refreshToken(), tokenProvider.refreshTokenDuration());
     }
 
     private void clearSession(HttpServletRequest request, HttpServletResponse response) {
         revokeSessionRefreshToken(cookieService.readCurrentRefreshToken(request));
+
         cookieService.clearAuthenticationCookies(response);
+
         SecurityContextHolder.clearContext();
     }
 
     private void revokeSessionRefreshToken(String tokenValue) {
-        if (tokenValue == null || tokenValue.isBlank()) return;
+        if (tokenValue == null || tokenValue.isBlank())
+            return;
+
         try {
             TokenClaims claims = tokenProvider.parse(tokenValue, TokenName.REFRESH.getValue());
             RefreshToken oldToken = refreshTokenService.findOldToken(claims.jti());
+
             if (oldToken != null) {
                 refreshTokenService.deleteOldToken(oldToken);
+
                 if (!refreshTokenService.existsByMemberIdAndExpiresAtAfter(oldToken.getMemberId(), Instant.now())) {
                     memberTokenCacheService.delete(oldToken.getMemberId());
                 }
@@ -631,5 +650,4 @@ public class MemberFacade {
             // Logout remains idempotent for expired or malformed client tokens.
         }
     }
-
 }

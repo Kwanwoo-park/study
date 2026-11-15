@@ -133,16 +133,6 @@ public class ReportService {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     @Transactional
     public ReportResponseDto cancel(Long id, Member reporter) {
         Report report = reportRepository.findForUpdateByIdAndReporterIsNotNull(id)

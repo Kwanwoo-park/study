@@ -29,10 +29,11 @@ public class MemoSecurityConfig {
     @Order(5)
     public SecurityFilterChain memoFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
         CookieCsrfTokenRepository csrf = new CookieCsrfTokenRepository();
+
         csrf.setCookieName("MEMOS-CSRF");
         csrf.setCookiePath("/api");
-        return http.securityMatcher("/memos", "/memos/**", "/api/memos", "/api/memos/**",
-                        "/admin/memos", "/admin/memos/**", "/api/admin/memos", "/api/admin/memos/**")
+
+        return http.securityMatcher("/memos", "/memos/**", "/api/memos", "/api/memos/**")
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().hasAnyRole("USER", "ADMIN"))
                 // JWT restores authentication on every request; retain CSRF verification without login-time token removal.
                 .csrf(config -> config.csrfTokenRepository(csrf).sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy()))
@@ -49,9 +50,11 @@ public class MemoSecurityConfig {
             response.sendError(404);
             return;
         }
+
         boolean csrfFailure = error instanceof CsrfException;
         String code = csrfFailure ? "CSRF_INVALID" : "FORBIDDEN";
         String message = csrfFailure ? "요청 인증 정보가 변경되었습니다. 다시 시도해 주세요." : "메모를 사용할 권한이 없습니다.";
+
         response.setStatus(403);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

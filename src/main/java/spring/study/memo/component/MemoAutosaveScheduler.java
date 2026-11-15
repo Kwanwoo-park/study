@@ -28,16 +28,26 @@ public class MemoAutosaveScheduler {
     }
 
     @PostConstruct
-    public void start() { task = scheduler.scheduleWithFixedDelay(this::flushDue, Duration.ofMillis(properties.getPollMs())); }
+    public void start() {
+        task = scheduler.scheduleWithFixedDelay(this::flushDue, Duration.ofMillis(properties.getPollMs()));
+    }
 
     @PreDestroy
-    public void stop() { if (task != null) task.cancel(false); }
+    public void stop() {
+        if (task != null)
+            task.cancel(false);
+    }
 
     public void flushDue() {
-        if (System.currentTimeMillis() < nextAttemptAt) return;
-        try { memoFacade.flushDue(); failures = 0; }
-        catch (RuntimeException exception) {
+        if (System.currentTimeMillis() < nextAttemptAt)
+            return;
+
+        try {
+            memoFacade.flushDue();
+            failures = 0;
+        } catch (RuntimeException exception) {
             nextAttemptAt = System.currentTimeMillis() + Math.min(60000, 1000L << Math.min(failures++, 6));
+
             log.warn("Memo draft queue unavailable; will retry. error={}", exception.getClass().getSimpleName());
         }
     }

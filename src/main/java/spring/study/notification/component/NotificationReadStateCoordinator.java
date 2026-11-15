@@ -21,10 +21,10 @@ public class NotificationReadStateCoordinator {
     private final Map<String, NotificationReadState> pending = new ConcurrentHashMap<>();
 
     public void afterCommit(NotificationReadState read) {
-        if (!TransactionSynchronizationManager.isActualTransactionActive()
-                || !TransactionSynchronizationManager.isSynchronizationActive()) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive() || !TransactionSynchronizationManager.isSynchronizationActive()) {
             throw new IllegalStateException("Notification reads must be synchronized inside a transaction");
         }
+
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
@@ -32,6 +32,7 @@ public class NotificationReadStateCoordinator {
                 // Redis failures must not turn an already committed read into an HTTP error.
                 emitterService.applyReadState(read);
                 pending.merge(read.scopeKey(), read, NotificationReadStateCoordinator::latest);
+
                 publishPending(read.scopeKey());
             }
         });
@@ -45,13 +46,15 @@ public class NotificationReadStateCoordinator {
 
     private void publishPending(String key) {
         NotificationReadState read = pending.get(key);
-        if (read == null) return;
+
+        if (read == null)
+            return;
+
         try {
             publisher.publishReadState(read);
             pending.remove(key, read);
         } catch (RuntimeException exception) {
-            log.warn("Notification read propagation will be retried. memberId={}, notificationId={}",
-                    read.memberId(), read.notificationId(), exception);
+            log.warn("Notification read propagation will be retried. memberId={}, notificationId={}", read.memberId(), read.notificationId(), exception);
         }
     }
 

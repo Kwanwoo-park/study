@@ -18,8 +18,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
-import spring.study.member.event.MemberChangedEvent;
-import spring.study.member.event.MemberDeletedEvent;
+import spring.study.member.dto.MemberChangedEvent;
 import spring.study.common.entity.CommonVisibility;
 import spring.study.member.repository.MemberRepository;
 import spring.study.common.dto.EntityIdProjection;
@@ -45,7 +44,9 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public Member save(Member member) { return memberRepository.save(member); }
+    public Member save(Member member) {
+        return memberRepository.save(member);
+    }
 
     @Transactional(readOnly = true)
     public HashMap<String, Object> findAll(Integer page, Integer size) {
@@ -63,13 +64,7 @@ public class MemberService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public Member findById(Long id) {
-        return memberRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
-    }
-
-    @Transactional(readOnly = true)
-    public List<MemberResponseDto> findName(String name) {
-        return memberRepository.findByNameContaining(name).stream().map(MemberResponseDto::new).toList();
+        return memberRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
     }
 
     @Transactional(readOnly = true)
@@ -84,8 +79,7 @@ public class MemberService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public Member findMember(String email) {
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
+        return memberRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"));
     }
 
     @Transactional(readOnly = true)
@@ -139,18 +133,21 @@ public class MemberService implements UserDetailsService {
     @Transactional
     public void deleteById(Long id) {
         memberRepository.deleteById(id);
+
         publishMemberChanged(id);
     }
 
     @Transactional
     public void activate(Long id) {
         memberRepository.findById(id).orElseThrow().activate();
+
         publishMemberChanged(id);
     }
 
     @Transactional
     public void ban(Long id) {
         memberRepository.findById(id).orElseThrow().ban();
+
         publishMemberChanged(id);
     }
 
@@ -172,6 +169,7 @@ public class MemberService implements UserDetailsService {
 
         member.changeLastLoginTime(LocalDateTime.now());
         publishMemberChanged(id);
+
         return member;
     }
 
@@ -214,18 +212,19 @@ public class MemberService implements UserDetailsService {
 
         member.changeVisibility(visibility);
         publishMemberChanged(id);
+
         return member.getId();
     }
 
     @Transactional
-    public long updateAudioCallEnabled(Long id, boolean audioCallEnabled) {
+    public void updateAudioCallEnabled(Long id, boolean audioCallEnabled) {
         Member member = memberRepository.findById(id).orElseThrow(() -> new BadCredentialsException(
                 "존재하지 않는 회원입니다."
         ));
 
         member.changeAudioCallEnabled(audioCallEnabled);
         publishMemberChanged(id);
-        return member.getId();
+
     }
 
     private void publishMemberChanged(Long memberId) {
@@ -236,8 +235,6 @@ public class MemberService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new BadCredentialsException(
-                        "이메일이나 비밀번호를 확인해주세요"
-                ));
+                .orElseThrow(() -> new BadCredentialsException("이메일이나 비밀번호를 확인해주세요"));
     }
 }

@@ -22,10 +22,12 @@ public class AuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         if (cookieService.isMobileOAuth(request)) {
             cookieService.clearMobileOAuthMarker(response);
-            getRedirectStrategy().sendRedirect(request, response,
-                    "kwanwooapp://oauth/callback?error=oauth_failed");
+
+            getRedirectStrategy().sendRedirect(request, response, "kwanwooapp://oauth/callback?error=oauth_failed");
+
             return;
         }
+
         String msg = "Invalid Email or Password";
 
         if (exception instanceof DisabledException) {

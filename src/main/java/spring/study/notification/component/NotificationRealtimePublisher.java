@@ -44,14 +44,16 @@ public class NotificationRealtimePublisher {
     public void publishReadState(NotificationReadState read) {
         try {
             Long subscribers = redisTemplate.convertAndSend(READ_CHANNEL, objectMapper.writeValueAsString(read));
-            if (subscribers == null || subscribers == 0) throw new IllegalStateException("No notification read subscribers available");
-            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION_READ, IntegrationEventLogOperation.PUBLISH,
-                    IntegrationEventLogOutcome.SUCCESS, read.notificationId(), 1, null, subscribers, null);
+
+            if (subscribers == 0)
+                throw new IllegalStateException("No notification read subscribers available");
+
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION_READ, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.SUCCESS, read.notificationId(), 1, null, subscribers, null);
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Notification read state serialization failed", exception);
         } catch (RuntimeException exception) {
-            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION_READ, IntegrationEventLogOperation.PUBLISH,
-                    IntegrationEventLogOutcome.FAILED, read.notificationId(), 1, exception);
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION_READ, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.FAILED, read.notificationId(), 1, exception);
+
             throw exception;
         }
     }
@@ -61,22 +63,28 @@ public class NotificationRealtimePublisher {
             String payload = objectMapper.writeValueAsString(NotificationRealtimeEvent.from(notification));
             String identity = eventId == null ? payload : eventId;
             String key = "notification:delivered:" + fingerprint(identity);
-            Long subscribers = redisTemplate.execute(PUBLISH_ONCE, List.of(key), CHANNEL, payload, Long.toString(properties.getDedupTtlSeconds()));
-            if (subscribers == null) throw new IllegalStateException("Redis delivery result unavailable");
+            long subscribers = redisTemplate.execute(PUBLISH_ONCE, List.of(key), CHANNEL, payload, Long.toString(properties.getDedupTtlSeconds()));
+
+
             eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH,
                     subscribers == -1 ? IntegrationEventLogOutcome.DUPLICATE : subscribers == 0 ? IntegrationEventLogOutcome.NO_SUBSCRIBERS : IntegrationEventLogOutcome.SUCCESS,
                     notification.getId(), 1, null, subscribers < 0 ? null : subscribers, null);
         } catch (JsonProcessingException exception) {
             eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.FAILED, notification == null ? null : notification.getId(), 1, exception);
+
             throw new IllegalStateException("실시간 알림을 직렬화할 수 없습니다", exception);
         } catch (RuntimeException exception) {
             eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.FAILED, notification == null ? null : notification.getId(), 1, exception);
+
             throw exception;
         }
     }
 
     private static String fingerprint(String value) {
-        try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }
-        catch (NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

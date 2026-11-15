@@ -9,9 +9,11 @@ public class MemoAutosaveConfig {
     @Bean
     public ThreadPoolTaskScheduler memoAutosaveTaskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+
         scheduler.setPoolSize(1);
         scheduler.setThreadNamePrefix("memo-autosave-");
         scheduler.setRemoveOnCancelPolicy(true);
+
         return scheduler;
     }
 }

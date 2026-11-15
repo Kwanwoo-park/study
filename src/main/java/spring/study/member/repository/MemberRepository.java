@@ -18,11 +18,6 @@ import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update member m set m.lastLoginTime = :accessedAt where m.id = :memberId")
-    int updateLastLoginTime(@Param("memberId") Long memberId,
-                            @Param("accessedAt") LocalDateTime accessedAt);
-
     @Transactional(readOnly = true)
     List<Member> findByRegisterTimeBetween(LocalDateTime start, LocalDateTime end);
 
@@ -40,8 +35,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // Restrict both OR branches to the candidate member IDs.
     @Transactional(readOnly = true)
-    List<EntityIdProjection> findByIdInAndLastLoginTimeIsNullOrIdInAndLastLoginTimeLessThanEqual(
-            Collection<Long> neverLoggedInMemberIds, Collection<Long> inactiveMemberIds, LocalDateTime cutoff);
+    List<EntityIdProjection> findByIdInAndLastLoginTimeIsNullOrIdInAndLastLoginTimeLessThanEqual(Collection<Long> neverLoggedInMemberIds, Collection<Long> inactiveMemberIds, LocalDateTime cutoff);
 
     @Transactional(readOnly = true)
     Member findByPhoneAndBirth(String phone, String birth);
@@ -59,8 +53,5 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Boolean existsByPhone(String phone);
 
     @Transactional(readOnly = true)
-    List<Member> findByAccountStatusAndSuspendedUntilLessThanEqual(
-            MemberStatus accountStatus,
-            LocalDateTime suspendedUntil
-    );
+    List<Member> findByAccountStatusAndSuspendedUntilLessThanEqual(MemberStatus accountStatus, LocalDateTime suspendedUntil);
 }

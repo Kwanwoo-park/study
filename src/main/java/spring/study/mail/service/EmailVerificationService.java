@@ -50,17 +50,21 @@ public class EmailVerificationService {
         try {
             redisTemplate.delete(key(purpose, subject, "code"));
             redisTemplate.delete(key(purpose, subject, "attempt"));
+
             if (purpose == EmailVerificationPurpose.PASSWORD_CHANGE) {
                 redisTemplate.delete(key(purpose, subject, "verified"));
             }
 
             String code = createCode(purpose);
+
             redisTemplate.opsForValue().set(key(purpose, subject, "code"), digest(code), CODE_TTL);
+
             sendMessage(purpose, recipient, code);
         } catch (RuntimeException exception) {
             redisTemplate.delete(key(purpose, subject, "code"));
             redisTemplate.delete(key(purpose, subject, "attempt"));
             redisTemplate.delete(cooldownKey);
+
             throw exception;
         }
     }
@@ -69,9 +73,13 @@ public class EmailVerificationService {
         verifyCode(purpose, subject, code);
 
         byte[] bytes = new byte[32];
+
         random.nextBytes(bytes);
+
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+
         redisTemplate.opsForValue().set(tokenKey(purpose, token), subject.trim(), CODE_TTL);
+
         return token;
     }
 
@@ -85,39 +93,44 @@ public class EmailVerificationService {
 
     public void verifyPasswordChange(String memberId, String code) {
         verifyCode(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, code);
-        redisTemplate.opsForValue().set(key(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, "verified"),
-                "1", PASSWORD_VERIFIED_TTL);
+
+        redisTemplate.opsForValue().set(key(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, "verified"), "1", PASSWORD_VERIFIED_TTL);
     }
 
     public boolean consumePasswordChange(String memberId) {
-        return Boolean.TRUE.equals(redisTemplate.delete(key(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, "verified")));
+        return redisTemplate.delete(key(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, "verified"));
     }
 
     private void verifyCode(EmailVerificationPurpose purpose, String subject, String code) {
         String codeKey = key(purpose, subject, "code");
         String savedCode = redisTemplate.opsForValue().get(codeKey);
+
         if (savedCode == null || code == null || code.isBlank()) {
             throw invalidCode();
         }
 
         String attemptKey = key(purpose, subject, "attempt");
         Long attempts = redisTemplate.opsForValue().increment(attemptKey);
+
         if (Long.valueOf(1).equals(attempts)) {
             redisTemplate.expire(attemptKey, CODE_TTL);
         }
+
         if (attempts != null && attempts > MAX_ATTEMPTS) {
             redisTemplate.delete(codeKey);
             redisTemplate.delete(attemptKey);
+
             if (purpose == EmailVerificationPurpose.EMAIL) {
                 throw invalidCode();
             }
+
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
                     "인증 시도 횟수를 초과했습니다. 인증번호를 다시 발급해주세요");
         }
 
         String suppliedCode = purpose == EmailVerificationPurpose.EMAIL ? code.trim() : code;
-        if (!MessageDigest.isEqual(savedCode.getBytes(StandardCharsets.UTF_8),
-                digest(suppliedCode).getBytes(StandardCharsets.UTF_8))) {
+
+        if (!MessageDigest.isEqual(savedCode.getBytes(StandardCharsets.UTF_8), digest(suppliedCode).getBytes(StandardCharsets.UTF_8))) {
             throw invalidCode();
         }
 
@@ -125,6 +138,7 @@ public class EmailVerificationService {
         if (!savedCode.equals(redisTemplate.opsForValue().getAndDelete(codeKey))) {
             throw invalidCode();
         }
+
         redisTemplate.delete(attemptKey);
     }
 
@@ -134,9 +148,11 @@ public class EmailVerificationService {
         }
 
         StringBuilder code = new StringBuilder(8);
+
         for (int index = 0; index < 8; index++) {
             code.append(EMAIL_CODE_CHARACTERS.charAt(random.nextInt(EMAIL_CODE_CHARACTERS.length())));
         }
+
         return code.toString();
     }
 

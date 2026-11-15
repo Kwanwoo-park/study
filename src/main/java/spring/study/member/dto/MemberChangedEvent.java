@@ -1,4 +1,4 @@
-package spring.study.member.event;
+package spring.study.member.dto;
 
 public record MemberChangedEvent(Long memberId) {
 }

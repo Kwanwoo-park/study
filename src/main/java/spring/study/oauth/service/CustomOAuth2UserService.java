@@ -13,7 +13,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
-import spring.study.member.event.MemberChangedEvent;
+import spring.study.member.dto.MemberChangedEvent;
 import spring.study.member.repository.MemberRepository;
 import spring.study.oauth.dto.OAuthAttributes;
 

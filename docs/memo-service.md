@@ -2,7 +2,7 @@
 
 일반 회원과 관리자 모두 `/memos`에서 **본인이 작성한 메모만** 사용할 수 있습니다. 회원 상세 메뉴와 하단 개인 설정 메뉴에 **내 메모**를 추가했습니다. 익명·차단 계정은 사용할 수 없으며, 관리자도 다른 회원의 메모를 조회하거나 수정할 수 없습니다.
 
-`AdminMemo*` 클래스·DTO·enum·테스트 이름은 `Memo*`로 변경했습니다. 기존 데이터를 유지하기 위해 엔티티 `Memo`는 계속 `admin_memo` 테이블을 사용합니다. `/admin/memos`는 `/memos`로 연결하고, `/api/admin/memos`는 기존 클라이언트를 위한 호환 경로로 유지합니다.
+`AdminMemo*` 클래스·DTO·enum·테스트 이름은 `Memo*`로 변경했습니다. 기존 데이터를 유지하기 위해 엔티티 `Memo`는 계속 `admin_memo` 테이블을 사용합니다. `/admin/memos`는 `/memos`로 연결합니다.
 
 ## 저장 흐름
 
@@ -46,7 +46,7 @@ maxmemory-policy noeviction
 
 `noeviction`은 메모리 부족 시 초안을 삭제하는 대신 새 저장 요청을 거절합니다. 화면은 완료 표시를 하지 않고 입력을 유지합니다. 미반영 초안에 짧은 TTL을 두거나 메모리 확보 목적으로 삭제하지 말고, 오래된 대기열·실패·Redis 메모리와 AOF 디스크 공간을 운영 모니터링해야 합니다. 메모리에는 최신 초안만 남지만 AOF는 변경을 기록하므로, 디스크 쓰기와 AOF 재작성 부하까지 없어지는 것은 아닙니다. 설정 확인은 한 요청만 수행하고 실패 결과도 10초간 캐시해 장애 시 동시 요청이 Redis 설정 조회로 몰리지 않게 했습니다.
 
-별도 인스턴스는 `memo.redis.host`, `memo.redis.port`, `memo.redis.username`, `memo.redis.password`, `memo.redis.database`로 지정합니다. 생략 시 기존 `spring.data.redis` 연결 위치/인증 정보를 기본값으로 사용합니다. 인증 정보는 환경 변수나 비공개 설정으로 관리합니다. 기존 공통 Redis 연결과 템플릿은 `@Primary`로 유지해 다른 도메인이 메모 전용 Redis로 바뀌지 않게 했습니다.
+별도 인스턴스는 `memo.redis.host`, `memo.redis.port`, `memo.redis.database`로 지정합니다. 호스트와 포트를 생략하면 기존 `spring.data.redis.host`, `spring.data.redis.port`를 사용하며, DB 번호의 기본값은 `0`입니다. 인증 정보 없이 연결합니다. 기존 공통 Redis 연결과 템플릿은 `@Primary`로 유지해 다른 도메인이 메모 전용 Redis로 바뀌지 않게 했습니다.
 
 ```properties
 memo.autosave.idle-ms=10000

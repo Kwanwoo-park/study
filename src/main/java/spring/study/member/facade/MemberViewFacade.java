@@ -32,8 +32,10 @@ public class MemberViewFacade {
         Member member = jwtManager.getLoginMember(request);
 
         if (member != null) {
-            if (member.getRole() == Role.USER) return "redirect:/board/main";
-            else if (member.getRole() == Role.ADMIN) return "redirect:/admin/administrator";
+            if (member.getRole() == Role.USER)
+                return "redirect:/board/main";
+            else if (member.getRole() == Role.ADMIN)
+                return "redirect:/admin/administrator";
         }
 
         model.addAttribute("error", error);
@@ -49,7 +51,9 @@ public class MemberViewFacade {
 
     public String detail(String email, Model model, HttpServletRequest request){
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/detail?email=" + email;
+
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/member/detail?email=" + email;
 
         String memberEmail = member.getEmail();
 
@@ -78,7 +82,8 @@ public class MemberViewFacade {
 
     public String updatePassword(Model model, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePassword";
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePassword";
 
         model.addAttribute("email", member.getEmail());
         model.addAttribute("emailVerificationRequired", true);
@@ -88,7 +93,8 @@ public class MemberViewFacade {
 
     public String updatePhone(Model model, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePhone";
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/member/updatePhone";
 
         model.addAttribute("email", member.getEmail());
         model.addAttribute("phone", member.getPhone());
@@ -106,7 +112,9 @@ public class MemberViewFacade {
 
     public String withdrawal(Model model, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/withdrawal";
+
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/member/withdrawal";
 
         model.addAttribute("name", member.getName());
 
@@ -128,7 +136,8 @@ public class MemberViewFacade {
                                String source,
                                HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
-        if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/member/search/detail?email=" + memberRequestDto.getEmail();
+        if (member == null)
+            return "redirect:/member/login?error=true&exception=Not Found&url=/member/search/detail?email=" + memberRequestDto.getEmail();
 
         String memberEmail = member.getEmail();
 
@@ -136,9 +145,11 @@ public class MemberViewFacade {
             return "redirect:/member/detail?email=" + memberEmail;
 
         Member search_member = memberService.findMember(memberRequestDto.getEmail());
+
         if (!visibilityAccessPolicy.canViewMember(search_member, member)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비공개 회원입니다.");
         }
+
         boolean includePrivateBoards = followService.existFollow(member, search_member);
 
         model.addAttribute("member", search_member);

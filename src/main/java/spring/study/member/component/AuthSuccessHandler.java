@@ -27,23 +27,29 @@ public class AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        String email = authentication.getPrincipal() instanceof OAuth2User oauth2User
-                ? oauth2User.getAttribute("email")
-                : authentication.getName();
+        String email = authentication.getPrincipal() instanceof OAuth2User oauth2User ? oauth2User.getAttribute("email") : authentication.getName();
         Member member = memberService.findMember(email);
+
         if (cookieService.isMobileOAuth(request)) {
             String code = mobileOAuthCodeService.create(member);
+
             cookieService.clearMobileOAuthMarker(response);
+
             String redirectUrl = UriComponentsBuilder.fromUriString("kwanwooapp://oauth/callback")
                     .queryParam("code", code)
                     .build()
                     .encode()
                     .toUriString();
+
             getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+
             return;
         }
+
         jwtAuthenticationService.login(member, request, response, ClientIpResolver.resolve(request));
+
         setDefaultTargetUrl("/board/main");
+
         super.onAuthenticationSuccess(request, response, authentication);
     }
 }

@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.member.entity.Member;
-import spring.study.member.event.MemberChangedEvent;
+import spring.study.member.dto.MemberChangedEvent;
 import spring.study.sanction.entity.MemberSanction;
 import spring.study.sanction.repository.MemberSanctionRepository;
 import spring.study.report.dto.ReportProcessRequestDto;

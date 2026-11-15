@@ -2,7 +2,8 @@
 
 2026-11-04 기준 모든 도메인의 `repository` 패키지에 있는 Java 파일 36개를 확인했다.
 직접 작성한 JPQL 37개 중 16개를 기본 CRUD 또는 메서드 이름 기반 쿼리로 전환했다.
-나머지 21개는 아래의 집계·접근 제어·벌크 처리 등의 이유로 유지한다.
+초기 점검에서 나머지 21개는 집계·접근 제어·벌크 처리 등의 이유로 유지했다.
+아래 목록에는 2026-11-15 알림 조회의 추가 정리도 반영했다.
 
 ## 전환한 조회
 
@@ -12,7 +13,7 @@
 | SavingAutoTransferRepository | 적금 계좌 번호가 기본 키이므로 `findById`로 납입 설정을 읽어 출금 계좌 번호 확인 |
 | AccountTransactionRepository | ID 기반 파생 조회 + `@Lock` + `@EntityGraph`로 전환, 입금/출금 계좌가 한쪽만 있는 거래도 유지 |
 | ReportRepository | ID와 신고자 존재 조건 기반 파생 조회 + `@Lock` + 신고자 `@EntityGraph`로 전환 |
-| NotificationRepository | 읽음 처리용 ID 조회에서 JPQL만 제거하고 기존 잠금 유지 |
+| NotificationRepository | 읽음 처리용 ID 조회의 잠금을 유지하고, 회원별·그룹별 최신순 목록도 `updateTime` 기준 파생 조회로 전환 |
 | ChatRoomMemberRepository | 방 조건·회원 이름/ID 순 정렬을 파생 조회로 전환하고 회원 `@EntityGraph` 유지 |
 | KafkaDeadLetterRepository | 재처리 상태·재시도 시각·ID 순 정렬·배치 크기·잠금을 파생 조회로 처리 |
 | KafkaOutboxEventRepository | 발행 대상 배치 조회를 파생 조회로 전환, 최소 생성 시각 집계는 생성 시각만 읽는 정렬된 첫 행 조회로 전환 |
@@ -34,7 +35,7 @@ Spring Data 파생 쿼리에서는 `AND`가 `OR`보다 먼저 묶이므로 다�
 독후감 검색의 `%`, `_`는 기존 JPQL과 같은 LIKE 패턴으로 유지한다.
 `Containing`으로 바꿔 사용자가 입력한 와일드카드의 의미가 달라지지 않도록 한다.
 
-## 유지한 JPQL 21개
+## 유지한 JPQL
 
 | Repository / 메서드 | 개수 | 유지 이유 |
 | --- | ---: | --- |
@@ -50,8 +51,7 @@ Spring Data 파생 쿼리에서는 `AND`가 `OR`보다 먼저 묶이므로 다�
 | KafkaDeadLetterRepository.findRecent | 1 | 선택적 상태·커서 조건과 DTO 생성자 프로젝션으로 필요한 컬럼과 payload 존재 여부만 조회. payload/key 원문은 조회 결과에서 제외 |
 | KafkaDeadLetterRepository.deleteReplayedBefore | 1 | 완료된 실패 이벤트를 단일 벌크 DELETE로 처리. 파생 delete로 바꿔 엔티티를 모두 로딩하지 않음 |
 | MemberRepository.updateLastLoginTime | 1 | 회원 전체를 로딩하지 않는 접속 시각 단일 UPDATE |
-| NotificationRepository.updateAll / updateReadStatusByMemberAndGroupAndUrl | 2 | 확인 시각 이후 도착한 알림을 제외하는 COALESCE 조건과 벌크 UPDATE 보존 |
-| NotificationRepository.findRecentByMember / findRecentByMemberAndGroup | 2 | `COALESCE(updateTime, registerTime)` 기준 최신순 정렬. 두 컬럼을 나란히 정렬하는 것으로 대체할 수 없음 |
+| NotificationRepository.updateAll / updateReadStatusByMemberAndGroupAndUrl | 2 | `updateTime <= readBefore` 조건으로 확인 시각 이후 알림을 제외하고, 여러 알림을 단일 벌크 UPDATE로 읽음 처리 |
 
 단순 UPDATE/DELETE도 파생 조회 후 `save`/`delete` 반복으로 바꾸면 쿼리 수·메모리 사용량,
 엔티티 콜백과 영속성 컨텍스트 동작이 달라지므로 기존 벌크 처리를 유지한다.

@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import spring.study.member.entity.MemberStatus;
-import spring.study.member.event.MemberChangedEvent;
+import spring.study.member.dto.MemberChangedEvent;
 import spring.study.member.repository.MemberRepository;
 
 import java.time.LocalDateTime;
@@ -20,11 +20,9 @@ public class MemberSanctionExpirationService {
     @Scheduled(fixedDelayString = "${spring.study.sanction-expiration-delay-ms:60000}")
     @Transactional
     public void activateExpiredSuspensions() {
-        memberRepository.findByAccountStatusAndSuspendedUntilLessThanEqual(
-                MemberStatus.SUSPENDED,
-                LocalDateTime.now()
-        ).forEach(member -> {
+        memberRepository.findByAccountStatusAndSuspendedUntilLessThanEqual(MemberStatus.SUSPENDED, LocalDateTime.now()).forEach(member -> {
             member.activate();
+
             eventPublisher.publishEvent(new MemberChangedEvent(member.getId()));
         });
     }

@@ -24,8 +24,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("""
             update Notification n set n.readStatus = :status
             where n.member.id = :id
-            and (coalesce(n.updateTime, n.registerTime) is null
-                 or coalesce(n.updateTime, n.registerTime) <= :readBefore)
+            and n.updateTime <= :readBefore
             """)
     int updateAll(@Param("id") Long id, @Param("status") Status status, @Param("readBefore") LocalDateTime readBefore);
 
@@ -34,8 +33,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             update Notification n set n.readStatus = :status
             where n.member = :member and n.notiGroup = :group and n.url = :url
             and n.readStatus = :currentStatus
-            and (coalesce(n.updateTime, n.registerTime) is null
-                 or coalesce(n.updateTime, n.registerTime) <= :readBefore)
+            and n.updateTime <= :readBefore
             """)
     int updateReadStatusByMemberAndGroupAndUrl(
             @Param("member") Member member,
@@ -46,13 +44,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("readBefore") LocalDateTime readBefore
     );
 
-    @Query("select n from Notification n where n.member = :member order by coalesce(n.updateTime, n.registerTime) desc")
     @Transactional(readOnly = true)
-    List<Notification> findRecentByMember(@Param("member") Member member, Pageable pageable);
+    List<Notification> findByMemberOrderByUpdateTimeDesc(Member member, Pageable pageable);
 
-    @Query("select n from Notification n where n.member = :member and n.notiGroup = :group order by coalesce(n.updateTime, n.registerTime) desc")
     @Transactional(readOnly = true)
-    List<Notification> findRecentByMemberAndGroup(@Param("member") Member member, @Param("group") Group group, Pageable pageable);
+    List<Notification> findByMemberAndNotiGroupOrderByUpdateTimeDesc(Member member, Group group, Pageable pageable);
 
     @Transactional(readOnly = true)
     List<Notification> findByMember(Member member);
@@ -62,12 +58,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     @Transactional(readOnly = true)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<Notification> findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(
-            Member member,
-            Group notiGroup,
-            String url,
-            Status readStatus
-    );
+    Optional<Notification> findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(Member member, Group notiGroup, String url, Status readStatus);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Notification> findForReadById(Long id);

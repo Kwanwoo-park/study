@@ -70,12 +70,7 @@ public class NotificationService {
         for (ChatRoomMember roomMember : list) {
             otherMember = roomMember.getMember();
 
-            notification = createOrUpdateNotification(
-                    otherMember,
-                    member.getName() + "님이 메시지를 보냈습니다.",
-                    group,
-                    roomMember.getRoom().getRoomId()
-            );
+            notification = createOrUpdateNotification(otherMember, member.getName() + "님이 메시지를 보냈습니다.", group, roomMember.getRoom().getRoomId());
 
             producer.sendNotification(notification);
         }
@@ -90,43 +85,35 @@ public class NotificationService {
     public int updateAllRead(Member member) {
         LocalDateTime readBefore = LocalDateTime.now();
         int updated = notificationRepository.updateAll(member.getId(), Status.READ, readBefore);
+
         readStateCoordinator.afterCommit(new NotificationReadState(member.getId(), null, null, null, readBefore));
+
         return updated;
     }
 
     @Transactional
-    public int updateReadByGroupAndUrl(Member member, Group group, String url) {
+    public void updateReadByGroupAndUrl(Member member, Group group, String url) {
         if (url == null || url.isBlank()) {
-            return 0;
+            return;
         }
 
         LocalDateTime readBefore = LocalDateTime.now();
-        int updated = notificationRepository.updateReadStatusByMemberAndGroupAndUrl(
-                member,
-                group,
-                url,
-                Status.UNREAD,
-                Status.READ,
-                readBefore
-        );
+        notificationRepository.updateReadStatusByMemberAndGroupAndUrl(member, group, url, Status.UNREAD, Status.READ, readBefore);
         readStateCoordinator.afterCommit(new NotificationReadState(member.getId(), null, group.name(), url, readBefore));
-        return updated;
     }
 
     @Transactional
-    public int closeRealtimeNotification(Member member, Group group, String url) {
-        if (url == null || url.isBlank()) return 0;
+    public void closeRealtimeNotification(Member member, Group group, String url) {
+        if (url == null || url.isBlank())
+            return;
 
-        return notificationRepository.findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(
-                member,
-                group,
-                url,
-                Status.UNREAD
-        ).map(notification -> {
+        notificationRepository.findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(member, group, url, Status.UNREAD).map(notification -> {
             markAsRead(notification);
+
             producer.sendNotification(notification);
-            return 1;
-        }).orElse(0);
+
+            return notification.getId();
+        });
     }
 
     @Transactional
@@ -142,10 +129,13 @@ public class NotificationService {
         // Capture scalars inside the transaction; never retain a lazy entity in the callback.
         LocalDateTime readBefore = LocalDateTime.now();
         LocalDateTime revision = notification.getUpdateTime() == null ? notification.getRegisterTime() : notification.getUpdateTime();
-        if (revision != null && revision.isAfter(readBefore)) readBefore = revision;
+
+        if (revision != null && revision.isAfter(readBefore))
+            readBefore = revision;
+
         notification.changeToRead();
-        readStateCoordinator.afterCommit(new NotificationReadState(
-                notification.getMember().getId(), notification.getId(), null, null, readBefore));
+
+        readStateCoordinator.afterCommit(new NotificationReadState(notification.getMember().getId(), notification.getId(), null, null, readBefore));
     }
 
     @Transactional(readOnly = true)
@@ -165,12 +155,12 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public List<Notification> findByMember(Member member, int page, int size) {
-        return notificationRepository.findRecentByMember(member, PageRequest.of(page, Math.min(Math.max(size, 1), 100)));
+        return notificationRepository.findByMemberOrderByUpdateTimeDesc(member, PageRequest.of(page, Math.min(Math.max(size, 1), 100)));
     }
 
     @Transactional(readOnly = true)
     public List<Notification> findByMemberAndGroup(Member member, Group group) {
-        return notificationRepository.findRecentByMemberAndGroup(member, group, PageRequest.of(0, 100));
+        return notificationRepository.findByMemberAndNotiGroupOrderByUpdateTimeDesc(member, group, PageRequest.of(0, 100));
     }
 
     @Transactional(readOnly = true)
@@ -206,6 +196,7 @@ public class NotificationService {
         }
 
         notification.updateUnread(message, url);
+
         return notification;
     }
 
@@ -214,12 +205,6 @@ public class NotificationService {
             return null;
         }
 
-        return notificationRepository.findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(
-                member,
-                group,
-                url,
-                Status.UNREAD
-        ).orElse(null);
+        return notificationRepository.findFirstByMemberAndNotiGroupAndUrlAndReadStatusOrderByIdDesc(member, group, url, Status.UNREAD).orElse(null);
     }
-
 }

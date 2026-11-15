@@ -36,6 +36,7 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     @Transactional(readOnly = true)
     Optional<Memo> findByIdAndOwner(Long id, Member owner);
 
+    @Transactional(readOnly = true)
     Optional<Memo> findByCreationKeyAndOwner(String creationKey, Member owner);
 
     @Transactional(readOnly = true)

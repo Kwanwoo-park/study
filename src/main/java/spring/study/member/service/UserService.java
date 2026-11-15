@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
-import spring.study.member.event.MemberChangedEvent;
+import spring.study.member.dto.MemberChangedEvent;
 import spring.study.member.repository.MemberRepository;
 import spring.study.member.repository.UserServiceRepository;
 import spring.study.member.entity.Role;
