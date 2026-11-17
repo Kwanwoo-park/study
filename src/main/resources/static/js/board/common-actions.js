@@ -1,76 +1,30 @@
 function fnLeft(listId, imageArr, skipAnimation) {
-    if (!Array.isArray(imageArr) || imageArr.length === 0) return;
-
-    const mainImage = document.getElementById('main_img' + listId);
-    const imgId = document.getElementById('img' + listId);
-    const leftArrow = document.getElementById('left' + listId);
-    const rightArrow = document.getElementById('right' + listId);
-
-    if (!mainImage || !imgId) return;
-
-    const currentIndex = parseInt(imgId.value, 10);
-    if (Number.isNaN(currentIndex) || currentIndex <= 0) return;
-    if (!skipAnimation && animateImageSwipe(mainImage, 'previous')) return;
-
-    const nextIndex = currentIndex - 1;
-    mainImage.src = imageArr[nextIndex].imgSrc;
-    imgId.value = nextIndex;
-    updateBoardImageIndicator(listId, nextIndex, imageArr.length);
-    preloadAdjacentImages(imageArr, nextIndex);
-
-    if (rightArrow) {
-        rightArrow.classList.remove('is-invisible');
-    }
-
-    if (leftArrow && nextIndex === 0) {
-        leftArrow.classList.add('is-invisible');
-    }
+    moveBoardImage(listId, imageArr, -1, skipAnimation);
 }
 
 function fnRight(listId, imageArr, skipAnimation) {
-    if (!Array.isArray(imageArr) || imageArr.length === 0) return;
-
-    const mainImage = document.getElementById('main_img' + listId);
-    const imgId = document.getElementById('img' + listId);
-    const leftArrow = document.getElementById('left' + listId);
-    const rightArrow = document.getElementById('right' + listId);
-
-    if (!mainImage || !imgId) return;
-
-    const currentIndex = parseInt(imgId.value, 10);
-    if (Number.isNaN(currentIndex) || currentIndex >= imageArr.length - 1) return;
-    if (!skipAnimation && animateImageSwipe(mainImage, 'next')) return;
-
-    const nextIndex = currentIndex + 1;
-    mainImage.src = imageArr[nextIndex].imgSrc;
-    imgId.value = nextIndex;
-    updateBoardImageIndicator(listId, nextIndex, imageArr.length);
-    preloadAdjacentImages(imageArr, nextIndex);
-
-    if (leftArrow) {
-        leftArrow.classList.remove('is-invisible');
-    }
-
-    if (rightArrow && nextIndex === imageArr.length - 1) {
-        rightArrow.classList.add('is-invisible');
-    }
+    moveBoardImage(listId, imageArr, 1, skipAnimation);
 }
 
-function updateBoardImageIndicator(listId, currentIndex, totalCount) {
-    const indicator = document.getElementById('imageCounter' + listId);
-    if (!indicator) return;
-
-    indicator.innerText = `${currentIndex + 1} / ${totalCount}`;
+function moveBoardImage(listId, imageArr, direction, skipAnimation) {
+    if (imageArr.length < 2) return;
+    const mainImage = document.getElementById('main_img' + listId);
+    const imgId = document.getElementById('img' + listId);
+    const nextIndex = Number(imgId.value) + direction;
+    if (nextIndex < 0 || nextIndex >= imageArr.length) return;
+    if (!skipAnimation && animateImageSwipe(mainImage, direction < 0 ? 'previous' : 'next')) return;
+    mainImage.src = imageArr[nextIndex].imgSrc;
+    imgId.value = nextIndex;
+    document.getElementById('imageCounter' + listId).innerText = `${nextIndex + 1} / ${imageArr.length}`;
+    document.getElementById('left' + listId).classList.toggle('is-invisible', nextIndex === 0);
+    document.getElementById('right' + listId).classList.toggle('is-invisible', nextIndex === imageArr.length - 1);
+    preloadAdjacentImages(imageArr, nextIndex);
 }
 
 function enableBoardImageSwipe(listId, imageArr) {
+    if (imageArr.length < 2) return;
     const mainImage = document.getElementById('main_img' + listId);
     const imgId = document.getElementById('img' + listId);
-
-    if (!mainImage || !imgId || !Array.isArray(imageArr) || imageArr.length <= 1
-            || typeof initImageSwipe !== 'function') {
-        return;
-    }
 
     initImageSwipe(mainImage, {
         canPrevious: () => Number(imgId.value) > 0,
@@ -85,8 +39,6 @@ function enableBoardImageSwipe(listId, imageArr) {
 function fnLike(listId) {
     const like = document.getElementById('like' + listId);
     const likeCnt = document.getElementById('like_cnt' + listId);
-    if (!like || !likeCnt) return;
-
     const liked = like.src.endsWith('ic_favorite.png');
     const url = liked ? `/api/favorite/delete?id=${listId}` : `/api/favorite/like?id=${listId}`;
     const method = liked ? 'DELETE' : 'POST';
@@ -115,8 +67,6 @@ function fnLike(listId) {
 function fnOnlyLike(listId) {
     const like = document.getElementById('like' + listId);
     const likeCnt = document.getElementById('like_cnt' + listId);
-    if (!like || !likeCnt) return;
-
     fetch(`/api/favorite/like?id=${listId}`, {
         method: 'POST',
         headers: {
@@ -139,27 +89,17 @@ function fnOnlyLike(listId) {
 }
 
 function fnComment(listId) {
-    if (typeof openCommentModal === 'function') {
-        openCommentModal(listId);
-        return;
-    }
-
-    location.replace('/comment?id=' + listId);
+    openCommentModal(listId);
 }
 
 function fnHref(listId) {
-    if (typeof openFavoriteModal === 'function') {
-        openFavoriteModal(listId);
-        return;
-    }
-
-    location.replace('/favorites?id=' + listId);
+    openFavoriteModal(listId);
 }
 
 function fnReportBoard(listId) {
-    location.replace(`/report?targetType=BOARD&targetId=${encodeURIComponent(listId)}`);
+    window.location.href = `/report?targetType=BOARD&targetId=${encodeURIComponent(listId)}`;
 }
 
 function fnProfile(email) {
-    location.replace('/member/search/detail?email=' + email);
+    window.location.href = '/member/search/detail?email=' + email;
 }

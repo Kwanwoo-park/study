@@ -7,7 +7,7 @@
     <!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css?v=20260830">
-    <link rel="stylesheet" href="/css/notification/list.css?v=20260830">
+    <link rel="stylesheet" href="/css/notification/list.css?v=20261117-history">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <th:block th:replace="~{fragments/common :: memberNavi(${member.email}, ${member.profile})}"></th:block>
@@ -16,28 +16,34 @@
     <header class="page-header">
         <div>
             <h1 class="page-title">알림</h1>
-            <p class="page-description">새 소식과 활동 내역을 한 곳에서 확인하세요.</p>
+            <p class="page-description">읽은 알림도 직접 삭제하기 전까지 보관됩니다.</p>
         </div>
         <button class="btn btn-primary" onclick="fnAllRead()">모두 읽음</button>
     </header>
     <div class="noti-group">
-        <button type="button" id="admin" onclick="fnClick('ADMIN')">시스템</button>
-        <button type="button" id="follow" onclick="fnClick('FOLLOW')">팔로우</button>
-        <button type="button" id="favorite" onclick="fnClick('FAVORITE')">좋아요</button>
-        <button type="button" id="tran" onclick="fnClick('TRAN')">거래</button>
-        <button type="button" id="chat" onclick="fnClick('CHAT')">채팅</button>
-        <button type="button" id="call" onclick="fnClick('CALL')">통화</button>
-        <button type="button" id="comment" onclick="fnClick('COMMENT')">댓글</button>
-        <button type="button" id="reply" onclick="fnClick('REPLY')">답글</button>
+        <button type="button" data-group="" aria-pressed="true" onclick="fnClick('')">전체</button>
+        <button type="button" id="admin" data-group="ADMIN" aria-pressed="false" onclick="fnClick('ADMIN')">시스템</button>
+        <button type="button" id="follow" data-group="FOLLOW" aria-pressed="false" onclick="fnClick('FOLLOW')">팔로우</button>
+        <button type="button" id="favorite" data-group="FAVORITE" aria-pressed="false" onclick="fnClick('FAVORITE')">좋아요</button>
+        <button type="button" id="tran" data-group="TRAN" aria-pressed="false" onclick="fnClick('TRAN')">거래</button>
+        <button type="button" id="chat" data-group="CHAT" aria-pressed="false" onclick="fnClick('CHAT')">채팅</button>
+        <button type="button" id="call" data-group="CALL" aria-pressed="false" onclick="fnClick('CALL')">통화</button>
+        <button type="button" id="comment" data-group="COMMENT" aria-pressed="false" onclick="fnClick('COMMENT')">댓글</button>
+        <button type="button" id="reply" data-group="REPLY" aria-pressed="false" onclick="fnClick('REPLY')">답글</button>
     </div>
+    <p id="notification-range" class="notification-range" aria-live="polite">최근 24시간 알림</p>
     <div class="noti-div">
+        <ul class="noti-ul" aria-label="알림 목록"></ul>
+        <p id="notification-empty" class="notification-empty" hidden>이 기간에 받은 알림이 없습니다.</p>
     </div>
+    <p id="notification-error" class="notification-error" role="alert"></p>
+    <button type="button" id="notification-more" class="btn btn-outline-primary notification-more" onclick="fnLoadMoreNotifications()">더보기</button>
 </div>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/notification/list.js?v=20261021-notification-read"></script>
-<script src="/js/common/common.js?v=20261021-notification-read"></script>
+<script src="/js/notification/list.js?v=20261117-history"></script>
+<script src="/js/common/common.js?v=20261116-navigation"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </html>

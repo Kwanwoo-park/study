@@ -23,10 +23,13 @@ public class TodoService {
 
     public Page<TodoResponseDto> findByMember(Member member, Boolean completed, int page, int size) {
         requireMember(member);
-        PageRequest pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE), Sort.by("id").descending());
-        Page<Todo> todos = completed == null
-                ? todoRepository.findByMember(member, pageable)
-                : todoRepository.findByMemberAndCompleted(member, completed, pageable);
+        Sort sort = Sort.by(Sort.Direction.DESC, "registerTime", "id");
+        if (Boolean.TRUE.equals(completed)) sort = Sort.by(Sort.Direction.DESC, "completedAt", "id");
+
+        PageRequest pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE), sort);
+        Page<Todo> todos;
+        if (completed == null) todos = todoRepository.findByMember(member, pageable);
+        else todos = todoRepository.findByMemberAndCompleted(member, completed, pageable);
 
         return todos.map(TodoResponseDto::new);
     }

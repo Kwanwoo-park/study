@@ -32,11 +32,11 @@
     }
 
     async function snapshotFiles(files) {
-        return Promise.all(Array.from(files || []).map(snapshotFile));
+        return Promise.all(Array.from(files).map(snapshotFile));
     }
 
     function buildFormData(files) {
-        const images = Array.from(files || []);
+        const images = Array.from(files);
         if (images.length === 0 || images.some(file => !(file instanceof Blob) || file.size === 0)) {
             throw new Error('업로드할 이미지를 다시 선택하여 주십시오.');
         }

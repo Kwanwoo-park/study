@@ -45,4 +45,17 @@ class MemberRegistrationRegressionTest {
         verifyNoInteractions(userService);
     }
 
+    @Test
+    void blankRequiredNameIsRejectedBeforeVerificationOrMemberCreation() {
+        MemberRequestDto request = MemberRequestDto.builder()
+                .email("new@test.com").password("password").name("   ")
+                .phone("010-1111-2222").birth("2000-01-01").build();
+
+        ResponseEntity<?> result = memberFacade.register(request);
+
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(result.getBody()).isEqualTo(Map.of("result", -10L, "message", "이름이 입력되지 않았습니다"));
+        verifyNoInteractions(userService, forbiddenService, emailVerificationService, notificationService);
+    }
+
 }

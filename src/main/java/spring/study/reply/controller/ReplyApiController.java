@@ -70,9 +70,9 @@ public class ReplyApiController {
         int risk = moderationFacade.validate(content, member, response);
         if (risk == 0) return null;
 
-        return ResponseEntity.status(risk == -99 ? HttpStatus.BAD_REQUEST : HttpStatus.FORBIDDEN).body(Map.of(
-                "result", risk == -99 ? emptyResult : -risk,
-                "message", risk == -99 ? "답글이 없습니다" : "금칙어를 사용하였습니다"
-        ));
+        if (risk == -99)
+            return ResponseEntity.badRequest().body(Map.of("result", emptyResult, "message", "답글이 없습니다"));
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("result", -(long) risk, "message", "금칙어를 사용하였습니다"));
     }
 }

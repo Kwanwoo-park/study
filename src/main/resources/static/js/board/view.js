@@ -1,9 +1,6 @@
-const boardDel = document.getElementById("boardDel");
 initBoardContent(document.getElementById('content'));
-
-if (typeof initCommentModal === 'function') {
-    initCommentModal();
-}
+initCommentModal();
+initFavoriteModal();
 
 function fnEdit() {
     const edit = document.getElementById('edit');
@@ -11,7 +8,6 @@ function fnEdit() {
     const del = document.getElementById('delete');
     const content = document.getElementById('content');
     const editContent = document.getElementById('editContent');
-    const editVisibility = document.getElementById('editVisibility');
     const visibilityEditButton = document.getElementById('visibilityEditButton');
     const visibilityEditPanel = document.getElementById('visibilityEditPanel');
     const visibilitySaveButton = document.getElementById('visibilitySaveButton');
@@ -96,7 +92,7 @@ function fnDelete(boardId) {
     .then((json) => {
         if (json['result'] != -1) {
             alert("삭제가 완료되었습니다");
-            location.replace(`/member/detail?email=`+json['email']);
+            window.location.href = `/member/detail?email=`+json['email'];
         }
         else
             alert("다시 시도하여주십시오");
@@ -107,9 +103,9 @@ function fnDelete(boardId) {
 }
 
 function fnPrevious(previous) {
-    location.replace(`/board/view?id=` + previous)
+    window.location.href = `/board/view?id=` + previous
 }
 
 function fnNext(next) {
-    location.replace(`/board/view?id=` + next)
+    window.location.href = `/board/view?id=` + next
 }

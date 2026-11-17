@@ -24,9 +24,7 @@ public record ChatMessageEventDto(String action, String id, String roomId, Strin
                 "DELETED_FOR_ALL",
                 message.getId(),
                 message.getRoom().getRoomId(),
-                message.isDeletedByAdmin()
-                        ? "관리자에 의해 삭제된 메시지입니다"
-                        : "삭제된 메시지입니다",
+                message.displayMessage(),
                 message.getStatus(),
                 message.getUpdateTime(),
                 message.isEditedByAdmin(),

@@ -1,8 +1,6 @@
 (function () {
     const list = document.getElementById('adminAppealList');
     const pagination = document.getElementById('adminAppealPagination');
-    if (!list || !pagination) return;
-
     const selectedId = new URLSearchParams(window.location.search).get('appealId');
     let currentPage = 0;
     list.addEventListener('click', handleAppealAction);
@@ -19,8 +17,8 @@
                 list.textContent = data.message || '상소문을 불러오지 못했습니다.';
                 return;
             }
-            currentPage = Number(data.page || 0);
-            renderAppeals(data.list || []);
+            currentPage = data.page;
+            renderAppeals(data.list);
             renderPagination(data);
         } catch (error) {
             console.error(error);
@@ -91,12 +89,12 @@
     }
 
     function renderPagination(data) {
-        const totalPages = Math.max(Number(data.totalPages || 0), 1);
+        const totalPages = Math.max(data.totalPages, 1);
         pagination.replaceChildren();
         const previous = button('이전', currentPage > 0, () => loadAppeals(currentPage - 1));
         const pageText = document.createElement('span');
         pageText.textContent = `${currentPage + 1} / ${totalPages}`;
-        const next = button('다음', currentPage + 1 < Number(data.totalPages || 0), () => loadAppeals(currentPage + 1));
+        const next = button('다음', currentPage + 1 < data.totalPages, () => loadAppeals(currentPage + 1));
         pagination.append(previous, pageText, next);
     }
 

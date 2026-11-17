@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     eventSource.addEventListener('notification', function(event) {
         try {
-            let json = fnApplyNotificationReadWatermarks(JSON.parse(event.data));
+            const json = fnApplyNotificationReadWatermarks(JSON.parse(event.data));
             if (!fnAcceptNotificationEvent(json)) return;
             const notificationId = json['id'];
             const notificationMessage = json['message'];
@@ -118,9 +118,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (banner && String(banner.dataset.notificationId) === String(notificationId)) banner.classList.add('d-none');
                 }
                 if (isAudioCall) {
-                    if (notificationReadStatus === 'READ' && typeof fnApplyNotificationReadState === 'function') {
-                        fnApplyNotificationReadState(notificationId);
-                    }
                     fnHandleAudioCallRealtime(json).catch(error => {
                         console.error('통화 알림 처리 오류:', error);
                     });
@@ -162,17 +159,12 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('상태:', event.readyState);
     };
 
-    const notificationBanner = document.getElementById('notification-banner');
-    const notificationCloseButton = notificationBanner ? notificationBanner.querySelector('.btn-close') : null;
-    if (notificationCloseButton) {
-        notificationCloseButton.addEventListener('click', function(event) {
-            event.stopPropagation();
-            const notificationBanner = document.getElementById('notification-banner');
-            const notificationId = notificationBanner ? notificationBanner.dataset.notificationId : null;
-            if (notificationBanner) notificationBanner.classList.add('d-none');
-            fnMarkNotificationAsRead(notificationId);
-        });
-    }
+    const notificationBanner = fnEnsureNotificationBanner();
+    notificationBanner.querySelector('.btn-close').addEventListener('click', function(event) {
+        event.stopPropagation();
+        notificationBanner.classList.add('d-none');
+        fnMarkNotificationAsRead(notificationBanner.dataset.notificationId);
+    });
 
     window.addEventListener('beforeunload', function() {
         eventSource.close();
@@ -238,7 +230,6 @@ async function fnRestoreIncomingAudioCall() {
 async function fnFetchIncomingAudioCall(roomId) {
     const query = roomId ? `?roomId=${encodeURIComponent(roomId)}` : '';
     const response = await fetch(`/api/chat/audio/incoming${query}`, {
-        method: 'GET',
         credentials: 'include'
     });
     if (response.status === 204 || !response.ok) return null;
@@ -246,7 +237,6 @@ async function fnFetchIncomingAudioCall(roomId) {
 }
 
 function fnShowIncomingAudioCall(call) {
-    if (!call || !call.callId) return;
     if (activeIncomingAudioCall && activeIncomingAudioCall.callId !== call.callId) {
         fnCloseIncomingAudioCall(activeIncomingAudioCall.callId);
     }
@@ -259,7 +249,7 @@ function fnShowIncomingAudioCall(call) {
     fnStartIncomingAudioRingtone();
     fnShowIncomingAudioSystemNotification(call);
 
-    if (incomingAudioCallTimeout) window.clearTimeout(incomingAudioCallTimeout);
+    window.clearTimeout(incomingAudioCallTimeout);
     incomingAudioCallTimeout = window.setTimeout(() => {
         if (!activeIncomingAudioCall || activeIncomingAudioCall.callId !== call.callId) return;
         fnRejectIncomingAudioCall();
@@ -269,7 +259,7 @@ function fnShowIncomingAudioCall(call) {
 function fnCloseIncomingAudioCall(callId) {
     if (activeIncomingAudioCall && callId && activeIncomingAudioCall.callId !== callId) return;
     const resolvedCallId = callId || activeIncomingAudioCall?.callId;
-    if (incomingAudioCallTimeout) window.clearTimeout(incomingAudioCallTimeout);
+    window.clearTimeout(incomingAudioCallTimeout);
     incomingAudioCallTimeout = null;
     fnStopIncomingAudioRingtone();
 
@@ -340,7 +330,7 @@ function fnAcceptIncomingAudioCall() {
     fnMarkNotificationAsRead(call.notificationId);
     const target = new URL(call.url, window.location.origin);
     target.searchParams.set('acceptAudioCall', call.callId);
-    window.location.replace(target.pathname + target.search);
+    window.location.href = target.pathname + target.search;
 }
 
 function fnParseAudioCallUrl(value) {
@@ -400,7 +390,7 @@ function fnStartIncomingAudioRingtone() {
 }
 
 function fnStopIncomingAudioRingtone() {
-    if (incomingAudioRingtoneInterval) window.clearInterval(incomingAudioRingtoneInterval);
+    window.clearInterval(incomingAudioRingtoneInterval);
     incomingAudioRingtoneInterval = null;
     if (incomingAudioRingtoneContext) incomingAudioRingtoneContext.close().catch(() => {});
     incomingAudioRingtoneContext = null;
@@ -417,10 +407,6 @@ function fnEnsureNotificationBanner() {
     banner.setAttribute('role', 'alert');
     banner.innerHTML = '<span id="notification-message">새 알림</span>'
         + '<button type="button" class="btn-close" aria-label="Close">닫기</button>';
-    banner.querySelector('.btn-close').addEventListener('click', event => {
-        event.stopPropagation();
-        banner.classList.add('d-none');
-    });
     document.body.appendChild(banner);
     return banner;
 }
@@ -435,7 +421,6 @@ async function fnLoadAudioCallNotificationPreference(forceRefresh = false) {
     }
 
     audioCallNotificationPreferenceRequest = fetch('/api/chat/audio/preference', {
-        method: 'GET',
         credentials: 'include',
     }).then(async response => {
         const data = await response.json();
@@ -558,8 +543,7 @@ function fnCloseNavigationSettings() {
 }
 
 function fnInitThemeSelector() {
-    const savedTheme = fnGetStoredTheme() === 'dark' ? 'dark' : 'light';
-    fnApplyTheme(savedTheme);
+    fnApplyTheme(fnGetStoredTheme());
 
     document.querySelectorAll('.themeChoice[data-theme]').forEach(function(themeChoice) {
         themeChoice.addEventListener('click', function() {
@@ -615,10 +599,6 @@ function fnSetUnreadNotificationDot(unreadCount) {
 
 function fnUpdateUnreadNotificationDot() {
     fetch('/api/notification/count/unread', {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
         credentials: "include",
     })
     .then((response) => response.json())
@@ -709,10 +689,6 @@ function fnSetMemberVisibility(visibility) {
 
 function fnNavigationLogout() {
     fetch('/api/member/logout', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-        },
         credentials: 'include',
     })
     .then((response) => response.json())
@@ -730,11 +706,11 @@ function fnNavigationLogout() {
 }
 
 function fnMyReports() {
-    location.replace(`/report/my`);
+    window.location.href = `/report/my`;
 }
 
 function fnReportApply() {
-    location.replace(`/admin/report`);
+    window.location.href = `/admin/report`;
 }
 
 function fnDetail(email) {
@@ -742,23 +718,23 @@ function fnDetail(email) {
 }
 
 function fnForbidden() {
-    location.replace(`/forbidden/list`);
+    window.location.href = `/forbidden/list`;
 }
 
 function fnNotificationMove(group, url) {
     if (group == "CHAT")
-        location.replace(`/chat/chatRoom?roomId=` + url);
+        window.location.href = `/chat/chatRoom?roomId=` + url;
     else if (group == "CALL") {
         const call = fnParseAudioCallUrl(url);
-        if (call) location.replace(call.url);
+        if (call) window.location.href = call.url;
     }
     else if (group == "COMMENT" || group == "REPLY")
-        location.replace(`/comment?id=` + url);
+        window.location.href = `/comment?id=` + url;
     else if (group == "FAVORITE")
-        location.replace(`/board/view?id=` + url);
+        window.location.href = `/board/view?id=` + url;
     else if (group == "TRAN")
-        location.replace(`/account/transactions?account=` + encodeURIComponent(url));
+        window.location.href = `/account/transactions?account=` + encodeURIComponent(url);
     else if (group == "ADMIN" && typeof url === 'string'
             && (url.startsWith('/admin/report') || url.startsWith('/admin/appeal')))
-        location.replace(url);
+        window.location.href = url;
 }

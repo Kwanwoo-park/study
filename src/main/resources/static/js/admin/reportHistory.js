@@ -37,8 +37,8 @@ async function loadReportHistory() {
             throw new Error(data.message || '처리 내역 조회 실패');
         }
 
-        renderHistory(data.list || []);
-        renderPagination(data.page || 0, data.totalPages || 0);
+        renderHistory(data.list);
+        renderPagination(data.page, data.totalPages);
     } catch (error) {
         console.error(error);
         list.innerHTML = '<div class="admin-report-empty">처리 내역을 불러오지 못했습니다.</div>';
@@ -140,7 +140,7 @@ function formatDateTime(value) {
 }
 
 function escapeHtml(value) {
-    return String(value == null ? '' : value)
+    return String(value ?? '')
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')

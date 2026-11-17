@@ -44,19 +44,16 @@ public class AccountService {
             validateOpeningSource(source, member, requestDto.getTimeDepositAmount(), "예금");
         }
 
-        String accountFirst = "919";
-        String accountLast = createAccountLast();
-        String accountNumber = accountFirst + accountLast;
+        String accountNumber = "919" + createAccountLast();
 
         while (accountRepository.existsById(accountNumber)) {
-            accountLast = createAccountLast();
-            accountNumber = accountFirst + accountLast;
+            accountNumber = "919" + createAccountLast();
         }
 
         Account account = Account.builder()
                 .account(accountNumber)
                 .amount(0L)
-                .name(createDefaultAccountName(resolvedType))
+                .name(resolvedType.getDefaultAccountName())
                 .accountType(resolvedType)
                 .member(member)
                 .build();
@@ -171,11 +168,7 @@ public class AccountService {
         long settlementAmount = Math.addExact(principal, interest);
 
         source.clearAmount();
-        settlementAccount.addAmount(principal);
-
-        if (interest > 0L) {
-            settlementAccount.addAmount(interest);
-        }
+        settlementAccount.addAmount(settlementAmount);
 
         return new AccountSettlementResult(source.getAccount(), settlementAccount.getAccount(), principal, interest, settlementAmount, matured);
     }
@@ -236,12 +229,6 @@ public class AccountService {
         long randomValue = ThreadLocalRandom.current().nextLong(range);
 
         return String.valueOf(min + Math.floorMod(timestamp + randomValue, range));
-    }
-
-    private String createDefaultAccountName(AccountType accountType) {
-        AccountType resolvedType = accountType == null ? AccountType.DEPOSIT_WITHDRAWAL : accountType;
-
-        return resolvedType.getDefaultAccountName();
     }
 
     private void validateActive(Account account) {

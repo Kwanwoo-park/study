@@ -27,7 +27,7 @@
     }
 
     document.addEventListener('click', function (event) {
-        const link = event.target.closest && event.target.closest('a[data-page-back]');
+        const link = event.target.closest('a[data-page-back]');
         if (!link || event.defaultPrevented || event.button !== 0
                 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
@@ -35,10 +35,10 @@
             try {
                 window.history.back();
             } catch (error) {
-                window.location.replace(link.href);
+                window.location.href = link.href;
             }
         } else {
-            window.location.replace(link.href);
+            window.location.href = link.href;
         }
         // Without JavaScript, the anchor's href still provides the page-specific fallback.
     });

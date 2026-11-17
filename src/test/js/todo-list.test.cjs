@@ -62,19 +62,17 @@ async function setup(reply = async () => ({body: page()})) {
     const window = new Element();
     window.confirm = () => true;
     const nodes = new Map();
-    const tags = {todoCreateForm: 'form', todoContent: 'input', todoList: 'ul', todoPrevious: 'button', todoNext: 'button', todoRetry: 'button'};
-    const ids = ['todoPage', 'todoCreateForm', 'todoContent', 'todoList', 'todoMessage', 'todoEmpty',
-        'todoCount', 'todoPrevious', 'todoNext', 'todoPageNumber', 'todoRetry'];
+    const tags = {todoCreateForm: 'form', todoContent: 'input'};
+    const ids = ['todoPage', 'todoCreateForm', 'todoContent', 'todoMessage'];
+    for (const prefix of ['todoPending', 'todoCompleted']) {
+        for (const part of ['List', 'Empty', 'Count', 'Previous', 'Next', 'PageNumber', 'Retry']) ids.push(prefix + part);
+        tags[prefix + 'List'] = 'ul';
+        for (const part of ['Previous', 'Next', 'Retry']) tags[prefix + part] = 'button';
+    }
     ids.forEach(id => nodes.set(id, new Element(tags[id])));
-    const filters = ['', 'false', 'true'].map(completed => {
-        const button = new Element('button');
-        button.dataset.completed = completed;
-        return button;
-    });
     const root = nodes.get('todoPage');
-    root.append(...ids.filter(id => id !== 'todoPage').map(id => nodes.get(id)), ...filters);
+    root.append(...ids.filter(id => id !== 'todoPage').map(id => nodes.get(id)));
     document.getElementById = id => nodes.get(id);
-    document.querySelectorAll = () => filters;
     document.createElement = tag => new Element(tag);
     const requests = [];
     vm.runInNewContext(script, {
@@ -88,12 +86,15 @@ async function setup(reply = async () => ({body: page()})) {
     });
     document.emit('DOMContentLoaded');
     await flush();
-    return {nodes, root, window, filters, requests, rows: () => nodes.get('todoList').children};
+    return {nodes, root, window, requests, rows: (completed = false) => {
+        if (completed) return nodes.get('todoCompletedList').children;
+        return nodes.get('todoPendingList').children;
+    }};
 }
 
 test('failed inline edits retain the entered content for retry', async () => {
     const ui = await setup(async (url, options) => options.method
-        ? {status: 400, body: {message: '수정 실패'}} : {body: page([todo()])});
+        ? {status: 400, body: {message: '수정 실패'}} : {body: page(url.includes('completed=false') ? [todo()] : [])});
     ui.rows()[0].children[2].children[0].emit('click');
     const form = ui.rows()[0].children[0];
     form.children[0].value = '보존할 수정 내용';
@@ -102,4 +103,34 @@ test('failed inline edits retain the entered content for retry', async () => {
     assert.equal(form.children[0].value, '보존할 수정 내용');
     assert.equal(form.children[0].disabled, false);
     assert.equal(ui.nodes.get('todoMessage').textContent, '수정 실패');
+});
+
+test('completion moves a row between independently loaded sections and unchecking restores creation order', async () => {
+    const items = [todo(2, '새 할 일'), todo(1, '오래된 할 일'), todo(3, '완료한 일', true)];
+    const ui = await setup(async (url, options) => {
+        if (options.method) {
+            const item = items.find(item => item.id === Number(url.split('/')[3]));
+            item.completed = JSON.parse(options.body).completed;
+            return {body: {result: item.id, todo: item}};
+        }
+        const completed = new URLSearchParams(url.split('?')[1]).get('completed') === 'true';
+        const list = items.filter(item => item.completed === completed);
+        if (completed) list.sort((a, b) => a.id - b.id);
+        return {body: page(list.map(item => ({...item})))};
+    });
+    assert.equal(ui.rows().length, 2);
+    assert.equal(ui.rows(true).length, 1);
+    ui.rows()[1].children[0].emit('change');
+    await flush();
+    assert.equal(ui.rows().length, 1);
+    assert.equal(ui.rows(true).length, 2);
+    assert.equal(ui.rows(true)[0].children[0].id, 'todo-1');
+    assert.equal(ui.nodes.get('todoPendingCount').textContent, '1개');
+    assert.equal(ui.nodes.get('todoCompletedCount').textContent, '2개');
+
+    ui.rows(true)[0].children[0].emit('change');
+    await flush();
+    assert.deepEqual(ui.rows().map(row => row.children[0].id), ['todo-2', 'todo-1']);
+    assert.equal(ui.rows(true).length, 1);
+    assert.ok(ui.requests.filter(request => !request.options.method).every(request => request.url.includes('size=20&completed=')));
 });

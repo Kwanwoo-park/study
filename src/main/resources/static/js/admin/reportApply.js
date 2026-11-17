@@ -2,16 +2,10 @@ window.addEventListener('load', loadPendingReports);
 
 async function loadPendingReports() {
     const list = document.getElementById('report-list');
-    if (!list) return;
-
     list.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오는 중입니다.</div>';
 
     try {
         const response = await fetch('/api/admin/report/pending', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
             credentials: 'include',
         });
         const data = await response.json();
@@ -21,7 +15,7 @@ async function loadPendingReports() {
             return;
         }
 
-        renderReports(data.list || []);
+        renderReports(data.list);
     } catch (error) {
         console.error(error);
         list.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오지 못했습니다.</div>';
@@ -107,7 +101,7 @@ function formatTargetType(value) {
 }
 
 function formatReason(report) {
-    const value = report && typeof report === 'object' ? report.reason : report;
+    const value = report.reason;
     const label = {
         SPAM: '스팸/도배',
         ABUSE: '욕설/괴롭힘',
@@ -119,7 +113,7 @@ function formatReason(report) {
         ETC: '기타'
     }[value] || value;
 
-    const detail = report && typeof report === 'object' ? report.reasonDetail : '';
+    const detail = report.reasonDetail;
     if (value === 'ETC' && detail) {
         return `${label}: ${detail}`;
     }

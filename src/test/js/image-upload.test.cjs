@@ -112,6 +112,7 @@ function loadPage(path) {
     element('diaryForm').append(submit);
     element('flag').value = 'false';
     const document = {
+        body: new Element(),
         getElementById: element,
         querySelector: selector => selector.startsWith('#') ? element(selector.slice(1))
             : ['.container', '.imgGrid', '.imgDiv'].includes(selector) ? element(selector.slice(1)) : null,

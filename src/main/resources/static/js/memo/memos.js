@@ -65,6 +65,17 @@
         return svg;
     }
 
+    function saveState(changed) {
+        if (busy) return '처리하고 있어요…';
+        if (saving && saveMode === 'draft') return '임시 저장 중…';
+        if (saving) return 'DB 저장 중…';
+        if (active?.conflicted || blocked) return '저장 확인 필요 · 내용은 유지됩니다';
+        if (changed) return '자동 저장 대기 중';
+        if (active?.pending) return '임시 저장됨 · DB 반영 대기';
+        if (active?.id) return 'DB 저장 완료';
+        return '새 메모';
+    }
+
     function updateControls() {
         const changed = dirty();
         const locked = busy || saving || Boolean(blocked);
@@ -83,9 +94,7 @@
             color.setAttribute('aria-pressed', String(color.dataset.color === active?.color));
         }
         byId('edit-dot').classList.toggle('is-dirty', changed);
-        byId('save-state').textContent = busy ? '처리하고 있어요…' : saving ? saveMode === 'draft' ? '임시 저장 중…' : 'DB 저장 중…'
-            : active?.conflicted || blocked ? '저장 확인 필요 · 내용은 유지됩니다' : changed ? '자동 저장 대기 중'
-            : active?.pending ? '임시 저장됨 · DB 반영 대기' : active?.id ? 'DB 저장 완료' : '새 메모';
+        byId('save-state').textContent = saveState(changed);
         byId('character-count').textContent = `${content.value.length.toLocaleString('ko-KR')} / 20,000자`;
     }
 
@@ -97,8 +106,8 @@
         retryRequest = null;
         retryAttempt = 0;
         active = {...memo};
-        title.value = memo.title || '';
-        content.value = memo.content || '';
+        title.value = memo.title;
+        content.value = memo.content;
         baseline = values();
         byId('welcome').hidden = true;
         form.hidden = false;
@@ -113,7 +122,7 @@
 
     function updateEditorMeta(memo) {
         byId('editor-meta').textContent = memo.id
-            ? `작성 ${date(memo.createdAt)} · 최근 저장 ${date(memo.updatedAt || memo.createdAt)}`
+            ? `작성 ${date(memo.createdAt)} · 최근 저장 ${date(memo.updatedAt)}`
             : '아직 저장하지 않은 메모입니다.';
     }
 
@@ -191,15 +200,15 @@
             card.type = 'button';
             card.className = 'memo-card';
             card.dataset.id = String(memo.id);
-            card.dataset.color = ['LAVENDER', 'MINT', 'AMBER', 'ROSE'].includes(memo.color) ? memo.color : 'LAVENDER';
+            card.dataset.color = memo.color;
             const heading = document.createElement('h3');
-            heading.textContent = memo.title || '제목 없는 메모';
+            heading.textContent = memo.title;
             const preview = document.createElement('p');
-            preview.textContent = memo.preview?.trim() || '내용이 없는 메모입니다.';
+            preview.textContent = memo.preview.trim() || '내용이 없는 메모입니다.';
             const meta = document.createElement('div');
             meta.className = 'memo-card-meta';
             const time = document.createElement('span');
-            time.textContent = date(memo.updatedAt || memo.createdAt);
+            time.textContent = date(memo.updatedAt);
             meta.append(time);
             if (memo.pinned) {
                 const pin = icon('pin');
@@ -286,7 +295,7 @@
     function scheduleAutosave() {
         if (retryRequest) return;
         clearTimeout(autosaveTimer);
-        if (!active || blocked || composing || !dirty() || retryRequest) return;
+        if (!active || blocked || composing || !dirty()) return;
         const now = Date.now();
         firstDirtyAt ||= now;
         const delay = Math.max(0, Math.min(1000 - (now - lastInputAt), 5000 - (now - firstDirtyAt)));

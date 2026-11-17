@@ -24,34 +24,26 @@ const messageDateFormatter = new Intl.DateTimeFormat('ko-KR', {
     weekday: 'short',
 });
 
-let container = document.querySelector(".container");
+const container = document.querySelector(".container");
 let nextCursor = 1;
-let height = 0;
 let presenceRefreshInterval = null;
 let chatImageModalSources = [];
 let chatImageModalIndex = 0;
 let chatImageModalReturnFocus = null;
 let lastKnownReadAt = '';
 let lastReadMarkAt = 0;
-let socket = null;
 let client = null;
 let reconnectTimer = null;
 let reconnectAttempt = 0;
 let pageLeaving = false;
 let isSendingImages = false;
 
-ignoreWebSocketLogs();
-
-if (btn)
-    btn.addEventListener('click', () => upload.click());
-
-if (newMessageNotice) {
-    newMessageNotice.addEventListener('click', () => {
-        scrollToBottom();
-        hideNewMessageNotice();
-        markCurrentRoomRead();
-    });
-}
+btn.addEventListener('click', () => upload.click());
+newMessageNotice.addEventListener('click', () => {
+    scrollToBottom();
+    hideNewMessageNotice();
+    markCurrentRoomRead();
+});
 
 document.addEventListener('click', closeChatActionMenus);
 
@@ -66,7 +58,7 @@ window.onload = function() {
 
 window.addEventListener('pagehide', () => {
     pageLeaving = true;
-    if (reconnectTimer) clearTimeout(reconnectTimer);
+    clearTimeout(reconnectTimer);
     deactivateChatPresence();
 });
 
@@ -92,7 +84,7 @@ connectChatSocket();
 
 function connectChatSocket() {
     if (pageLeaving || reconnectTimer) return;
-    socket = new SockJS('/ws/chat');
+    const socket = new SockJS('/ws/chat');
     client = Stomp.over(socket);
     client.debug = function() {};
     client.heartbeat.outgoing = 10000;
@@ -144,9 +136,7 @@ function activateChatPresence() {
 }
 
 function deactivateChatPresence() {
-    if (presenceRefreshInterval) {
-        clearInterval(presenceRefreshInterval);
-    }
+    clearInterval(presenceRefreshInterval);
 
     const url = `/api/chat/presence/inactive?roomId=${encodeURIComponent(roomId)}`;
     if (navigator.sendBeacon) {
@@ -160,32 +150,6 @@ function deactivateChatPresence() {
         keepalive: true,
     }).catch((error) => {
         console.error('채팅방 접속 해제 오류:', error);
-    });
-}
-
-function ignoreWebSocketLogs() {
-    const webSocketLogPatterns = [
-        'Opening Web Socket',
-        'Web Socket Opened',
-        'Web Socket Closed',
-        'STOMP: connected',
-        'Whoops! Lost connection',
-        '>>>',
-        '<<<'
-    ];
-
-    ['log', 'debug', 'info'].forEach(method => {
-        const originalConsoleMethod = console[method];
-
-        console[method] = function() {
-            const message = Array.from(arguments).join(' ');
-
-            if (webSocketLogPatterns.some(pattern => message.indexOf(pattern) !== -1)) {
-                return;
-            }
-
-            originalConsoleMethod.apply(console, arguments);
-        };
     });
 }
 
@@ -204,10 +168,6 @@ function onMessageReceived(e) {
 async function loadMoreChat() {
     try {
         const res = await fetch(`/api/chat/load?roomId=${encodeURIComponent(roomId)}&cursor=${nextCursor - 1}&limit=${CHAT_LIMIT}`, {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
             credentials: "include",
         });
         const data = await res.json();
@@ -231,15 +191,11 @@ async function loadPreviousChat() {
 
     try {
         const res = await fetch(`/api/chat/previous/load?roomId=${encodeURIComponent(roomId)}&cursor=${nextCursor - 1}&limit=${CHAT_LIMIT}`, {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
             credentials: "include",
         });
 
         const data = await res.json();
-        height = container.scrollHeight;
+        const height = container.scrollHeight;
 
         if (data['result'] > 0) {
             fnLoadDraw(data)
@@ -255,7 +211,7 @@ async function loadPreviousChat() {
 }
 
 function enterRoom() {
-    var enterMsg = {
+    const enterMsg = {
         type : "ENTER",
         roomId : roomId,
         email : email
@@ -266,14 +222,14 @@ function enterRoom() {
 
  function send(e) {
     if (e.keyCode == 13 && !e.shiftKey) {
-        event.preventDefault();
+        e.preventDefault();
 
         sendMsg();
     }
 }
 
 function quit() {
-    var quitMsg = {
+    const quitMsg = {
         type : "QUIT",
         roomId : roomId,
         email : email
@@ -291,10 +247,6 @@ function sendMsg() {
     let content = document.getElementById('chat').value;
 
     fetch(`/api/chat/message/check?message=`+content, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
         credentials: "include",
     })
     .then((response) => response.json())
@@ -333,39 +285,13 @@ function sendMsg() {
 function fnDraw(data) {
     if (!registerMessageForRender(data)) return;
 
-    let msgArea = document.querySelector('.list-group-flush');
+    const msgArea = document.querySelector('.list-group-flush');
     const mine = isMyMessage(data);
     const shouldStickToBottom = isScrolledToBottom();
 
-    let newMsgLi = document.createElement('li');
-    let newMsgArea = document.createElement('span');
-    let name = document.createElement('span');
-    let profile = document.createElement('img');
-
-    applyMessageDirection(newMsgLi, newMsgArea, data);
-
-    if (data.status === 'DELETED_FOR_ALL') {
-        renderDeletedMessage(newMsgLi, newMsgArea, data);
-        newMsgLi.append(newMsgArea);
-        msgArea.append(newMsgLi);
-        refreshDateSeparators();
-        return;
-    }
-
-    profile.src = data.member.profile;
-    profile.className = "profile";
-
-    name.innerText = data.member.name;
-
-    appendMessageHeader(newMsgArea, profile, name, data);
-
-    appendChatMessageMain(newMsgArea, data, normalizeChatImageSources(data.list));
-    appendEditedIndicator(newMsgArea, data);
-    appendMessageTime(newMsgArea, data);
-    newMsgLi.append(newMsgArea);
-
-    msgArea.append(newMsgLi);
+    msgArea.append(createChatMessage(data, data.list));
     refreshDateSeparators();
+    if (data.status === 'DELETED_FOR_ALL') return;
 
     if (mine) {
         scrollToBottom();
@@ -380,41 +306,34 @@ function fnDraw(data) {
 }
 
 function fnLoadDraw(json) {
+    const msgArea = document.querySelector('.list-group-flush');
     json.message.forEach(data => {
         if (!registerMessageForRender(data)) return;
-
-        let msgArea = document.querySelector('.list-group-flush');
-
-        let newMsgLi = document.createElement('li');
-        let newMsgArea = document.createElement('span');
-        let name = document.createElement('span');
-        let profile = document.createElement('img');
-
-        applyMessageDirection(newMsgLi, newMsgArea, data);
-
-        if (data.status === 'DELETED_FOR_ALL') {
-            renderDeletedMessage(newMsgLi, newMsgArea, data);
-            newMsgLi.append(newMsgArea);
-            msgArea.prepend(newMsgLi);
-            return;
-        }
-
-        profile.src = data.member.profile;
-        profile.className = "profile";
-
-        name.innerText = data.member.name;
-
-        appendMessageHeader(newMsgArea, profile, name, data);
-
-        appendChatMessageMain(newMsgArea, data, normalizeChatImageSources(json.img[data.id]));
-        appendEditedIndicator(newMsgArea, data);
-        appendMessageTime(newMsgArea, data);
-        newMsgLi.append(newMsgArea);
-
-        msgArea.prepend(newMsgLi);
+        msgArea.prepend(createChatMessage(data, json.img[data.id]));
     });
 
     refreshDateSeparators();
+}
+
+function createChatMessage(data, images) {
+    const row = document.createElement('li');
+    const area = document.createElement('span');
+    applyMessageDirection(row, area, data);
+    if (data.status === 'DELETED_FOR_ALL') {
+        renderDeletedMessage(row, area, data);
+    } else {
+        const profile = document.createElement('img');
+        profile.src = data.member.profile;
+        profile.className = 'profile';
+        const name = document.createElement('span');
+        name.innerText = data.member.name;
+        appendMessageHeader(area, profile, name, data);
+        appendChatMessageMain(area, data, normalizeChatImageSources(images));
+        appendEditedIndicator(area, data);
+        appendMessageTime(area, data);
+    }
+    row.append(area);
+    return row;
 }
 
 const renderedMessageIds = new Set();
@@ -441,7 +360,7 @@ function applyMessageDirection(messageLi, messageArea, data) {
 }
 
 function isMyMessage(data) {
-    const senderEmail = data.member && data.member.email ? data.member.email : data.email;
+    const senderEmail = data.member?.email || data.email;
 
     return senderEmail == email;
 }
@@ -455,24 +374,18 @@ function isScrolledToBottom() {
 }
 
 function showNewMessageNotice(data) {
-    if (!newMessageNotice) return;
-
-    const senderName = data && data.member && data.member.name ? data.member.name : '알 수 없음';
-    const message = data && data.message ? data.message : '새 메시지가 도착했습니다';
+    const senderName = data.member.name || '알 수 없음';
+    const message = data.message || '새 메시지가 도착했습니다';
 
     newMessageNotice.innerText = `${senderName}: ${message}`;
     newMessageNotice.classList.remove('is-hidden');
 }
 
 function hideNewMessageNotice() {
-    if (!newMessageNotice) return;
-
     newMessageNotice.classList.add('is-hidden');
 }
 
 function initChatImageModal() {
-    if (document.getElementById('chatImageModal')) return;
-
     const modal = document.createElement('div');
     const dialog = document.createElement('div');
     const closeButton = document.createElement('button');
@@ -540,10 +453,10 @@ function initChatImageModal() {
             const last = controls[controls.length - 1];
             if (event.shiftKey && document.activeElement === first) {
                 event.preventDefault();
-                last?.focus();
+                last.focus();
             } else if (!event.shiftKey && document.activeElement === last) {
                 event.preventDefault();
-                first?.focus();
+                first.focus();
             }
         }
 
@@ -578,7 +491,7 @@ function openChatImageModal(sources, initialIndex) {
     const modal = document.getElementById('chatImageModal');
     const normalizedSources = normalizeChatImageSources(sources);
 
-    if (!modal || normalizedSources.length === 0) return;
+    if (normalizedSources.length === 0) return;
 
     chatImageModalReturnFocus = document.activeElement;
     chatImageModalSources = normalizedSources;
@@ -587,14 +500,12 @@ function openChatImageModal(sources, initialIndex) {
     renderChatImageModal();
     modal.classList.remove('is-hidden');
     document.body.classList.add('chat-image-modal-open');
-    modal.querySelector('.chat-image-modal-close')?.focus();
+    modal.querySelector('.chat-image-modal-close').focus();
 }
 
 function closeChatImageModal() {
     const modal = document.getElementById('chatImageModal');
     const image = document.getElementById('chatImageModalImg');
-
-    if (!modal || !image) return;
 
     modal.classList.add('is-hidden');
     image.removeAttribute('src');
@@ -629,20 +540,13 @@ function renderChatImageModal() {
     const previousButton = document.getElementById('chatImageModalPrev');
     const nextButton = document.getElementById('chatImageModalNext');
 
-    if (!image) return;
-
     image.src = chatImageModalSources[chatImageModalIndex];
     preloadAdjacentImages(chatImageModalSources, chatImageModalIndex);
 
-    if (previousButton) {
-        previousButton.classList.toggle('is-hidden', chatImageModalSources.length <= 1);
-        previousButton.disabled = chatImageModalIndex === 0;
-    }
-
-    if (nextButton) {
-        nextButton.classList.toggle('is-hidden', chatImageModalSources.length <= 1);
-        nextButton.disabled = chatImageModalIndex === chatImageModalSources.length - 1;
-    }
+    previousButton.classList.toggle('is-hidden', chatImageModalSources.length <= 1);
+    previousButton.disabled = chatImageModalIndex === 0;
+    nextButton.classList.toggle('is-hidden', chatImageModalSources.length <= 1);
+    nextButton.disabled = chatImageModalIndex === chatImageModalSources.length - 1;
 }
 
 function normalizeChatImageSources(images) {
@@ -744,7 +648,7 @@ function appendMessageActions(messageArea, data) {
 
     if (!isMyMessage(data)) {
         menu.append(createMessageActionButton('신고', () => {
-            location.replace(`/report?targetType=CHAT_MESSAGE&targetId=${encodeURIComponent(data.id)}`);
+            window.location.href = `/report?targetType=CHAT_MESSAGE&targetId=${encodeURIComponent(data.id)}`;
         }));
     }
 
@@ -930,7 +834,7 @@ function renderDeletedMessage(row, messageArea, data) {
 
     row.classList.add('deleted');
     deletedText.className = 'chat-message-deleted-text';
-    deletedText.innerText = data && data.deletedByAdmin
+    deletedText.innerText = data.deletedByAdmin
         ? '관리자에 의해 삭제된 메시지입니다'
         : '삭제된 메시지입니다';
     messageArea.replaceChildren(deletedText);
@@ -954,8 +858,6 @@ function appendMessageTime(messageArea, data) {
 
 function refreshDateSeparators() {
     const msgArea = document.querySelector('.list-group-flush');
-    if (!msgArea) return;
-
     msgArea.querySelectorAll('.chat-date-separator').forEach(separator => separator.remove());
 
     let previousDate = '';
@@ -977,8 +879,6 @@ function refreshDateSeparators() {
 
 function refreshReadBoundary() {
     const msgArea = document.querySelector('.list-group-flush');
-    if (!msgArea) return;
-
     msgArea.querySelectorAll('.chat-read-boundary').forEach(separator => separator.remove());
 
     if (!lastKnownReadAt) {
@@ -1050,7 +950,7 @@ function getMessageDate(data) {
 
 async function fnLoad(input) {
     if (isSendingImages) return;
-    const selectedFiles = Array.from(input.files || []);
+    const selectedFiles = Array.from(input.files);
     if (selectedFiles.length === 0) return;
 
     if (selectedFiles.length > maxSize) {
@@ -1059,7 +959,7 @@ async function fnLoad(input) {
 
     isSendingImages = true;
     input.disabled = true;
-    if (btn) btn.disabled = true;
+    btn.disabled = true;
     try {
         const files = await ImageUpload.snapshotFiles(selectedFiles.slice(0, maxSize));
         input.value = '';
@@ -1070,7 +970,7 @@ async function fnLoad(input) {
         });
         const json = await response.json();
         if (response.ok && json['result'] > 0) {
-            let talkMsg = {
+            const talkMsg = {
                 id: json['messageId'],
                 type : "IMAGE",
                 roomId : roomId,
@@ -1089,6 +989,6 @@ async function fnLoad(input) {
         isSendingImages = false;
         input.value = '';
         input.disabled = false;
-        if (btn) btn.disabled = false;
+        btn.disabled = false;
     }
 }

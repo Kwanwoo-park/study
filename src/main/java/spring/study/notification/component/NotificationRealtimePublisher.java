@@ -66,8 +66,11 @@ public class NotificationRealtimePublisher {
             long subscribers = redisTemplate.execute(PUBLISH_ONCE, List.of(key), CHANNEL, payload, Long.toString(properties.getDedupTtlSeconds()));
 
 
-            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH,
-                    subscribers == -1 ? IntegrationEventLogOutcome.DUPLICATE : subscribers == 0 ? IntegrationEventLogOutcome.NO_SUBSCRIBERS : IntegrationEventLogOutcome.SUCCESS,
+            IntegrationEventLogOutcome outcome = IntegrationEventLogOutcome.SUCCESS;
+            if (subscribers == -1) outcome = IntegrationEventLogOutcome.DUPLICATE;
+            else if (subscribers == 0) outcome = IntegrationEventLogOutcome.NO_SUBSCRIBERS;
+
+            eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, outcome,
                     notification.getId(), 1, null, subscribers < 0 ? null : subscribers, null);
         } catch (JsonProcessingException exception) {
             eventLogs.record(IntegrationEventLogRoute.REALTIME_NOTIFICATION, IntegrationEventLogOperation.PUBLISH, IntegrationEventLogOutcome.FAILED, notification == null ? null : notification.getId(), 1, exception);

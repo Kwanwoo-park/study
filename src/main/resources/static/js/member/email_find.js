@@ -5,7 +5,6 @@
     const check = document.getElementById('check');
     const code = document.getElementById('memailconfirm');
     const message = document.getElementById('memailconfirmTxt');
-    if (!button || !email || !sendButton || !code) return;
     email.value = new URLSearchParams(location.search).get('email') || email.value;
 
     sendButton.addEventListener('click', async () => {
@@ -34,7 +33,7 @@
             sessionStorage.setItem('passwordRecoveryVerification', JSON.stringify({
                 email: email.value.trim(), token: data.verificationToken, expiresAt: Date.now() + 5 * 60 * 1000
             }));
-            location.replace('/member/updatePassword/' + encodeURIComponent(email.value.trim()));
+            window.location.href = '/member/updatePassword/' + encodeURIComponent(email.value.trim());
         } catch (error) {
             message.textContent = error.message;
         } finally {

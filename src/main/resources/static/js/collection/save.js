@@ -31,28 +31,15 @@ window.onload = async function() {
     await loadMoreCollections();
 };
 
-if (btn) {
-    btn.addEventListener('click', openImagePicker);
-}
-
-if (reselectBtn) {
-    reselectBtn.addEventListener('click', openImagePicker);
-}
-
-if (selectToggle) {
-    selectToggle.addEventListener('click', toggleSelectionMode);
-}
-
-if (container) {
-    container.addEventListener('scroll', () => {
-        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1) {
-            loadMoreCollections();
-        }
-    });
-}
+btn.addEventListener('click', openImagePicker);
+reselectBtn.addEventListener('click', openImagePicker);
+selectToggle.addEventListener('click', toggleSelectionMode);
+container.addEventListener('scroll', () => {
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1) loadMoreCollections();
+});
 
 async function loadMoreCollections() {
-    if (!imgGrid || !nextCursor || isLoading) {
+    if (!nextCursor || isLoading) {
         return;
     }
 
@@ -60,7 +47,6 @@ async function loadMoreCollections() {
 
     try {
         const response = await fetch(`/api/collection/load?cursor=${nextCursor - 1}&limit=${COLLECTION_LIMIT}`, {
-            method: 'GET',
             credentials: 'include',
         });
 
@@ -110,7 +96,7 @@ function drawCollections(collections) {
 
         wrapper.addEventListener('click', function() {
             if (isSelectionMode) {
-                toggleCollectionSelection(wrapper.dataset.id);
+                toggleCollectionSelection(wrapper);
                 return;
             }
 
@@ -130,7 +116,7 @@ function drawCollections(collections) {
 
 async function fnSave() {
     if (isPreparingImage || isSavingCollection || isUploadingImage) return;
-    if (!file || !url || !description) return;
+    if (!file) return;
 
     isSavingCollection = true;
     updateImageControls();
@@ -206,12 +192,7 @@ async function fnDelete() {
     }
 
     const ids = Array.from(selectedCollectionIds);
-    let successCount = 0;
-    let failCount = 0;
-
-    if (deleteBtn) {
-        deleteBtn.disabled = true;
-    }
+    deleteBtn.disabled = true;
 
     try {
         const response = await fetch(`/api/collection/delete`, {
@@ -225,41 +206,22 @@ async function fnDelete() {
 
         const json = await response.json();
 
-        if (response.ok && json.result > 0) {
-            successCount += ids.length;
-        }
+        if (!response.ok || json.result <= 0) throw new Error('삭제 실패');
+        removeCollectionCard(ids);
+        updateCollectionCount(-ids.length);
+        selectedCollectionIds.clear();
+        alert('선택한 게시글이 삭제되었습니다');
     } catch (error) {
         console.error(error);
+        alert('게시글 삭제 중 오류가 발생하였습니다');
+    } finally {
+        updateSelectionSummary();
     }
-
-    if (successCount > 0) {
-        updateCollectionCount(-successCount);
-    }
-
-    document.querySelectorAll('.mainImgDiv').forEach((card) => {
-        syncCardSelectionState(card);
-    });
-
-    selectedCollectionIds.clear();
-    updateSelectionSummary();
-
-    if (successCount > 0 && failCount === 0) {
-        removeCollectionCard(ids)
-        alert('선택한 게시글이 삭제되었습니다');
-        return;
-    }
-
-    if (successCount > 0) {
-        alert(`${successCount}개 삭제, ${failCount}개 실패하였습니다`);
-        return;
-    }
-
-    alert('게시글 삭제 중 오류가 발생하였습니다');
 }
 
 async function fnLoad(input) {
     if (isPreparingImage || isSavingCollection || isUploadingImage) return;
-    const selectedFile = input.files && input.files[0];
+    const selectedFile = input.files[0];
     if (!selectedFile) return;
 
     isPreparingImage = true;
@@ -297,12 +259,12 @@ async function fnLoad(input) {
 function updateImageControls() {
     const busy = isPreparingImage || isSavingCollection || isUploadingImage;
     [upload, btn, reselectBtn, submit, imgBtn].forEach(element => {
-        if (element) element.disabled = busy;
+        element.disabled = busy;
     });
 }
 
 function openImagePicker() {
-    if (!upload || isPreparingImage || isSavingCollection || isUploadingImage) return;
+    if (isPreparingImage || isSavingCollection || isUploadingImage) return;
 
     upload.value = '';
     upload.click();
@@ -322,17 +284,15 @@ function toggleSelectionMode() {
     updateSelectionSummary();
 }
 
-function toggleCollectionSelection(id) {
+function toggleCollectionSelection(card) {
+    const id = card.dataset.id;
     if (selectedCollectionIds.has(id)) {
         selectedCollectionIds.delete(id);
     } else {
         selectedCollectionIds.add(id);
     }
 
-    const card = document.querySelector(`.mainImgDiv[data-id="${id}"]`);
-    if (card) {
-        syncCardSelectionState(card);
-    }
+    syncCardSelectionState(card);
 
     updateSelectionSummary();
 }
@@ -346,10 +306,6 @@ function syncCardSelectionState(card) {
     card.classList.toggle('shadow-sm', isSelected);
     card.style.cursor = isSelectionMode || card.dataset.url ? 'pointer' : 'default';
     card.setAttribute('aria-pressed', String(isSelected));
-
-    if (!status) {
-        return;
-    }
 
     if (!isSelectionMode) {
         status.classList.add('d-none');
@@ -365,36 +321,22 @@ function syncCardSelectionState(card) {
 }
 
 function updateSelectionSummary() {
-    if (selectedCount) {
-        selectedCount.innerText = `선택된 게시글 ${selectedCollectionIds.size}개`;
-    }
-
-    if (selectToggle) {
-        selectToggle.innerText = isSelectionMode ? '선택 모드 종료' : '선택 모드';
-        selectToggle.classList.toggle('btn-secondary', isSelectionMode);
-        selectToggle.classList.toggle('btn-outline-secondary', !isSelectionMode);
-    }
-
-    if (deleteBtn) {
-        deleteBtn.disabled = !isSelectionMode || selectedCollectionIds.size === 0;
-    }
+    selectedCount.innerText = `선택된 게시글 ${selectedCollectionIds.size}개`;
+    selectToggle.innerText = isSelectionMode ? '선택 모드 종료' : '선택 모드';
+    selectToggle.classList.toggle('btn-secondary', isSelectionMode);
+    selectToggle.classList.toggle('btn-outline-secondary', !isSelectionMode);
+    deleteBtn.disabled = !isSelectionMode || selectedCollectionIds.size === 0;
 }
 
 function removeCollectionCard(ids) {
     for (const id of ids) {
         const card = document.querySelector(`.mainImgDiv[data-id="${id}"]`);
 
-        if (card) {
-            card.remove();
-        }
+        card?.remove();
     }
 }
 
 function updateCollectionCount(diff) {
-    if (!collectionCount) {
-        return;
-    }
-
     const currentCount = Number(collectionCount.innerText);
     collectionCount.innerText = Math.max(0, currentCount + diff);
 }

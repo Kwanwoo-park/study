@@ -38,16 +38,17 @@
 
 .noti-group button {
     min-height: 42px;
-    border: 1px solid #d8dee9;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: #fff;
-    color: #374151;
+    background: var(--surface-bg);
+    color: var(--text-primary);
     font-weight: 600;
     cursor: pointer;
     transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 
-.noti-group button:hover {
+.noti-group button:hover,
+.noti-group button[aria-pressed="true"] {
     background: #eef4ff;
     border-color: #9dbcfb;
     color: #1d4ed8;
@@ -79,21 +80,92 @@
     background: #fff;
 }
 
-.notification-card > div:first-child {
+.notification-content {
     flex: 1;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    text-align: left;
     cursor: pointer;
 }
 
 .notification-message {
+    display: block;
     margin: 0;
     color: #1f2937;
     font-size: 15px;
     line-height: 1.5;
-    word-break: keep-all;
+    overflow-wrap: anywhere;
 }
 
 .notification-actions {
+    display: flex;
+    gap: 8px;
     flex: 0 0 auto;
+}
+
+.notification-time {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.notification-card.is-read {
+    background: #f5f6f8;
+    border-color: #eceef2;
+}
+
+.notification-card.is-read .notification-content {
+    opacity: .58;
+}
+
+.notification-range,
+.notification-empty {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.notification-empty {
+    text-align: center;
+    padding: 32px 0;
+}
+
+.notification-more {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.notification-error {
+    margin: 12px 0 0;
+    color: #b91c1c;
+}
+
+.notification-more[hidden],
+.notification-empty[hidden] {
+    display: none;
+}
+
+body.dark-mode .notification-card.is-read {
+    background: var(--surface-muted) !important;
+}
+
+body.dark-mode .noti-group button[aria-pressed="true"] {
+    background: #1e3a5f;
+    border-color: #60a5fa;
+    color: #bfdbfe;
+}
+
+body.dark-mode .notification-delete {
+    color: #fca5a5;
+    border-color: #f87171;
+}
+
+body.dark-mode .notification-more {
+    color: #93c5fd;
+    border-color: #60a5fa;
 }
 
 .mark-as-read-button {
@@ -143,8 +215,11 @@ body.dark-mode .mark-as-read-button:disabled {
         flex-direction: column;
     }
 
-    .notification-actions,
-    .mark-as-read-button {
+    .notification-actions {
         width: 100%;
+    }
+
+    .mark-as-read-button {
+        flex: 1;
     }
 }

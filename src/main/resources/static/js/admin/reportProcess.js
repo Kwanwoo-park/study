@@ -2,16 +2,10 @@ window.addEventListener('load', loadReviewingReports);
 
 async function loadReviewingReports() {
     const list = document.getElementById('report-process-list');
-    if (!list) return;
-
     list.innerHTML = '<div class="admin-report-empty">처리할 신고 목록을 불러오는 중입니다.</div>';
 
     try {
         const response = await fetch('/api/admin/report/reviewing', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
             credentials: 'include',
         });
         const data = await response.json();
@@ -21,7 +15,7 @@ async function loadReviewingReports() {
             return;
         }
 
-        renderReports(data.list || []);
+        renderReports(data.list);
     } catch (error) {
         console.error(error);
         list.innerHTML = '<div class="admin-report-empty">처리할 신고 목록을 불러오지 못했습니다.</div>';
@@ -136,15 +130,12 @@ async function processReport(form) {
         suspendedUntil: toEndOfDay(form.elements.suspendedUntil.value)
     };
 
-    if (!reportId) return;
-
     submitButton.disabled = true;
 
     try {
         if (payload.status === 'RESOLVED' && payload.action === 'CONTENT_DELETE') {
             const deleted = await deleteReportedContent(targetType, targetId);
             if (!deleted) {
-                submitButton.disabled = false;
                 return;
             }
         }
@@ -161,7 +152,6 @@ async function processReport(form) {
 
         if (!response.ok || data.result < 0) {
             alert(data.message || '신고 처리에 실패했습니다.');
-            submitButton.disabled = false;
             return;
         }
 
@@ -169,6 +159,7 @@ async function processReport(form) {
     } catch (error) {
         console.error(error);
         alert('신고 처리에 실패했습니다.');
+    } finally {
         submitButton.disabled = false;
     }
 }
@@ -190,40 +181,22 @@ async function deleteReportedContent(targetType, targetId) {
         return false;
     }
 
-    let response;
-
-    if (targetType === 'BOARD') {
-        response = await fetch(`/api/board/view/delete?id=${encodeURIComponent(targetId)}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
-            credentials: 'include',
-        });
-    } else if (targetType === 'COMMENT') {
-        response = await fetch(`/api/comment/delete?id=${encodeURIComponent(targetId)}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                id: Number(targetId)
-            })
-        });
-    } else if (targetType === 'CHAT_MESSAGE') {
-        response = await fetch(`/api/chat/message/delete?id=${encodeURIComponent(targetId)}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
-            credentials: 'include',
-        });
-    } else {
+    const id = encodeURIComponent(targetId);
+    const endpoint = {
+        BOARD: `/api/board/view/delete?id=${id}`,
+        COMMENT: `/api/comment/delete?id=${id}`,
+        CHAT_MESSAGE: `/api/chat/message/delete?id=${id}`,
+    }[targetType];
+    if (!endpoint) {
         alert('이 신고 대상은 콘텐츠 삭제를 할 수 없습니다.');
         return false;
     }
-
+    const options = {method: 'DELETE', credentials: 'include'};
+    if (targetType === 'COMMENT') {
+        options.headers = {'Content-Type': 'application/json; charset=utf-8'};
+        options.body = JSON.stringify({id: Number(targetId)});
+    }
+    const response = await fetch(endpoint, options);
     const data = await response.json();
     if (!response.ok || data.result < 0) {
         alert(data.message || '콘텐츠 삭제에 실패했습니다.');
@@ -243,7 +216,7 @@ function formatTargetType(value) {
 }
 
 function formatReason(report) {
-    const value = report && typeof report === 'object' ? report.reason : report;
+    const value = report.reason;
     const label = {
         SPAM: '스팸/도배',
         ABUSE: '욕설/괴롭힘',
@@ -254,7 +227,7 @@ function formatReason(report) {
         COPYRIGHT: '저작권 침해',
         ETC: '기타'
     }[value] || value;
-    const detail = report && typeof report === 'object' ? report.reasonDetail : '';
+    const detail = report.reasonDetail;
 
     if (value === 'ETC' && detail) {
         return `${label}: ${detail}`;

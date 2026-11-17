@@ -41,13 +41,6 @@ public class FollowFacade {
 
         Member follower = memberService.findMember(email);
 
-        if (follower == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "result", -10L,
-                    "message", "존재하지 않는 회원입니다"
-            ));
-        }
-
         if (!visibilityAccessPolicy.canViewMember(follower, member)) {
             return privateMemberResponse();
         }
@@ -75,13 +68,6 @@ public class FollowFacade {
         }
 
         Member following = memberService.findMember(email);
-
-        if (following == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "result", -10L,
-                    "message", "존재하지 않는 회원입니다"
-            ));
-        }
 
         if (!visibilityAccessPolicy.canViewMember(following, member)) {
             return privateMemberResponse();

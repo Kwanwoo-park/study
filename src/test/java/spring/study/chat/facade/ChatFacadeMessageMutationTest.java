@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageEventDto;
+import spring.study.chat.dto.ChatMessageResponseDto;
 import spring.study.chat.entity.*;
 import spring.study.chat.service.*;
 import spring.study.member.entity.Member;
@@ -16,6 +17,7 @@ import spring.study.member.service.MemberService;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -46,6 +48,7 @@ class ChatFacadeMessageMutationTest {
         verifyNoInteractions(messagingTemplate);
         verify(messageImgService, never()).deleteMessage(any());
         verify(imageS3Service, never()).deleteImg(any());
+        assertThat(new ChatMessageResponseDto(message).getMessage()).isEqualTo("원본");
     }
 
     @Test
@@ -66,6 +69,11 @@ class ChatFacadeMessageMutationTest {
         );
         verify(messageImgService, never()).deleteMessage(any());
         verify(imageS3Service, never()).deleteImg(any());
+        assertThat(new ChatMessageResponseDto(message).getMessage()).isEqualTo("삭제된 메시지입니다");
+        assertThat(ChatMessageEventDto.deletedForAll(message).message()).isEqualTo("삭제된 메시지입니다");
+        message.deleteForAll(true);
+        assertThat(new ChatMessageResponseDto(message).getMessage()).isEqualTo("관리자에 의해 삭제된 메시지입니다");
+        assertThat(ChatMessageEventDto.deletedForAll(message).message()).isEqualTo("관리자에 의해 삭제된 메시지입니다");
     }
 
     private ChatMessage message(Member owner) {

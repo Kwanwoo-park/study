@@ -86,7 +86,7 @@ public class MessageConsumer {
         Notification notification = record.value();
         try {
             if (notification == null || notification.getId() == null) throw new IllegalArgumentException("Invalid notification event");
-            Notification current = notificationService.findById(notification.getId());
+            Notification current = notificationService.findForDelivery(notification.getId());
             if (current == null) {
                 eventLogs.record(IntegrationEventLogRoute.NOTIFICATION, IntegrationEventLogOperation.CONSUME, IntegrationEventLogOutcome.SKIPPED, notification.getId(), 1, null);
                 return;

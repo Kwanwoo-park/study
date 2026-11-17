@@ -20,10 +20,12 @@ import spring.study.notification.dto.NotificationReadState;
 import spring.study.notification.dto.NotificationRealtimeEvent;
 import spring.study.notification.entity.Group;
 import spring.study.notification.entity.Notification;
+import spring.study.notification.entity.NotificationPeriod;
 import spring.study.notification.service.NotificationService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -91,6 +93,16 @@ public class NotificationFacade {
         ));
     }
 
+    public ResponseEntity<?> history(Member member, Group group, NotificationPeriod period,
+                                     LocalDateTime asOf, LocalDateTime beforeTime, Long beforeId) {
+        return ResponseEntity.ok(notificationService.findHistory(member, group, period, asOf, beforeTime, beforeId));
+    }
+
+    public ResponseEntity<?> delete(Long id, Member member) {
+        notificationService.delete(id, member);
+        return ResponseEntity.ok(Map.of("result", 10L));
+    }
+
     public ResponseEntity<?> loadByGroup(Member member, Group group) {
         List<Notification> list = notificationService.findByMemberAndGroup(member, group);
         long totalCount = notificationService.countByMemberAndGroup(member, group);
@@ -120,8 +132,10 @@ public class NotificationFacade {
     }
 
     public ResponseEntity<?> updateAllAsRead(Member member) {
+        LocalDateTime readBefore = LocalDateTime.now();
         return ResponseEntity.ok(Map.of(
-                "result", notificationService.updateAllRead(member)
+                "result", notificationService.updateAllRead(member, readBefore),
+                "readBefore", readBefore
         ));
     }
 

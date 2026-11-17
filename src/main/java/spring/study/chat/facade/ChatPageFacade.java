@@ -61,19 +61,20 @@ public class ChatPageFacade {
         if (room == null)
             return "redirect:/chat/chatList";
 
+        boolean participant = roomMemberService.exist(member, room);
+        List<ChatRoomMember> participants = roomMemberService.find(room);
         model.addAttribute("room", room.getRoomId());
         model.addAttribute("member", member.getEmail());
         model.addAttribute("isAdmin", member.getRole() == Role.ADMIN);
-        model.addAttribute("flag", !roomMemberService.exist(member, room));
-        model.addAttribute("participantNames", getParticipantNames(room, member));
-        model.addAttribute("audioCallAvailable",
-                roomMemberService.exist(member, room) && roomMemberService.find(room).size() >= 2);
+        model.addAttribute("flag", !participant);
+        model.addAttribute("participantNames", getParticipantNames(participants, member));
+        model.addAttribute("audioCallAvailable", participant && participants.size() >= 2);
 
         return "chat/chatRoom";
     }
 
-    private List<String> getParticipantNames(ChatRoom room, Member currentMember) {
-        List<String> names = new ArrayList<>(roomMemberService.find(room).stream()
+    private List<String> getParticipantNames(List<ChatRoomMember> participants, Member currentMember) {
+        List<String> names = new ArrayList<>(participants.stream()
                 .map(roomMember -> roomMember.getMember().getName())
                 .toList());
 

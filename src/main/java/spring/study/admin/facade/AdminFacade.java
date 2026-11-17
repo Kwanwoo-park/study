@@ -155,7 +155,7 @@ public class AdminFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "unacknowledgedCount", systemIncidentService.countUnacknowledged(),
-                "list", systemIncidentService.findRecent().stream()
+                "list", systemIncidentService.findRecentUnacknowledged().stream()
                         .map(incident ->
                                 new SystemIncidentResponseDto(incident, ipLocationService.find(incident.getRequestIp()))
                         )

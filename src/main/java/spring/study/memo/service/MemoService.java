@@ -141,7 +141,7 @@ public class MemoService {
     }
 
     private String title(MemoRequestDto request) {
-        return request.title() == null || request.title().isBlank() ? "" : request.title().strip();
+        return request.title() == null ? "" : request.title().strip();
     }
 
     private String content(MemoRequestDto request) {

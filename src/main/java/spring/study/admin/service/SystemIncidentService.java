@@ -46,8 +46,8 @@ public class SystemIncidentService {
     }
 
     @Transactional(readOnly = true)
-    public List<SystemIncident> findRecent() {
-        return systemIncidentRepository.findTop50ByOrderByOccurredAtDesc();
+    public List<SystemIncident> findRecentUnacknowledged() {
+        return systemIncidentRepository.findTop30ByAcknowledgedFalseOrderByOccurredAtDesc();
     }
 
     @Transactional(readOnly = true)

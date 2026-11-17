@@ -13,10 +13,6 @@
     const description = document.getElementById('transactionPageDescription');
     const body = document.getElementById('transactionPageBody');
 
-    if (!page || !body) {
-        return;
-    }
-
     const account = String(page.dataset.account || '').replace(/\D/g, '');
     let currentPage = 0;
     let isLoading = false;
@@ -60,10 +56,6 @@
             const response = await fetch(
                 `/api/account/transactions?account=${encodeURIComponent(account)}&page=${encodeURIComponent(pageNumber)}`,
                 {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8',
-                    },
                     credentials: 'include',
                 }
             );
@@ -75,7 +67,7 @@
                 return;
             }
 
-            currentPage = Number(json.page || 0);
+            currentPage = json.page;
             renderTransactions(json);
         } catch (error) {
             console.error(error);
@@ -87,7 +79,7 @@
     }
 
     function renderTransactions(data) {
-        const transactions = data.list || [];
+        const transactions = data.list;
 
         if (transactions.length === 0) {
             body.innerHTML = '<div class="account-page-message">거래 내역이 없습니다</div>';
@@ -118,7 +110,7 @@
 
         const pageText = document.createElement('span');
         pageText.className = 'account-page-number';
-        pageText.innerText = `${Number(data.page || 0) + 1} / ${Math.max(Number(data.totalPages || 1), 1)} 페이지`;
+        pageText.innerText = `${data.page + 1} / ${Math.max(data.totalPages, 1)} 페이지`;
 
         const previousButton = document.createElement('button');
         previousButton.type = 'button';
@@ -166,10 +158,6 @@
     }
 
     async function cancelTransaction(transactionId) {
-        if (!transactionId) {
-            return;
-        }
-
         if (!confirm('거래를 취소하시겠습니까?')) {
             return;
         }
@@ -239,7 +227,7 @@
     }
 
     function formatAmount(value) {
-        return amountFormatter.format(Number(value || 0));
+        return amountFormatter.format(value);
     }
 
     function formatOptionalAccount(value) {

@@ -8,14 +8,14 @@ const script = readFileSync(join(__dirname, '../../main/resources/static/js/comm
 function setup({referrer = 'https://www.kwanwoo.site/board/main', current = 'https://www.kwanwoo.site/board/view?id=1',
     length = 2, fallback = '/board/main', backThrows = false} = {}) {
     const listeners = [];
-    const replaced = [];
+    const navigated = [];
     let backCalls = 0;
     const link = {href: new URL(fallback, current).href};
     const context = {
         URL,
         document: {referrer, addEventListener: (name, callback) => { if (name === 'click') listeners.push(callback); }},
         window: {
-            location: {href: current, replace: href => replaced.push(href)},
+            location: {get href() {return current;}, set href(value) {navigated.push(value);}},
             history: {length, back() { backCalls++; if (backThrows) throw new Error('Unavailable'); }},
         },
     };
@@ -27,12 +27,21 @@ function setup({referrer = 'https://www.kwanwoo.site/board/main', current = 'htt
         listeners.forEach(listener => listener(event));
         return event;
     }
-    return {click, replaced, link, listeners, backCalls: () => backCalls, reload: () => vm.runInContext(script, context)};
+    return {click, navigated, link, listeners, backCalls: () => backCalls, reload: () => vm.runInContext(script, context)};
 }
 
 test('uses browser back for a previous page on the same site, including a clicked arrow child', () => {
     const ui = setup();
     assert.equal(ui.click().defaultPrevented, true);
     assert.equal(ui.backCalls(), 1);
-    assert.deepEqual(ui.replaced, []);
+    assert.deepEqual(ui.navigated, []);
+});
+
+test('back falls back to a normal navigation when there is no usable previous page', () => {
+    for (const options of [{length: 1, referrer: ''}, {referrer: 'https://elsewhere.test/'}, {backThrows: true}]) {
+        const ui = setup(options);
+        assert.equal(ui.click().defaultPrevented, true);
+        assert.deepEqual(ui.navigated, ['https://www.kwanwoo.site/board/main']);
+        assert.equal(ui.backCalls(), options.backThrows ? 1 : 0);
+    }
 });

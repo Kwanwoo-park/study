@@ -20,58 +20,54 @@ else if (role.innerText == "DENIED") {
 else
     change.style.display = 'none';
 
-if (change) {
-    change.addEventListener('click', (event) => {
-        fetch(url, {
-            method: 'PATCH',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
-            body: JSON.stringify({
-                id: id.value
-            }),
-            credentials: "include",
-        })
-        .then((response) => response.json())
-        .then((json) => {
-            if (json['result'] > 0) {
-                alert(msg);
-                window.location.reload();
-            }
-            else
-                alert("다시 시도하여주십시오");
-        })
-        .catch((error) => {
-            alert("다시 시도하여주십시오");
-        })
+change.addEventListener('click', (event) => {
+    fetch(url, {
+        method: 'PATCH',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify({
+            id: id.value
+        }),
+        credentials: "include",
     })
-}
-
-if (del) {
-    del.addEventListener('click', (event) => {
-        event.preventDefault();
-
-        fetch(`/api/admin/member/withdrawal?email=` + email.innerText, {
-            method: 'DELETE',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
-            credentials: "include",
-        })
-        .then((response) => response.json())
-        .then((json) => {
-            if (json['result'] >= 0) {
-                alert("삭제되었습니다");
-            }
-            else {
-                alert("다시 시도하여주십시오");
-            }
-        })
-        .catch((error) => {
-            console.error(error)
+    .then((response) => response.json())
+    .then((json) => {
+        if (json['result'] > 0) {
+            alert(msg);
+            window.location.reload();
+        }
+        else
             alert("다시 시도하여주십시오");
-        })
     })
-}
+    .catch((error) => {
+        alert("다시 시도하여주십시오");
+    })
+})
+
+del.addEventListener('click', (event) => {
+    event.preventDefault();
+
+    fetch(`/api/admin/member/withdrawal?email=` + email.innerText, {
+        method: 'DELETE',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        credentials: "include",
+    })
+    .then((response) => response.json())
+    .then((json) => {
+        if (json['result'] >= 0) {
+            alert("삭제되었습니다");
+        }
+        else {
+            alert("다시 시도하여주십시오");
+        }
+    })
+    .catch((error) => {
+        console.error(error)
+        alert("다시 시도하여주십시오");
+    })
+})
 
 

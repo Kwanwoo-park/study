@@ -6,10 +6,13 @@ import spring.study.member.entity.Member;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public record MobileChatRoomResponse(String roomId, String name, String lastMessage, LocalDateTime lastChatTime, long unreadCount, List<MobileMemberResponse> participants) {
     public static MobileChatRoomResponse from(ChatRoom room, List<Member> participants, long unreadCount) {
-        String displayName = participants.isEmpty() ? room.getName() : participants.stream().map(Member::getName).reduce((left, right) -> left + " · " + right).orElse(room.getName());
+        String displayName = room.getName();
+        if (!participants.isEmpty())
+            displayName = participants.stream().map(Member::getName).collect(Collectors.joining(" · "));
 
         return new MobileChatRoomResponse(
                 room.getRoomId(),

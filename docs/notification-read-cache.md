@@ -1,5 +1,12 @@
 # Notification read-state synchronization
 
+## Notification history
+
+- Notification records no longer expire automatically. Reading changes only `readStatus`, preserving the event timestamp and displaying the card dimmed. Account withdrawal still removes the member's records.
+- `/api/notification/history` defaults to `period=DAY`; More expands through `WEEK`, `MONTH`, and `ALL`. Optional `group` filters the history. Each response contains at most 30 entries, plus `hasMore`, `asOf`, and the next `beforeTime` / `beforeId` cursor. Reuse `asOf` and both cursor values when paging or expanding the period.
+- `DELETE /api/notification/{id}` deletes only the authenticated member's notification and propagates a read watermark to suppress cached popups. Pending Kafka delivery skips records that have already been deleted.
+- The existing load/sort APIs remain available for older clients. Notifications deleted by the previous retention job cannot be recovered by this change.
+
 ## Flow
 
 - Individual reads, read-all, chat-room reads, and call notification closure register a read watermark in the existing DB transaction.

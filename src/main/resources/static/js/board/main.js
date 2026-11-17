@@ -1,17 +1,11 @@
 const container = document.querySelector('.container')
 
 let nextCursor = 1;
-let loading;
+let loading = false;
 
 window.onload = function() {
-    if (typeof initCommentModal === 'function') {
-        initCommentModal();
-    }
-
-    if (typeof initFavoriteModal === 'function') {
-        initFavoriteModal();
-    }
-
+    initCommentModal();
+    initFavoriteModal();
     loadMorePosts();
 }
 
@@ -22,14 +16,10 @@ container.addEventListener('scroll', () => {
 })
 
 async function loadMorePosts() {
-    if (!nextCursor) return;
-
+    if (loading || !nextCursor) return;
+    loading = true;
     try {
         const res = await fetch(`/api/board/load?cursor=` + (nextCursor-1) + `&limit=10`, {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
             credentials: "include",
         });
         const data = await res.json();
@@ -40,10 +30,8 @@ async function loadMorePosts() {
             nextCursor = data.nextCursor;
 
             if (!nextCursor){
-                load = document.getElementById('loading');
-
-                if (!load) {
-                    load = document.createElement('span')
+                if (!document.getElementById('loading')) {
+                    const load = document.createElement('span')
                     load.id = 'loading'
                     load.innerText = '모든 게시물을 불러왔습니다';
                     container.append(load);
@@ -53,6 +41,8 @@ async function loadMorePosts() {
             alert("다시 시도하여주십시오");
     } catch (e) {
         console.error('로드 오류', e);
+    } finally {
+        loading = false;
     }
 }
 
@@ -158,7 +148,7 @@ function fnDraw(data) {
         img_comment.className = 'icon';
         img_comment.id = 'comment' + board.id;
         img_comment.onclick = function() {
-            fnOpenComment(board.id);
+            fnComment(board.id);
         }
         img_comment.src = '/img/ic_chat_black.png';
 
@@ -179,7 +169,7 @@ function fnDraw(data) {
         const like_div = document.createElement('div')
         like_div.className = 'like'
         like_div.onclick = function() {
-            fnOpenFavorite(board.id);
+            fnHref(board.id);
         }
 
         const label1 = document.createElement('label')
@@ -216,7 +206,7 @@ function fnDraw(data) {
         const comment_div = document.createElement('div')
         comment_div.className = 'comment'
         comment_div.onclick = function() {
-            fnOpenComment(board.id)
+            fnComment(board.id)
         }
 
         const label4 = document.createElement('label')
@@ -257,22 +247,4 @@ function fnDraw(data) {
         initBoardContent(pre);
         enableBoardImageSwipe(board.id, board.img);
     });
-}
-
-function fnOpenComment(boardId) {
-    if (typeof openCommentModal === 'function') {
-        openCommentModal(boardId);
-        return;
-    }
-
-    fnComment(boardId);
-}
-
-function fnOpenFavorite(boardId) {
-    if (typeof openFavoriteModal === 'function') {
-        openFavoriteModal(boardId);
-        return;
-    }
-
-    fnHref(boardId);
 }

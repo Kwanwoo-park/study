@@ -18,7 +18,7 @@
       <h1>금칙어 적용 관리</h1>
       <p>처리할 금칙어를 선택한 뒤 검토 상태로 변경하거나 최종 승인하세요.</p>
     </div>
-    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.replace('/admin/administrator')">관리자 화면으로</button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.location.href = '/admin/administrator'">관리자 화면으로</button>
   </header>
   <div class="admin-forbidden-action-bar">
     <span id="forbidden-selection-count" class="admin-forbidden-selection-count">선택된 항목 없음</span>
@@ -43,6 +43,6 @@
 </div>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/admin/forbiddenWordApplyList.js"></script>
+<script src="/js/admin/forbiddenWordApplyList.js?v=20261116"></script>
 </body>
 </html>

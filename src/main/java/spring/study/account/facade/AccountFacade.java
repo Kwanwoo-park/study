@@ -167,10 +167,18 @@ public class AccountFacade {
 
     @Transactional(readOnly = true)
     public ResponseEntity<?> getListByAccount(String accountNumber, int page, Member member) {
-        ResponseEntity<?> validation = validateOwner(accountNumber, member);
-        if (validation != null) return validation;
+        if (accountNumber == null || accountNumber.isBlank() || !accountService.existsByAccount(accountNumber))
+            return accountNotFound();
 
         Account account = accountService.findByAccount(accountNumber);
+
+        if (account.getAccountStatus() == AccountStatus.DELETED) return accountNotFound();
+        if (member == null || account.getMember() == null || !account.getMember().getId().equals(member.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "result", -10L,
+                    "message", "본인 계좌만 조회할 수 있습니다"
+            ));
+        }
 
         Page<AccountTransaction> transactionPage = accountTransactionService.findByAccount(account, page);
 
@@ -255,30 +263,10 @@ public class AccountFacade {
 
         if (source.equals(target)) throw new IllegalArgumentException("같은 계좌로 이체할 수 없습니다");
 
-        boolean sourceFirst = source.compareTo(target) < 0;
+        if (source.compareTo(target) < 0) return new Account[]{lock(source), lock(target)};
 
-        Account first = lock(sourceFirst ? source : target);
-        Account second = lock(sourceFirst ? target : source);
-
-        return sourceFirst ? new Account[]{first, second} : new Account[]{second, first};
-    }
-
-    private ResponseEntity<?> validateOwner(String accountNumber, Member member) {
-        if (accountNumber == null || accountNumber.isBlank()) return accountNotFound();
-
-        if (!accountService.existsByAccount(accountNumber)) return accountNotFound();
-
-        Account account = accountService.findByAccount(accountNumber);
-
-        if (account.getAccountStatus() == AccountStatus.DELETED) return accountNotFound();
-        if (member == null || account.getMember() == null || !account.getMember().getId().equals(member.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -10L,
-                    "message", "본인 계좌만 조회할 수 있습니다"
-            ));
-        }
-
-        return null;
+        Account targetAccount = lock(target);
+        return new Account[]{lock(source), targetAccount};
     }
 
     private ResponseEntity<?> accountNotFound() {
@@ -376,10 +364,10 @@ public class AccountFacade {
         else if (first == null) return new Account[]{accountService.findByAccountForUpdate(second.getAccount())};
         else if (second == null) return new Account[]{accountService.findByAccountForUpdate(first.getAccount())};
 
-        String firstNumber = first.getAccount().compareTo(second.getAccount()) <= 0 ? first.getAccount() : second.getAccount();
-        String secondNumber = firstNumber.equals(first.getAccount()) ? second.getAccount() : first.getAccount();
+        if (first.getAccount().compareTo(second.getAccount()) > 0)
+            return new Account[]{lock(second.getAccount()), lock(first.getAccount())};
 
-        return new Account[]{ accountService.findByAccountForUpdate(firstNumber), accountService.findByAccountForUpdate(secondNumber) };
+        return new Account[]{lock(first.getAccount()), lock(second.getAccount())};
     }
 
     private boolean isAccountOwner(Account account, Long memberId) {

@@ -42,16 +42,7 @@ public class CollectionFacade {
 
     public ResponseEntity<?> save(CollectionRequestDto dto, Member member) {
         dto.setMember(member);
-        Collection collection = dto.toEntity();
-
-        Collection saved = collectionService.save(collection);
-
-        if (saved == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "result", -10,
-                    "message", "저장되지 않았습니다"
-            ));
-        }
+        Collection saved = collectionService.save(dto);
 
         return ResponseEntity.ok(Map.of(
                 "result", saved.getId()

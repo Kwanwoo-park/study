@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('diaryForm');
-    if (!form) return;
-
     const maxImageCount = 10;
     const imageInput = document.getElementById('imageInput');
     const imageSelectButton = document.getElementById('imageSelectButton');
@@ -69,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isPreparingImages || isSaving) return;
         const currentCount = imagePreviewList.querySelectorAll('.image-preview-item').length;
         const availableCount = maxImageCount - currentCount;
-        const files = Array.from(imageInput.files || []);
+        const files = Array.from(imageInput.files);
         if (files.length === 0) return;
 
         if (files.length > availableCount) {
@@ -117,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 throw new Error(body.message || '이미지를 업로드하지 못했습니다');
             }
-            return body.imageUrls || [];
+            return body.imageUrls;
         });
     }
 
@@ -155,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 throw new Error(body.message || '일기를 저장하지 못했습니다');
             }
-            window.location.replace('/diary/list');
+            window.location.href = '/diary/list';
         } catch (error) {
             showMessage(error.message);
         } finally {
@@ -182,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) {
                     throw new Error(body.message || '일기를 삭제하지 못했습니다');
                 }
-                window.location.replace('/diary/list');
+                window.location.href = '/diary/list';
             } catch (error) {
                 showMessage(error.message);
             } finally {

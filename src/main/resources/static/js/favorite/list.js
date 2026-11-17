@@ -10,16 +10,16 @@ window.onload = function() {
     loadMoreFavorites(true);
 };
 
-if (favoriteContainer) {
-    favoriteContainer.addEventListener('scroll', () => {
-        if (favoriteContainer.scrollTop + favoriteContainer.clientHeight >= favoriteContainer.scrollHeight - 10) {
-            loadMoreFavorites();
-        }
-    });
-}
+favoriteContainer.addEventListener('scroll', () => {
+    if (favoriteContainer.scrollTop + favoriteContainer.clientHeight >= favoriteContainer.scrollHeight - 10) loadMoreFavorites();
+});
+favoriteList.addEventListener('click', event => {
+    const button = event.target.closest('[data-action="follow"]');
+    if (button) toggleMemberFollow(button);
+});
 
 async function loadMoreFavorites(reset = false) {
-    if (!favoriteContainer || !favoriteList || favoriteLoading) {
+    if (favoriteLoading) {
         return;
     }
 
@@ -37,10 +37,6 @@ async function loadMoreFavorites(reset = false) {
     try {
         const boardId = favoriteContainer.dataset.boardId;
         const response = await fetch(`/api/favorite/list?id=${boardId}&cursor=${nextFavoriteCursor - 1}&limit=${FAVORITE_LIMIT}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
             credentials: 'include',
         });
         const json = await response.json();
@@ -50,7 +46,7 @@ async function loadMoreFavorites(reset = false) {
             return;
         }
 
-        renderFavorites(json, reset);
+        renderFavorites(json);
         nextFavoriteCursor = json.nextCursor;
     } catch (error) {
         console.error(error);
@@ -60,11 +56,7 @@ async function loadMoreFavorites(reset = false) {
     }
 }
 
-function renderFavorites(data, reset) {
-    if (reset) {
-        favoriteList.innerHTML = '';
-    }
-
+function renderFavorites(data) {
     const startIndex = favoriteList.children.length;
 
     if (data.list.length === 0 && startIndex === 0) {
@@ -88,41 +80,13 @@ function renderFavorites(data, reset) {
                 <span>${escapeHtml(item.member.email)}</span>
                 ${item.member.email !== data.email ? `
                     <div class="float-right">
-                        <button type="button" id="follow${item.id}" class="btn btn-success" onclick="fnFollow(${item.id}, '${escapeJsString(item.member.email)}')">${data.following[item.id] ? 'Unfollow' : 'Follow'}</button>
+                        <button type="button" class="btn btn-success" data-action="follow" data-email="${escapeHtml(item.member.email)}">${data.following[item.id] ? 'Unfollow' : 'Follow'}</button>
                     </div>
                 ` : ''}
             </span>
         `;
         favoriteList.append(li);
     });
-}
-
-function fnFollow(listId, memberEmail) {
-    const btn = document.getElementById('follow' + listId);
-    if (!btn) return;
-
-    const method = btn.innerText === 'Follow' ? 'POST' : 'DELETE';
-    const data = { email: memberEmail };
-
-    fetch('/api/follow', {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include',
-    })
-        .then((response) => response.json())
-        .then((json) => {
-            if (json.result > 0) {
-                btn.innerText = method === 'POST' ? 'Unfollow' : 'Follow';
-            } else {
-                alert('다시 시도하여주십시오');
-            }
-        })
-        .catch(() => {
-            alert('다시 시도하여주십시오');
-        });
 }
 
 function escapeHtml(value) {
@@ -132,10 +96,4 @@ function escapeHtml(value) {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
-}
-
-function escapeJsString(value) {
-    return String(value)
-        .replaceAll('\\', '\\\\')
-        .replaceAll("'", "\\'");
 }

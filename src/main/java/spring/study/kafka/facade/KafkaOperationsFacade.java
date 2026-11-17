@@ -9,7 +9,6 @@ import spring.study.admin.entity.IntegrationEventLogOutcome;
 import spring.study.admin.entity.IntegrationEventLogRoute;
 import spring.study.admin.service.IntegrationEventLogService;
 import spring.study.kafka.config.KafkaOperationsProperties;
-import spring.study.kafka.config.KafkaTopics;
 import spring.study.kafka.dto.*;
 import spring.study.kafka.entity.KafkaDeadLetter;
 import spring.study.kafka.entity.KafkaDeadLetterStatus;
@@ -23,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
 
@@ -84,7 +82,7 @@ public class KafkaOperationsFacade {
 
     private KafkaTopicHealth health(KafkaTopicSnapshot topic, List<String> warnings) {
         String name = topic.topic();
-        int desired = name.endsWith(".DLT") ? properties.getDeadLetterPartitions() : name.equals(KafkaTopics.CHAT) ? properties.getChatPartitions() : properties.getNotificationPartitions();
+        int desired = properties.partitionsFor(name);
         int replicas = topic.partitions().stream().mapToInt(partition -> partition.replicas().size()).min().orElse(0);
         long underReplicated = topic.partitions().stream().filter(p -> p.inSyncReplicas().size() < p.replicas().size()).count();
         long leaderless = topic.partitions().stream().filter(partition -> partition.leader() == null).count();
@@ -95,7 +93,7 @@ public class KafkaOperationsFacade {
             if (leaderless > 0) warnings.add(name + ": 리더가 없는 파티션이 " + leaderless + "개 있습니다.");
             if (topic.partitions().size() != desired || replicas != properties.getReplicationFactor()) warnings.add(name + ": 운영 토픽 구성과 신규 생성 설정이 다릅니다. 기존 구성은 자동 변경하지 않습니다.");
 
-            long retention = TimeUnit.DAYS.toMillis(name.endsWith(".DLT") ? properties.getDeadLetterRetentionDays() : properties.getRetentionDays());
+            long retention = properties.retentionMillisFor(name);
 
             if (topic.error() == null && (!"delete".equals(configs.get("cleanup.policy"))
                     || !Long.toString(retention).equals(configs.get("retention.ms"))

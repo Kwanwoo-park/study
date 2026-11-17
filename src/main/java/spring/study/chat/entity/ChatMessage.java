@@ -108,6 +108,12 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
         return CENSORED_MESSAGE.equals(message);
     }
 
+    public String displayMessage() {
+        if (status != ChatMessageStatus.DELETED_FOR_ALL) return message;
+        if (deletedByAdmin) return "관리자에 의해 삭제된 메시지입니다";
+        return "삭제된 메시지입니다";
+    }
+
     public void deleteForAll() {
         deleteForAll(false);
     }

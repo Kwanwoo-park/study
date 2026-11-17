@@ -65,15 +65,10 @@ public class SavingsAutoTransfer implements Serializable {
     }
 
     void completePayment(LocalDateTime maturityAt) {
-        if (nextPaymentDate == null) return;
-
-        YearMonth nextMonth = YearMonth.from(nextPaymentDate).plusMonths(1L);
-        LocalDate nextDate = nextMonth.atDay(Math.min(paymentDay, nextMonth.lengthOfMonth()));
-        nextPaymentDate = maturityAt != null && nextDate.isAfter(maturityAt.toLocalDate()) ? null : nextDate;
-        lastFailureNotificationDate = null;
+        if (nextPaymentDate != null) completePayment(nextPaymentDate, maturityAt);
     }
 
-    void completeInitialPayment(LocalDate paymentDate, LocalDateTime maturityAt) {
+    void completePayment(LocalDate paymentDate, LocalDateTime maturityAt) {
         YearMonth nextMonth = YearMonth.from(paymentDate).plusMonths(1L);
         LocalDate nextDate = nextMonth.atDay(Math.min(paymentDay, nextMonth.lengthOfMonth()));
         nextPaymentDate = maturityAt != null && nextDate.isAfter(maturityAt.toLocalDate()) ? null : nextDate;

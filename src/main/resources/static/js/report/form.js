@@ -1,7 +1,5 @@
 (function() {
     const form = document.getElementById('reportForm');
-    if (!form) return;
-
     const targetTypeDisplay = document.getElementById('targetTypeDisplay');
     const targetIdDisplay = document.getElementById('targetIdDisplay');
     const reason = document.getElementById('reason');
@@ -89,12 +87,7 @@
                 body: JSON.stringify(payload)
             });
 
-            let json = {};
-            try {
-                json = await response.json();
-            } catch (error) {
-                json = {};
-            }
+            const json = await response.json().catch(() => ({}));
 
             if (response.status === 401) {
                 showMessage('로그인이 필요합니다. 로그인 후 다시 신고해주세요.', 'error');
@@ -148,7 +141,7 @@
     function moveToOriginalPage() {
         const returnUrl = getSafeReturnUrl();
         if (returnUrl) {
-            window.location.replace(returnUrl);
+            window.location.href = returnUrl;
             return;
         }
 
@@ -156,7 +149,7 @@
             try {
                 const referrer = new URL(document.referrer);
                 if (referrer.origin === window.location.origin && referrer.pathname !== window.location.pathname) {
-                    window.location.replace(referrer.href);
+                    window.location.href = referrer.href;
                     return;
                 }
             } catch (error) {
@@ -169,7 +162,7 @@
             return;
         }
 
-        window.location.replace('/');
+        window.location.href = '/';
     }
 
     function getSafeReturnUrl() {

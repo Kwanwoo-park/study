@@ -1,5 +1,5 @@
-let imgDiv = document.querySelector('.imgDiv');
-let file, fidx;
+const imgDiv = document.querySelector('.imgDiv');
+let file = [], fidx = 0;
 let id;
 let img;
 let left, right, size, imageCounter;
@@ -48,11 +48,11 @@ function fnSave() {
             alert("다시 시도하여주십시오.");
         }
         else {
-            if (hasSelectedImages()) {
+            if (file.length) {
                 img_btn.click();
             } else {
                 alert("게시글이 저장되었습니다.");
-                location.replace(`/board/main`);
+                window.location.href = `/board/main`;
             }
         }
     })
@@ -63,22 +63,21 @@ function fnSave() {
 
 function fnImgSave() {
     if (isPreparingImages) return;
-    const uploadFormData = buildImageFormData();
-    if (!uploadFormData) {
+    if (!file.length) {
         alert("업로드할 이미지를 다시 선택하여 주십시오.");
         return;
     }
 
     fetch(`/api/boardImg/save?id=` + id, {
         method: 'POST',
-        body: uploadFormData,
+        body: ImageUpload.buildFormData(file),
         credentials: "include",
     })
     .then((response) => response.json())
     .then((json) => {
         if (json['result'] > 0) {
             alert("게시글 사진 등록 완료");
-            location.replace(`/board/main`);
+            window.location.href = `/board/main`;
         } else if (json['result'] == -2) {
             alert("게시글 사진 갯수 초과")
             fnDelete(id)
@@ -150,7 +149,7 @@ function fnPrevious() {
         imageCounter = null;
     }
 
-    file = null;
+    file = [];
     fidx = 0;
     size = 0;
     upload.value = '';
@@ -160,7 +159,7 @@ function fnPrevious() {
 
 async function fnLoad(input) {
     if (isPreparingImages) return;
-    const selectedFiles = Array.from(input.files || []);
+    const selectedFiles = Array.from(input.files);
     if (selectedFiles.length === 0) {
         return;
     }
@@ -241,20 +240,6 @@ async function fnLoad(input) {
     }
     else imgDiv.append(img);
 
-}
-
-function hasSelectedImages() {
-    return Array.isArray(file)
-        && file.length > 0
-        && file.every(imageFile => imageFile instanceof Blob && imageFile.size > 0);
-}
-
-function buildImageFormData() {
-    if (!hasSelectedImages()) {
-        return null;
-    }
-
-    return ImageUpload.buildFormData(file);
 }
 
 function fnDelete(boardId) {

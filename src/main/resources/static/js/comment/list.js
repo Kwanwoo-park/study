@@ -26,70 +26,64 @@ window.onload = function() {
     loadMoreComments(true);
 };
 
-if (container) {
-    container.addEventListener('scroll', () => {
-        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) {
-            loadMoreComments();
-        }
-    });
-}
+container.addEventListener('scroll', () => {
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) loadMoreComments();
+});
 
-if (submit) {
+submit.addEventListener('click', () => {
     let apiUrl;
     let data;
-    submit.addEventListener('click', () => {
-        if (flag) {
-            apiUrl = '/api/comment';
-            data = {
-                id: urlParams.get('id'),
-                comments: comments.value
-            };
-        } else {
-            apiUrl = '/api/reply';
-            data = {
-                id: id,
-                reply: comments.value
-            };
-        }
+    if (flag) {
+        apiUrl = '/api/comment';
+        data = {
+            id: urlParams.get('id'),
+            comments: comments.value
+        };
+    } else {
+        apiUrl = '/api/reply';
+        data = {
+            id: id,
+            reply: comments.value
+        };
+    }
 
-        fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
-            body: JSON.stringify(data),
-            credentials: 'include',
-        })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json.result == -1) {
-                    alert('부적절한 내용 감지되었습니다');
-                } else if (json.result == -3) {
-                    alert('금칙어를 사용하여 계정이 정지되었습니다');
-                    window.location.reload();
-                } else if (json.result == -10) {
-                    alert('다시 시도하여주십시오');
-                } else if (flag) {
-                    comments.value = '';
-                    loadMoreComments(true);
-                } else {
-                    const replyCommentId = id;
-                    fnCancel();
-                    const replyState = getReplyState(replyCommentId);
-                    replyState.nextCursor = 1;
-                    replyState.items = [];
-                    const replyArea = document.getElementById('replyArea' + replyCommentId);
-                    if (replyArea) {
-                        replyArea.remove();
-                    }
-                    fnReplyGet(replyCommentId);
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+    })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json.result == -1) {
+                alert('부적절한 내용 감지되었습니다');
+            } else if (json.result == -3) {
+                alert('금칙어를 사용하여 계정이 정지되었습니다');
+                window.location.reload();
+            } else if (json.result == -10) {
+                alert('다시 시도하여주십시오');
+            } else if (flag) {
+                comments.value = '';
+                loadMoreComments(true);
+            } else {
+                const replyCommentId = id;
+                fnCancel();
+                const replyState = getReplyState(replyCommentId);
+                replyState.nextCursor = 1;
+                replyState.items = [];
+                const replyArea = document.getElementById('replyArea' + replyCommentId);
+                if (replyArea) {
+                    replyArea.remove();
                 }
-            })
-            .catch(() => {
-                alert('다시 시도하여주십시오.');
-            });
-    });
-}
+                fnReplyGet(replyCommentId);
+            }
+        })
+        .catch(() => {
+            alert('다시 시도하여주십시오.');
+        });
+});
 
 function fnEdit(commentId) {
     const commentEdit = document.getElementById('edit_comment' + commentId);
@@ -171,7 +165,7 @@ function fnCancel() {
 }
 
 async function loadMoreComments(reset = false) {
-    if (!commentList || isCommentLoading) {
+    if (isCommentLoading) {
         return;
     }
 
@@ -188,10 +182,6 @@ async function loadMoreComments(reset = false) {
 
     try {
         const response = await fetch(`/api/comment/list?id=${urlParams.get('id')}&cursor=${nextCommentCursor - 1}&limit=${COMMENT_LIMIT}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
             credentials: 'include',
         });
         const json = await response.json();
@@ -201,7 +191,7 @@ async function loadMoreComments(reset = false) {
             return;
         }
 
-        renderComments(json, reset);
+        renderComments(json);
         nextCommentCursor = json.nextCursor;
     } catch (error) {
         console.error(error);
@@ -211,15 +201,7 @@ async function loadMoreComments(reset = false) {
     }
 }
 
-function renderComments(json, reset) {
-    if (!commentList) {
-        return;
-    }
-
-    if (reset) {
-        commentList.innerHTML = '';
-    }
-
+function renderComments(json) {
     if (json.list.length === 0 && commentList.children.length === 0) {
         const empty = document.createElement('li');
         empty.className = 'list-group-item';
@@ -285,7 +267,7 @@ function buildCommentItem(item, memberEmail) {
 }
 
 function fnReportComment(commentId) {
-    location.replace(`/report?targetType=COMMENT&targetId=${encodeURIComponent(commentId)}`);
+    window.location.href = `/report?targetType=COMMENT&targetId=${encodeURIComponent(commentId)}`;
 }
 
 const replyStateMap = new Map();
@@ -344,10 +326,6 @@ async function loadReplies(commentId, reset = false) {
 
     try {
         const response = await fetch(`/api/reply/list?id=${commentId}&cursor=${state.nextCursor - 1}&limit=${REPLY_LIMIT}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
             credentials: 'include',
         });
         const json = await response.json();
@@ -357,7 +335,7 @@ async function loadReplies(commentId, reset = false) {
             return;
         }
 
-        state.items = reset ? json.list.slice() : state.items.concat(json.list);
+        state.items.push(...json.list);
         state.nextCursor = json.nextCursor;
         renderReplies(commentId);
     } catch (error) {

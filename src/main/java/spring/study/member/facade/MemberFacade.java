@@ -35,7 +35,6 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.MemberResponseDto;
 import spring.study.member.entity.Member;
 import spring.study.jwt.component.JwtTokenProvider;
-import spring.study.jwt.dto.AuthenticationTokens;
 import spring.study.jwt.dto.IssuedToken;
 import spring.study.jwt.dto.TokenClaims;
 import spring.study.jwt.entity.RefreshToken;
@@ -46,6 +45,7 @@ import spring.study.jwt.service.RefreshTokenService;
 import spring.study.common.exception.JwtValidationException;
 import spring.study.common.component.TransactionRunner;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import java.time.Instant;
 import spring.study.member.service.MemberService;
 import spring.study.member.service.UserService;
@@ -108,28 +108,10 @@ public class MemberFacade {
     }
 
     public ResponseEntity<?> login(MemberRequestDto dto, HttpServletRequest request, HttpServletResponse response, String ipAddress) {
-        int check = validateLogin(dto);
-
-        if (check == -1) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "이메일이 입력되지 않았습니다"
-            ));
-        } else if (check == -2) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "비밀번호가 입력되지 않았습니다"
-            ));
-        }
+        if (!StringUtils.hasText(dto.getEmail())) return invalidInput("이메일이 입력되지 않았습니다");
+        if (!StringUtils.hasText(dto.getPassword())) return invalidInput("비밀번호가 입력되지 않았습니다");
 
         Member member = (Member) memberService.loadUserByUsername(dto.getEmail());
-
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -3L,
-                    "message", "존재하지 않는 회원입니다"
-            ));
-        }
 
         if (!encoder.matches(dto.getPassword(), member.getPassword())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -157,34 +139,11 @@ public class MemberFacade {
 
     @Transactional
     public ResponseEntity<?> register(MemberRequestDto dto) {
-        int check = validateMember(dto);
-
-        if (check == -1) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "이메일이 입력되지 않았습니다"
-            ));
-        } else if (check == -2) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "비밀번호가 입력되지 않았습니다"
-            ));
-        } else if (check == -3) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "이름이 입력되지 않았습니다"
-            ));
-        } else if (check == -4) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "전화번호가 입력되지 않았습니다"
-            ));
-        } else if (check == -5) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "생년월일이 입력되지 않았습니다"
-            ));
-        }
+        if (!StringUtils.hasText(dto.getEmail())) return invalidInput("이메일이 입력되지 않았습니다");
+        if (!StringUtils.hasText(dto.getPassword())) return invalidInput("비밀번호가 입력되지 않았습니다");
+        if (!StringUtils.hasText(dto.getName())) return invalidInput("이름이 입력되지 않았습니다");
+        if (!StringUtils.hasText(dto.getPhone())) return invalidInput("전화번호가 입력되지 않았습니다");
+        if (!StringUtils.hasText(dto.getBirth())) return invalidInput("생년월일이 입력되지 않았습니다");
 
         if (dto.getBirth().equals("1900-01-01")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -193,16 +152,7 @@ public class MemberFacade {
             ));
         }
 
-        check = validateContent(dto.getName());
-
-        if (check != 0) {
-            if (check == -99) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "result", check,
-                        "message", "이름이 입력되지 않았습니다"
-                ));
-            }
-
+        if (forbiddenService.findWordList(Status.APPROVAL, dto.getName()) != 0) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
                     "result", -1L,
                     "message", "금칙어를 사용하였습니다"
@@ -276,8 +226,7 @@ public class MemberFacade {
             ));
         }
 
-        if (member.getProfile().equals(imageUrl))
-            imageS3Service.deleteImage(oldProfile);
+        imageS3Service.deleteImage(oldProfile);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId()
@@ -294,33 +243,15 @@ public class MemberFacade {
 
         Member member = memberService.findMember(email);
 
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "result", -10L,
-                    "message", "존재하지 않는 회원 이메일입니다"
-            ));
-        } else {
-            return ResponseEntity.ok(Map.of(
-                    "result", member.getId(),
-                    "member", member
-            ));
-        }
+        return ResponseEntity.ok(Map.of(
+                "result", member.getId(),
+                "member", member
+        ));
     }
 
     public ResponseEntity<?> findInfo(String birth, String phone) {
-        int check = validateBirthAndPhone(birth, phone);
-
-        if (check == -1) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "생년월일이 입력되지 않았습니다"
-            ));
-        } else if (check == -2) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "전화번호가 입력되지 않았습니다"
-            ));
-        }
+        if (!StringUtils.hasText(birth)) return invalidInput("생년월일이 입력되지 않았습니다");
+        if (!StringUtils.hasText(phone)) return invalidInput("전화번호가 입력되지 않았습니다");
 
         phone = userService.replacePhoneNumber(phone);
         Member member = memberService.findMember(phone, birth);
@@ -339,12 +270,7 @@ public class MemberFacade {
     }
 
     public ResponseEntity<?> updatePassword(String password, Member member) {
-        if (password == null || password.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "비밀번호가 입력되지 않았습니다"
-            ));
-        }
+        if (!StringUtils.hasText(password)) return invalidInput("비밀번호가 입력되지 않았습니다");
 
         return ResponseEntity.ok(Map.of(
                 "result", userService.updatePwd(member.getId(), password)
@@ -368,24 +294,9 @@ public class MemberFacade {
     }
 
     public ResponseEntity<?> updatePhone(MemberRequestDto dto) {
-        int check = validateMember2(dto);
-
-        if (check == -1) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "이메일이 입력되지 않았습니다"
-            ));
-        } else if (check == -2) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "전화번호가 입력되지 않았습니다"
-            ));
-        } else if (check == -3) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "생년월일이 입력되지 않았습니다"
-            ));
-        }
+        if (!StringUtils.hasText(dto.getEmail())) return invalidInput("이메일이 입력되지 않았습니다");
+        if (!StringUtils.hasText(dto.getPhone())) return invalidInput("전화번호가 입력되지 않았습니다");
+        if (!StringUtils.hasText(dto.getBirth())) return invalidInput("생년월일이 입력되지 않았습니다");
 
         if (dto.getBirth().equals("1900-01-01")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -495,40 +406,8 @@ public class MemberFacade {
         memberService.deleteById(member.getId());
     }
 
-    private int validateLogin(MemberRequestDto dto) {
-        if (dto.getEmail() == null || dto.getEmail().isBlank()) return -1;
-        else if (dto.getPassword() == null || dto.getPassword().isBlank()) return -2;
-        else return 0;
-    }
-
-    private int validateMember(MemberRequestDto dto) {
-        if (dto.getEmail() == null || dto.getEmail().isBlank()) return -1;
-        else if (dto.getPassword() == null || dto.getPassword().isBlank()) return -2;
-        else if (dto.getName() == null || dto.getName().isBlank()) return -3;
-        else if (dto.getPhone() == null || dto.getPhone().isBlank()) return -4;
-        else if (dto.getBirth() == null || dto.getBirth().isBlank()) return -5;
-        else return 0;
-    }
-
-    private int validateContent(String name) {
-        if (name == null || name.isBlank()) {
-            return -99;
-        }
-
-        return forbiddenService.findWordList(Status.APPROVAL, name);
-    }
-
-    private int validateBirthAndPhone(String birth, String phone) {
-        if (birth == null || birth.isBlank()) return -1;
-        else if (phone == null || phone.isBlank()) return -2;
-        else return 0;
-    }
-
-    private int validateMember2(MemberRequestDto dto) {
-        if (dto.getEmail() == null || dto.getEmail().isBlank()) return -1;
-        else if (dto.getPhone() == null || dto.getPhone().isBlank()) return -2;
-        else if (dto.getBirth() == null || dto.getBirth().isBlank()) return -3;
-        else return 0;
+    private ResponseEntity<?> invalidInput(String message) {
+        return ResponseEntity.badRequest().body(Map.of("result", -10L, "message", message));
     }
 
     public ResponseEntity<?> logout(Member member, HttpServletRequest request, HttpServletResponse response) {
@@ -590,9 +469,7 @@ public class MemberFacade {
 
         ResponseEntity<?> result = updatePassword(password, member);
 
-        if (result.getStatusCode().is2xxSuccessful()) {
-            clearSession(request, response);
-        }
+        clearSession(request, response);
 
         return result;
     }
@@ -612,15 +489,13 @@ public class MemberFacade {
         refreshTokenService.save(refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress);
         memberTokenCacheService.save(member, tokenProvider.refreshTokenDuration());
 
-        AuthenticationTokens tokens = new AuthenticationTokens(accessToken.value(), refreshToken.value(), accessToken.expiresAt(), refreshToken.expiresAt());
-
         if (request != null) {
             revokeSessionRefreshToken(cookieService.readCurrentRefreshToken(request));
-            cookieService.rememberRefreshToken(request, tokens.refreshToken());
+            cookieService.rememberRefreshToken(request, refreshToken.value());
         }
 
-        cookieService.writeAccessToken(response, tokens.accessToken(), tokenProvider.accessTokenDuration());
-        cookieService.writeRefreshToken(response, tokens.refreshToken(), tokenProvider.refreshTokenDuration());
+        cookieService.writeAccessToken(response, accessToken.value(), tokenProvider.accessTokenDuration());
+        cookieService.writeRefreshToken(response, refreshToken.value(), tokenProvider.refreshTokenDuration());
     }
 
     private void clearSession(HttpServletRequest request, HttpServletResponse response) {

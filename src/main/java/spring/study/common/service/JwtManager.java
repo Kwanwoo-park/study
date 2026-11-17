@@ -1,6 +1,7 @@
 package spring.study.common.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
@@ -11,9 +12,8 @@ import spring.study.member.entity.Member;
 @Service
 public class JwtManager {
     public Member getLoginMember(HttpServletRequest request) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication() == null ? null : SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (!(principal instanceof Member authenticatedMember)) return null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Member authenticatedMember)) return null;
 
         if (authenticatedMember.isAccessBlocked()) {
             SecurityContextHolder.clearContext();

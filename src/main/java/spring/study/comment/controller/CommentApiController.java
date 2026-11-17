@@ -71,9 +71,9 @@ public class CommentApiController {
         int risk = moderationFacade.validate(content, member, response);
         if (risk == 0) return null;
 
-        return ResponseEntity.status(risk == -99 ? HttpStatus.BAD_REQUEST : HttpStatus.FORBIDDEN).body(Map.of(
-                "result", risk == -99 ? -10L : -risk,
-                "message", risk == -99 ? "댓글이 입력되지 않았습니다" : "금칙어를 사용하였습니다"
-        ));
+        if (risk == -99)
+            return ResponseEntity.badRequest().body(Map.of("result", -10L, "message", "댓글이 입력되지 않았습니다"));
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("result", -(long) risk, "message", "금칙어를 사용하였습니다"));
     }
 }

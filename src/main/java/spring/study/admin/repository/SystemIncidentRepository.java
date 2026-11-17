@@ -19,7 +19,7 @@ public interface SystemIncidentRepository extends JpaRepository<SystemIncident, 
     int acknowledgeAll(@Param("acknowledgedAt") LocalDateTime acknowledgedAt);
 
     @Transactional(readOnly = true)
-    List<SystemIncident> findTop50ByOrderByOccurredAtDesc();
+    List<SystemIncident> findTop30ByAcknowledgedFalseOrderByOccurredAtDesc();
 
     @Transactional(readOnly = true)
     long countByAcknowledgedFalse();

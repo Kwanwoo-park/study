@@ -17,7 +17,7 @@
             if (!response.ok || Number(body.result) < 0) {
                 throw new Error(body.message || '독후감을 삭제하지 못했습니다.');
             }
-            window.location.replace('/book-reviews');
+            window.location.href = '/book-reviews';
         } catch (error) {
             message.textContent = error.message || '독후감을 삭제하지 못했습니다.';
             message.classList.add('error');

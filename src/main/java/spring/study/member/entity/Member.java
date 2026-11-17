@@ -202,6 +202,11 @@ public class Member extends BasetimeEntity implements UserDetails {
         return !isAccessBlocked();
     }
 
+    public String displayName() {
+        if (name == null || name.isBlank()) return email;
+        return name;
+    }
+
     public boolean isAccessBlocked() {
         if (role == Role.DENIED || accountStatus == MemberStatus.BANNED) return true;
         return accountStatus == MemberStatus.SUSPENDED

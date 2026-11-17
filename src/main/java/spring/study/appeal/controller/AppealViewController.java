@@ -16,11 +16,11 @@ public class AppealViewController {
 
     @GetMapping("/appeal")
     public String appeal(Model model,
-                         @RequestParam(required = false) String email,
+                         @RequestParam(defaultValue = "") String email,
                          HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         model.addAttribute("authenticated", member != null);
-        model.addAttribute("email", member == null ? (email == null ? "" : email.trim()) : member.getEmail());
+        model.addAttribute("email", member == null ? email.trim() : member.getEmail());
         model.addAttribute("name", member == null ? "" : member.getName());
         return "appeal/form";
     }

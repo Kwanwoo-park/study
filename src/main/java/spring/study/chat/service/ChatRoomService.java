@@ -1,6 +1,5 @@
 package spring.study.chat.service;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class ChatRoomService {
-    private Map<String, ChatRoom> chatRoomMap;
     private final ChatRoomRepository chatRoomRepository;
-
-    @PostConstruct
-    void init() {
-        chatRoomMap = new LinkedHashMap<>();
-    }
 
     @Transactional
     public ChatRoom createRoom(String name, Long count) {
@@ -41,11 +34,7 @@ public class ChatRoomService {
                 .count(count)
                 .build();
 
-        ChatRoom save = chatRoomRepository.save(room);
-
-        chatRoomMap.put(randomId, save);
-
-        return save;
+        return chatRoomRepository.save(room);
     }
 
     @Transactional(readOnly = true)
@@ -78,11 +67,10 @@ public class ChatRoomService {
         String name2 = searchMember.getEmail() + " " + sessionMember.getEmail();
 
         ChatRoom search1 = chatRoomRepository.findByName(name1);
-        ChatRoom search2 = chatRoomRepository.findByName(name2);
-
         if (search1 != null)
             return search1;
-        else return search2;
+
+        return chatRoomRepository.findByName(name2);
     }
 
     @Transactional(readOnly = true)

@@ -87,9 +87,9 @@ public class BoardApiController {
         int risk = moderationFacade.validate(content, member, response);
         if (risk == 0) return null;
 
-        return ResponseEntity.status(risk == -99 ? HttpStatus.BAD_REQUEST : HttpStatus.FORBIDDEN).body(Map.of(
-                "result", risk == -99 ? -99 : -risk,
-                "message", risk == -99 ? "게시글 내용이 없습니다" : "금칙어를 사용하였습니다"
-        ));
+        if (risk == -99)
+            return ResponseEntity.badRequest().body(Map.of("result", -99, "message", "게시글 내용이 없습니다"));
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("result", -risk, "message", "금칙어를 사용하였습니다"));
     }
 }

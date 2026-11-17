@@ -1,7 +1,5 @@
 (function() {
     const list = document.getElementById('myReportList');
-    if (!list) return;
-
     const message = document.getElementById('myReportMessage');
     const pagination = document.getElementById('myReportPagination');
     const refreshButton = document.getElementById('refreshReportsButton');
@@ -26,22 +24,13 @@
 
         try {
             const response = await fetch(`/api/report/my?page=${currentPage}&size=${pageSize}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8'
-                },
                 credentials: 'include'
             });
 
-            let json = {};
-            try {
-                json = await response.json();
-            } catch (error) {
-                json = {};
-            }
+            const json = await response.json().catch(() => ({}));
 
             if (response.status === 401) {
-                location.replace('/member/login?error=true&exception=Not Found&url=/report/my');
+                window.location.href = '/member/login?error=true&exception=Not Found&url=/report/my';
                 return;
             }
 
@@ -50,8 +39,8 @@
                 return;
             }
 
-            renderReports(json.list || []);
-            renderPagination(json.page || 0, json.totalPages || 0);
+            renderReports(json.list);
+            renderPagination(json.page, json.totalPages);
             setMessage('', '');
         } catch (error) {
             console.error(error);
@@ -155,15 +144,10 @@
                 credentials: 'include'
             });
 
-            let json = {};
-            try {
-                json = await response.json();
-            } catch (error) {
-                json = {};
-            }
+            const json = await response.json().catch(() => ({}));
 
             if (response.status === 401) {
-                location.replace('/member/login?error=true&exception=Not Found&url=/report/my');
+                window.location.href = '/member/login?error=true&exception=Not Found&url=/report/my';
                 return;
             }
 
@@ -221,7 +205,7 @@
     }
 
     function formatReason(report) {
-        const value = report && typeof report === 'object' ? report.reason : report;
+        const value = report.reason;
         const labels = {
             SPAM: '스팸/도배',
             ABUSE: '욕설/괴롭힘',
@@ -233,7 +217,7 @@
             ETC: '기타'
         };
         const label = labels[value] || value || '-';
-        const detail = report && typeof report === 'object' ? report.reasonDetail : '';
+        const detail = report.reasonDetail;
 
         if (value === 'ETC' && detail) {
             return `${label}: ${detail}`;
@@ -268,7 +252,7 @@
     }
 
     function escapeHtml(value) {
-        return String(value == null ? '' : value)
+        return String(value ?? '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')

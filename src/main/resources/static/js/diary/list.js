@@ -8,9 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchClearButton = document.getElementById('diarySearchClearButton');
     const diaryCount = document.getElementById('diaryCount');
 
-    if (!diaryList || !sentinel || !status || !searchForm || !searchInput) return;
-
-    let nextPage = Number(diaryList.dataset.nextPage || 0);
+    let nextPage = Number(diaryList.dataset.nextPage);
     let hasNext = diaryList.dataset.hasNext === 'true';
     let loading = false;
     let searchTitle = '';
@@ -87,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     ? `/api/diary/search?title=${encodeURIComponent(requestedTitle)}&page=${requestedPage}`
                     : `/api/diary/list?page=${requestedPage}`;
             const response = await fetch(endpoint, {
-                method: 'GET',
                 credentials: 'include',
                 signal: activeController.signal
             });
@@ -97,11 +94,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (generation !== requestGeneration) return;
 
-            (body.diaries || []).forEach(appendDiary);
+            body.diaries.forEach(appendDiary);
             hasNext = body.hasNext === true;
-            nextPage = Number(body.nextPage || 0);
-            const totalCount = Number(body.totalCount || 0);
-            diaryCount.textContent = String(totalCount);
+            nextPage = body.nextPage;
+            diaryCount.textContent = body.totalCount;
             const hasDiary = diaryList.querySelector('.list-group-item') !== null;
             emptyMessage.textContent = searchTitle
                     ? '검색 결과가 없습니다.'

@@ -87,12 +87,13 @@
     <!--부트스트랩 js, jquery 추가-->
 		    <script src="/js/lib/jquery.min.js"></script>
 		    <script src="/js/lib/bootstrap.min.js"></script>
-            <script src="/js/favorite/modal.js"></script>
+            <script src="/js/follow/actions.js?v=20261116"></script>
+            <script src="/js/favorite/modal.js?v=20261116"></script>
 			<script src="/js/common/image-swipe.js"></script>
-			<script src="/js/board/common-actions.js?v=20260916-replace"></script>
-			<script src="/js/comment/modal.js?v=20260823"></script>
+			<script src="/js/board/common-actions.js?v=20261116-navigation"></script>
+			<script src="/js/comment/modal.js?v=20261116"></script>
 			<script src="/js/board/content.js?v=20261011"></script>
-			<script src="/js/board/view.js?v=20261011"></script>
+			<script src="/js/board/view.js?v=20261116-navigation"></script>
 			<script th:if="${board.img.size > 1}" th:inline="javascript">
 				const boardImages = /*[[${board.img}]]*/ [];
 				enableBoardImageSwipe(/*[[${board.id}]]*/ 0, boardImages);

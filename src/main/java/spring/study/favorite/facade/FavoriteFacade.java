@@ -61,13 +61,6 @@ public class FavoriteFacade {
         if (!visibilityAccessPolicy.canViewBoard(board, member))
             return forbiddenBoard();
 
-        if (board == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -1L,
-                    "message", "존재하지 않는 게시글입니다"
-            ));
-        }
-
         if (favoriteService.existFavorite(member, board)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "result", -1L,

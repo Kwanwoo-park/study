@@ -152,7 +152,7 @@ public class Account implements Serializable {
     }
 
     public void completeInitialSavingsPayment(LocalDate paymentDate) {
-        if (savingsAutoTransfer != null) savingsAutoTransfer.completeInitialPayment(paymentDate, getMaturityAt());
+        if (savingsAutoTransfer != null) savingsAutoTransfer.completePayment(paymentDate, getMaturityAt());
     }
 
     public void recordSavingsFailureNotification(LocalDate notificationDate) {

@@ -6,54 +6,50 @@ const searchDiv = document.querySelector('.searchDiv')
 const risk = document.getElementById('risk')
 let searchTimer;
 
-if (btn) {
-    btn.addEventListener('click', (event) => {
-        if (getComputedStyle(div).display === 'none')
-            div.style.display = 'block';
-        else {
-            fetch(`/api/forbidden/word/apply`, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                body: JSON.stringify({
-                    word: word.value,
-                    risk: risk.value
-                }),
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['result'] == -1)
-                    alert("이미 신청되었거나 존재하는 단어입니다");
-                else if (json['result'] < 0)
-                    alert("다시 시도하여 주십시오");
-                else
-                    window.location.reload();
-            })
-            .catch((error) => {
+btn.addEventListener('click', (event) => {
+    if (getComputedStyle(div).display === 'none')
+        div.style.display = 'block';
+    else {
+        fetch(`/api/forbidden/word/apply`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
+                word: word.value,
+                risk: risk.value
+            }),
+            credentials: "include",
+        })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] == -1)
+                alert("이미 신청되었거나 존재하는 단어입니다");
+            else if (json['result'] < 0)
                 alert("다시 시도하여 주십시오");
-            })
-        }
-    })
-}
+            else
+                window.location.reload();
+        })
+        .catch((error) => {
+            alert("다시 시도하여 주십시오");
+        })
+    }
+})
 
-if (search) {
-    renderMessage('검색어를 입력해주세요.');
+renderMessage('검색어를 입력해주세요.');
 
-    search.addEventListener('input', () => {
+search.addEventListener('input', () => {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(searchForbiddenWords, 250);
+});
+
+search.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
         window.clearTimeout(searchTimer);
-        searchTimer = window.setTimeout(searchForbiddenWords, 250);
-    });
-
-    search.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            window.clearTimeout(searchTimer);
-            searchForbiddenWords();
-        }
-    })
-}
+        searchForbiddenWords();
+    }
+})
 
 async function searchForbiddenWords() {
     const keyword = search.value.trim();
@@ -67,10 +63,6 @@ async function searchForbiddenWords() {
 
     try {
         const response = await fetch(`/api/forbidden/word/search?word=${encodeURIComponent(keyword)}`, {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
             credentials: "include",
         });
         const json = await response.json();
@@ -80,7 +72,7 @@ async function searchForbiddenWords() {
             return;
         }
 
-        renderResults(json.list || []);
+        renderResults(json.list);
     } catch (error) {
         console.error(error);
         alert("다시 시도하여주십시오")
@@ -88,72 +80,28 @@ async function searchForbiddenWords() {
 }
 
 function fnFindProposal() {
-    clearResults();
-
-    fetch(`/api/forbidden/word/proposal`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-        credentials: "include",
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        if (json['result'] >= 0) {
-            renderResults(json.list || []);
-        } else
-            alert("다시 시도하여주십시오")
-    })
-    .catch((error) => {
-        console.error(error)
-        alert("다시 시도하여주십시오")
-    })
+    loadWords('proposal');
 }
 
 function fnFindExamine() {
-    clearResults();
-
-    fetch(`/api/forbidden/word/examine`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-        credentials: "include",
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        if (json['result'] >= 0) {
-            renderResults(json.list || []);
-        } else
-            alert("다시 시도하여주십시오")
-    })
-    .catch((error) => {
-        console.error(error)
-        alert("다시 시도하여주십시오")
-    })
+    loadWords('examine');
 }
 
 function fnFindApproval() {
-    clearResults();
+    loadWords('approval');
+}
 
-    fetch(`/api/forbidden/word/approval`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-        credentials: "include",
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        if (json['result'] >= 0) {
-            renderResults(json.list || []);
-        } else
-            alert("다시 시도하여주십시오")
-    })
-    .catch((error) => {
-        console.error(error)
-        alert("다시 시도하여주십시오")
-    })
+async function loadWords(status) {
+    clearResults();
+    try {
+        const response = await fetch(`/api/forbidden/word/${status}`, {credentials: 'include'});
+        const json = await response.json();
+        if (json.result < 0) throw new Error('금칙어 조회 실패');
+        renderResults(json.list);
+    } catch (error) {
+        console.error(error);
+        alert('다시 시도하여주십시오');
+    }
 }
 
 function clearResults() {
@@ -161,16 +109,12 @@ function clearResults() {
 }
 
 function renderResults(list) {
-    clearResults();
-
     if (list.length === 0) {
         renderMessage('검색 결과가 없습니다.');
         return;
     }
-
-    list.forEach(data => {
-        fnCreate(data)
-    })
+    clearResults();
+    list.forEach(fnCreate);
 }
 
 function fnCreate(data) {

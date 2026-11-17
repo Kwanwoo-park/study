@@ -13,124 +13,114 @@ const memailconfirm = document.getElementById('memailconfirm');
 let verificationToken;
 const verifyEmail = document.getElementById('verifyEmail');
 
-if (email_check) {
-    email_check.addEventListener('click', (event) => {
-        event.preventDefault();
+email_check.addEventListener('click', (event) => {
+    event.preventDefault();
 
-        if (email.value != '') {
-            fetch(`/api/member/duplicateCheck?email=` + email.value, {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json; charset-utf-8",
-                },
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['result'] > 0) {
-                    alert("사용 가능한 이메일입니다");
-                    email_certification.classList.remove('is-hidden');
-                }
-                else {
-                    alert("이미 가입된 이메일입니다");
-                }
-            })
-            .catch((error) => {
-                console.error(error)
-                alert("다시 시도하여주십시오")
-            })
-        }
-    })
-}
+    if (email.value != '') {
+        fetch(`/api/member/duplicateCheck?email=` + email.value, {
+            credentials: "include",
+        })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] > 0) {
+                alert("사용 가능한 이메일입니다");
+                email_certification.classList.remove('is-hidden');
+            }
+            else {
+                alert("이미 가입된 이메일입니다");
+            }
+        })
+        .catch((error) => {
+            console.error(error)
+            alert("다시 시도하여주십시오")
+        })
+    }
+})
 
-if (email_certification) {
-    email_certification.addEventListener('click', (event) => {
-        event.preventDefault();
+email_certification.addEventListener('click', (event) => {
+    event.preventDefault();
 
-        if (email.value != '') {
-            fetch(`/api/mail/confirm`, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                body: JSON.stringify({
-                    email: email.value
-                }),
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['status'] == 'ok') {
-                    verificationToken = null;
-                    button.classList.add('is-hidden');
-                    alert("해당 이메일로 인증번호 발송이 완료되었습니다\n 확인부탁드립니다")
-                    check.classList.remove('is-hidden');
-                    email.disabled = true;
-                } else
-                    alert("인증번호 발송에 실패하였습니다\n 잠시후에 시도하여 주십시오");
-            })
-            .catch((error) => {
-                alert("인증번호 발송에 실패하였습니다\n 다시 시도하여 주십시오");
-            });
-        }
-    })
-}
+    if (email.value != '') {
+        fetch(`/api/mail/confirm`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
+                email: email.value
+            }),
+            credentials: "include",
+        })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['status'] == 'ok') {
+                verificationToken = null;
+                button.classList.add('is-hidden');
+                alert("해당 이메일로 인증번호 발송이 완료되었습니다\n 확인부탁드립니다")
+                check.classList.remove('is-hidden');
+                email.disabled = true;
+            } else
+                alert("인증번호 발송에 실패하였습니다\n 잠시후에 시도하여 주십시오");
+        })
+        .catch((error) => {
+            alert("인증번호 발송에 실패하였습니다\n 다시 시도하여 주십시오");
+        });
+    }
+})
 
-if (button) {
-    button.addEventListener('click', (event) => {
-        event.preventDefault();
+button.addEventListener('click', (event) => {
+    event.preventDefault();
 
-        if (memailconfirm.value == '')
-            alert('메일 인증값 입력 안 함!!')
-        else if (!verificationToken)
-            alert('메일 인증 안 함!!')
-        else if (password.value == '')
-            alert('비밀번호 입력 안 함!!')
-        else if (name.value == '')
-            alert('이름 입력 안 함!!')
-        else if (phone.value == '')
-            alert('전화번호 입력 안 함!!')
-        else if (birth.value == '')
-            alert('생년월일 입력 안 함!!')
-        else if(birth.value == '1900-01-01')
-            alert('현재 연세 100세 이상...?!?')
-        else {
-            fetch(`/api/member/register`, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                body: JSON.stringify({
-                    email: email.value,
-                    password: password.value,
-                    name: name.value,
-                    phone: phone.value,
-                    birth: birth.value,
-                    verificationToken
-                }),
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['result'] < 0 && json.message)
-                    alert(json.message);
-                else if (json['result'] == -1)
-                    alert("부적절한 내용 감지되었습니다");
-                else if (json['result'] == -2)
-                    alert("회원가입에 실패하였습니다\n입력 값들을 확인해주세요")
-                else {
-                    alert("회원가입이 완료되었습니다.");
-                    location.replace(`/member/login`)
-                }
-            })
-            .catch((error) => {
-                alert("이미 회원가입이 된 이메일입니다.");
-            });
-        }
-    })
-}
+    if (memailconfirm.value == '')
+        alert('메일 인증값 입력 안 함!!')
+    else if (!verificationToken)
+        alert('메일 인증 안 함!!')
+    else if (password.value == '')
+        alert('비밀번호 입력 안 함!!')
+    else if (name.value == '')
+        alert('이름 입력 안 함!!')
+    else if (phone.value == '')
+        alert('전화번호 입력 안 함!!')
+    else if (birth.value == '')
+        alert('생년월일 입력 안 함!!')
+    else if(birth.value == '1900-01-01')
+        alert('현재 연세 100세 이상...?!?')
+    else {
+        fetch(`/api/member/register`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
+                email: email.value,
+                password: password.value,
+                name: name.value,
+                phone: phone.value,
+                birth: birth.value,
+                verificationToken
+            }),
+            credentials: "include",
+        })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] < 0 && json.message)
+                alert(json.message);
+            else if (json['result'] == -1)
+                alert("부적절한 내용 감지되었습니다");
+            else if (json['result'] == -2)
+                alert("회원가입에 실패하였습니다\n입력 값들을 확인해주세요")
+            else {
+                alert("회원가입이 완료되었습니다.");
+                window.location.href = `/member/login`
+            }
+        })
+        .catch((error) => {
+            alert("이미 회원가입이 된 이메일입니다.");
+        });
+    }
+})
 
-verifyEmail?.addEventListener('click', async () => {
+verifyEmail.addEventListener('click', async () => {
     verifyEmail.disabled = true;
     try {
         const response = await fetch('/api/mail/verify', {
@@ -151,7 +141,7 @@ verifyEmail?.addEventListener('click', async () => {
     }
 });
 
-memailconfirm?.addEventListener('input', () => {
+memailconfirm.addEventListener('input', () => {
     verificationToken = null;
     button.classList.add('is-hidden');
 });

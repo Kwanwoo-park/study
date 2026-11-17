@@ -128,14 +128,14 @@ public class ChatMessageService {
     public ChatMessage edit(String id, String content, Member member) {
         ChatMessage message = chatMessageRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "메시지를 찾을 수 없습니다."));
 
-        validateEditable(message, member);
+        validateEditable(message);
 
         message.edit(content, member.getRole() == Role.ADMIN);
 
         return message;
     }
 
-    private void validateEditable(ChatMessage message, Member member) {
+    private void validateEditable(ChatMessage message) {
         if (message.getType() != MessageType.TALK) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "텍스트 메시지만 수정할 수 있습니다.");
         }

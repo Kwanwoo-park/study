@@ -56,9 +56,6 @@ public class AudioCallFacade {
                 Member sender = memberService.findMember(email);
                 ChatRoom room = roomService.find(signal.roomId());
 
-                if (sender == null)
-                    throw new IllegalArgumentException("존재하지 않는 회원입니다.");
-
                 if (room == null)
                     throw new IllegalArgumentException("채팅방이 존재하지 않습니다.");
 
@@ -172,7 +169,7 @@ public class AudioCallFacade {
         if (audioCallSignalingService.findByMember(sender.getEmail()).isPresent())
             throw new BusinessStateException("현재 다른 통화가 진행 중입니다.");
 
-        String callerName = displayName(sender);
+        String callerName = sender.displayName();
         List<AudioCallParticipant> participants = new ArrayList<>();
         List<Member> memberList = new ArrayList<>();
 
@@ -191,7 +188,7 @@ public class AudioCallFacade {
                 continue;
 
             memberList.add(candidate);
-            participants.add(new AudioCallParticipant(candidate.getEmail(), displayName(candidate), null, AudioCallParticipantStatus.INVITED));
+            participants.add(new AudioCallParticipant(candidate.getEmail(), candidate.displayName(), null, AudioCallParticipantStatus.INVITED));
         }
 
         if (participants.size() == 1) {
@@ -327,10 +324,6 @@ public class AudioCallFacade {
                 .filter(AudioCallParticipant::isAvailable)
                 .filter(participant -> excludedEmail == null || !excludedEmail.equals(participant.email()))
                 .forEach(participant -> forward(participant.email(), participant.sessionId(), response));
-    }
-
-    private String displayName(Member member) {
-        return member.getName() == null || member.getName().isBlank() ? member.getEmail() : member.getName();
     }
 
     private void forward(String email, String sessionId, AudioCallSignalResponse response) {

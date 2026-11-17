@@ -1,5 +1,7 @@
 .event-log-page { max-width: 1180px; overflow-y: auto; overflow-x: hidden; }
-.event-log-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0; }
+.event-log-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0; }
+.event-log-heading-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; max-width: 100%; }
+.event-log-heading-actions .btn { flex: 0 0 auto; }
 .event-log-heading small { color: var(--text-secondary); letter-spacing: .12em; }
 .event-log-heading h1 { font-size: clamp(22px, 4vw, 30px); margin: 10px 0; }
 .event-log-heading p, .event-log-note { color: var(--text-secondary); line-height: 1.7; font-size: 13px; margin-bottom: 12px; }
@@ -53,6 +55,8 @@ body.dark-mode .event-log-badge.warning { color: #fef08a; background: #713f12; }
     .event-log-detail-heading, .event-log-detail-body { padding: 16px; }
     .event-log-detail-fields { grid-template-columns: minmax(95px, 1fr) minmax(0, 2fr); }
     .event-log-heading { align-items: flex-start; flex-direction: column; }
+    .event-log-heading-actions { width: 100%; margin-left: 0; justify-content: flex-start; }
+    .event-log-heading-actions .btn { flex: 1 1 auto; }
     .event-log-panel { padding: 16px; }
     .event-log-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .event-log-tools { flex-wrap: wrap; }

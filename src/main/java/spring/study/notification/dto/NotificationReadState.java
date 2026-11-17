@@ -23,7 +23,8 @@ public record NotificationReadState(Long memberId, Long notificationId, String n
     }
 
     public String scopeKey() {
-        return memberId + ":" + (notificationId != null ? "id:" + notificationId
-                : notiGroup != null ? "target:" + notiGroup + ":" + url : "all");
+        if (notificationId != null) return memberId + ":id:" + notificationId;
+        if (notiGroup != null) return memberId + ":target:" + notiGroup + ":" + url;
+        return memberId + ":all";
     }
 }

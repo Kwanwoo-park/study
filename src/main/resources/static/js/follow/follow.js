@@ -10,13 +10,13 @@ window.onload = function() {
     loadMoreFollow(true);
 };
 
-if (followContainer) {
-    followContainer.addEventListener('scroll', () => {
-        if (followContainer.scrollTop + followContainer.clientHeight >= followContainer.scrollHeight - 10) {
-            loadMoreFollow();
-        }
-    });
-}
+followContainer.addEventListener('scroll', () => {
+    if (followContainer.scrollTop + followContainer.clientHeight >= followContainer.scrollHeight - 10) loadMoreFollow();
+});
+followList.addEventListener('click', event => {
+    const button = event.target.closest('[data-action="follow"]');
+    if (button) toggleMemberFollow(button);
+});
 
 window.addEventListener('scroll', () => {
     if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
@@ -25,7 +25,7 @@ window.addEventListener('scroll', () => {
 });
 
 async function loadMoreFollow(reset = false) {
-    if (!followContainer || !followList || followLoading) {
+    if (followLoading) {
         return;
     }
 
@@ -43,12 +43,7 @@ async function loadMoreFollow(reset = false) {
     try {
         const targetEmail = followContainer.dataset.targetEmail;
         const mode = followContainer.dataset.mode;
-        const apiPath = mode === 'follower' ? 'follower' : 'following';
-        const response = await fetch(`/api/follow/${apiPath}?email=${encodeURIComponent(targetEmail)}&cursor=${nextFollowCursor - 1}&limit=${FOLLOW_LIMIT}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
+        const response = await fetch(`/api/follow/${mode}?email=${encodeURIComponent(targetEmail)}&cursor=${nextFollowCursor - 1}&limit=${FOLLOW_LIMIT}`, {
             credentials: 'include',
         });
         const json = await response.json();
@@ -58,7 +53,7 @@ async function loadMoreFollow(reset = false) {
             return;
         }
 
-        renderFollow(json, mode, reset);
+        renderFollow(json, mode);
         nextFollowCursor = json.nextCursor;
     } catch (error) {
         console.error(error);
@@ -68,12 +63,8 @@ async function loadMoreFollow(reset = false) {
     }
 }
 
-function renderFollow(data, mode, reset) {
-    if (reset) {
-        followList.innerHTML = '';
-    }
-
-    const items = mode === 'follower' ? data.follower : data.following;
+function renderFollow(data, mode) {
+    const items = data[mode];
     const emptyMessage = mode === 'follower' ? '팔로워가 없습니다' : '팔로잉 중인 회원이 없습니다';
     const startIndex = followList.children.length;
 
@@ -86,7 +77,7 @@ function renderFollow(data, mode, reset) {
     }
 
     items.forEach((item, index) => {
-        const profile = mode === 'follower' ? item.follower : item.following;
+        const profile = item[mode];
         const li = document.createElement('li');
         li.className = 'list-group-item follow-list-item';
         li.innerHTML = `
@@ -101,41 +92,13 @@ function renderFollow(data, mode, reset) {
                 </div>
                 ${profile.email !== data.email ? `
                     <div class="follow-list-actions">
-                        <button type="button" id="follow${item.id}" class="btn btn-success" onclick="fnFollow(${item.id}, '${escapeJsString(profile.email)}')">${data.follow[item.id] ? 'Unfollow' : 'Follow'}</button>
+                        <button type="button" class="btn btn-success" data-action="follow" data-email="${escapeHtml(profile.email)}">${data.follow[item.id] ? 'Unfollow' : 'Follow'}</button>
                     </div>
                 ` : ''}
             </div>
         `;
         followList.append(li);
     });
-}
-
-function fnFollow(listId, memberEmail) {
-    const btn = document.getElementById('follow' + listId);
-    if (!btn) return;
-
-    const method = btn.innerText === 'Follow' ? 'POST' : 'DELETE';
-    const data = { email: memberEmail };
-
-    fetch('/api/follow', {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include',
-    })
-        .then((response) => response.json())
-        .then((json) => {
-            if (json.result > 0) {
-                btn.innerText = method === 'POST' ? 'Unfollow' : 'Follow';
-            } else {
-                alert('다시 시도하여주십시오');
-            }
-        })
-        .catch(() => {
-            alert('다시 시도하여주십시오');
-        });
 }
 
 function escapeHtml(value) {
@@ -145,10 +108,4 @@ function escapeHtml(value) {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
-}
-
-function escapeJsString(value) {
-    return String(value)
-        .replaceAll('\\', '\\\\')
-        .replaceAll("'", "\\'");
 }

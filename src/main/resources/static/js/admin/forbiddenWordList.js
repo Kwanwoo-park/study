@@ -3,35 +3,33 @@ const btn = document.getElementById("btn");
 const div = document.getElementById("uploadDiv")
 const risk = document.getElementById('risk')
 
-if (btn) {
-    btn.addEventListener('click', (event) => {
-        if (window.getComputedStyle(div).display === 'none') {
-            div.classList.remove('is-hidden');
-            div.style.display = 'inline';
-        } else {
-            fetch(`/api/admin/forbidden/word/save`, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                body: JSON.stringify({
-                    word: word.value,
-                    risk: risk.value
-                }),
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['result'] == -1)
-                    alert("이미 신청되었거나 존재하는 단어입니다");
-                else if (json['result'] < 0)
-                    alert("다시 시도하여 주십시오");
-                else
-                    window.location.reload();
-            })
-            .catch((error) => {
+btn.addEventListener('click', (event) => {
+    if (window.getComputedStyle(div).display === 'none') {
+        div.classList.remove('is-hidden');
+        div.style.display = 'inline';
+    } else {
+        fetch(`/api/admin/forbidden/word/save`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
+                word: word.value,
+                risk: risk.value
+            }),
+            credentials: "include",
+        })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] == -1)
+                alert("이미 신청되었거나 존재하는 단어입니다");
+            else if (json['result'] < 0)
                 alert("다시 시도하여 주십시오");
-            })
-        }
-    })
-}
+            else
+                window.location.reload();
+        })
+        .catch((error) => {
+            alert("다시 시도하여 주십시오");
+        })
+    }
+})

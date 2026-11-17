@@ -11,30 +11,20 @@ window.onload = async function() {
     setInterval(loadSystemIncidents, 30000);
 
     const incidentRefresh = document.getElementById('incident-refresh');
-    if (incidentRefresh) incidentRefresh.addEventListener('click', loadSystemIncidents);
+    incidentRefresh.addEventListener('click', loadSystemIncidents);
 
     const incidentAcknowledgeAll = document.getElementById('incident-acknowledge-all');
-    if (incidentAcknowledgeAll) {
-        incidentAcknowledgeAll.addEventListener('click', acknowledgeAllSystemIncidents);
-    }
-
-
+    incidentAcknowledgeAll.addEventListener('click', acknowledgeAllSystemIncidents);
     const tokenSessionRefresh = document.getElementById('token-session-refresh');
-    if (tokenSessionRefresh) tokenSessionRefresh.addEventListener('click', loadTokenSessions);
+    tokenSessionRefresh.addEventListener('click', loadTokenSessions);
 }
 
 async function loadSystemStatus() {
     const statusDiv = document.getElementById('system-status');
     const updatedAt = document.getElementById('system-status-updated');
 
-    if (!statusDiv) return;
-
     try {
         const res = await fetch(`/api/admin/system/status`, {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
             credentials: "include",
         });
         const data = await res.json();
@@ -42,9 +32,7 @@ async function loadSystemStatus() {
         if (data.result > 0) {
             fnSystemStatusDraw(data);
 
-            if (updatedAt) {
-                updatedAt.innerText = "최근 갱신: " + new Date().toLocaleTimeString('ko-KR');
-            }
+            updatedAt.innerText = "최근 갱신: " + new Date().toLocaleTimeString('ko-KR');
         }
     } catch (error) {
         console.error(error);
@@ -56,14 +44,8 @@ async function loadSystemIncidents() {
     const incidentList = document.getElementById('system-incident-list');
     const incidentCount = document.getElementById('incident-unacknowledged-count');
     const acknowledgeAllButton = document.getElementById('incident-acknowledge-all');
-    if (!incidentList) return;
-
     try {
         const response = await fetch('/api/admin/system/incidents', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
             credentials: 'include',
         });
         const data = await response.json();
@@ -71,16 +53,12 @@ async function loadSystemIncidents() {
             throw new Error('장애 기록 조회 실패');
         }
 
-        const unacknowledgedCount = Number(data.unacknowledgedCount || 0);
-        if (incidentCount) {
-            incidentCount.innerText = `${unacknowledgedCount}건 미확인`;
-            incidentCount.classList.toggle('has-incidents', unacknowledgedCount > 0);
-        }
-        if (acknowledgeAllButton) {
-            acknowledgeAllButton.disabled = unacknowledgedCount === 0;
-            acknowledgeAllButton.dataset.unacknowledgedCount = String(unacknowledgedCount);
-        }
-        renderSystemIncidents(data.list || []);
+        const unacknowledgedCount = data.unacknowledgedCount;
+        incidentCount.innerText = `${unacknowledgedCount}건 미확인`;
+        incidentCount.classList.toggle('has-incidents', unacknowledgedCount > 0);
+        acknowledgeAllButton.disabled = unacknowledgedCount === 0;
+        acknowledgeAllButton.dataset.unacknowledgedCount = String(unacknowledgedCount);
+        renderSystemIncidents(data.list);
     } catch (error) {
         console.error(error);
         incidentList.innerHTML = '<div class="admin-incident-empty error">장애 기록을 불러오지 못했습니다.</div>';
@@ -89,13 +67,12 @@ async function loadSystemIncidents() {
 
 function renderSystemIncidents(incidents) {
     const incidentList = document.getElementById('system-incident-list');
-    if (!incidentList) return;
     incidentList.replaceChildren();
 
     if (incidents.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'admin-incident-empty';
-        empty.innerText = '기록된 서버 장애가 없습니다.';
+        empty.innerText = '미확인된 서버 장애가 없습니다.';
         incidentList.append(empty);
         return;
     }
@@ -114,7 +91,7 @@ function createIncidentCard(incident) {
     const message = document.createElement('p');
     const acknowledge = document.createElement('button');
 
-    card.className = `admin-incident-card${incident.acknowledged ? ' acknowledged' : ''}`;
+    card.className = 'admin-incident-card';
     header.className = 'admin-incident-card-header';
     status.className = 'admin-incident-http-status';
     status.innerText = String(incident.httpStatus || 500);
@@ -130,12 +107,9 @@ function createIncidentCard(incident) {
     message.className = 'admin-incident-message';
     message.innerText = incident.message || '메시지 없는 서버 오류';
     acknowledge.type = 'button';
-    acknowledge.className = 'btn btn-sm ' + (incident.acknowledged ? 'btn-outline-secondary' : 'btn-outline-danger');
-    acknowledge.disabled = Boolean(incident.acknowledged);
-    acknowledge.innerText = incident.acknowledged ? '확인 완료' : '확인 처리';
-    if (!incident.acknowledged) {
-        acknowledge.addEventListener('click', () => acknowledgeSystemIncident(incident.id));
-    }
+    acknowledge.className = 'btn btn-sm btn-outline-danger';
+    acknowledge.innerText = '확인 처리';
+    acknowledge.addEventListener('click', () => acknowledgeSystemIncident(incident.id));
 
     header.append(status, time);
     card.append(header, route, ip, type, message, acknowledge);
@@ -162,8 +136,8 @@ async function acknowledgeSystemIncident(incidentId) {
 
 async function acknowledgeAllSystemIncidents() {
     const button = document.getElementById('incident-acknowledge-all');
-    const unacknowledgedCount = Number(button?.dataset.unacknowledgedCount || 0);
-    if (!button || unacknowledgedCount === 0) return;
+    const unacknowledgedCount = Number(button.dataset.unacknowledgedCount || 0);
+    if (unacknowledgedCount === 0) return;
 
     if (!confirm(`미확인 서버 장애 ${unacknowledgedCount}건을 모두 확인 처리할까요?`)) return;
 
@@ -193,16 +167,13 @@ async function acknowledgeAllSystemIncidents() {
 
 async function loadTokenSessions() {
     const tokenList = document.getElementById('token-session-list');
-    if (!tokenList) return;
-
     try {
         const response = await fetch('/api/admin/token/sessions', {
-            method: 'GET',
             credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok || data.result < 0) throw new Error('토큰 접속 정보 조회 실패');
-        renderTokenSessions(data.list || []);
+        renderTokenSessions(data.list);
     } catch (error) {
         console.error(error);
         tokenList.innerHTML = '<div class="admin-token-empty error">로그인 접속 정보를 불러오지 못했습니다.</div>';
@@ -211,7 +182,6 @@ async function loadTokenSessions() {
 
 function renderTokenSessions(sessions) {
     const tokenList = document.getElementById('token-session-list');
-    if (!tokenList) return;
     tokenList.replaceChildren();
 
     if (sessions.length === 0) {
@@ -240,10 +210,6 @@ function renderTokenSessions(sessions) {
 
 async function loadUserStatus() {
     const res = await fetch(`/api/admin/member/online`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
         credentials: "include",
     });
     const data = await res.json();
@@ -254,10 +220,6 @@ async function loadUserStatus() {
 
 async function loadNewUser() {
     const res = await fetch(`/api/admin/member/new`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
         credentials: "include",
     });
     const data = await res.json();
@@ -268,10 +230,6 @@ async function loadNewUser() {
 
 async function loadNewBoard() {
     const res = await fetch(`/api/admin/board/new`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
         credentials: "include",
     });
     const data = await res.json();
@@ -282,10 +240,6 @@ async function loadNewBoard() {
 
 async function loadActiveChatting() {
     const res = await fetch(`/api/admin/chat/active`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
         credentials: "include",
     });
 
@@ -297,16 +251,10 @@ async function loadActiveChatting() {
 
 async function loadRecentReports() {
     const reportDiv = document.getElementById('recent-report-list');
-    if (!reportDiv) return;
-
     reportDiv.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오는 중입니다.</div>';
 
     try {
         const res = await fetch('/api/admin/report', {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
             credentials: "include",
         });
         const data = await res.json();
@@ -316,7 +264,7 @@ async function loadRecentReports() {
             return;
         }
 
-        fnRecentReportDraw(data.list || []);
+        fnRecentReportDraw(data.list);
     } catch (error) {
         console.error(error);
         reportDiv.innerHTML = '<div class="admin-report-empty">신고 목록을 불러오지 못했습니다.</div>';
@@ -336,7 +284,7 @@ function fnRecentReportDraw(reports) {
         const card = document.createElement('article');
         card.className = 'admin-report-card';
         card.onclick = function() {
-            location.replace('/admin/report');
+            window.location.href = '/admin/report';
         };
         card.innerHTML = `
             <div class="admin-report-card-title">
@@ -636,7 +584,7 @@ function formatReportTargetType(value) {
 }
 
 function formatReportReason(report) {
-    const value = report && typeof report === 'object' ? report.reason : report;
+    const value = report.reason;
     const label = {
         SPAM: '스팸/도배',
         ABUSE: '욕설/괴롭힘',
@@ -648,7 +596,7 @@ function formatReportReason(report) {
         ETC: '기타'
     }[value] || value;
 
-    const detail = report && typeof report === 'object' ? report.reasonDetail : '';
+    const detail = report.reasonDetail;
     if (value === 'ETC' && detail) {
         return `${label}: ${detail}`;
     }
@@ -665,27 +613,10 @@ function escapeHtml(value) {
         .replaceAll("'", '&#39;');
 }
 
-function fnLogout() {
-    fetch(`/api/member/logout`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-        credentials: "include",
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        if (json['result'] > 0) {
-            location.replace(`/member/login`);
-        } else
-            alert("다시 시도하여주십시오");
-    })
-}
-
 function fnBoardMove(id) {
-    location.replace(`/board/view?id=` + id);
+    window.location.href = `/board/view?id=` + id;
 }
 
 function fnChatRoomMove(id) {
-    location.replace(`/chat/chatRoom?roomId=` + id);
+    window.location.href = `/chat/chatRoom?roomId=` + id;
 }

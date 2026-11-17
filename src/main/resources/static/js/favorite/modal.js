@@ -7,24 +7,13 @@
         const modalClose = document.getElementById('favoriteModalClose');
         const modalBody = document.getElementById('favoriteModalBody');
 
-        if (!modal || !modalBody || modal.dataset.initialized === 'true') {
-            return;
-        }
-
-        modal.dataset.initialized = 'true';
-
         let currentBoardId = null;
         let modalOpen = false;
         let nextCursor = 1;
         let isLoading = false;
 
-        if (modalOverlay) {
-            modalOverlay.addEventListener('click', () => closeFavoriteModal());
-        }
-
-        if (modalClose) {
-            modalClose.addEventListener('click', () => closeFavoriteModal());
-        }
+        modalOverlay.addEventListener('click', () => closeFavoriteModal());
+        modalClose.addEventListener('click', () => closeFavoriteModal());
 
         modalBody.addEventListener('scroll', () => {
             if (modalBody.scrollTop + modalBody.clientHeight >= modalBody.scrollHeight - 10) {
@@ -32,17 +21,9 @@
             }
         });
 
-        modalBody.addEventListener('click', async (event) => {
-            const actionTarget = event.target.closest('[data-action]');
-            if (!actionTarget) return;
-
-            const action = actionTarget.dataset.action;
-            const followId = actionTarget.dataset.followId;
-            const email = actionTarget.dataset.email;
-
-            if (action === 'follow') {
-                await toggleFollow(Number(followId), email);
-            }
+        modalBody.addEventListener('click', event => {
+            const button = event.target.closest('[data-action="follow"]');
+            if (button) toggleMemberFollow(button);
         });
 
         window.addEventListener('popstate', async (event) => {
@@ -66,7 +47,7 @@
             modalOpen = true;
             modalBody.innerHTML = '';
 
-            await loadFavorites(true);
+            await loadFavorites();
 
             if (push) {
                 history.pushState({ favoriteModal: true, boardId: boardId }, '', `/favorites?id=${boardId}`);
@@ -88,14 +69,9 @@
             }
         }
 
-        async function loadFavorites(reset = false) {
+        async function loadFavorites() {
             if (!currentBoardId || isLoading) {
                 return;
-            }
-
-            if (reset) {
-                nextCursor = 1;
-                modalBody.innerHTML = '';
             }
 
             if (!nextCursor) {
@@ -106,10 +82,6 @@
 
             try {
                 const response = await fetch(`/api/favorite/list?id=${currentBoardId}&cursor=${nextCursor - 1}&limit=${FAVORITE_LIMIT}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8',
-                    },
                     credentials: 'include',
                 });
                 const json = await response.json();
@@ -119,7 +91,7 @@
                     return;
                 }
 
-                renderFavorite(json, reset);
+                renderFavorite(json);
                 nextCursor = json.nextCursor;
             } catch (error) {
                 console.error(error);
@@ -129,11 +101,7 @@
             }
         }
 
-        function renderFavorite(data, reset) {
-            if (reset) {
-                modalBody.innerHTML = '';
-            }
-
+        function renderFavorite(data) {
             if (data.list.length === 0 && modalBody.children.length === 0) {
                 modalBody.innerHTML = '<div>아직 좋아요를 누른 회원이 없습니다</div>';
                 return;
@@ -156,44 +124,13 @@
                         <span class="favorite-modal-text">${escapeHtml(item.member.email)}</span>
                         ${item.member.email !== data.email ? `
                             <div class="favorite-modal-actions">
-                                <button type="button" id="follow${item.id}" class="btn btn-success" data-action="follow" data-follow-id="${item.id}" data-email="${escapeHtml(item.member.email)}">${data.following[item.id] ? 'Unfollow' : 'Follow'}</button>
+                                <button type="button" class="btn btn-success" data-action="follow" data-email="${escapeHtml(item.member.email)}">${data.following[item.id] ? 'Unfollow' : 'Follow'}</button>
                             </div>
                         ` : ''}
                     </div>
                 `;
                 list.append(li);
             });
-        }
-
-        async function toggleFollow(id, email) {
-            const followText = document.getElementById('follow' + id);
-            const data = { email: email };
-
-            if (!followText) return;
-
-            const method = followText.innerText === 'Follow' ? 'POST' : 'DELETE';
-
-            try {
-                const response = await fetch('/api/follow', {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8',
-                    },
-                    body: JSON.stringify(data),
-                    credentials: 'include',
-                });
-
-                const json = await response.json();
-
-                if (json.result > 0) {
-                    followText.innerText = method === 'POST' ? 'Unfollow' : 'Follow';
-                } else {
-                    alert('다시 시도하여주십시오');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('다시 시도하여주십시오');
-            }
         }
 
         function escapeHtml(value) {

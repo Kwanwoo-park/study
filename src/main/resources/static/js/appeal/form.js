@@ -1,8 +1,6 @@
 (function () {
     const page = document.getElementById('appealPage');
     const form = document.getElementById('appealForm');
-    if (!page || !form) return;
-
     const authenticated = page.dataset.authenticated === 'true';
     const email = document.getElementById('appealEmail');
     const verificationSend = document.getElementById('appealVerificationSend');
@@ -24,19 +22,19 @@
     let resendTimer = null;
     let resendSeconds = 0;
 
-    back?.addEventListener('click', () => {
+    back.addEventListener('click', () => {
         if (window.history.length > 1) window.history.back();
-        else window.location.replace(authenticated ? '/board/main' : '/member/login');
+        else window.location.href = authenticated ? '/board/main' : '/member/login';
     });
     content.addEventListener('input', () => {
         contentCount.textContent = String(content.value.length);
     });
     form.addEventListener('submit', submitAppeal);
-    verificationSend?.addEventListener('click', sendVerificationCode);
-    verificationConfirm?.addEventListener('click', confirmVerificationCode);
     if (!authenticated) {
+        verificationSend.addEventListener('click', sendVerificationCode);
+        verificationConfirm.addEventListener('click', confirmVerificationCode);
         email.addEventListener('input', resetVerificationForEmailChange);
-        verificationCode?.addEventListener('input', () => {
+        verificationCode.addEventListener('input', () => {
             verificationCode.value = verificationCode.value.replace(/\D/g, '').slice(0, 6);
         });
     }
@@ -84,7 +82,7 @@
 
     async function confirmVerificationCode() {
         const requestedEmail = email.value.trim();
-        const code = verificationCode?.value.trim() || '';
+        const code = verificationCode.value.trim();
         if (!requestedEmail || !/^\d{6}$/.test(code)) {
             showMessage('이메일과 인증번호 6자리를 확인해주세요.', 'error');
             return;
@@ -120,11 +118,10 @@
     }
 
     function startVerificationTimer(seconds, verified) {
-        if (verificationTimer) window.clearInterval(verificationTimer);
+        window.clearInterval(verificationTimer);
         let remaining = Math.max(0, Number(seconds));
 
         const update = () => {
-            if (!verificationStatus) return;
             const minutes = String(Math.floor(remaining / 60)).padStart(2, '0');
             const secs = String(remaining % 60).padStart(2, '0');
             verificationStatus.textContent = verified
@@ -156,7 +153,7 @@
     }
 
     function startResendCooldown(seconds) {
-        if (resendTimer) window.clearInterval(resendTimer);
+        window.clearInterval(resendTimer);
         resendSeconds = Math.max(0, Number(seconds));
         verificationSend.disabled = true;
 
@@ -177,18 +174,16 @@
     }
 
     function resetVerificationForEmailChange() {
-        if (verificationToken || verificationCode?.value) {
+        if (verificationToken || verificationCode.value) {
             verificationToken = null;
             verificationCode.value = '';
             verificationCode.readOnly = false;
             verificationConfirm.disabled = false;
         }
-        if (verificationTimer) window.clearInterval(verificationTimer);
+        window.clearInterval(verificationTimer);
         verificationTimer = null;
-        if (verificationStatus) {
-            verificationStatus.textContent = '인증번호를 발송해주세요.';
-            verificationStatus.classList.remove('verified', 'expired');
-        }
+        verificationStatus.textContent = '인증번호를 발송해주세요.';
+        verificationStatus.classList.remove('verified', 'expired');
     }
 
     async function loadContext() {
@@ -199,8 +194,8 @@
                 showMessage(data.message || '신고·제재 내역을 불러오지 못했습니다.', 'error');
                 return;
             }
-            renderSanctions(data.sanctions || []);
-            renderAppeals(data.appeals || []);
+            renderSanctions(data.sanctions);
+            renderAppeals(data.appeals);
         } catch (error) {
             console.error(error);
             showMessage('신고·제재 내역을 불러오지 못했습니다.', 'error');
@@ -208,7 +203,6 @@
     }
 
     function renderSanctions(sanctions) {
-        if (!sanctionList) return;
         if (sanctions.length === 0) {
             sanctionList.textContent = '본인에게 적용된 신고·제재 내역이 없습니다.';
             return;
@@ -229,7 +223,6 @@
     }
 
     function renderAppeals(appeals) {
-        if (!appealHistory) return;
         if (appeals.length === 0) {
             appealHistory.textContent = '작성한 상소문이 없습니다.';
             return;
@@ -247,7 +240,7 @@
         const payload = {
             email: email.value.trim(),
             verificationToken: authenticated ? null : verificationToken,
-            sanctionId: sanctionSelect?.value ? Number(sanctionSelect.value) : null,
+            sanctionId: sanctionSelect.value ? Number(sanctionSelect.value) : null,
             title: title.value.trim(),
             content: content.value.trim()
         };
@@ -293,13 +286,11 @@
         email.readOnly = false;
         verificationCode.readOnly = false;
         verificationConfirm.disabled = false;
-        if (verificationTimer) window.clearInterval(verificationTimer);
+        window.clearInterval(verificationTimer);
         verificationTimer = null;
-        if (verificationStatus) {
-            verificationStatus.textContent = '제출에 실패하여 이메일 인증이 해제되었습니다. 다시 인증해주세요.';
-            verificationStatus.classList.remove('verified');
-            verificationStatus.classList.add('expired');
-        }
+        verificationStatus.textContent = '제출에 실패하여 이메일 인증이 해제되었습니다. 다시 인증해주세요.';
+        verificationStatus.classList.remove('verified');
+        verificationStatus.classList.add('expired');
         if (resendSeconds <= 0) verificationSend.disabled = false;
     }
 

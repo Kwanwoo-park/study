@@ -7,10 +7,6 @@
         const boardPrevBtn = document.getElementById('boardPrevBtn');
         const boardNextBtn = document.getElementById('boardNextBtn');
 
-        if (!modal || !modalBody || !boardPrevBtn || !boardNextBtn) {
-            return;
-        }
-
         const basePageUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
         let modalOpen = false;
         let currentBoardData = null;
@@ -20,13 +16,8 @@
         let boardFetchController = null;
         let renderVersion = 0;
 
-        if (modalOverlay) {
-            modalOverlay.addEventListener('click', () => closeBoardModal());
-        }
-
-        if (modalClose) {
-            modalClose.addEventListener('click', () => closeBoardModal());
-        }
+        modalOverlay.addEventListener('click', () => closeBoardModal());
+        modalClose.addEventListener('click', () => closeBoardModal());
 
         window.addEventListener('popstate', async (event) => {
             const state = event.state;
@@ -58,10 +49,6 @@
                 modalOpen = true;
 
                 const response = await fetch(`/api/board/detail?id=${boardId}`, {
-                    method: 'GET',
-                    headers: {
-                        "Content-Type": "application/json; charset=utf-8",
-                    },
                     credentials: "include",
                     signal: boardFetchController.signal,
                 });
@@ -128,16 +115,14 @@
 
         function drawBoardModal(data) {
             const board = data.board;
-            const registeredAt = board.registerTime ? new Date(board.registerTime) : null;
-            const createdDate = registeredAt && !Number.isNaN(registeredAt.getTime())
-                ? `${registeredAt.getFullYear()}년 ${registeredAt.getMonth() + 1}월 ${registeredAt.getDate()}일`
-                : '';
-            const imageList = (board.img && board.img.length > 0)
+            const registeredAt = new Date(board.registerTime);
+            const createdDate = `${registeredAt.getFullYear()}년 ${registeredAt.getMonth() + 1}월 ${registeredAt.getDate()}일`;
+            const imageList = board.img.length
                 ? board.img
                 : [{ imgSrc: "/img/IMG_0111.jpeg" }];
             const canEdit = board.member.email === data.email;
             const currentImage = imageList[currentImageIndex];
-            const liked = Boolean(data.like);
+            const liked = data.like;
             const hasMultipleImages = imageList.length > 1;
             global.preloadAdjacentImages(imageList, currentImageIndex);
 
@@ -207,13 +192,13 @@
                         <label class="form-label" id="comment_cnt${board.id}">${data.comment_count}</label>
                         <label class="form-label">개 모두 보기</label>
                     </div>
-                    ${createdDate ? `<time class="modal-created-date" datetime="${escapeHtml(board.registerTime)}" aria-label="작성 일자">${createdDate}</time>` : ''}
+                    <time class="modal-created-date" datetime="${escapeHtml(board.registerTime)}" aria-label="작성 일자">${createdDate}</time>
                 </div>
             `;
 
             global.initBoardContent(document.getElementById('modalContent'));
             const modalMainImage = document.getElementById('modalMainImage');
-            if (hasMultipleImages && modalMainImage && typeof global.initImageSwipe === 'function') {
+            if (hasMultipleImages) {
                 global.initImageSwipe(modalMainImage, {
                     canPrevious: () => currentImageIndex > 0,
                     canNext: () => currentImageIndex < imageList.length - 1,
@@ -228,8 +213,7 @@
         function modalImageLeft(event, skipAnimation) {
             if (event) event.stopPropagation();
 
-            if (!currentBoardData || !currentBoardData.img || currentBoardData.img.length === 0) return;
-            if (currentImageIndex === 0) return;
+            if (!currentBoardData || currentImageIndex === 0) return;
             const modalMainImage = document.getElementById('modalMainImage');
             if (!skipAnimation && global.animateImageSwipe(modalMainImage, 'previous')) return;
 
@@ -240,8 +224,7 @@
         function modalImageRight(event, skipAnimation) {
             if (event) event.stopPropagation();
 
-            if (!currentBoardData || !currentBoardData.img || currentBoardData.img.length === 0) return;
-            if (currentImageIndex >= currentBoardData.img.length - 1) return;
+            if (!currentBoardData || currentImageIndex >= currentBoardData.img.length - 1) return;
             const modalMainImage = document.getElementById('modalMainImage');
             if (!skipAnimation && global.animateImageSwipe(modalMainImage, 'next')) return;
 
@@ -250,51 +233,35 @@
         }
 
         function redrawModalImage() {
-            const imageList = (currentBoardData.img && currentBoardData.img.length > 0)
-                ? currentBoardData.img
-                : [{ imgSrc: "/img/IMG_0111.jpeg" }];
+            const imageList = currentBoardData.img;
 
             const modalMainImage = document.getElementById('modalMainImage');
             const leftArrow = document.getElementById('modalImageLeftBtn');
             const rightArrow = document.getElementById('modalImageRightBtn');
 
-            if (modalMainImage) {
-                modalMainImage.src = imageList[currentImageIndex].imgSrc;
-                global.preloadAdjacentImages(imageList, currentImageIndex);
-            }
-
-            if (leftArrow) {
-                leftArrow.classList.toggle('is-disabled', currentImageIndex === 0);
-            }
-
-            if (rightArrow) {
-                rightArrow.classList.toggle('is-disabled', currentImageIndex === imageList.length - 1);
-            }
-
+            modalMainImage.src = imageList[currentImageIndex].imgSrc;
+            global.preloadAdjacentImages(imageList, currentImageIndex);
+            leftArrow.classList.toggle('is-disabled', currentImageIndex === 0);
+            rightArrow.classList.toggle('is-disabled', currentImageIndex === imageList.length - 1);
             const imageCounter = document.getElementById('modalImageCounter');
-            if (imageCounter) {
-                imageCounter.textContent = `${currentImageIndex + 1} / ${imageList.length}`;
-            }
+            imageCounter.textContent = `${currentImageIndex + 1} / ${imageList.length}`;
         }
 
         function updateBoardNavigation() {
-            if (!currentPrevBoardId || currentPrevBoardId === 0) boardPrevBtn.classList.add('hidden');
-            else boardPrevBtn.classList.remove('hidden');
-
-            if (!currentNextBoardId || currentNextBoardId === 0) boardNextBtn.classList.add('hidden');
-            else boardNextBtn.classList.remove('hidden');
+            boardPrevBtn.classList.toggle('hidden', !currentPrevBoardId);
+            boardNextBtn.classList.toggle('hidden', !currentNextBoardId);
         }
 
         boardPrevBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (currentPrevBoardId && currentPrevBoardId !== 0) {
+            if (currentPrevBoardId) {
                 openBoardModal(currentPrevBoardId, false);
             }
         });
 
         boardNextBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (currentNextBoardId && currentNextBoardId !== 0) {
+            if (currentNextBoardId) {
                 openBoardModal(currentNextBoardId, false);
             }
         });
@@ -302,8 +269,6 @@
         function fnLike(listId) {
             const like = document.getElementById('like' + listId);
             const likeCnt = document.getElementById('like_cnt' + listId);
-            if (!like || !likeCnt) return;
-
             const liked = like.src.endsWith('ic_favorite.png');
             const url = liked ? `/api/favorite/delete?id=${listId}` : `/api/favorite/like?id=${listId}`;
             const method = liked ? 'DELETE' : 'POST';
@@ -331,30 +296,20 @@
 
         function fnOnlyLike(listId) {
             const like = document.getElementById('like' + listId);
-            if (!like || like.src.endsWith('ic_favorite.png')) return;
+            if (like.src.endsWith('ic_favorite.png')) return;
             fnLike(listId);
         }
 
         function fnHref(listId) {
-            if (typeof global.openFavoriteModal === 'function') {
-                global.openFavoriteModal(listId);
-                return;
-            }
-
-            location.replace("/favorites?id=" + listId);
+            global.openFavoriteModal(listId);
         }
 
         function fnComment(listId) {
-            if (typeof global.openCommentModal === 'function') {
-                global.openCommentModal(listId);
-                return;
-            }
-
-            location.replace("/comment?id=" + listId);
+            global.openCommentModal(listId);
         }
 
         function fnProfile(email) {
-            location.replace("/member/search/detail?email=" + email);
+            window.location.href = "/member/search/detail?email=" + email;
         }
 
         function fnEditModal() {
@@ -367,10 +322,6 @@
             const visibilityEditPanel = document.getElementById('modalVisibilityEditPanel');
             const visibilitySaveButton = document.getElementById('modalVisibilitySaveButton');
             const visibilityCancelButton = document.getElementById('modalVisibilityCancelButton');
-
-            if (!edit || !complete || !del || !content || !editContent
-                || !visibilityEditButton || !visibilityEditPanel
-                || !visibilitySaveButton || !visibilityCancelButton) return;
 
             edit.style.display = 'none';
             del.style.display = 'none';
@@ -386,16 +337,12 @@
         function fnEditCompleteModal(boardId) {
             const editContent = document.getElementById('modalEditContent');
             const editVisibility = document.getElementById('modalEditVisibility');
-            if (!editContent || !editVisibility) return;
-
             fnUpdateBoardModal(boardId, editContent.value, editVisibility.value);
         }
 
         function fnModalVisibilityEdit() {
             const visibilityEditButton = document.getElementById('modalVisibilityEditButton');
             const visibilityEditPanel = document.getElementById('modalVisibilityEditPanel');
-            if (!visibilityEditButton || !visibilityEditPanel) return;
-
             visibilityEditButton.style.display = 'none';
             visibilityEditPanel.classList.remove('is-hidden');
         }
@@ -403,8 +350,6 @@
         function fnModalVisibilityCancel() {
             const visibilityEditButton = document.getElementById('modalVisibilityEditButton');
             const visibilityEditPanel = document.getElementById('modalVisibilityEditPanel');
-            if (!visibilityEditButton || !visibilityEditPanel) return;
-
             visibilityEditPanel.classList.add('is-hidden');
             visibilityEditButton.style.display = 'inline-block';
         }
@@ -412,8 +357,6 @@
         function fnModalVisibilityComplete(boardId) {
             const content = document.getElementById('modalContent');
             const editVisibility = document.getElementById('modalEditVisibility');
-            if (!content || !editVisibility) return;
-
             fnUpdateBoardModal(boardId, content.textContent, editVisibility.value);
         }
 
@@ -459,7 +402,7 @@
             .then((json) => {
                 if (json.result != -1) {
                     alert("삭제가 완료되었습니다");
-                    location.replace(`/member/detail?email=` + json.email);
+                    window.location.href = `/member/detail?email=` + json.email;
                 } else {
                     alert("다시 시도하여주십시오");
                 }

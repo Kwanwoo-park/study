@@ -7,6 +7,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.concurrent.TimeUnit;
+
 @Getter @Setter
 @Component @Validated
 @ConfigurationProperties(prefix = "kafka.operations")
@@ -27,6 +29,18 @@ public class KafkaOperationsProperties {
     @Min(1) private long outboxWarningSeconds = 60;
     @Min(60) private long dedupTtlSeconds = 2592000;
     @Min(1) @Max(365) private int replayHistoryDays = 30;
+
+    public int partitionsFor(String topic) {
+        if (topic.endsWith(".DLT")) return deadLetterPartitions;
+        if (KafkaTopics.CHAT.equals(topic)) return chatPartitions;
+        return notificationPartitions;
+    }
+
+    public long retentionMillisFor(String topic) {
+        int days = retentionDays;
+        if (topic.endsWith(".DLT")) days = deadLetterRetentionDays;
+        return TimeUnit.DAYS.toMillis(days);
+    }
 
     @AssertTrue(message = "min-in-sync-replicas must not exceed replication-factor")
     public boolean isReplicaConfigurationValid() { return minInSyncReplicas <= replicationFactor; }

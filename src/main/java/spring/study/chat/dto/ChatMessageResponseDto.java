@@ -26,11 +26,7 @@ public class ChatMessageResponseDto {
 
     public ChatMessageResponseDto(ChatMessage entity) {
         this.id = entity.getId();
-        this.message = entity.getStatus() == ChatMessageStatus.DELETED_FOR_ALL
-                ? entity.isDeletedByAdmin()
-                    ? "관리자에 의해 삭제된 메시지입니다"
-                    : "삭제된 메시지입니다"
-                : entity.getMessage();
+        this.message = entity.displayMessage();
         this.type = entity.getType();
         this.member = entity.getMember();
         this.room = entity.getRoom();

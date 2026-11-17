@@ -1,3 +1,3 @@
 function fnClick(roomId) {
-    location.replace('/chat/chatRoom?roomId=' + roomId);
+    window.location.href = '/chat/chatRoom?roomId=' + roomId;
 }

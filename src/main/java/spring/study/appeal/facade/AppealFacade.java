@@ -134,10 +134,7 @@ public class AppealFacade {
     }
 
     private void notifyAdministrators(Appeal appeal) {
-        String memberName = appeal.getMember().getName() == null || appeal.getMember().getName().isBlank()
-                ? appeal.getMember().getEmail()
-                : appeal.getMember().getName();
-        String message = memberName + "님이 상소문을 제출했습니다.";
+        String message = appeal.getMember().displayName() + "님이 상소문을 제출했습니다.";
         String url = "/admin/appeal?appealId=" + appeal.getId();
 
         memberService.findAdministrators().forEach(admin ->

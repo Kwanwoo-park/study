@@ -12,12 +12,6 @@
         const modalSubmit = document.getElementById('commentModalSubmit');
         const modalCancel = document.getElementById('commentModalCancel');
 
-        if (!modal || !modalBody || !modalInput || !modalSubmit || modal.dataset.initialized === 'true') {
-            return;
-        }
-
-        modal.dataset.initialized = 'true';
-
         let currentBoardId = null;
         let currentCommentId = null;
         let isReplyMode = false;
@@ -26,17 +20,9 @@
         let isCommentLoading = false;
         const replyStates = new Map();
 
-        if (modalOverlay) {
-            modalOverlay.addEventListener('click', () => closeCommentModal());
-        }
-
-        if (modalClose) {
-            modalClose.addEventListener('click', () => closeCommentModal());
-        }
-
-        if (modalCancel) {
-            modalCancel.addEventListener('click', () => resetComposer());
-        }
+        modalOverlay.addEventListener('click', () => closeCommentModal());
+        modalClose.addEventListener('click', () => closeCommentModal());
+        modalCancel.addEventListener('click', resetComposer);
 
         modalInput.addEventListener('keydown', async (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -89,12 +75,7 @@
                     return;
                 }
 
-                const savedReplyMode = isReplyMode;
-                const savedCommentId = currentCommentId;
                 resetComposer();
-                if (savedReplyMode && savedCommentId) {
-                    resetReplyState(savedCommentId);
-                }
                 await loadComments(true);
             } catch (error) {
                 console.error(error);
@@ -110,12 +91,11 @@
 
             const action = actionTarget.dataset.action;
             const commentId = Number(actionTarget.dataset.commentId);
-            const name = actionTarget.dataset.name;
 
             if (action === 'reply') {
                 isReplyMode = true;
                 currentCommentId = commentId;
-                modalCancel.style.display = 'inline';
+                modalCancel.classList.remove('is-hidden');
                 modalInput.value = '';
                 modalInput.focus();
                 return;
@@ -157,7 +137,6 @@
         async function openCommentModal(boardId, push = true) {
             currentBoardId = boardId;
             resetComposer();
-            resetCommentState();
             modal.classList.remove('hidden');
             document.body.classList.add('comment-modal-open');
             modalOpen = true;
@@ -173,7 +152,6 @@
 
         function closeCommentModal(fromPopState = false) {
             modal.classList.add('hidden');
-            modalBody.innerHTML = '';
             document.body.classList.remove('comment-modal-open');
             modalOpen = false;
             currentBoardId = null;
@@ -202,10 +180,6 @@
 
             try {
                 const response = await fetch(`/api/comment/list?id=${currentBoardId}&cursor=${nextCommentCursor - 1}&limit=${COMMENT_LIMIT}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8',
-                    },
                     credentials: 'include',
                 });
                 const json = await response.json();
@@ -216,7 +190,7 @@
                 }
 
                 nextCommentCursor = json.nextCursor;
-                renderComments(json, reset);
+                renderComments(json);
                 updateCommentCount(currentBoardId, json.totalCount);
             } catch (error) {
                 console.error(error);
@@ -226,12 +200,8 @@
             }
         }
 
-        function renderComments(data, reset) {
+        function renderComments(data) {
             modalTitle.innerText = `댓글 ${data.totalCount}개`;
-
-            if (reset) {
-                modalBody.innerHTML = '';
-            }
 
             if (data.list.length === 0 && modalBody.children.length === 0) {
                 modalBody.innerHTML = '<div>등록된 댓글이 없습니다</div>';
@@ -273,7 +243,7 @@
                     <pre class="comment-modal-text" id="comment${item.id}">${escapeHtml(item.comments)}</pre>
                     <textarea class="form-control comment-modal-edit" id="edit_comment${item.id}" rows="4">${escapeHtml(item.comments)}</textarea>
                     <div class="comment-modal-reply-row">
-                        <span class="comment-modal-reply-button" data-action="reply" data-comment-id="${item.id}" data-name="${escapeHtmlAttr(item.member.name)}">답글 달기</span>
+                        <span class="comment-modal-reply-button" data-action="reply" data-comment-id="${item.id}">답글 달기</span>
                         ${item.replyCount > 0 ? `
                             <span class="comment-modal-reply-button" data-action="toggle-replies" data-comment-id="${item.id}">답글 ${item.replyCount}개 모두 보기</span>
                         ` : ''}
@@ -297,8 +267,6 @@
         async function toggleEdit(commentId) {
             const commentText = document.getElementById('comment' + commentId);
             const commentEdit = document.getElementById('edit_comment' + commentId);
-
-            if (!commentText || !commentEdit) return;
 
             if (commentEdit.style.display === 'block') {
                 try {
@@ -397,14 +365,6 @@
             return replyStates.get(commentId);
         }
 
-        function resetReplyState(commentId) {
-            replyStates.set(commentId, {
-                nextCursor: 1,
-                items: [],
-                isLoading: false
-            });
-        }
-
         async function loadReplies(commentId, reset = false) {
             const state = getReplyState(commentId);
 
@@ -413,23 +373,19 @@
             }
 
             if (reset) {
-                resetReplyState(commentId);
+                state.nextCursor = 1;
+                state.items = [];
             }
 
-            const currentState = getReplyState(commentId);
-            if (!currentState.nextCursor) {
+            if (!state.nextCursor) {
                 renderReplies(commentId);
                 return;
             }
 
-            currentState.isLoading = true;
+            state.isLoading = true;
 
             try {
-                const response = await fetch(`/api/reply/list?id=${commentId}&cursor=${currentState.nextCursor - 1}&limit=${REPLY_LIMIT}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8',
-                    },
+                const response = await fetch(`/api/reply/list?id=${commentId}&cursor=${state.nextCursor - 1}&limit=${REPLY_LIMIT}`, {
                     credentials: 'include',
                 });
                 const json = await response.json();
@@ -439,14 +395,14 @@
                     return;
                 }
 
-                currentState.items = reset ? json.list.slice() : currentState.items.concat(json.list);
-                currentState.nextCursor = json.nextCursor;
+                state.items.push(...json.list);
+                state.nextCursor = json.nextCursor;
                 renderReplies(commentId);
             } catch (error) {
                 console.error(error);
                 alert('다시 시도하여주십시오');
             } finally {
-                currentState.isLoading = false;
+                state.isLoading = false;
             }
         }
 
@@ -489,9 +445,7 @@
             currentCommentId = null;
             modalInput.value = '';
             modalSubmit.disabled = false;
-            if (modalCancel) {
-                modalCancel.style.display = 'none';
-            }
+            modalCancel.classList.add('is-hidden');
         }
 
         function resetCommentState() {
@@ -515,10 +469,6 @@
                 .replaceAll('>', '&gt;')
                 .replaceAll('"', '&quot;')
                 .replaceAll("'", '&#39;');
-        }
-
-        function escapeHtmlAttr(value) {
-            return escapeHtml(value);
         }
 
         global.openCommentModal = openCommentModal;

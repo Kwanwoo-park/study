@@ -16,6 +16,8 @@ public enum IntegrationEventLogRoute {
     }
 
     public static IntegrationEventLogRoute kafka(String topic) {
-        return "topic".equals(topic) ? CHAT : "topic2".equals(topic) ? NOTIFICATION : UNKNOWN_KAFKA;
+        if ("topic".equals(topic)) return CHAT;
+        if ("topic2".equals(topic)) return NOTIFICATION;
+        return UNKNOWN_KAFKA;
     }
 }

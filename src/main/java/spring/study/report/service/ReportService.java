@@ -43,11 +43,8 @@ public class ReportService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신고한 대상입니다");
         }
 
-        Report report = reportRepository.save(requestDto.toEntity(reporter));
-        return report;
+        return reportRepository.save(requestDto.toEntity(reporter));
     }
-
-
 
     private void validateReasonDetail(ReportRequestDto requestDto) {
         if (requestDto.getReason() == ReportReason.ETC && requestDto.getNormalizedReasonDetail() == null) {

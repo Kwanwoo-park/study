@@ -7,84 +7,77 @@ const url = new URL(window.location.href);
 const urlParams = url.searchParams;
 const redirectUrl = urlParams.get('url');
 
-if (appealLink && email) {
-    const updateAppealLink = () => {
-        const enteredEmail = email.value.trim();
-        appealLink.href = enteredEmail
-            ? `/appeal?email=${encodeURIComponent(enteredEmail)}`
-            : '/appeal';
-    };
-    email.addEventListener('input', updateAppealLink);
-    updateAppealLink();
-}
+const updateAppealLink = () => {
+    const enteredEmail = email.value.trim();
+    appealLink.href = enteredEmail
+        ? `/appeal?email=${encodeURIComponent(enteredEmail)}`
+        : '/appeal';
+};
+email.addEventListener('input', updateAppealLink);
+updateAppealLink();
 
-if (button) {
-    button.addEventListener('click', (event) => {
-        event.preventDefault();
+button.addEventListener('click', (event) => {
+    event.preventDefault();
 
-        if (email.value != '' && password.value != '') {
-            fetch(`/api/member/login`, {
-                method: 'PATCH',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: email.value,
-                    password: password.value,
-                }),
-                credentials: "include",
-            })
-            .then((response) => response.json())
-            .then((json) => {
-                if (json['result'] > 0) {
-                    if (redirectUrl) {
-                        location.replace(redirectUrl);
-                    }
-                    else {
-                        alert(json.member.name + "님 환영합니다!");
-                        location.replace(`/board/main`)
-                    }
-                } else if (json['result'] == -10) {
-                    console.error('Error during login:', error);
-                    alert('Login error occurred. Please try again later');
+    if (email.value != '' && password.value != '') {
+        fetch(`/api/member/login`, {
+            method: 'PATCH',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email: email.value,
+                password: password.value,
+            }),
+            credentials: "include",
+        })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json['result'] > 0) {
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
                 }
-                else if (json['result'] == -2)
-                    alert("Access Deny");
-                else if (json['result'] == -3)
-                    alert("이메일을 확인해주세요")
-                else
-                    alert("비밀번호를 확인해주세요")
-            })
-            .catch((error) => {
-                console.error('Error during login:', error);
+                else {
+                    alert(json.member.name + "님 환영합니다!");
+                    window.location.href = `/board/main`
+                }
+            } else if (json['result'] == -10) {
                 alert('Login error occurred. Please try again later');
-            });
-        }
-    });
-}
+            }
+            else if (json['result'] == -2)
+                alert("Access Deny");
+            else if (json['result'] == -3)
+                alert("이메일을 확인해주세요")
+            else
+                alert("비밀번호를 확인해주세요")
+        })
+        .catch((error) => {
+            console.error('Error during login:', error);
+            alert('Login error occurred. Please try again later');
+        });
+    }
+});
 
-if (password) {
-    const removeUnsupportedPasswordCharacters = () => {
-        const sanitizedValue = password.value.replace(/[^\x21-\x7E]/g, '');
-        if (sanitizedValue === password.value) return;
+const removeUnsupportedPasswordCharacters = () => {
+    const sanitizedValue = password.value.replace(/[^\x21-\x7E]/g, '');
+    if (sanitizedValue === password.value) return;
 
-        const cursorPosition = password.selectionStart;
-        const removedBeforeCursor = cursorPosition == null
-            ? 0
-            : password.value.slice(0, cursorPosition).replace(/[\x21-\x7E]/g, '').length;
+    const cursorPosition = password.selectionStart;
+    const removedBeforeCursor = cursorPosition == null
+        ? 0
+        : password.value.slice(0, cursorPosition).replace(/[\x21-\x7E]/g, '').length;
 
-        password.value = sanitizedValue;
-        if (cursorPosition != null) {
-            const nextCursorPosition = Math.max(0, cursorPosition - removedBeforeCursor);
-            password.setSelectionRange(nextCursorPosition, nextCursorPosition);
-        }
-    };
+    password.value = sanitizedValue;
+    if (cursorPosition != null) {
+        const nextCursorPosition = Math.max(0, cursorPosition - removedBeforeCursor);
+        password.setSelectionRange(nextCursorPosition, nextCursorPosition);
+    }
+};
 
-    password.addEventListener('input', removeUnsupportedPasswordCharacters);
-    password.addEventListener('compositionend', removeUnsupportedPasswordCharacters);
+password.addEventListener('input', removeUnsupportedPasswordCharacters);
+password.addEventListener('compositionend', removeUnsupportedPasswordCharacters);
 
-    password.addEventListener('keydown', (event) => {
-        if (event.key == 'Enter')
-            button.click();
-    });
-}
+password.addEventListener('keydown', (event) => {
+    if (event.key == 'Enter')
+        button.click();
+});

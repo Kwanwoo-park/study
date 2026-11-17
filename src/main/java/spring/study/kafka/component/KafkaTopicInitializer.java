@@ -51,12 +51,9 @@ public class KafkaTopicInitializer implements SmartInitializingSingleton {
     }
 
     public NewTopic definition(String topic) {
-        boolean dlt = topic.endsWith(".DLT");
-        int partitions = dlt ? properties.getDeadLetterPartitions() : KafkaTopics.CHAT.equals(topic) ? properties.getChatPartitions() : properties.getNotificationPartitions();
-
-        return new NewTopic(topic, partitions, properties.getReplicationFactor()).configs(Map.of(
+        return new NewTopic(topic, properties.partitionsFor(topic), properties.getReplicationFactor()).configs(Map.of(
                 "cleanup.policy", "delete",
-                "retention.ms", Long.toString(TimeUnit.DAYS.toMillis(dlt ? properties.getDeadLetterRetentionDays() : properties.getRetentionDays())),
+                "retention.ms", Long.toString(properties.retentionMillisFor(topic)),
                 "min.insync.replicas", Integer.toString(properties.getMinInSyncReplicas())
         ));
     }

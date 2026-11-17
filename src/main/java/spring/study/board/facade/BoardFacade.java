@@ -115,13 +115,6 @@ public class BoardFacade {
 
         Board saved = boardService.save(dto);
 
-        if (saved == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "result", -10,
-                    "message", "게시글이 저장되지 않았습니다"
-            ));
-        }
-
         return ResponseEntity.ok(Map.of(
                 "result", saved.getId()
         ));

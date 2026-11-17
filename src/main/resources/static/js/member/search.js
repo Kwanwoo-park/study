@@ -3,22 +3,20 @@ const searchResult = document.getElementById('searchResult');
 
 let searchTimer;
 
-if (nameInput && searchResult) {
-    renderMessage('검색어를 입력해주세요.');
+renderMessage('검색어를 입력해주세요.');
 
-    nameInput.addEventListener('input', () => {
+nameInput.addEventListener('input', () => {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(searchMembers, 250);
+});
+
+nameInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
         window.clearTimeout(searchTimer);
-        searchTimer = window.setTimeout(searchMembers, 250);
-    });
-
-    nameInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            window.clearTimeout(searchTimer);
-            searchMembers();
-        }
-    });
-}
+        searchMembers();
+    }
+});
 
 async function searchMembers() {
     const keyword = nameInput.value.trim();
@@ -32,10 +30,6 @@ async function searchMembers() {
 
     try {
         const response = await fetch(`/api/member/search?name=${encodeURIComponent(keyword)}`, {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-            },
             credentials: "include",
         });
         const json = await response.json();
@@ -45,7 +39,7 @@ async function searchMembers() {
             return;
         }
 
-        renderResults(json.list || []);
+        renderResults(json.list);
     } catch (error) {
         console.error(error);
         alert('다시 시도해주세요');

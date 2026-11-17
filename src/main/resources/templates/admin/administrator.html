@@ -16,14 +16,14 @@
     <th:block th:replace="~{fragments/common :: pageBack('/board/main')}"></th:block>
     <h1>Admin view</h1>
       <div class="float-left">
-        <button type="button" class="btn btn-primary" onclick="location.replace('/admin/memberCheck')">Member List</button>
-        <button type="button" class="btn btn-primary" onclick="location.replace('/board/all')">Board List</button>
-        <button type="button" class="btn btn-primary" onclick="location.replace('/board/main')">Board Main</button>
-        <button type="button" class="btn btn-primary" onclick="location.replace('/portfolio')">Portfolio</button>
-        <button type="button" class="btn btn-primary" onclick="location.replace('/admin/files')">File Storage</button>
-        <button type="button" class="btn btn-primary" onclick="location.replace('/memos')">메모장</button>
+        <button type="button" class="btn btn-primary" onclick="window.location.href = '/admin/memberCheck'">Member List</button>
+        <button type="button" class="btn btn-primary" onclick="window.location.href = '/board/all'">Board List</button>
+        <button type="button" class="btn btn-primary" onclick="window.location.href = '/board/main'">Board Main</button>
+        <button type="button" class="btn btn-primary" onclick="window.location.href = '/portfolio'">Portfolio</button>
+        <button type="button" class="btn btn-primary" onclick="window.location.href = '/admin/files'">File Storage</button>
+        <button type="button" class="btn btn-primary" onclick="window.location.href = '/memos'">메모장</button>
         <a class="btn btn-primary" href="/admin/github">GitHub 내역</a>
-        <button type="button" class="btn btn-primary" onclick="location.replace('/admin/forbidden/word/apply')">Forbbiden apply</button>
+        <button type="button" class="btn btn-primary" onclick="window.location.href = '/admin/forbidden/word/apply'">Forbbiden apply</button>
       </div>
       <section class="admin-system-panel">
         <div class="admin-system-header">
@@ -49,12 +49,12 @@
         <div class="admin-incident-header">
           <div>
             <span class="admin-section-label">INCIDENTS</span>
-            <h2>최근 서버 장애</h2>
-            <p>처리되지 않은 서버 예외를 최근 발생 순으로 표시합니다.</p>
+            <h2>미확인 서버 장애</h2>
+            <p>미확인 장애를 최근 발생 순으로 최대 30건 표시합니다. 확인한 기록은 목록에서 제외됩니다.</p>
           </div>
           <div class="admin-incident-summary">
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.replace('/admin/kafka')">Kafka 운영 · 실패 재처리</button>
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.replace('/admin/event-logs')">Kafka · Redis 이벤트 로그</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.location.href = '/admin/kafka'">Kafka 운영 · 실패 재처리</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.location.href = '/admin/event-logs'">Kafka · Redis 이벤트 로그</button>
             <span id="incident-unacknowledged-count" class="admin-incident-count">0건 미확인</span>
             <button type="button" id="incident-acknowledge-all" class="btn btn-outline-danger btn-sm" disabled>전체 확인</button>
             <button type="button" id="incident-refresh" class="btn btn-outline-secondary btn-sm">새로고침</button>
@@ -84,10 +84,10 @@
             <span>접수되지 않은 최근 신고 10건</span>
           </div>
           <div class="admin-report-dashboard-actions">
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.replace('/admin/report')">전체 보기</button>
-            <button type="button" class="btn btn-outline-danger btn-sm" onclick="location.replace('/admin/appeal')">상소문 확인</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.replace('/admin/report/process')">처리 화면</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="location.replace('/admin/report/history')">처리 내역</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.location.href = '/admin/report'">전체 보기</button>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="window.location.href = '/admin/appeal'">상소문 확인</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.location.href = '/admin/report/process'">처리 화면</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.location.href = '/admin/report/history'">처리 내역</button>
           </div>
         </div>
         <div id="recent-report-list" class="admin-report-card-grid"></div>
@@ -112,8 +112,8 @@
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/admin/system-details.js?v=20260925"></script>
-<script src="/js/admin/main.js?v=20260925-diagnostics"></script>
-<script src="/js/common/common.js?v=20261021-notification-read"></script>
+<script src="/js/admin/system-details.js?v=20261116"></script>
+<script src="/js/admin/main.js?v=20261117-unacknowledged"></script>
+<script src="/js/common/common.js?v=20261116-navigation"></script>
 </body>
 </html>

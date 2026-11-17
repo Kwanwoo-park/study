@@ -79,7 +79,7 @@ public class KafkaOutboxDispatcher {
     private Object resolvePayload(KafkaOutboxEvent event) throws Exception {
         return switch (event.resolvedPayloadType()) {
             case CHAT_MESSAGE -> objectMapper.readValue(event.getPayload(), ChatMessageRequestDto.class);
-            case NOTIFICATION -> notificationService.findById(Long.valueOf(event.getPayload()));
+            case NOTIFICATION -> notificationService.findForDelivery(Long.valueOf(event.getPayload()));
         };
     }
 

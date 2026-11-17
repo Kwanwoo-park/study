@@ -11,10 +11,13 @@ import spring.study.member.entity.Member;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_notification_member_history", columnList = "member_id,updateTime,id"),
+        @Index(name = "idx_notification_member_unread", columnList = "member_id,readStatus,notiGroup")
+})
 @Getter
 @Setter
 public class Notification extends BasetimeEntity implements Serializable {

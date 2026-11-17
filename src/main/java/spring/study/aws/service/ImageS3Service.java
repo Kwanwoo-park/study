@@ -13,59 +13,27 @@ import spring.study.board.entity.BoardImg;
 import spring.study.chat.entity.ChatMessageImg;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ImageS3Service {
+    private static final Set<String> IMAGE_FORMATS = Set.of("jpg", "jpeg", "png", "gif");
     private final AmazonS3 amazonS3;
 
     @Value("${cloud.aws.s3.bucketName}")
     private String bucketName;
 
-    private String changedImageName(String originName) {
-        String random = UUID.randomUUID().toString();
-        return random + originName;
-    }
-
     public boolean fileFormatCheck(MultipartFile file) {
-        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
-        String originName = file.getOriginalFilename();
-        if (originName == null || originName.isBlank()) {
-            return true;
-        }
-
-        String format = StringUtils.getFilenameExtension(originName);
-        if (format == null) {
-            return true;
-        }
-
-        return !Arrays.stream(formatArr).toList().contains(format.toLowerCase());
+        String format = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        return format == null || !IMAGE_FORMATS.contains(format.toLowerCase());
     }
 
     public boolean findFormatCheck(List<MultipartFile> files) {
-        String[] formatArr = {"jpg", "jpeg", "png", "gif"};
-        String format;
-
-        for (MultipartFile file : files) {
-            String originName = file.getOriginalFilename();
-            if (originName == null || originName.isBlank()) {
-                return true;
-            }
-
-            format = StringUtils.getFilenameExtension(originName);
-            if (format == null) {
-                return true;
-            }
-
-            if (!Arrays.stream(formatArr).toList().contains(format.toLowerCase()))
-                return true;
-        }
-
-        return false;
+        return files.stream().anyMatch(this::fileFormatCheck);
     }
 
     public int fileSizeCheck(List<MultipartFile> files) {
@@ -90,7 +58,7 @@ public class ImageS3Service {
             throw new IOException("image extension is empty");
         }
 
-        String changedName = changedImageName(originName);
+        String changedName = UUID.randomUUID() + originName;
 
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType("image/" + ext.toLowerCase());
@@ -111,29 +79,11 @@ public class ImageS3Service {
     }
 
     public void deleteImg(List<ChatMessageImg> list) {
-        String[] splitString;
-        String fileName;
-
-        for (ChatMessageImg img : list) {
-            splitString = img.getImgSrc().split("/");
-            fileName = splitString[splitString.length-1];
-
-            if (amazonS3.doesObjectExist(bucketName, fileName))
-                amazonS3.deleteObject(new DeleteObjectRequest(bucketName, fileName));
-        }
+        list.forEach(image -> deleteImage(image.getImgSrc()));
     }
 
     public void deleteImage(List<BoardImg> list) {
-        String[] splitString;
-        String fileName;
-
-        for (BoardImg img : list) {
-            splitString = img.getImgSrc().split("/");
-            fileName = splitString[splitString.length-1];
-
-            if (amazonS3.doesObjectExist(bucketName, fileName))
-                amazonS3.deleteObject(new DeleteObjectRequest(bucketName, fileName));
-        }
+        list.forEach(image -> deleteImage(image.getImgSrc()));
     }
 
     public void deleteImage(String name) {
@@ -146,15 +96,6 @@ public class ImageS3Service {
     }
 
     public void deleteImgSrc(List<String> list) {
-        String[] splitString;
-        String fileName;
-
-        for (String imgSrc : list) {
-            splitString = imgSrc.split("/");
-            fileName = splitString[splitString.length-1];
-
-            if (amazonS3.doesObjectExist(bucketName, fileName))
-                amazonS3.deleteObject(new DeleteObjectRequest(bucketName, fileName));
-        }
+        list.forEach(this::deleteImage);
     }
 }

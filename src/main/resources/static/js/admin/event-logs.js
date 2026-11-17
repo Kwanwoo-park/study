@@ -56,7 +56,7 @@
         if (entry.errorType) explanation.append(node('p', '오류 클래스만 기록되어 있어 정확한 예외 원문은 확인할 수 없습니다. 발생 시각과 서버 인스턴스를 기준으로 서버 로그를 함께 확인해 주세요.'));
         if (entry.broker === 'KAFKA' && ['FAILED', 'RETRY_SCHEDULED', 'DEAD_LETTER', 'DLT_PUBLISHED'].includes(entry.outcome)) {
             const link = node('button', 'Kafka 운영 · 실패 재처리', 'btn btn-outline-primary');
-            link.type = 'button'; link.addEventListener('click', () => location.replace('/admin/kafka')); explanation.append(link);
+            link.type = 'button'; link.addEventListener('click', () => window.location.href = '/admin/kafka'); explanation.append(link);
         }
         el('detail-content').replaceChildren(explanation, fields);
     }

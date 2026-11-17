@@ -4,13 +4,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 import spring.study.notification.entity.Group;
+import spring.study.notification.entity.NotificationPeriod;
 import spring.study.notification.facade.NotificationFacade;
+
+import java.time.LocalDateTime;
 
 
 @RequiredArgsConstructor
@@ -46,6 +50,27 @@ public class NotificationApiController {
         if (member == null) return commonFacade.unauthorized();
 
         return notificationFacade.count(member);
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> history(@RequestParam(defaultValue = "DAY") NotificationPeriod period,
+                                     @RequestParam(required = false) Group group,
+                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime asOf,
+                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime beforeTime,
+                                     @RequestParam(required = false) Long beforeId,
+                                     HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return notificationFacade.history(member, group, period, asOf, beforeTime, beforeId);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return notificationFacade.delete(id, member);
     }
 
     @GetMapping("/sort/{group}")

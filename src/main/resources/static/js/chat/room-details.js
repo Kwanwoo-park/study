@@ -4,8 +4,6 @@
     const overlay = get('overlay');
     const panel = get('panel');
     const opener = get('open');
-    if (!overlay || !panel || !opener) return;
-
     const room = document.getElementById('room').value;
     const api = `/api/chat/rooms/${encodeURIComponent(room)}`;
     const members = get('members');
@@ -59,7 +57,7 @@
     }
 
     function closePreview() {
-        if (galleryPreview && typeof window.closeChatImageModal === 'function') window.closeChatImageModal();
+        if (galleryPreview) window.closeChatImageModal();
         galleryPreview = false;
     }
 
@@ -90,7 +88,6 @@
         try {
             const data = await request('/details', controller.signal);
             if (!opened || version !== generation || controller !== membersRequest) return;
-            if (!Array.isArray(data.participants)) throw new Error('참여자 정보를 확인할 수 없습니다.');
             members.replaceChildren();
             get('room-name').textContent = data.name || '채팅방';
             get('member-count').textContent = `(${data.participants.length}명)`;
@@ -147,7 +144,7 @@
             button.append(image);
             button.addEventListener('click', () => {
                 const index = photos.findIndex(item => item.id === photo.id);
-                if (index < 0 || typeof window.openChatImageModal !== 'function') return;
+                if (index < 0) return;
                 galleryPreview = true;
                 window.openChatImageModal(photos.map(item => item.imgSrc), index);
             });
@@ -175,7 +172,6 @@
         try {
             const data = await request(`/images${requestedCursor ? `?cursor=${encodeURIComponent(requestedCursor)}` : ''}`, controller.signal);
             if (!opened || version !== generation || controller !== imagesRequest) return;
-            if (!Array.isArray(data.images)) throw new Error('사진 정보를 확인할 수 없습니다.');
             const known = new Set(photos.map(photo => photo.id));
             for (const photo of data.images) {
                 const source = safeImageUrl(photo.imgSrc);
@@ -184,7 +180,7 @@
                     known.add(photo.id);
                 }
             }
-            nextCursor = data.nextCursor && data.nextCursor !== requestedCursor ? data.nextCursor : null;
+            nextCursor = data.nextCursor;
             renderPhotos();
         } catch (error) {
             if (!opened || version !== generation || controller !== imagesRequest || error.name === 'AbortError') return;
@@ -244,7 +240,7 @@
 
     function imagePreviewOpen() {
         const modal = document.getElementById('chatImageModal');
-        return modal && !modal.classList.contains('is-hidden');
+        return !modal.classList.contains('is-hidden');
     }
 
     opener.addEventListener('click', open);
@@ -263,10 +259,10 @@
             const last = focusable[focusable.length - 1];
             if (event.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
                 event.preventDefault();
-                last?.focus();
+                last.focus();
             } else if (!event.shiftKey && document.activeElement === last) {
                 event.preventDefault();
-                first?.focus();
+                first.focus();
             }
         }
     });

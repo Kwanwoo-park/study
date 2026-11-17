@@ -41,11 +41,15 @@ public class SavingsAutoTransferFacade {
     public void processDuePayment(String savingsAccountNumber, LocalDate processingDate, LocalDateTime processingTime) {
         String sourceNumber = transferService.findSavingsSourceAccountNumber(savingsAccountNumber);
         if (sourceNumber == null) return;
-        boolean savingsFirst = savingsAccountNumber.compareTo(sourceNumber) < 0;
-        Account first = accountService.findByAccountForUpdate(savingsFirst ? savingsAccountNumber : sourceNumber);
-        Account second = accountService.findByAccountForUpdate(savingsFirst ? sourceNumber : savingsAccountNumber);
-        Account savings = savingsFirst ? first : second;
-        Account source = savingsFirst ? second : first;
+        Account savings;
+        Account source;
+        if (savingsAccountNumber.compareTo(sourceNumber) < 0) {
+            savings = accountService.findByAccountForUpdate(savingsAccountNumber);
+            source = accountService.findByAccountForUpdate(sourceNumber);
+        } else {
+            source = accountService.findByAccountForUpdate(sourceNumber);
+            savings = accountService.findByAccountForUpdate(savingsAccountNumber);
+        }
         if (!isDue(savings, processingDate) || !isValidSource(savings, source)) {
             return;
         }

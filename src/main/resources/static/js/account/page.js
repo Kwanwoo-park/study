@@ -22,10 +22,6 @@
     const timeDepositAmount = document.getElementById('timeDepositAmount');
     const timeDepositMaturityMonths = document.getElementById('timeDepositMaturityMonths');
 
-    if (!page || !body) {
-        return;
-    }
-
     const transferTarget = {
         account: String(page.dataset.tranAccount || '').replace(/\D/g, ''),
         name: page.dataset.tranName || '회원',
@@ -34,20 +30,16 @@
     let isLoading = false;
     let loadedAccounts = [];
 
-    if (accountCreateBtn) {
-        accountCreateControls?.classList.toggle('hidden', isTransferPage);
-        accountCreateBtn.addEventListener('click', createAccount);
-        accountTypeSelect?.addEventListener('change', updateAccountCreateOptions);
-        timeDepositSourceAccountSelect?.addEventListener('change', updateTimeDepositBalance);
-        timeDepositAmount?.addEventListener('input', updateTimeDepositBalance);
-        fillTodayAsDefaultSavingsDay();
-        if (timeDepositMaturityMonths) {
-            timeDepositMaturityMonths.innerHTML = Array.from({ length: 24 }, (_, index) => {
-                const months = index + 1;
-                return `<option value="${months}"${months === 12 ? ' selected' : ''}>${months}개월</option>`;
-            }).join('');
-        }
-    }
+    accountCreateControls.classList.toggle('hidden', isTransferPage);
+    accountCreateBtn.addEventListener('click', createAccount);
+    accountTypeSelect.addEventListener('change', updateAccountCreateOptions);
+    timeDepositSourceAccountSelect.addEventListener('change', updateTimeDepositBalance);
+    timeDepositAmount.addEventListener('input', updateTimeDepositBalance);
+    fillTodayAsDefaultSavingsDay();
+    timeDepositMaturityMonths.innerHTML = Array.from({ length: 24 }, (_, index) => {
+        const months = index + 1;
+        return `<option value="${months}"${months === 12 ? ' selected' : ''}>${months}개월</option>`;
+    }).join('');
 
     body.addEventListener('click', async (event) => {
         const actionTarget = event.target.closest('[data-action]');
@@ -67,7 +59,7 @@
         }
 
         if (action === 'transactions') {
-            window.location.replace(`/account/transactions?account=${encodeURIComponent(account)}`);
+            window.location.href = `/account/transactions?account=${encodeURIComponent(account)}`;
             return;
         }
 
@@ -93,7 +85,7 @@
 
         if (action === 'terminate-submit') {
             const settlementSelect = document.getElementById(`settlementAccount${account}`);
-            await terminateAccount(account, settlementSelect?.value);
+            await terminateAccount(account, settlementSelect.value);
         }
     });
 
@@ -109,10 +101,6 @@
 
         try {
             const response = await fetch('/api/account/list', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
-                },
                 credentials: 'include',
             });
             const json = await response.json();
@@ -132,11 +120,11 @@
     }
 
     async function createAccount() {
-        if (isLoading || !accountCreateBtn) {
+        if (isLoading) {
             return;
         }
 
-        const accountType = accountTypeSelect?.value || 'DEPOSIT_WITHDRAWAL';
+        const accountType = accountTypeSelect.value;
         if (accountType === 'DEPOSIT_WITHDRAWAL' && !confirmCheckingAccountCreation()) {
             return;
         }
@@ -149,7 +137,7 @@
                 || accountType === 'TIME_DEPOSIT';
             const hasCheckingAccount = loadedAccounts.some((account) =>
                 account.accountType === 'DEPOSIT_WITHDRAWAL'
-                && normalizeAccountStatus(account) === 'ACTIVE'
+                && account.accountStatus === 'ACTIVE'
             );
             if (requiresCheckingAccount && !hasCheckingAccount) {
                 alert('예적금 계좌를 만들려면 먼저 입출금 계좌를 생성해주세요');
@@ -158,8 +146,8 @@
 
             const payload = { accountType };
             if (accountType === 'INSTALLMENT_SAVINGS') {
-                const amount = Number(monthlySavingsAmount?.value || 0);
-                const paymentDay = Number(monthlySavingsDay?.value || 0);
+                const amount = Number(monthlySavingsAmount.value);
+                const paymentDay = Number(monthlySavingsDay.value);
                 if (amount < 10000) {
                     alert('적금 월 납입액은 1만원 이상으로 입력해주세요');
                     return;
@@ -168,19 +156,19 @@
                     alert('자동이체일은 1일부터 31일 사이로 입력해주세요');
                     return;
                 }
-                if (!savingsAutoTerminationAcknowledged?.checked) {
+                if (!savingsAutoTerminationAcknowledged.checked) {
                     alert('3일 내 미납 시 자동 해지되는 정책을 확인하고 동의해주세요');
                     return;
                 }
 
-                payload.savingsSourceAccount = savingsSourceAccountSelect?.value || null;
+                payload.savingsSourceAccount = savingsSourceAccountSelect.value;
                 payload.monthlySavingsAmount = amount;
                 payload.monthlySavingsDay = paymentDay;
                 payload.autoTerminationAcknowledged = true;
             }
             else if (accountType === 'TIME_DEPOSIT') {
-                const amount = Number(timeDepositAmount?.value || 0);
-                const maturityMonths = Number(timeDepositMaturityMonths?.value || 0);
+                const amount = Number(timeDepositAmount.value);
+                const maturityMonths = Number(timeDepositMaturityMonths.value);
                 const sourceAccount = getSelectedCheckingAccount(timeDepositSourceAccountSelect);
                 if (!sourceAccount) {
                     alert('예금 원금을 출금할 입출금 계좌를 선택해주세요');
@@ -190,7 +178,7 @@
                     alert('예금 금액은 1만원 이상으로 입력해주세요');
                     return;
                 }
-                else if (amount > Number(sourceAccount.amount || 0)) {
+                else if (amount > sourceAccount.amount) {
                     alert('선택한 입출금 계좌의 잔액이 부족합니다');
                     return;
                 }
@@ -238,11 +226,11 @@
     }
 
     function renderAccounts(data) {
-        loadedAccounts = data.list || [];
+        loadedAccounts = data.list;
         updateAccountCreateOptions();
-        const accounts = (data.list || []).filter((account) =>
+        const accounts = loadedAccounts.filter((account) =>
             !isTransferPage || (
-                normalizeAccountStatus(account) === 'ACTIVE'
+                account.accountStatus === 'ACTIVE'
                 && account.outgoingTransferAllowed === true
             )
         );
@@ -263,14 +251,14 @@
         list.className = 'account-page-list';
         const checkingAccounts = accounts.filter((account) =>
             account.accountType === 'DEPOSIT_WITHDRAWAL'
-            && normalizeAccountStatus(account) === 'ACTIVE'
+            && account.accountStatus === 'ACTIVE'
         );
 
         accounts.forEach((account) => {
             const accountId = escapeAttribute(account.account);
-            const canTransfer = normalizeAccountStatus(account) === 'ACTIVE'
+            const canTransfer = account.accountStatus === 'ACTIVE'
                 && account.outgoingTransferAllowed === true
-                && Number(account.amount || 0) >= 10000;
+                && account.amount >= 10000;
             const item = document.createElement('li');
             item.className = 'account-page-item';
             item.innerHTML = isTransferPage
@@ -308,7 +296,7 @@
     }
 
     function renderOwnAccount(account, accountId, canTransfer, checkingAccounts) {
-        const accountStatus = normalizeAccountStatus(account);
+        const accountStatus = account.accountStatus;
         const isActive = accountStatus === 'ACTIVE';
         const canDeposit = isActive && account.depositAllowed === true;
         const isInterestAccount = account.accountType === 'INSTALLMENT_SAVINGS'
@@ -373,9 +361,9 @@
     function renderInterestDetails(account) {
         if (account.accountType === 'DEPOSIT_WITHDRAWAL') return '';
 
-        const rate = Number(account.annualInterestRatePercent || 0);
+        const rate = account.annualInterestRatePercent;
         const maturity = account.maturityAt ? formatDate(account.maturityAt) : '-';
-        const interestLabel = normalizeAccountStatus(account) === 'TERMINATED' ? '지급 이자' : '예상 이자';
+        const interestLabel = account.accountStatus === 'TERMINATED' ? '지급 이자' : '예상 이자';
 
         const savingsDetails = account.accountType === 'INSTALLMENT_SAVINGS'
             ? `<span>자동이체 ${formatAmount(account.monthlySavingsAmount)}원 / 매월 ${escapeHtml(account.monthlySavingsDay || '-')}일</span>
@@ -396,14 +384,14 @@
     }
 
     function updateAccountCreateOptions() {
-        const isSavings = accountTypeSelect?.value === 'INSTALLMENT_SAVINGS';
-        const isTimeDeposit = accountTypeSelect?.value === 'TIME_DEPOSIT';
-        savingsCreateOptions?.classList.toggle('hidden', !isSavings);
-        timeDepositCreateOptions?.classList.toggle('hidden', !isTimeDeposit);
+        const isSavings = accountTypeSelect.value === 'INSTALLMENT_SAVINGS';
+        const isTimeDeposit = accountTypeSelect.value === 'TIME_DEPOSIT';
+        savingsCreateOptions.classList.toggle('hidden', !isSavings);
+        timeDepositCreateOptions.classList.toggle('hidden', !isTimeDeposit);
 
         const checkingAccounts = loadedAccounts.filter((account) =>
             account.accountType === 'DEPOSIT_WITHDRAWAL'
-            && normalizeAccountStatus(account) === 'ACTIVE'
+            && account.accountStatus === 'ACTIVE'
         );
         if (isSavings) {
             fillTodayAsDefaultSavingsDay();
@@ -426,47 +414,43 @@
     }
 
     function fillTodayAsDefaultSavingsDay() {
-        if (monthlySavingsDay && !monthlySavingsDay.value) {
+        if (!monthlySavingsDay.value) {
             monthlySavingsDay.value = String(new Date().getDate());
         }
     }
 
     function configureSourceAccountSelection(checkingAccounts, select, label, autoInfo) {
-        if (!select) return;
-
         select.innerHTML = checkingAccounts.length === 0
             ? '<option value="">활성 입출금 계좌가 없습니다</option>'
             : checkingAccounts.map((account) => `<option value="${escapeAttribute(account.account)}">${escapeHtml(account.name)} (${escapeHtml(formatAccountNumber(account.account))})</option>`).join('');
         const isSingleAccount = checkingAccounts.length === 1;
         select.disabled = checkingAccounts.length <= 1;
         select.classList.toggle('hidden', isSingleAccount);
-        label?.classList.toggle('hidden', isSingleAccount);
-        autoInfo?.classList.toggle('hidden', !isSingleAccount);
-        if (autoInfo && isSingleAccount) {
+        label.classList.toggle('hidden', isSingleAccount);
+        autoInfo.classList.toggle('hidden', !isSingleAccount);
+        if (isSingleAccount) {
             const account = checkingAccounts[0];
             autoInfo.innerHTML = `입출금 계좌 자동 선택: ${escapeHtml(account.name)} (${escapeHtml(formatAccountNumber(account.account))})`;
         }
     }
 
     function getSelectedCheckingAccount(select) {
-        const selectedAccount = select?.value;
+        const selectedAccount = select.value;
         return loadedAccounts.find((account) =>
             account.account === selectedAccount
             && account.accountType === 'DEPOSIT_WITHDRAWAL'
-            && normalizeAccountStatus(account) === 'ACTIVE'
+            && account.accountStatus === 'ACTIVE'
         );
     }
 
     function updateTimeDepositBalance() {
-        if (!timeDepositSourceBalance) return;
-
         const sourceAccount = getSelectedCheckingAccount(timeDepositSourceAccountSelect);
         if (!sourceAccount) {
             timeDepositSourceBalance.innerText = '출금 가능한 입출금 계좌가 없습니다';
             return;
         }
-        const balance = Number(sourceAccount.amount || 0);
-        const requestedAmount = Math.max(Number(timeDepositAmount?.value || 0), 0);
+        const balance = sourceAccount.amount;
+        const requestedAmount = Math.max(Number(timeDepositAmount.value), 0);
         const remainingBalance = Math.max(balance - requestedAmount, 0);
         timeDepositSourceBalance.innerText = requestedAmount > 0
             ? `현재 잔액 ${formatAmount(balance)}원 · 개설 후 잔액 ${formatAmount(remainingBalance)}원`
@@ -475,8 +459,6 @@
 
     function toggleForm(formId) {
         const targetForm = document.getElementById(formId);
-        if (!targetForm) return;
-
         body.querySelectorAll('.account-transfer-form').forEach((form) => {
             if (form !== targetForm) {
                 form.classList.add('hidden');
@@ -493,8 +475,8 @@
 
         const tranAccountInput = document.getElementById(`transferAccount${account}`);
         const amountInput = document.getElementById(`transferAmount${account}`);
-        const tranAccount = String(targetAccount || tranAccountInput?.value || '').replace(/\D/g, '');
-        const amount = Number(amountInput?.value || 0);
+        const tranAccount = (targetAccount || tranAccountInput.value).replace(/\D/g, '');
+        const amount = Number(amountInput.value);
 
         if (!tranAccount) {
             alert('받는 계좌번호를 입력해주세요');
@@ -543,7 +525,7 @@
         }
 
         const amountInput = document.getElementById(`depositAmount${account}`);
-        const amount = Number(amountInput?.value || 0);
+        const amount = Number(amountInput.value);
 
         if (!amount || amount < 1) {
             alert('입금 금액을 입력해주세요');
@@ -616,12 +598,10 @@
     }
 
     function formatAmount(value) {
-        return amountFormatter.format(Number(value || 0));
+        return amountFormatter.format(value);
     }
 
     function getAccountTypeName(account) {
-        if (account.accountType.displayName) return account.accountType.displayName;
-
         const names = {
             DEPOSIT_WITHDRAWAL: '입출금',
             INSTALLMENT_SAVINGS: '적금',
@@ -629,10 +609,6 @@
         };
 
         return names[account.accountType] || '입출금';
-    }
-
-    function normalizeAccountStatus(account) {
-        return account.accountStatus || 'ACTIVE';
     }
 
     function getAccountStatusName(status) {

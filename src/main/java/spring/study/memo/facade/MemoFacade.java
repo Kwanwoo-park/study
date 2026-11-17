@@ -108,7 +108,11 @@ public class MemoFacade {
             throw new IllegalArgumentException("메모 색상을 선택해 주세요");
         // Allocate a stable id once; the automatic body save itself stays in Redis.
         // This service transaction commits before Redis publishes a due job.
-        MemoResponseDto created = existing.orElseGet(() -> memoService.create(new MemoRequestDto(draftOnly ? "제목 없는 메모" : title, draftOnly ? "" : content, request.color(), request.pinned(), null, request.creationKey(), null), member));
+        MemoResponseDto created = existing.orElseGet(() -> {
+            MemoRequestDto initial = new MemoRequestDto(draftOnly ? "제목 없는 메모" : title, draftOnly ? "" : content,
+                    request.color(), request.pinned(), null, request.creationKey(), null);
+            return memoService.create(initial, member);
+        });
 
         return locked(created.id(), token -> {
             Optional<MemoDraft> cached = draftService.find(created.id());
@@ -186,14 +190,7 @@ public class MemoFacade {
             draftService.requireDurability();
             draftService.store(deleting, token);
 
-            try {
-                memoService.deleteStored(id, draft.ownerId());
-                draftService.remove(id, token);
-            } catch (RuntimeException exception) {
-                draftService.store(draftService.retry(deleting), token);
-
-                throw exception;
-            }
+            deleteStored(deleting, token);
 
             return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
         });
@@ -218,16 +215,9 @@ public class MemoFacade {
                         return null;
                     }
 
-                    if (draft.deleted()) {
-                        try {
-                            memoService.deleteStored(id, draft.ownerId());
-                            draftService.remove(id, token);
-                        } catch (RuntimeException exception) {
-                            draftService.store(draftService.retry(draft), token);
-
-                            throw exception;
-                        }
-                    } else
+                    if (draft.deleted())
+                        deleteStored(draft, token);
+                    else
                         persist(draft, token);
                     return null;
                 });
@@ -236,6 +226,17 @@ public class MemoFacade {
             } catch (RuntimeException exception) {
                 log.warn("Memo flush failed; retained for retry. memoId={}, error={}", id, exception.getClass().getSimpleName());
             }
+        }
+    }
+
+    private void deleteStored(MemoDraft draft, String token) {
+        Long id = draft.memo().id();
+        try {
+            memoService.deleteStored(id, draft.ownerId());
+            draftService.remove(id, token);
+        } catch (RuntimeException exception) {
+            draftService.store(draftService.retry(draft), token);
+            throw exception;
         }
     }
 

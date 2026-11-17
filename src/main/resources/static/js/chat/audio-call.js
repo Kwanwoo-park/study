@@ -15,8 +15,6 @@
     const inputSelect = document.getElementById('audio-call-input');
     const outputSelect = document.getElementById('audio-call-output');
 
-    if (!panel) return;
-
     let rtcConfig = null;
     let stompClient = null;
     let subscription = null;
@@ -33,7 +31,6 @@
     let ringtoneInterval = null;
     let wakeLock = null;
     let joinedCall = false;
-    let isInitiator = false;
     let autoAcceptCallId = new URLSearchParams(window.location.search).get('acceptAudioCall');
     const peerConnections = new Map();
     const participantStates = new Map();
@@ -65,11 +62,12 @@
             showError('채팅 서버에 연결되지 않았습니다.');
             return false;
         }
-        stompClient.send('/api/audio/signal', {}, JSON.stringify(Object.assign({
+        stompClient.send('/api/audio/signal', {}, JSON.stringify({
             callId: activeCallId,
             roomId: roomId,
-            type: type
-        }, extra || {})));
+            type: type,
+            ...extra,
+        }));
         return true;
     }
 
@@ -78,7 +76,6 @@
         try {
             await ensureLocalAudio();
             activeCallId = createCallId();
-            isInitiator = true;
             joinedCall = true;
             participantStates.set(email, {name: '나', state: 'connected'});
             renderParticipants();
@@ -215,7 +212,7 @@
             throw new Error('UNSUPPORTED');
         }
         if (!localStream) {
-            const selectedDeviceId = inputSelect ? inputSelect.value : '';
+            const selectedDeviceId = inputSelect.value;
             localStream = await navigator.mediaDevices.getUserMedia({
                 audio: selectedDeviceId ? {deviceId: {exact: selectedDeviceId}} : true,
                 video: false
@@ -229,7 +226,7 @@
         if (activeCallId) return;
         const response = await fetch(
             `/api/chat/audio/incoming?roomId=${encodeURIComponent(roomId)}`,
-            {method: 'GET', credentials: 'include'}
+            {credentials: 'include'}
         );
         if (response.status === 204 || !response.ok) return;
         displayIncomingCall(await response.json());
@@ -238,7 +235,6 @@
     function displayIncomingCall(signal) {
         if (activeCallId || !signal || !signal.callId) return;
         activeCallId = signal.callId;
-        isInitiator = false;
         joinedCall = false;
         incomingCaller = signal.senderName || signal.senderEmail || '상대방';
         participantStates.set(signal.senderEmail, {name: incomingCaller, state: 'waiting'});
@@ -261,7 +257,6 @@
     async function ensureRtcConfig() {
         if (rtcConfig) return rtcConfig;
         const response = await fetch('/api/chat/audio/ice-servers', {
-            method: 'GET',
             credentials: 'include'
         });
         if (!response.ok) throw new Error('ICE_CONFIG');
@@ -403,10 +398,10 @@
         stopDurationTimer();
         stopRingtone();
         releaseWakeLock();
-        if (callNoticeTimeout) window.clearTimeout(callNoticeTimeout);
+        window.clearTimeout(callNoticeTimeout);
         callNoticeTimeout = null;
         peerConnections.forEach(metadata => {
-            if (metadata.failureTimeout) window.clearTimeout(metadata.failureTimeout);
+            window.clearTimeout(metadata.failureTimeout);
             metadata.connection.close();
         });
         peerConnections.clear();
@@ -416,7 +411,6 @@
         activeCallId = null;
         incomingCaller = '';
         joinedCall = false;
-        isInitiator = false;
         participantStates.clear();
         renderParticipants();
         muteButton.innerText = '음소거';
@@ -434,7 +428,7 @@
     function removePeer(peerEmail, state) {
         const metadata = peerConnections.get(peerEmail);
         if (metadata) {
-            if (metadata.failureTimeout) window.clearTimeout(metadata.failureTimeout);
+            window.clearTimeout(metadata.failureTimeout);
             metadata.connection.close();
             peerConnections.delete(peerEmail);
         }
@@ -473,7 +467,7 @@
     }
 
     function clearCallTimeout() {
-        if (callTimeout) window.clearTimeout(callTimeout);
+        window.clearTimeout(callTimeout);
         callTimeout = null;
     }
 
@@ -511,7 +505,7 @@
     }
 
     function stopKeepAlive() {
-        if (keepAliveInterval) window.clearInterval(keepAliveInterval);
+        window.clearInterval(keepAliveInterval);
         keepAliveInterval = null;
     }
 
@@ -538,7 +532,7 @@
     }
 
     function clearIncomingCallTimeout() {
-        if (incomingCallTimeout) window.clearTimeout(incomingCallTimeout);
+        window.clearTimeout(incomingCallTimeout);
         incomingCallTimeout = null;
     }
 
@@ -569,7 +563,7 @@
     }
 
     function stopRingtone() {
-        if (ringtoneInterval) window.clearInterval(ringtoneInterval);
+        window.clearInterval(ringtoneInterval);
         ringtoneInterval = null;
         if (ringtoneContext) ringtoneContext.close().catch(() => {});
         ringtoneContext = null;
@@ -596,7 +590,7 @@
     }
 
     function stopDurationTimer() {
-        if (durationInterval) window.clearInterval(durationInterval);
+        window.clearInterval(durationInterval);
         durationInterval = null;
         connectedAt = null;
     }
@@ -623,7 +617,6 @@
     }
 
     function renderParticipants() {
-        if (!participantList) return;
         participantList.replaceChildren();
         participantStates.forEach((participant, participantEmail) => {
             const item = document.createElement('span');
@@ -711,10 +704,10 @@
     }
 
     function microphoneErrorMessage(error) {
-        if (error && error.message === 'ICE_CONFIG') return '통화 서버 설정을 불러올 수 없습니다.';
-        if (error && error.message === 'UNSUPPORTED') return '이 브라우저는 음성 통화를 지원하지 않습니다.';
-        if (error && error.name === 'NotAllowedError') return '마이크 권한이 필요합니다.';
-        if (error && error.name === 'NotFoundError') return '사용 가능한 마이크를 찾을 수 없습니다.';
+        if (error.message === 'ICE_CONFIG') return '통화 서버 설정을 불러올 수 없습니다.';
+        if (error.message === 'UNSUPPORTED') return '이 브라우저는 음성 통화를 지원하지 않습니다.';
+        if (error.name === 'NotAllowedError') return '마이크 권한이 필요합니다.';
+        if (error.name === 'NotFoundError') return '사용 가능한 마이크를 찾을 수 없습니다.';
         return '마이크를 시작할 수 없습니다.';
     }
 

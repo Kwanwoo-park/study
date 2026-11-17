@@ -116,11 +116,7 @@ public class ReportFacade {
             case COMMENT -> "댓글";
             case CHAT_MESSAGE -> "채팅 메시지";
         };
-        String reporterName = report.getReporter().getName() == null
-                || report.getReporter().getName().isBlank()
-                ? report.getReporter().getEmail()
-                : report.getReporter().getName();
-        String message = "새 " + targetName + " 신고가 접수되었습니다. 신고자: " + reporterName;
+        String message = "새 " + targetName + " 신고가 접수되었습니다. 신고자: " + report.getReporter().displayName();
         String url = "/admin/report?reportId=" + report.getId();
 
         memberService.findAdministrators().forEach(admin ->

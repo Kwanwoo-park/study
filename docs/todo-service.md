@@ -5,6 +5,7 @@
 ## 화면과 API
 
 - 화면: `/todo` (`/todo/list`도 동일). 회원 상세의 `To-do list` 메뉴와 일기 목록에서 접근합니다.
+- 미완료·완료 구역을 함께 표시하며 각각 20개씩 페이지를 나눕니다. 미완료는 생성 시각 내림차순, 완료는 완료 시각 내림차순으로 표시합니다.
 - `GET /api/todo?page=0&size=20`: 본인 목록. `completed=true/false`로 완료 상태를 필터링합니다.
 - `GET /api/todo/{id}`: 본인의 할 일 한 건 조회.
 - `POST /api/todo`: `{ "content": "할 일" }`로 미완료 항목 작성.
@@ -13,6 +14,25 @@
 - `DELETE /api/todo/{id}`: 본인 항목 삭제.
 
 내용은 공백만 입력할 수 없고 최대 255자입니다. 로그인 회원을 서버에서 결정하며, 다른 회원의 항목은 관리자라도 이 API로 조회·변경할 수 없습니다. 일기 삭제에는 영향을 받지 않고, 회원 탈퇴 시에는 해당 회원의 할 일을 삭제합니다.
+
+완료로 바뀔 때 `completedAt`을 기록하고, 미완료로 되돌리면 지웁니다. 내용 수정이나 이미 완료된 항목에 대한 중복 완료 요청은 완료 시각을 바꾸지 않습니다. 다시 완료하면 새 완료 시각을 기록합니다.
+
+## 기존 To-do의 완료 시각 추가
+
+`ddl-auto=update` 환경에서는 새 컬럼과 인덱스가 생성됩니다. 수동 관리 환경에서는 아래 컬럼·인덱스가 없는 경우에만 각각 추가합니다. 아래의 과거 일기 테이블 전환 작업을 다시 실행할 필요는 없습니다.
+
+```sql
+ALTER TABLE todo ADD COLUMN completed_at DATETIME(6) NULL;
+CREATE INDEX idx_todo_member_completed_at ON todo (member_id, completed, completed_at, id);
+```
+
+기존 완료 항목은 정확한 완료 시각을 기록하지 않았으므로 복원할 수 없습니다. 기존 수정 시각으로 보완하려면 컬럼 추가 후 아래 SQL을 한 번 실행합니다. 이미 완료 시각이 있는 항목은 바꾸지 않습니다. 보완하지 않은 기존 항목은 완료 구역 마지막에 표시됩니다. 이 SQL은 자동 실행되지 않습니다.
+
+```sql
+UPDATE todo
+SET completed_at = COALESCE(update_time, register_time, CURRENT_TIMESTAMP(6))
+WHERE completed = TRUE AND completed_at IS NULL;
+```
 
 ## 기존 환경 배포 순서
 
@@ -33,11 +53,13 @@ CREATE TABLE IF NOT EXISTS todo (
     member_id BIGINT NOT NULL,
     content VARCHAR(255) NOT NULL,
     completed BIT NOT NULL,
+    completed_at DATETIME(6) NULL,
     register_time DATETIME(6) NULL,
     update_time DATETIME(6) NULL,
     PRIMARY KEY (id),
     INDEX idx_todo_member_id (member_id, id),
     INDEX idx_todo_member_completed_id (member_id, completed, id),
+    INDEX idx_todo_member_completed_at (member_id, completed, completed_at, id),
     CONSTRAINT fk_todo_member FOREIGN KEY (member_id) REFERENCES member (member_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

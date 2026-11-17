@@ -1,7 +1,5 @@
 (function () {
     const form = document.getElementById('bookReviewForm');
-    if (!form) return;
-
     const reviewTitle = document.getElementById('reviewTitle');
     const bookTitle = document.getElementById('bookTitle');
     const bookAuthor = document.getElementById('bookAuthor');
@@ -52,7 +50,7 @@
             if (!response.ok || Number(body.result) < 0) {
                 throw new Error(body.message || '독후감을 저장하지 못했습니다.');
             }
-            window.location.replace(`/book-reviews/${encodeURIComponent(body.result)}`);
+            window.location.href = `/book-reviews/${encodeURIComponent(body.result)}`;
         } catch (error) {
             showMessage(error.message || '독후감을 저장하지 못했습니다.', 'error');
             submit.disabled = false;

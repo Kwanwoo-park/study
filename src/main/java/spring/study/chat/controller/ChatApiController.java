@@ -14,7 +14,6 @@ import spring.study.chat.dto.AudioCallPreferenceRequest;
 import spring.study.chat.facade.ChatFacade;
 import spring.study.chat.facade.AudioCallFacade;
 import spring.study.chat.facade.ChatRoomFacade;
-import spring.study.chat.facade.ChatSendFacade;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.facade.ModerationFacade;
 import spring.study.common.service.JwtManager;
@@ -33,7 +32,6 @@ public class ChatApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final ChatFacade chatFacade;
-    private final ChatSendFacade chatSendFacade;
     private final ChatRoomFacade chatRoomFacade;
     private final AudioCallFacade audioCallFacade;
     private final ModerationFacade moderationFacade;
@@ -194,9 +192,9 @@ public class ChatApiController {
         int risk = moderationFacade.validate(content, member, response);
         if (risk == 0) return null;
 
-        return ResponseEntity.status(risk == -99 ? HttpStatus.BAD_REQUEST : HttpStatus.FORBIDDEN).body(Map.of(
-                "result", risk == -99 ? -10L : -risk,
-                "message", risk == -99 ? "메시지가 입력되지 않았습니다" : "금칙어를 사용하였습니다"
-        ));
+        if (risk == -99)
+            return ResponseEntity.badRequest().body(Map.of("result", -10L, "message", "메시지가 입력되지 않았습니다"));
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("result", -(long) risk, "message", "금칙어를 사용하였습니다"));
     }
 }

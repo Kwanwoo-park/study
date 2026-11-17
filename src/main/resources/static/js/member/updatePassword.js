@@ -3,7 +3,6 @@
     const password = document.getElementById('password');
     const email = document.getElementById('email');
     const updateButton = document.getElementById('update');
-    if (!page || !password || !email || !updateButton) return;
 
     const verificationRequired = page.dataset.verificationRequired === 'true';
     let recovery;
@@ -13,7 +12,7 @@
         } catch (_) { /* Invalid or unavailable storage requires verification again. */ }
         if (!recovery || recovery.email !== email.value || recovery.expiresAt <= Date.now() || !recovery.token) {
             alert('이메일 인증을 먼저 완료해 주세요.');
-            location.replace('/member/findByEmail');
+            window.location.href = '/member/findByEmail';
             return;
         }
     }
@@ -127,7 +126,7 @@
                 if (!verificationRequired && response.status === 403) {
                     sessionStorage.removeItem('passwordRecoveryVerification');
                     alert(data.message || '인증 시간이 만료되었습니다. 다시 인증해 주세요.');
-                    location.replace('/member/findByEmail');
+                    window.location.href = '/member/findByEmail';
                     return;
                 }
                 if (verificationRequired) {
@@ -143,7 +142,7 @@
 
             alert('비밀번호가 정상적으로 변경되었습니다. 다시 로그인해주세요.');
             if (!verificationRequired) sessionStorage.removeItem('passwordRecoveryVerification');
-            window.location.replace('/member/login');
+            window.location.href = '/member/login';
         } catch (error) {
             console.error(error);
             alert('비밀번호 변경 중 오류가 발생했습니다.');

@@ -25,7 +25,6 @@ function diagnosticsMessage(message, error = false) {
 
 function openSystemDetails(type) {
     const overlay = systemDetailsElement('system-details');
-    if (!overlay || !['processes', 'disk'].includes(type)) return;
     systemDetailsState.previousFocus = document.activeElement;
     systemDetailsState.type = type;
     systemDetailsState.root = 'project';
@@ -172,10 +171,10 @@ function renderSystemDisk(data) {
     content.append(paging);
 }
 
-systemDetailsElement('system-details-close')?.addEventListener('click', closeSystemDetails);
-systemDetailsElement('system-details')?.addEventListener('click', event => {
+systemDetailsElement('system-details-close').addEventListener('click', closeSystemDetails);
+systemDetailsElement('system-details').addEventListener('click', event => {
     if (event.target.id === 'system-details') closeSystemDetails();
 });
 document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !systemDetailsElement('system-details')?.hidden) closeSystemDetails();
+    if (event.key === 'Escape' && !systemDetailsElement('system-details').hidden) closeSystemDetails();
 });
