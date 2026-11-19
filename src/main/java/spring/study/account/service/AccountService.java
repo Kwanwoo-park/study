@@ -266,74 +266,43 @@ public class AccountService {
     @Transactional(propagation = Propagation.MANDATORY)
     public Account resolveSavingsSourceAccount(Member member, AccountCreateRequestDto requestDto) {
         validateSavingsRequest(requestDto);
-
-        List<Account> checkingAccounts = accountRepository.findByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE);
-        String requestedSource = requestDto.getSavingsSourceAccount();
-        Account selected;
-
-        if (checkingAccounts.size() == 1 && (requestedSource == null || requestedSource.isBlank())) {
-            selected = checkingAccounts.get(0);
-        } else {
-            if (requestedSource == null || requestedSource.isBlank()) {
-                throw new IllegalArgumentException("적금 자동이체에 사용할 입출금 계좌를 선택해주세요");
-            }
-
-            selected = checkingAccounts.stream()
-                    .filter(account -> account.getAccount().equals(requestedSource))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다"
-                    ));
-        }
-
-        return lockAndValidateSavingsSource(selected, member, requestDto.getMonthlySavingsAmount());
-    }
-
-    private Account lockAndValidateSavingsSource(Account selected, Member member, long paymentAmount) {
-        Account lockedSource = accountRepository.findByAccount(selected.getAccount())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
-
-        if (lockedSource.getMember() == null || !lockedSource.getMember().getId().equals(member.getId()) || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new IllegalArgumentException("본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다");
-        } else if (lockedSource.getAmount() < paymentAmount) {
+        Account source = selectAndLockSource(member, requestDto.getSavingsSourceAccount(),
+                "적금 자동이체에 사용할 입출금 계좌를 선택해주세요",
+                "본인의 활성 입출금 계좌만 자동이체 계좌로 선택할 수 있습니다");
+        if (source.getAmount() < requestDto.getMonthlySavingsAmount()) {
             throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 적금 납입 금액보다 부족합니다");
         }
-
-        return lockedSource;
+        return source;
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Account resolveTimeDepositSourceAccount(Member member, AccountCreateRequestDto requestDto) {
         validateTimeDepositRequest(requestDto);
+        Account source = selectAndLockSource(member, requestDto.getTimeDepositSourceAccount(),
+                "예금 원금을 출금할 입출금 계좌를 선택해주세요",
+                "본인의 활성 입출금 계좌만 예금 출금 계좌로 선택할 수 있습니다");
+        if (source.getAmount() < requestDto.getTimeDepositAmount()) {
+            throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 예금 금액보다 부족합니다");
+        }
+        return source;
+    }
 
+    private Account selectAndLockSource(Member member, String requestedSource, String selectionRequired, String invalidAccount) {
         List<Account> checkingAccounts = accountRepository.findByMemberAndAccountTypeAndAccountStatus(member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE);
-        String requestedSource = requestDto.getTimeDepositSourceAccount();
         Account selected;
 
-        if (checkingAccounts.size() == 1 && (requestedSource == null || requestedSource.isBlank())) {
+        if (requestedSource == null || requestedSource.isBlank()) {
+            if (checkingAccounts.size() != 1) throw new IllegalArgumentException(selectionRequired);
             selected = checkingAccounts.get(0);
         } else {
-            if (requestedSource == null || requestedSource.isBlank()) {
-                throw new IllegalArgumentException("예금 원금을 출금할 입출금 계좌를 선택해주세요");
-            }
-
             selected = checkingAccounts.stream()
                     .filter(account -> account.getAccount().equals(requestedSource))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "본인의 활성 입출금 계좌만 예금 출금 계좌로 선택할 수 있습니다"
-                    ));
+                    .orElseThrow(() -> new IllegalArgumentException(invalidAccount));
         }
 
-        Account lockedSource = accountRepository.findByAccount(selected.getAccount())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
-
-        if (lockedSource.getMember() == null || !lockedSource.getMember().getId().equals(member.getId()) || lockedSource.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || lockedSource.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new IllegalArgumentException("본인의 활성 입출금 계좌만 예금 출금 계좌로 선택할 수 있습니다");
-        } else if (lockedSource.getAmount() < requestDto.getTimeDepositAmount()) {
-            throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 예금 금액보다 부족합니다");
-        }
-
+        Account lockedSource = findByAccountForUpdate(selected.getAccount());
+        if (!isOwnedActiveCheckingAccount(lockedSource, member)) throw new IllegalArgumentException(invalidAccount);
         return lockedSource;
     }
 
@@ -369,11 +338,17 @@ public class AccountService {
     }
 
     private void validateOpeningSource(Account source, Member member, long amount, String product) {
-        if (source == null || source.getMember() == null || member == null || !source.getMember().getId().equals(member.getId())
-                || source.getAccountType() != AccountType.DEPOSIT_WITHDRAWAL || source.getAccountStatus() != AccountStatus.ACTIVE)
+        if (!isOwnedActiveCheckingAccount(source, member))
             throw new IllegalArgumentException("본인의 활성 입출금 계좌만 출금 계좌로 선택할 수 있습니다");
         if (source.getAmount() < amount)
             throw new IllegalArgumentException("선택한 입출금 계좌의 잔액이 " + product + " 금액보다 부족합니다");
+    }
+
+    private boolean isOwnedActiveCheckingAccount(Account account, Member member) {
+        return account != null && account.getMember() != null && member != null
+                && account.getMember().getId().equals(member.getId())
+                && account.getAccountType() == AccountType.DEPOSIT_WITHDRAWAL
+                && account.getAccountStatus() == AccountStatus.ACTIVE;
     }
 
     private void validateAmount(Long amount) {

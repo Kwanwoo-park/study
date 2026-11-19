@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Follower List</title>
+  <title>팔로워</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
-  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/common/common.css?v=20261118-standalone">
   <link rel="stylesheet" href="/css/follow/list.css">
 </head>
-<body th:classappend="${isMobile} ? 'mobile-view' : ''">
-<div class="container" th:attr="data-target-email=${targetEmail},data-member-email=${email},data-mode='follower'">
-  <h1>Follower List</h1>
-  <form method="dialog">
-    <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-    <div class="card">
-      <ul class="list-group-flush" id="followList"></ul>
-    </div>
-  </form>
-</div>
+<body class="standalone-page standalone-list-page" th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="container" th:attr="data-target-email=${targetEmail},data-member-email=${email},data-mode='follower'">
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+  <header class="standalone-page-header">
+    <th:block th:replace="~{fragments/common :: pageBack(@{/member/search/detail(email=${targetEmail})})}"></th:block>
+    <h1 class="simple-page-title">팔로워</h1>
+  </header>
+  <ul class="list-group-flush standalone-list" id="followList"></ul>
+</main>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/follow/actions.js?v=20261116"></script>
-<script src="/js/follow/follow.js?v=20261116"></script>
+<script src="/js/follow/follow.js?v=20261118-standalone"></script>
+<script src="/js/common/common.js?v=20261116-navigation"></script>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </body>
 </html>

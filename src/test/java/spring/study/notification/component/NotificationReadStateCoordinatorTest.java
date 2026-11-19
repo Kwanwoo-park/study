@@ -31,20 +31,16 @@ class NotificationReadStateCoordinatorTest {
     }
 
     @Test
-    void cacheAndOtherServersChangeOnlyAfterCommit() {
-        service.afterCommit(read);
-        verifyNoInteractions(emitters, publisher);
-        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
-        verify(emitters).applyReadState(read);
-        verify(publisher).publishReadState(read);
-    }
-
-    @Test
-    void redisFailureIsRetriedWithoutFailingTheCommittedRequest() {
+    void readStateChangesAfterCommitAndRedisFailureRetriesOnlyUntilSuccess() {
         doThrow(new IllegalStateException("offline")).doNothing().when(publisher).publishReadState(read);
         service.afterCommit(read);
+        verifyNoInteractions(emitters, publisher);
+
         assertThatCode(() -> TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit))
                 .doesNotThrowAnyException();
+        verify(emitters).applyReadState(read);
+        verify(publisher).publishReadState(read);
+
         service.retryPending();
         service.retryPending();
         verify(publisher, times(2)).publishReadState(read);

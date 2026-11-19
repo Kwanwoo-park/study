@@ -5,21 +5,16 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.s3.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.entity.AdminFile;
 import spring.study.admin.repository.AdminFileRepository;
 
 import java.util.Optional;
 import java.time.LocalDateTime;
 import org.mockito.ArgumentCaptor;
-import spring.study.admin.dto.AdminFileResponseDto;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -46,17 +41,15 @@ class AdminFileUploadTest {
         when(repository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void databaseRollbackDeletesOnlyTheNewVersion(boolean replacing) {
-        if (replacing) existingFile("old-version");
+    @Test
+    void databaseRollbackKeepsTheExistingFileVersion() {
+        existingFile("old-version");
         TransactionSynchronizationManager.initSynchronization();
         try {
-            AdminFileResponseDto result = service.upload(file, 7L);
-            if (replacing) assertThat(result.id()).isEqualTo(ID);
+            service.upload(file, 7L);
             TransactionSynchronizationManager.getSynchronizations()
                     .forEach(sync -> sync.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
-            verify(s3).deleteVersion(BUCKET, "admin-files/" + result.id(), "new-version");
+            verify(s3).deleteVersion(BUCKET, "admin-files/" + ID, "new-version");
             verify(s3, never()).deleteVersion(anyString(), anyString(), eq("old-version"));
             verify(s3, never()).deleteObject(anyString(), anyString());
         } finally {

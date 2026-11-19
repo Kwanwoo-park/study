@@ -15,6 +15,7 @@ import spring.study.memo.dto.MemoResponseDto;
 import spring.study.memo.dto.MemoSummaryDto;
 import spring.study.memo.dto.MemoDraft;
 import spring.study.memo.entity.Memo;
+import spring.study.memo.entity.MemoColor;
 import spring.study.memo.repository.MemoRepository;
 import spring.study.common.exception.BusinessStateException;
 import spring.study.common.exception.ResourceNotFoundException;
@@ -31,7 +32,7 @@ import java.util.UUID;
 public class MemoService {
     private final MemoRepository memoRepository;
 
-    public MemoPageDto list(Member member, String query, boolean pinnedOnly, int page) {
+    public MemoPageDto list(Member member, String query, boolean pinnedOnly, MemoColor color, int page) {
         requireMember(member);
 
         String keyword = query == null ? "" : query.strip().toLowerCase(Locale.ROOT);
@@ -41,7 +42,7 @@ public class MemoService {
 
         String pattern = "%" + keyword.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
         PageRequest pageable = PageRequest.of(Math.max(page, 0), 18, Sort.by(Sort.Order.desc("pinned"), Sort.Order.desc("updateTime"), Sort.Order.desc("id")));
-        Page<MemoSummaryDto> result = memoRepository.search(member, keyword, pattern, pinnedOnly, pageable);
+        Page<MemoSummaryDto> result = memoRepository.search(member, keyword, pattern, pinnedOnly, color, pageable);
 
         return new MemoPageDto(result.getContent(), result.getNumber(), result.getTotalPages(), result.getTotalElements(), memoRepository.countByOwner(member), memoRepository.countByOwnerAndPinnedTrue(member));
     }

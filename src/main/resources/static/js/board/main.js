@@ -25,7 +25,7 @@ async function loadMorePosts() {
         const data = await res.json();
 
         if (data['result'] > 0) {
-            fnDraw(data)
+            renderPosts(data);
 
             nextCursor = data.nextCursor;
 
@@ -46,205 +46,112 @@ async function loadMorePosts() {
     }
 }
 
-function fnDraw(data) {
-    data.boards.forEach(board => {
-        const main = document.createElement('div');
-        main.className = 'main';
-
-        const profile = document.createElement('div');
-        profile.className = 'profile';
-        profile.onclick = function() {
-            fnProfile(board.member.email)
-        };
-
-        const pro_img = document.createElement('img');
-        pro_img.className = 'profile-img';
-        pro_img.src = board.member.profile;
-
-        const name = document.createElement('span');
-        name.className = 'name';
-        name.innerText = board.member.name;
-
-        profile.append(pro_img);
-        profile.append(name);
-
-        const main_image_div = document.createElement('div');
-        main_image_div.className = 'main-image-wrapper'
-
-        if (board.img.length > 1) {
-            const button = document.createElement('button')
-            button.className = 'arrow is-invisible';
-            button.type = 'button'
-            button.id = 'left' + board.id;
-            button.onclick = function() {
-                fnLeft(board.id, board.img);
-            }
-            button.innerText = '‹'
-            main_image_div.append(button)
-        }
-
-        const imageCount = board.img.length;
-
-        const main_img = document.createElement('img')
-        main_img.className = 'main-image';
-        main_img.id = 'main_img' + board.id;
-        main_img.addEventListener('dblclick', () => {
-            fnOnlyLike(board.id)
-        })
-
-        if (board.img.length == 0)
-            main_img.src = "/img/IMG_0111.jpeg";
-        else
-            main_img.src = board.img[0].imgSrc;
-
-        main_image_div.append(main_img);
-
-        preloadAdjacentImages(board.img, 0);
-
-        const img_idx = document.createElement('input')
-        img_idx.type = 'hidden'
-        img_idx.id = 'img' + board.id;
-        img_idx.value = 0;
-
-        main_image_div.append(img_idx)
-
-        if (board.img.length > 1) {
-            const button = document.createElement('button')
-            button.className = 'arrow';
-            button.type = 'button'
-            button.id = 'right' + board.id;
-            button.onclick = function() {
-                fnRight(board.id, board.img);
-            }
-            button.innerText = '›'
-            main_image_div.append(button);
-
-            const imageCounter = document.createElement('span');
-            imageCounter.className = 'image-counter';
-            imageCounter.id = 'imageCounter' + board.id;
-            imageCounter.innerText = `1 / ${imageCount}`;
-            main_image_div.append(imageCounter);
-        }
-
-        const info = document.createElement('div');
-        info.className = 'info'
-
-        const icon_div = document.createElement('div')
-        icon_div.className = 'icon-box'
-
-        const img_like = document.createElement('img')
-        img_like.className = 'icon';
-        img_like.id = 'like' + board.id;
-        img_like.onclick = function() {
-            fnLike(board.id);
-        }
-
-        if (data.like[board.id])
-            img_like.src = "/img/ic_favorite.png"
-        else
-            img_like.src = "/img/ic_favorite_border.png";
-
-        const img_comment = document.createElement('img')
-        img_comment.className = 'icon';
-        img_comment.id = 'comment' + board.id;
-        img_comment.onclick = function() {
-            fnComment(board.id);
-        }
-        img_comment.src = '/img/ic_chat_black.png';
-
-        icon_div.append(img_like)
-        icon_div.append(img_comment)
-
-        if (board.member.email !== data.email) {
-            const report_button = document.createElement('button');
-            report_button.type = 'button';
-            report_button.className = 'btn btn-outline-danger btn-sm report-button';
-            report_button.innerText = '신고';
-            report_button.onclick = function() {
-                fnReportBoard(board.id);
-            };
-            icon_div.append(report_button);
-        }
-
-        const like_div = document.createElement('div')
-        like_div.className = 'like'
-        like_div.onclick = function() {
-            fnHref(board.id);
-        }
-
-        const label1 = document.createElement('label')
-        label1.className = 'form-label'
-        label1.innerText = '좋아요';
-
-        const label2 = document.createElement('label')
-        label2.className = 'form-label'
-        label2.id = 'like_cnt' + board.id;
-        label2.innerText = data.like_count[board.id];
-
-        const label3 = document.createElement('label')
-        label3.className = 'form-label'
-        label3.innerText = '개';
-
-        like_div.append(label1)
-        like_div.append(label2)
-        like_div.append(label3)
-
-        info.append(icon_div)
-        info.append(like_div)
-
-        const name2 = document.createElement('span');
-        name2.className = 'name';
-        name2.innerText = board.member.name;
-
-        info.append(name2)
-
-        const pre = document.createElement('pre');
-        pre.textContent = board.content;
-
-        info.append(pre)
-
-        const comment_div = document.createElement('div')
-        comment_div.className = 'comment'
-        comment_div.onclick = function() {
-            fnComment(board.id)
-        }
-
-        const label4 = document.createElement('label')
-        label4.className = 'form-label'
-        label4.innerText = '댓글';
-
-        const label5 = document.createElement('label')
-        label5.className = 'form-label'
-        label5.id = 'comment_cnt' + board.id;
-        label5.innerText = data.comment_count[board.id];
-
-        const label6 = document.createElement('label')
-        label6.className = 'form-label'
-        label6.innerText = '개 모두 보기';
-
-        comment_div.append(label4)
-        comment_div.append(label5)
-        comment_div.append(label6)
-
-        info.append(comment_div)
-
-        const date = new Date(board.registerTime)
-        let temp = date.getFullYear() + "년 " +
-                    (date.getMonth() + 1) + "월 " +
-                    date.getDate() + "일"
-
-        const date_label = document.createElement('label')
-        date_label.className = 'date'
-        date_label.innerText = temp;
-
-        info.append(date_label)
-
-        main.append(profile);
-        main.append(main_image_div);
-        main.append(info)
-
-        container.appendChild(main);
-        initBoardContent(pre);
+function renderPosts(data) {
+    for (const board of data.boards) {
+        const post = postElement('div', 'main');
+        const content = postElement('pre', '', board.content);
+        post.append(createPostProfile(board.member), createPostGallery(board), createPostInfo(board, data, content));
+        container.append(post);
+        initBoardContent(content);
         enableBoardImageSwipe(board.id, board.img);
-    });
+    }
+}
+
+function createPostProfile(member) {
+    const profile = postElement('div', 'profile');
+    const image = postElement('img', 'profile-img');
+    image.src = member.profile;
+    profile.onclick = () => fnProfile(member.email);
+    profile.append(image, postElement('span', 'name', member.name));
+    return profile;
+}
+
+function createPostGallery(board) {
+    const gallery = postElement('div', 'main-image-wrapper');
+    const image = postElement('img', 'main-image');
+    image.id = 'main_img' + board.id;
+    image.src = board.img.length ? board.img[0].imgSrc : '/img/IMG_0111.jpeg';
+    image.addEventListener('dblclick', () => fnOnlyLike(board.id));
+
+    const index = document.createElement('input');
+    index.type = 'hidden';
+    index.id = 'img' + board.id;
+    index.value = 0;
+    gallery.append(image, index);
+
+    if (board.img.length > 1) {
+        const previous = galleryArrow('left' + board.id, '‹', () => fnLeft(board.id, board.img));
+        previous.classList.add('is-invisible');
+        const next = galleryArrow('right' + board.id, '›', () => fnRight(board.id, board.img));
+        const counter = postElement('span', 'image-counter', `1 / ${board.img.length}`);
+        counter.id = 'imageCounter' + board.id;
+        gallery.prepend(previous);
+        gallery.append(next, counter);
+    }
+
+    preloadAdjacentImages(board.img, 0);
+    return gallery;
+}
+
+function galleryArrow(id, text, onClick) {
+    const button = postElement('button', 'arrow', text);
+    button.type = 'button';
+    button.id = id;
+    button.onclick = onClick;
+    return button;
+}
+
+function createPostInfo(board, data, content) {
+    const id = board.id;
+    const info = postElement('div', 'info');
+    const date = new Date(board.registerTime);
+    const registration = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+
+    info.append(
+        createPostActions(board, data.email, data.like[id]),
+        createPostCount('like', '좋아요', 'like_cnt' + id, data.like_count[id], '개', () => fnHref(id)),
+        postElement('span', 'name', board.member.name),
+        content,
+        createPostCount('comment', '댓글', 'comment_cnt' + id, data.comment_count[id], '개 모두 보기', () => fnComment(id)),
+        postElement('label', 'date', registration)
+    );
+    return info;
+}
+
+function createPostActions(board, viewerEmail, liked) {
+    const actions = postElement('div', 'icon-box');
+    const like = postElement('img', 'icon');
+    like.id = 'like' + board.id;
+    like.src = liked ? '/img/ic_favorite.png' : '/img/ic_favorite_border.png';
+    like.onclick = () => fnLike(board.id);
+
+    const comment = postElement('img', 'icon');
+    comment.id = 'comment' + board.id;
+    comment.src = '/img/ic_chat_black.png';
+    comment.onclick = () => fnComment(board.id);
+    actions.append(like, comment);
+
+    if (board.member.email !== viewerEmail) {
+        const report = postElement('button', 'btn btn-outline-danger btn-sm report-button', '신고');
+        report.type = 'button';
+        report.onclick = () => fnReportBoard(board.id);
+        actions.append(report);
+    }
+    return actions;
+}
+
+function createPostCount(className, label, id, count, suffix, onClick) {
+    const row = postElement('div', className);
+    const total = postElement('label', 'form-label', count);
+    total.id = id;
+    row.onclick = onClick;
+    row.append(postElement('label', 'form-label', label), total, postElement('label', 'form-label', suffix));
+    return row;
+}
+
+function postElement(tag, className, text = '') {
+    const element = document.createElement(tag);
+    element.className = className;
+    element.textContent = text;
+    return element;
 }

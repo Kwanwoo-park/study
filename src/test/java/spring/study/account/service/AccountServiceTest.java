@@ -1,8 +1,6 @@
 package spring.study.account.service;
 
 import org.junit.jupiter.api.Test;
-import spring.study.account.dto.AccountTranDto;
-import spring.study.account.dto.AccountResponseDto;
 import spring.study.account.dto.AccountCreateRequestDto;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountType;
@@ -17,9 +15,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.List;
 
 class AccountServiceTest {
     private final AccountRepository accountRepository = mock(AccountRepository.class);
@@ -38,11 +33,6 @@ class AccountServiceTest {
         when(accountRepository.existsByMemberAndAccountTypeAndAccountStatus(
                 member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE
         )).thenReturn(true);
-        when(accountRepository.findByMemberAndAccountTypeAndAccountStatus(
-                member, AccountType.DEPOSIT_WITHDRAWAL, AccountStatus.ACTIVE
-        )).thenReturn(List.of(checking));
-        when(accountRepository.findByAccount(checking.getAccount()))
-                .thenReturn(java.util.Optional.of(checking));
         AccountCreateRequestDto request = new AccountCreateRequestDto();
         request.setAccountType(AccountType.INSTALLMENT_SAVINGS);
         request.setMonthlySavingsAmount(100_000L);
@@ -59,28 +49,4 @@ class AccountServiceTest {
         verify(accountRepository, never()).save(any(Account.class));
     }
 
-    private Account account(String number, long amount, AccountType type, Member member) {
-        return Account.builder()
-                .account(number)
-                .amount(amount)
-                .name(number)
-                .accountType(type)
-                .member(member)
-                .build();
-    }
-
-    private void mockLockedAccounts(Account first, Account second) {
-        when(accountRepository.findByAccount(first.getAccount()))
-                .thenReturn(java.util.Optional.of(first));
-        when(accountRepository.findByAccount(second.getAccount()))
-                .thenReturn(java.util.Optional.of(second));
-    }
-
-    private AccountTranDto transferRequest(Account withdrawal, Account deposit, long amount) {
-        AccountTranDto dto = new AccountTranDto();
-        dto.setAccount(withdrawal.getAccount());
-        dto.setTranAccount(deposit.getAccount());
-        dto.setAmount(amount);
-        return dto;
-    }
 }

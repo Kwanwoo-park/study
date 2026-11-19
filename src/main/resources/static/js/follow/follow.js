@@ -10,18 +10,12 @@ window.onload = function() {
     loadMoreFollow(true);
 };
 
-followContainer.addEventListener('scroll', () => {
-    if (followContainer.scrollTop + followContainer.clientHeight >= followContainer.scrollHeight - 10) loadMoreFollow();
+followList.addEventListener('scroll', () => {
+    if (followList.scrollTop + followList.clientHeight >= followList.scrollHeight - 10) loadMoreFollow();
 });
 followList.addEventListener('click', event => {
     const button = event.target.closest('[data-action="follow"]');
     if (button) toggleMemberFollow(button);
-});
-
-window.addEventListener('scroll', () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
-        loadMoreFollow();
-    }
 });
 
 async function loadMoreFollow(reset = false) {

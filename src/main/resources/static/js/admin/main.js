@@ -2,10 +2,7 @@ window.onload = async function() {
     await loadSystemStatus();
     await loadSystemIncidents();
     await loadTokenSessions();
-    await loadUserStatus();
-    await loadNewUser();
-    await loadNewBoard();
-    await loadActiveChatting();
+    await loadActivityCards();
     await loadRecentReports();
     setInterval(loadSystemStatus, 30000);
     setInterval(loadSystemIncidents, 30000);
@@ -116,22 +113,26 @@ function createIncidentCard(incident) {
     return card;
 }
 
-async function acknowledgeSystemIncident(incidentId) {
+async function acknowledgeIncidents(path, failureMessage) {
     try {
-        const response = await fetch(`/api/admin/system/incidents/${encodeURIComponent(incidentId)}/acknowledge`, {
+        const response = await fetch('/api/admin/system/incidents' + path, {
             method: 'PATCH',
             credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok || data.result < 0) {
-            alert(data.message || '장애 기록을 확인 처리하지 못했습니다.');
+            alert(data.message || failureMessage);
             return;
         }
         await loadSystemIncidents();
     } catch (error) {
         console.error(error);
-        alert('장애 기록을 확인 처리하지 못했습니다.');
+        alert(failureMessage);
     }
+}
+
+function acknowledgeSystemIncident(incidentId) {
+    return acknowledgeIncidents(`/${encodeURIComponent(incidentId)}/acknowledge`, '장애 기록을 확인 처리하지 못했습니다.');
 }
 
 async function acknowledgeAllSystemIncidents() {
@@ -146,19 +147,7 @@ async function acknowledgeAllSystemIncidents() {
     button.innerText = '처리 중...';
 
     try {
-        const response = await fetch('/api/admin/system/incidents/acknowledge-all', {
-            method: 'PATCH',
-            credentials: 'include',
-        });
-        const data = await response.json();
-        if (!response.ok || data.result < 0) {
-            alert(data.message || '장애 기록을 전체 확인 처리하지 못했습니다.');
-            return;
-        }
-        await loadSystemIncidents();
-    } catch (error) {
-        console.error(error);
-        alert('장애 기록을 전체 확인 처리하지 못했습니다.');
+        await acknowledgeIncidents('/acknowledge-all', '장애 기록을 전체 확인 처리하지 못했습니다.');
     } finally {
         button.innerText = originalText;
         button.disabled = Number(button.dataset.unacknowledgedCount || 0) === 0;
@@ -208,45 +197,41 @@ function renderTokenSessions(sessions) {
     });
 }
 
-async function loadUserStatus() {
-    const res = await fetch(`/api/admin/member/online`, {
-        credentials: "include",
-    });
-    const data = await res.json();
-
-    if (data.count >= 0)
-        fnDraw(data);
+async function loadActivityCards() {
+    await loadActivityCard('/member/online', 'user-status', {
+        label: 'LIVE',
+        title: '현재 접속자',
+        unit: '명',
+        emptyMessage: '현재 접속 중인 사용자가 없습니다.',
+    }, memberActivity);
+    await loadActivityCard('/member/new', 'new-user', {
+        label: 'LAST 24 HOURS',
+        title: '신규 가입자',
+        unit: '명',
+        emptyMessage: '최근 가입한 사용자가 없습니다.',
+    }, memberActivity);
+    await loadActivityCard('/board/new', 'new-board', {
+        label: 'LAST 7 DAYS',
+        title: '신규 게시글',
+        unit: '건',
+        emptyMessage: '최근 등록된 게시글이 없습니다.',
+    }, boardActivity);
+    await loadActivityCard('/chat/active', 'active-chat-room', {
+        label: 'LAST 1 HOUR',
+        title: '활성 채팅방',
+        unit: '개',
+        emptyMessage: '최근 활성화된 채팅방이 없습니다.',
+    }, chatActivity);
 }
 
-async function loadNewUser() {
-    const res = await fetch(`/api/admin/member/new`, {
-        credentials: "include",
-    });
-    const data = await res.json();
-
-    if (data.count >= 0)
-        fnNewUserDraw(data);
-}
-
-async function loadNewBoard() {
-    const res = await fetch(`/api/admin/board/new`, {
-        credentials: "include",
-    });
-    const data = await res.json();
-
-    if (data.count >= 0)
-        fnNewBoardDraw(data);
-}
-
-async function loadActiveChatting() {
-    const res = await fetch(`/api/admin/chat/active`, {
-        credentials: "include",
-    });
-
-    const data = await res.json();
-
-    if (data.count >= 0)
-        fnChattingActive(data);
+async function loadActivityCard(path, elementId, config, toItem) {
+    const response = await fetch('/api/admin' + path, {credentials: 'include'});
+    const data = await response.json();
+    if (data.count >= 0) {
+        renderActivityCard(document.getElementById(elementId), {
+            ...config, count: data.count, items: data.list.map(toItem),
+        });
+    }
 }
 
 async function loadRecentReports() {
@@ -299,80 +284,34 @@ function fnRecentReportDraw(reports) {
     });
 }
 
-function fnDraw(data) {
-    const userDiv = document.getElementById('user-status');
-
-    renderActivityCard(userDiv, {
-        label: 'LIVE',
-        title: '현재 접속자',
-        count: data.count,
-        unit: '명',
-        emptyMessage: '현재 접속 중인 사용자가 없습니다.',
-        items: data.list.map(member => ({
-            badge: getInitial(member.name),
-            imageUrl: member.profile,
-            imageAlt: `${member.name} 프로필`,
-            title: member.name,
-            description: member.email
-        }))
-    });
+function memberActivity(member) {
+    return {
+        badge: getInitial(member.name),
+        imageUrl: member.profile,
+        imageAlt: `${member.name} 프로필`,
+        title: member.name,
+        description: member.email,
+    };
 }
 
-function fnNewUserDraw(data) {
-    const newUserDiv = document.getElementById('new-user');
-
-    renderActivityCard(newUserDiv, {
-        label: 'LAST 24 HOURS',
-        title: '신규 가입자',
-        count: data.count,
-        unit: '명',
-        emptyMessage: '최근 가입한 사용자가 없습니다.',
-        items: data.list.map(member => ({
-            badge: getInitial(member.name),
-            imageUrl: member.profile,
-            imageAlt: `${member.name} 프로필`,
-            title: member.name,
-            description: member.email
-        }))
-    });
+function boardActivity(board) {
+    return {
+        badge: '#',
+        imageUrl: board.imageUrl,
+        imageAlt: `게시글 #${board.id} 대표 이미지`,
+        title: `게시글 #${board.id}`,
+        description: `작성자 · ${board.memberName}`,
+        onClick: () => fnBoardMove(board.id),
+    };
 }
 
-function fnNewBoardDraw(data) {
-    const newBoardDiv = document.getElementById('new-board');
-
-    renderActivityCard(newBoardDiv, {
-        label: 'LAST 7 DAYS',
-        title: '신규 게시글',
-        count: data.count,
-        unit: '건',
-        emptyMessage: '최근 등록된 게시글이 없습니다.',
-        items: data.list.map(board => ({
-            badge: '#',
-            imageUrl: board.imageUrl,
-            imageAlt: `게시글 #${board.id} 대표 이미지`,
-            title: `게시글 #${board.id}`,
-            description: `작성자 · ${board.memberName}`,
-            onClick: () => fnBoardMove(board.id)
-        }))
-    });
-}
-
-function fnChattingActive(data) {
-    const activeChattingDiv = document.getElementById('active-chat-room');
-
-    renderActivityCard(activeChattingDiv, {
-        label: 'LAST 1 HOUR',
-        title: '활성 채팅방',
-        count: data.count,
-        unit: '개',
-        emptyMessage: '최근 활성화된 채팅방이 없습니다.',
-        items: data.list.map(room => ({
-            badge: 'C',
-            title: `채팅방 #${room.id}`,
-            description: room.lastMessage ? `최근 메시지 · ${room.lastMessage}` : '아직 메시지가 없습니다.',
-            onClick: () => fnChatRoomMove(room.roomId)
-        }))
-    });
+function chatActivity(room) {
+    return {
+        badge: 'C',
+        title: `채팅방 #${room.id}`,
+        description: room.lastMessage ? `최근 메시지 · ${room.lastMessage}` : '아직 메시지가 없습니다.',
+        onClick: () => fnChatRoomMove(room.roomId),
+    };
 }
 
 function renderActivityCard(container, config) {

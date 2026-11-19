@@ -4,7 +4,7 @@
 
 ## 화면과 API
 
-- 화면: `/todo` (`/todo/list`도 동일). 회원 상세의 `To-do list` 메뉴와 일기 목록에서 접근합니다.
+- 화면: `/todo` (`/todo/list`도 동일). 회원 상세의 `To-do list` 메뉴와 메모 화면 상단의 `To-do list` 버튼에서 접근합니다.
 - 미완료·완료 구역을 함께 표시하며 각각 20개씩 페이지를 나눕니다. 미완료는 생성 시각 내림차순, 완료는 완료 시각 내림차순으로 표시합니다.
 - `GET /api/todo?page=0&size=20`: 본인 목록. `completed=true/false`로 완료 상태를 필터링합니다.
 - `GET /api/todo/{id}`: 본인의 할 일 한 건 조회.

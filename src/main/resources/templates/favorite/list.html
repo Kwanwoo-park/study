@@ -1,31 +1,29 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Favorite List</title>
+  <title>좋아요 누른 사람들</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
-  <link rel="stylesheet" href="/css/common/common.css?v=20260830">
+  <link rel="stylesheet" href="/css/common/common.css?v=20261118-standalone">
   <link rel="stylesheet" href="/css/favorite/list.css?v=20260830">
 </head>
-<body class="favorite-list-page" th:classappend="${isMobile} ? ' mobile-view' : ''">
-<div>
-  <th:block th:replace="~{fragments/common :: pageBack(@{/board/view(id=${boardId})})}"></th:block>
-  <h4>좋아요 누른 사람들</h4>
-    <div class="container" th:attr="data-board-id=${boardId},data-member-email=${email}">
-      <ul class="list-group-flush" id="favoriteList"></ul>
-    </div>
-</div>
+<body class="standalone-page standalone-list-page favorite-list-page" th:classappend="${isMobile} ? ' mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="container" th:attr="data-board-id=${boardId},data-member-email=${email}">
+  <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+  <header class="standalone-page-header">
+    <th:block th:replace="~{fragments/common :: pageBack(@{/board/view(id=${boardId})})}"></th:block>
+    <h1 class="simple-page-title">좋아요 누른 사람들</h1>
+  </header>
+  <ul class="list-group-flush standalone-list" id="favoriteList"></ul>
+</main>
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/follow/actions.js?v=20261116"></script>
-<script src="/js/favorite/list.js?v=20261116"></script>
+<script src="/js/favorite/list.js?v=20261118-standalone"></script>
+<script src="/js/common/common.js?v=20261116-navigation"></script>
+<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </body>
-<footer>
-  <div class="card">
-    <div class="card-body text-center">
-      <p class="card-text"><small class="text-muted">Copyright Park Kwanwoo. All Rights Reserved.</small></p>
-    </div>
-  </div>
-</footer>
 </html>

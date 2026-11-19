@@ -2,6 +2,22 @@
     align-items: center;
 }
 
+.board-view-page .container > * {
+    flex-shrink: 0;
+}
+
+body.dark-mode .icon[src$="ic_chat_black.png"],
+body.dark-mode .icon[src$="ic_favorite_border.png"] {
+    filter: invert(1);
+}
+
+body.dark-mode .left,
+body.dark-mode .right {
+    color: var(--text-primary);
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+}
+
 .profile {
     display: flex;
     align-items: center;

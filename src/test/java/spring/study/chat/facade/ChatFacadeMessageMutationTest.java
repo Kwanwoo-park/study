@@ -65,15 +65,13 @@ class ChatFacadeMessageMutationTest {
 
         verify(messagingTemplate).convertAndSend(
                 eq("/sub/chat/room/room-1"),
-                any(ChatMessageEventDto.class)
+                argThat((ChatMessageEventDto event) -> event.action().equals("DELETED_FOR_ALL")
+                        && event.id().equals(message.getId())
+                        && event.message().equals("삭제된 메시지입니다"))
         );
         verify(messageImgService, never()).deleteMessage(any());
         verify(imageS3Service, never()).deleteImg(any());
         assertThat(new ChatMessageResponseDto(message).getMessage()).isEqualTo("삭제된 메시지입니다");
-        assertThat(ChatMessageEventDto.deletedForAll(message).message()).isEqualTo("삭제된 메시지입니다");
-        message.deleteForAll(true);
-        assertThat(new ChatMessageResponseDto(message).getMessage()).isEqualTo("관리자에 의해 삭제된 메시지입니다");
-        assertThat(ChatMessageEventDto.deletedForAll(message).message()).isEqualTo("관리자에 의해 삭제된 메시지입니다");
     }
 
     private ChatMessage message(Member owner) {

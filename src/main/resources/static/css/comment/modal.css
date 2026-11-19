@@ -55,7 +55,7 @@
 
 .comment-modal-item {
     padding: 12px 0;
-    border-bottom: 1px solid #e9e9e9;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .comment-modal-item:last-child {
@@ -71,13 +71,16 @@
 .comment-modal-profile-img {
     width: 30px;
     height: 30px;
+    flex: none;
     border-radius: 50%;
+    object-fit: cover;
 }
 
 .comment-modal-profile-link {
     color: inherit;
     text-decoration: none;
     font-weight: bold;
+    overflow-wrap: anywhere;
 }
 
 .comment-modal-actions {
@@ -101,22 +104,32 @@
 .comment-modal-text {
     margin: 8px 0;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .comment-modal-edit {
-    display: none;
     margin: 8px 0;
 }
 
 .comment-modal-reply-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     font-size: 12px;
-    color: gray;
+    color: var(--text-secondary);
 }
 
-.comment-modal-reply-button {
+.comment-text-button {
+    padding: 2px 0;
+    background: transparent;
+    color: inherit;
+    border: 0;
+    font: inherit;
     cursor: pointer;
+}
+
+.comment-text-button:hover {
+    text-decoration: underline;
 }
 
 .comment-modal-reply-list {
@@ -137,11 +150,13 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
 }
 
 .comment-modal-reply-text {
     margin: 0;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .comment-modal-compose {

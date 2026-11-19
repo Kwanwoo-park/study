@@ -51,7 +51,7 @@ public class KafkaClusterRepository {
         List<String> warnings = new ArrayList<>();
         List<String> groupIds = List.of(group, group + ".dead-letter-store");
         DescribeClusterResult cluster = admin.describeCluster();
-        Map<String, KafkaFuture<TopicDescription>>  descriptions = admin.describeTopics(KafkaTopics.ALL).topicNameValues();
+        Map<String, KafkaFuture<TopicDescription>> descriptions = admin.describeTopics(KafkaTopics.ALL).topicNameValues();
         List<ConfigResource> resources = KafkaTopics.ALL.stream().map(name -> new ConfigResource(ConfigResource.Type.TOPIC, name)).toList();
         Map<ConfigResource, KafkaFuture<Config>> configs = admin.describeConfigs(resources).values();
         Map<String, KafkaFuture<ConsumerGroupDescription>> groups = admin.describeConsumerGroups(groupIds).describedGroups();
@@ -59,75 +59,22 @@ public class KafkaClusterRepository {
 
         groupIds.forEach(id -> offsetQueries.put(id, admin.listConsumerGroupOffsets(id).partitionsToOffsetAndMetadata()));
 
-        Map<String, TopicDescription> topics = new LinkedHashMap<>();
-
-        for (String name : KafkaTopics.ALL) {
-            TopicDescription topic = await(descriptions.get(name), deadline, name + ": 토픽 정보를 조회할 수 없습니다.", warnings);
-            if (topic != null) topics.put(name, topic);
-        }
-
-        Map<TopicPartition, OffsetSpec> earliest = new HashMap<>();
-        Map<TopicPartition, OffsetSpec> latest = new HashMap<>();
-
-        topics.values().forEach(topic -> topic.partitions().forEach(partition -> {
-            TopicPartition key = new TopicPartition(topic.name(), partition.partition());
-            earliest.put(key, OffsetSpec.earliest());
-            latest.put(key, OffsetSpec.latest());
-        }));
-
-        KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>> startsQuery = earliest.isEmpty() ? null : admin.listOffsets(earliest).all();
-        KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>> endsQuery = latest.isEmpty() ? null : admin.listOffsets(latest).all();
-        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> starts = earliest.isEmpty() ? Map.of() : await(startsQuery, deadline, "시작 오프셋을 조회할 수 없습니다.", warnings);
-        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> ends = latest.isEmpty() ? Map.of() : await(endsQuery, deadline, "최신 오프셋을 조회할 수 없습니다.", warnings);
+        Map<String, TopicDescription> topics = readTopics(descriptions, deadline, warnings);
+        List<TopicPartition> partitions = topics.values().stream()
+                .flatMap(topic -> topic.partitions().stream().map(
+                        partition -> new TopicPartition(topic.name(), partition.partition())))
+                .toList();
+        KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>> startsQuery = queryOffsets(partitions, OffsetSpec.earliest());
+        KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>> endsQuery = queryOffsets(partitions, OffsetSpec.latest());
+        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> starts = await(startsQuery, deadline, "시작 오프셋을 조회할 수 없습니다.", warnings);
+        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> ends = await(endsQuery, deadline, "최신 오프셋을 조회할 수 없습니다.", warnings);
 
         String clusterId = await(cluster.clusterId(), deadline, "클러스터 ID를 조회할 수 없습니다.", warnings);
         Collection<Node> nodes = await(cluster.nodes(), deadline, "브로커 목록을 조회할 수 없습니다.", warnings);
         Node controller = await(cluster.controller(), deadline, "컨트롤러를 조회할 수 없습니다.", warnings);
-        Integer controllerId = controller == null || controller.id() < 0 ? null : controller.id();
-        List<KafkaTopicSnapshot> snapshots = new ArrayList<>();
-
-        for (String name : KafkaTopics.ALL) {
-            TopicDescription topic = topics.get(name);
-
-            if (topic == null) {
-                snapshots.add(new KafkaTopicSnapshot(name, List.of(), Map.of(), "토픽 정보를 조회할 수 없습니다."));
-                continue;
-            }
-
-            Config config = await(configs.get(new ConfigResource(ConfigResource.Type.TOPIC, name)), deadline, name + ": 보관 정책을 조회할 수 없습니다.", warnings);
-            Map<String, String> visible = new LinkedHashMap<>();
-
-            if (config != null) {
-                for (String key : VISIBLE_CONFIGS) {
-                    ConfigEntry entry = config.get(key);
-
-                    if (entry != null && !entry.isSensitive() && entry.value() != null)
-                        visible.put(key, entry.value());
-                }
-            }
-
-            List<KafkaPartitionHealth> partitions = topic.partitions().stream()
-                    .sorted(Comparator.comparingInt(TopicPartitionInfo::partition))
-                    .map(partition -> {
-                        TopicPartition key = new TopicPartition(name, partition.partition());
-                        Node leader = partition.leader();
-                        return new KafkaPartitionHealth(partition.partition(), leader == null || leader.id() < 0 ? null : leader.id(),
-                                partition.replicas().stream().map(Node::id).toList(),
-                                partition.isr().stream().map(Node::id).toList(), offset(starts, key), offset(ends, key));
-                    }).toList();
-
-            snapshots.add(new KafkaTopicSnapshot(name, partitions, Map.copyOf(visible),
-                    config == null ? "토픽 설정을 조회할 수 없습니다." : null));
-        }
-
-        List<KafkaBrokerInfo> brokers = nodes == null ? List.of() : nodes.stream()
-                .sorted(Comparator.comparingInt(Node::id))
-                .map(node -> new KafkaBrokerInfo(node.id(), node.host(), node.port(), node.rack(),
-                        Objects.equals(controllerId, node.id()),
-                        snapshots.stream().flatMap(topic -> topic.partitions().stream()).filter(p -> Objects.equals(p.leader(), node.id())).count(),
-                        snapshots.stream().flatMap(topic -> topic.partitions().stream()).filter(p -> p.replicas().contains(node.id())).count()))
-                .toList();
-
+        Integer controllerId = nodeId(controller);
+        List<KafkaTopicSnapshot> snapshots = readTopicSnapshots(topics, configs, starts, ends, deadline, warnings);
+        List<KafkaBrokerInfo> brokers = brokerInfo(nodes, controllerId, snapshots);
         List<KafkaConsumerGroupInfo> consumers = new ArrayList<>();
 
         for (String id : groupIds) {
@@ -143,6 +90,82 @@ public class KafkaClusterRepository {
         String error = nodes == null || topics.size() != KafkaTopics.ALL.size() ? QUERY_ERROR : null;
 
         return new KafkaBrokerSnapshot(Instant.now(), error, clusterId, controllerId, brokers, List.copyOf(snapshots), List.copyOf(consumers), lags, totalLag, List.copyOf(warnings));
+    }
+
+    private Map<String, TopicDescription> readTopics(Map<String, KafkaFuture<TopicDescription>> descriptions,
+                                                    long deadline, List<String> warnings) {
+        Map<String, TopicDescription> topics = new LinkedHashMap<>();
+        for (String name : KafkaTopics.ALL) {
+            TopicDescription topic = await(descriptions.get(name), deadline, name + ": 토픽 정보를 조회할 수 없습니다.", warnings);
+            if (topic != null) topics.put(name, topic);
+        }
+        return topics;
+    }
+
+    private KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>> queryOffsets(
+            List<TopicPartition> partitions, OffsetSpec offset) {
+        if (partitions.isEmpty()) return KafkaFuture.completedFuture(Map.of());
+
+        Map<TopicPartition, OffsetSpec> request = new HashMap<>();
+        partitions.forEach(partition -> request.put(partition, offset));
+        return admin.listOffsets(request).all();
+    }
+
+    private List<KafkaTopicSnapshot> readTopicSnapshots(Map<String, TopicDescription> topics,
+                                                       Map<ConfigResource, KafkaFuture<Config>> configs,
+                                                       Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> starts,
+                                                       Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> ends,
+                                                       long deadline, List<String> warnings) {
+        List<KafkaTopicSnapshot> snapshots = new ArrayList<>();
+        for (String name : KafkaTopics.ALL) {
+            TopicDescription topic = topics.get(name);
+            if (topic == null) {
+                snapshots.add(new KafkaTopicSnapshot(name, List.of(), Map.of(), "토픽 정보를 조회할 수 없습니다."));
+                continue;
+            }
+
+            ConfigResource resource = new ConfigResource(ConfigResource.Type.TOPIC, name);
+            Config config = await(configs.get(resource), deadline, name + ": 보관 정책을 조회할 수 없습니다.", warnings);
+            List<KafkaPartitionHealth> partitions = topic.partitions().stream()
+                    .sorted(Comparator.comparingInt(TopicPartitionInfo::partition))
+                    .map(partition -> {
+                        TopicPartition key = new TopicPartition(name, partition.partition());
+                        return new KafkaPartitionHealth(partition.partition(), nodeId(partition.leader()),
+                                partition.replicas().stream().map(Node::id).toList(),
+                                partition.isr().stream().map(Node::id).toList(), offset(starts, key), offset(ends, key));
+                    }).toList();
+            String error = config == null ? "토픽 설정을 조회할 수 없습니다." : null;
+            snapshots.add(new KafkaTopicSnapshot(name, partitions, visibleConfigs(config), error));
+        }
+        return snapshots;
+    }
+
+    private Map<String, String> visibleConfigs(Config config) {
+        if (config == null) return Map.of();
+
+        Map<String, String> visible = new LinkedHashMap<>();
+        for (String key : VISIBLE_CONFIGS) {
+            ConfigEntry entry = config.get(key);
+            if (entry != null && !entry.isSensitive() && entry.value() != null) visible.put(key, entry.value());
+        }
+        return Map.copyOf(visible);
+    }
+
+    private List<KafkaBrokerInfo> brokerInfo(Collection<Node> nodes, Integer controllerId, List<KafkaTopicSnapshot> topics) {
+        if (nodes == null) return List.of();
+
+        List<KafkaPartitionHealth> partitions = topics.stream().flatMap(topic -> topic.partitions().stream()).toList();
+        return nodes.stream()
+                .sorted(Comparator.comparingInt(Node::id))
+                .map(node -> new KafkaBrokerInfo(node.id(), node.host(), node.port(), node.rack(),
+                        Objects.equals(controllerId, node.id()),
+                        partitions.stream().filter(partition -> Objects.equals(partition.leader(), node.id())).count(),
+                        partitions.stream().filter(partition -> partition.replicas().contains(node.id())).count()))
+                .toList();
+    }
+
+    private Integer nodeId(Node node) {
+        return node == null || node.id() < 0 ? null : node.id();
     }
 
     private KafkaConsumerGroupInfo consumer(String id, ConsumerGroupDescription description, Map<TopicPartition, OffsetAndMetadata> committed, List<KafkaTopicSnapshot> topics, List<String> warnings) {

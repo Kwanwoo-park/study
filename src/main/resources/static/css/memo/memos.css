@@ -25,10 +25,10 @@
 .memo-page [hidden] { display: none !important; }
 .memo-symbols { position: absolute; width: 0; height: 0; overflow: hidden; }
 .memo-page svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-.memo-page button, .memo-page input, .memo-page textarea { font: inherit; }
+.memo-page button, .memo-page input, .memo-page textarea, .memo-page select { font: inherit; }
 .memo-page button { cursor: pointer; }
 .memo-page button:disabled { cursor: default; opacity: .45; }
-.memo-page button:focus-visible, .memo-page input:focus-visible, .memo-page textarea:focus-visible { outline: 3px solid var(--memo-accent); outline-offset: 3px; }
+.memo-page button:focus-visible, .memo-page input:focus-visible, .memo-page textarea:focus-visible, .memo-page select:focus-visible { outline: 3px solid var(--memo-accent); outline-offset: 3px; }
 .memo-shell { width: min(1440px, 100%); height: 100vh; height: 100dvh; margin: 0 auto; padding: 0 40px; display: flex; flex-direction: column; }
 .memo-topbar { min-height: 90px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--memo-line); }
 .memo-brand { display: flex; align-items: center; gap: 12px; }
@@ -42,6 +42,7 @@
 .memo-button:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 4px 12px #7460c225; }
 .memo-button-primary { color: #fff; background: #7560c8; }
 .memo-button-soft { color: var(--memo-accent); background: var(--memo-accent-soft); }
+.memo-page a.memo-button { text-decoration: none; }
 .memo-icon-button { width: 38px; min-height: 38px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 9px; background: transparent; color: var(--memo-muted); }
 .memo-icon-button:not(:disabled):hover { color: var(--memo-accent); background: var(--memo-accent-soft); }
 .memo-intro { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 0 26px; }
@@ -70,6 +71,9 @@
 .memo-filters button { min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 5px; border: 0; border-radius: 7px; padding: 6px 12px; background: transparent; color: var(--memo-muted); font-size: 11px; }
 .memo-filters svg { width: 12px; height: 12px; }
 .memo-filters .is-active { color: var(--memo-accent); background: var(--memo-accent-soft); font-weight: 650; }
+.memo-color-filter { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--memo-muted); font-size: 11px; }
+.memo-color-filter span { flex: none; }
+.memo-color-filter select { flex: 1; min-width: 0; min-height: 36px; padding: 6px 10px; border: 1px solid var(--memo-line); border-radius: 7px; background: var(--memo-canvas); color: var(--memo-ink); }
 .memo-list-heading { margin-bottom: 12px; font-size: 10px; color: var(--memo-muted); }
 .memo-list-heading > span:first-child { font-size: 9px; letter-spacing: 1.4px; }
 .memo-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 12px 12px; scrollbar-width: thin; }
@@ -143,11 +147,11 @@
 }
 @media (max-width: 760px) {
     .memo-shell { padding: 0 16px; }
-    .memo-topbar { min-height: 74px; }
+    .memo-topbar { min-height: 74px; flex-wrap: wrap; gap: 8px; padding: 12px 0; }
     .memo-brand-mark { width: 37px; height: 37px; border-radius: 11px; }
     .memo-brand { gap: 9px; }
     .memo-brand strong { font-size: 17px; }
-    .memo-top-actions { gap: 3px; }
+    .memo-top-actions { gap: 3px; margin-left: auto; }
     .memo-top-actions .memo-button { padding: 8px 11px; min-height: 38px; font-size: 12px; }
     .memo-intro { padding: 13px 0 17px; gap: 6px; flex-wrap: wrap; }
     .memo-intro .page-back-nav { margin-bottom: 9px; }

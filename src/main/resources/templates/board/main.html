@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/common/common.css?v=20260903">
     <link rel="stylesheet" href="/css/board/main.css?v=20261011">
     <link rel="stylesheet" href="/css/board/content.css?v=20261011">
-    <link rel="stylesheet" href="/css/comment/modal.css">
+    <link rel="stylesheet" href="/css/comment/modal.css?v=20261118-thread">
     <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
@@ -29,11 +29,12 @@
 	    <script src="/js/lib/bootstrap.min.js"></script>
         <script src="/js/common/image-swipe.js"></script>
 	    <script src="/js/board/common-actions.js?v=20261116-navigation"></script>
-	    <script src="/js/comment/modal.js?v=20261116"></script>
+	    <script src="/js/comment/panel.js?v=20261118-thread"></script>
+	    <script src="/js/comment/modal.js?v=20261118-thread"></script>
         <script src="/js/follow/actions.js?v=20261116"></script>
         <script src="/js/favorite/modal.js?v=20261116"></script>
         <script src="/js/board/content.js?v=20261011"></script>
-	    <script src="/js/board/main.js?v=20261116"></script>
+	    <script src="/js/board/main.js?v=20261118-post-rendering"></script>
 	    <script src="/js/common/common.js?v=20261116-navigation"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

@@ -10,8 +10,8 @@ window.onload = function() {
     loadMoreFavorites(true);
 };
 
-favoriteContainer.addEventListener('scroll', () => {
-    if (favoriteContainer.scrollTop + favoriteContainer.clientHeight >= favoriteContainer.scrollHeight - 10) loadMoreFavorites();
+favoriteList.addEventListener('scroll', () => {
+    if (favoriteList.scrollTop + favoriteList.clientHeight >= favoriteList.scrollHeight - 10) loadMoreFavorites();
 });
 favoriteList.addEventListener('click', event => {
     const button = event.target.closest('[data-action="follow"]');

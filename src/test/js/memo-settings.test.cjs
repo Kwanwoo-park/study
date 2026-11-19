@@ -98,7 +98,8 @@ async function setup({empty = false, patchStatus = 200, dropDraftResponse = fals
             if (url.endsWith('/status')) { stored = {...stored, pending: false}; return response(saveStatus()); }
             if (!url.includes('?')) return response(stored);
             const parameters = new URLSearchParams(url.split('?')[1]);
-            const visible = stored && (parameters.get('pinnedOnly') !== 'true' || stored.pinned);
+            const visible = stored && (parameters.get('pinnedOnly') !== 'true' || stored.pinned)
+                && (!parameters.get('color') || parameters.get('color') === stored.color);
             return response({content: visible ? [{...stored, preview: stored.content}] : [], page: 0,
                 totalPages: visible ? 1 : 0, totalCount: stored ? 1 : 0, pinnedCount: stored?.pinned ? 1 : 0, matchedCount: visible ? 1 : 0});
         },
@@ -151,6 +152,55 @@ test('pin and color save immediately without saving a text draft; manual save us
     assert.equal(ui.node('save').disabled, true);
 });
 
+test('color filtering combines with search and pin filters, resets paging, and preserves the editor without writes', async () => {
+    const ui = await setup();
+    ui.node('content').value = '편집 중인 본문';
+    await ui.node('content').emit('input');
+    ui.node('list-color').value = 'MINT';
+    await ui.node('list-color').emit('change');
+    let params = new URLSearchParams(ui.requests.at(-1).url.split('?')[1]);
+    assert.equal(params.get('color'), 'MINT');
+    assert.equal(params.get('page'), '0');
+    assert.equal(ui.node('list').children.filter(card => card.dataset.id).length, 0);
+    assert.equal(ui.node('content').value, '편집 중인 본문');
+    assert.equal(ui.writes().length, 0);
+
+    await ui.node('filter-pinned').emit('click');
+    await flush();
+    ui.node('search').value = '검색어';
+    await ui.node('search').emit('input');
+    await ui.advance(250);
+    params = new URLSearchParams(ui.requests.at(-1).url.split('?')[1]);
+    assert.equal(params.get('color'), 'MINT');
+    assert.equal(params.get('query'), '검색어');
+    assert.equal(params.get('pinnedOnly'), 'true');
+
+    ui.node('list-color').value = '';
+    await ui.node('list-color').emit('change');
+    assert.equal(new URLSearchParams(ui.requests.at(-1).url.split('?')[1]).has('color'), false);
+    assert.equal(ui.node('content').value, '편집 중인 본문');
+    assert.equal(ui.writes().length, 0);
+});
+
+test('recoloring a memo removes its card from the active color filter but keeps the editor open', async () => {
+    const ui = await setup();
+    ui.node('list-color').value = 'LAVENDER';
+    await ui.node('list-color').emit('change');
+    assert.equal(ui.node('list').children.filter(card => card.dataset.id).length, 1);
+    await ui.colors[1].emit('click');
+    await flush();
+    assert.equal(ui.stored().color, 'MINT');
+    assert.equal(ui.node('list').children.filter(card => card.dataset.id).length, 0);
+    assert.equal(ui.node('form').hidden, false);
+    assert.equal(ui.node('content').value, '저장된 본문');
+    ui.node('list-color').value = 'MINT';
+    await ui.node('list-color').emit('change');
+    assert.equal(ui.node('list').children[0].dataset.color, 'MINT');
+    await ui.node('new').emit('click');
+    assert.equal(ui.colors[1].attributes['aria-pressed'], 'true');
+    assert.equal(ui.writes().length, 1);
+});
+
 test('failed settings save restores controls and keeps the text draft', async () => {
     const ui = await setup({patchStatus: 409});
     ui.node('content').value = '보존할 본문';
@@ -189,7 +239,7 @@ test('changing a new empty memo color creates it once and later pin changes use 
     assert.equal(ui.stored().pinned, true);
 });
 
-test('body debounces for one second, sends only content, and checks DB completion without reloading the list', async () => {
+test('autosave distinguishes temporary and completed saves using plain language without reloading the list', async () => {
     const ui = await setup();
     ui.node('content').value = '자동 저장할 본문';
     await ui.node('content').emit('input');
@@ -200,10 +250,13 @@ test('body debounces for one second, sends only content, and checks DB completio
     assert.equal(ui.writes()[0].payload.content, '자동 저장할 본문');
     assert.equal('color' in ui.writes()[0].payload, false);
     assert.equal(ui.stored().pending, true);
-    assert.match(ui.node('save-state').textContent, /임시 저장됨/);
+    assert.equal(ui.node('save-state').textContent, '임시 저장됨');
+    assert.equal(ui.node('status').textContent, '내용을 임시로 저장했어요. 저장을 마무리하고 있어요.');
+    assert.equal(ui.node('save-label').textContent, '지금 저장');
     assert.equal(ui.requests.filter(request => request.url.includes('?query=')).length, 1);
     await ui.advance(11000);
-    assert.match(ui.node('save-state').textContent, /DB 저장 완료/);
+    assert.equal(ui.node('save-state').textContent, '저장 완료');
+    assert.equal(ui.node('status').textContent, '메모를 저장했어요.');
     assert.equal(ui.requests.filter(request => request.url.includes('?query=')).length, 1);
 });
 

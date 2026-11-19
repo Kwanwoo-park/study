@@ -22,6 +22,8 @@ public class CommentViewController {
         if (member == null) return "redirect:/member/login?error=true&exception=Not Found&url=/comment?id=" + id;
 
         model.addAttribute("member", member.getEmail());
+        model.addAttribute("email", member.getEmail());
+        model.addAttribute("profile", member.getProfile());
         model.addAttribute("boardId", id);
 
         return "comment/list";

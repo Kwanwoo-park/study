@@ -27,7 +27,7 @@ function setup({referrer = 'https://www.kwanwoo.site/board/main', current = 'htt
         listeners.forEach(listener => listener(event));
         return event;
     }
-    return {click, navigated, link, listeners, backCalls: () => backCalls, reload: () => vm.runInContext(script, context)};
+    return {click, navigated, backCalls: () => backCalls};
 }
 
 test('uses browser back for a previous page on the same site, including a clicked arrow child', () => {

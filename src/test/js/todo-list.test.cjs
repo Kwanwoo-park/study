@@ -54,7 +54,8 @@ class Element {
     }
 }
 
-const todo = (id = 1, content = '할 일', completed = false) => ({id, content, completed});
+const todo = (id = 1, content = '할 일', completed = false) => ({id, content, completed,
+    registerTime: '2026-11-17T09:00:00', completedAt: completed ? '2026-11-18T10:00:00' : null});
 const page = (list = [], totalPages = list.length ? 1 : 0, totalElements = list.length) => ({list, totalPages, totalElements});
 
 async function setup(reply = async () => ({body: page()})) {
@@ -111,6 +112,8 @@ test('completion moves a row between independently loaded sections and uncheckin
         if (options.method) {
             const item = items.find(item => item.id === Number(url.split('/')[3]));
             item.completed = JSON.parse(options.body).completed;
+            item.completedAt = null;
+            if (item.completed) item.completedAt = '2026-11-18T11:00:00';
             return {body: {result: item.id, todo: item}};
         }
         const completed = new URLSearchParams(url.split('?')[1]).get('completed') === 'true';
@@ -120,17 +123,22 @@ test('completion moves a row between independently loaded sections and uncheckin
     });
     assert.equal(ui.rows().length, 2);
     assert.equal(ui.rows(true).length, 1);
+    assert.equal(ui.rows()[0].children[1].children.length, 1);
+    assert.equal(ui.rows(true)[0].children[1].children[1].dateTime, '2026-11-18T10:00:00');
     ui.rows()[1].children[0].emit('change');
     await flush();
     assert.equal(ui.rows().length, 1);
     assert.equal(ui.rows(true).length, 2);
     assert.equal(ui.rows(true)[0].children[0].id, 'todo-1');
+    assert.equal(ui.rows(true)[0].children[1].children[1].dateTime, '2026-11-18T11:00:00');
+    assert.match(ui.rows(true)[0].children[1].children[1].textContent, /^완료 · /);
     assert.equal(ui.nodes.get('todoPendingCount').textContent, '1개');
     assert.equal(ui.nodes.get('todoCompletedCount').textContent, '2개');
 
     ui.rows(true)[0].children[0].emit('change');
     await flush();
     assert.deepEqual(ui.rows().map(row => row.children[0].id), ['todo-2', 'todo-1']);
+    assert.equal(ui.rows()[1].children[1].children.length, 1);
     assert.equal(ui.rows(true).length, 1);
     assert.ok(ui.requests.filter(request => !request.options.method).every(request => request.url.includes('size=20&completed=')));
 });

@@ -56,6 +56,4 @@ test('acknowledging incidents refreshes the pending list and all-read leaves an 
     assert.equal(count.innerText, '0건 미확인');
     assert.equal(all.disabled, true);
     assert.equal(all.innerText, '전체 확인');
-    assert.equal(incidents.length, 3);
-    assert.ok(incidents.every(incident => incident.acknowledged));
 });

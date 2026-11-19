@@ -23,6 +23,7 @@ public class FavoriteViewController {
 
         model.addAttribute("boardId", id);
         model.addAttribute("email", member.getEmail());
+        model.addAttribute("profile", member.getProfile());
 
         return "favorite/list";
     }

@@ -44,8 +44,8 @@ public class MemoFacade {
         ));
     }
 
-    public ResponseEntity<?> list(Member member, String query, boolean pinnedOnly, int page) {
-        return ok(memoService.list(member, query, pinnedOnly, page));
+    public ResponseEntity<?> list(Member member, String query, boolean pinnedOnly, MemoColor color, int page) {
+        return ok(memoService.list(member, query, pinnedOnly, color, page));
     }
 
     public ResponseEntity<?> find(Long id, Member member) {
@@ -286,7 +286,7 @@ public class MemoFacade {
         if (draft.deleted())
             throw new ResourceNotFoundException("메모가 삭제되었습니다");
         else if (draft.conflicted())
-            throw new BusinessStateException("DB에 변경된 메모가 있습니다. 내용을 복사한 뒤 저장본을 다시 열어 주세요");
+            throw new BusinessStateException("다른 화면에서 메모가 변경됐어요. 작성한 내용을 복사한 뒤 저장본을 다시 열어 주세요");
         else if ((operationKey == null || !operationKey.equals(draft.operationKey())) && (version == null || version != draft.memo().version()))
             throw new BusinessStateException("다른 화면에서 변경된 메모입니다. 내용을 복사한 뒤 메모를 다시 열어 주세요");
 

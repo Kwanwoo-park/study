@@ -5,22 +5,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.HttpStatus;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.web.server.ResponseStatusException;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.entity.MemberStatus;
 import spring.study.member.repository.MemberRepository;
 import spring.study.sanction.entity.MemberSanction;
 import spring.study.sanction.repository.MemberSanctionRepository;
-import spring.study.board.repository.BoardRepository;
-import spring.study.comment.repository.CommentRepository;
-import spring.study.chat.repository.ChatMessageRepository;
-import spring.study.report.dto.ReportRequestDto;
 import spring.study.report.dto.ReportProcessRequestDto;
-import spring.study.report.dto.ReportResponseDto;
 import spring.study.report.entity.Report;
 import spring.study.report.entity.ReportAction;
 import spring.study.report.entity.ReportReason;
@@ -33,15 +24,12 @@ import spring.study.sanction.service.MemberSanctionService;
 
 import java.util.Optional;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,12 +38,6 @@ class ReportServiceTest {
     private ReportRepository reportRepository;
     @Mock
     private MemberRepository memberRepository;
-    @Mock
-    private BoardRepository boardRepository;
-    @Mock
-    private CommentRepository commentRepository;
-    @Mock
-    private ChatMessageRepository chatMessageRepository;
     @Mock
     private MemberSanctionRepository memberSanctionRepository;
     @Mock
@@ -75,10 +57,6 @@ class ReportServiceTest {
                 org.mockito.Mockito.mock(spring.study.comment.service.CommentService.class),
                 org.mockito.Mockito.mock(spring.study.chat.service.ChatMessageService.class),
                 new MemberSanctionService(memberSanctionRepository, eventPublisher), notificationService);
-    }
-
-    private ReportResponseDto response(org.springframework.http.ResponseEntity<?> response) {
-        return (ReportResponseDto) ((java.util.Map<?, ?>) response.getBody()).get("report");
     }
 
     @Test

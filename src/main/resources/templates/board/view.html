@@ -6,16 +6,19 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
-	<link rel="stylesheet" href="/css/common/common.css?v=20260830">
-	<link rel="stylesheet" href="/css/board/view.css?v=20261011">
+	<link rel="stylesheet" href="/css/common/common.css?v=20261118-standalone">
+	<link rel="stylesheet" href="/css/board/view.css?v=20261118-standalone">
 	<link rel="stylesheet" href="/css/board/content.css?v=20261011">
-	<link rel="stylesheet" href="/css/comment/modal.css">
+	<link rel="stylesheet" href="/css/comment/modal.css?v=20261118-thread">
     <link rel="stylesheet" href="/css/favorite/modal.css">
 </head>
-<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<body class="standalone-page board-view-page" th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
 <button type="button" th:unless="${previous == 0}" id="left" class="left" th:onclick="fnPrevious([[${previous}]])">←</button>
 <button type="button" th:unless="${next == 0}" id="right" class="right" th:onclick="fnNext([[${next}]])">→</button>
 	<div class="container">
+		<th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
 		<th:block th:replace="~{fragments/common :: pageBack('/board/main')}"></th:block>
 		<h1 class="simple-page-title">게시글</h1>
 		<div class="editDiv" th:if="${#strings.equals(board.member.email, member)}">
@@ -91,14 +94,16 @@
             <script src="/js/favorite/modal.js?v=20261116"></script>
 			<script src="/js/common/image-swipe.js"></script>
 			<script src="/js/board/common-actions.js?v=20261116-navigation"></script>
-			<script src="/js/comment/modal.js?v=20261116"></script>
+			<script src="/js/comment/panel.js?v=20261118-thread"></script>
+			<script src="/js/comment/modal.js?v=20261118-thread"></script>
 			<script src="/js/board/content.js?v=20261011"></script>
 			<script src="/js/board/view.js?v=20261116-navigation"></script>
+			<script src="/js/common/common.js?v=20261116-navigation"></script>
 			<script th:if="${board.img.size > 1}" th:inline="javascript">
 				const boardImages = /*[[${board.img}]]*/ [];
 				enableBoardImageSwipe(/*[[${board.id}]]*/ 0, boardImages);
 				preloadAdjacentImages(boardImages, 0);
 			</script>
-	</body>
 	<th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
+	</body>
 </html>

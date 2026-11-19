@@ -19,7 +19,7 @@ class Element {
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const response = (body, status = 200) => ({ok: status < 400, status, json: async () => body});
 const entry = {id: 12, topic: 'topic', partition: 0, offset: 30, status: 'NEW', attempts: 0, replayable: true};
-function setup(respond, overview = () => response({observedAt: null, totalLag: null, warnings: [], topics: [], lags: []})) {
+function setup(respond) {
     const template = fs.readFileSync(path.join(__dirname, '../../main/resources/templates/admin/kafka_operations.html'), 'utf8');
     const ids = [...template.matchAll(/id="kafka-([^"]+)"/g)].map(match => match[1]);
     const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
@@ -29,11 +29,11 @@ function setup(respond, overview = () => response({observedAt: null, totalLag: n
         setInterval: fn => { interval = fn; return 1; }, clearInterval(){},
         fetch: async (url, options) => {
             calls.push({url, options});
-            if (url.endsWith('/overview')) return overview();
+            if (url.endsWith('/overview')) return response({observedAt: null, totalLag: null, warnings: [], topics: [], lags: []});
             return respond(url, options);
         }};
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../main/resources/static/js/admin/kafka-operations.js'), 'utf8'), context);
-    return {elements, calls, document, refresh: () => interval()};
+    return {elements, calls, refresh: () => interval()};
 }
 
 test('Kafka list follows cursors, returns to previous pages, and resets the cursor on filter changes', async () => {
@@ -72,16 +72,3 @@ test('Kafka replay fetches CSRF, prevents duplicate submissions, and displays qu
     assert.equal(app.elements['dead-letters'].children[0].children[0].children[1].textContent, '재발행 대기');
     assert.equal(app.elements.refresh.disabled, false);
 });
-
-const metadata = {
-    clusterId: 'cluster-test', controllerId: 1, observedAt: null, totalLag: null, warnings: [], lags: [],
-    brokers: [{id: 1, host: 'broker.test', port: 9092, controller: true, leaderPartitions: 4, replicaPartitions: 4}],
-    topics: [{topic: 'topic', partitions: 1, configuredPartitions: 1, replicas: 1, underReplicatedPartitions: 0,
-        retentionMs: '604800000', configs: {'cleanup.policy': 'delete'},
-        partitionDetails: [{partition: 0, leader: 1, replicas: [1], inSyncReplicas: [1], startOffset: 0, endOffset: 10}]}],
-    consumerGroups: [{groupId: 'study', state: 'STABLE', memberCount: 1, coordinatorId: 1, assignor: 'range', totalLag: null,
-        members: [{consumerId: 'consumer-1', clientId: 'client-1', host: '/127.0.0.1', assignments: ['topic / 0']}], lags: []}]
-};
-const walk = element => [element, ...element.children.flatMap(walk)];
-const text = element => walk(element).map(child => child.textContent).join(' ');
-const metadataApp = () => setup(() => response({entries: [], nextBeforeId: null}), () => response(metadata));

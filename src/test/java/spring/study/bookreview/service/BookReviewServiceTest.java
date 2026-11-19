@@ -2,29 +2,21 @@ package spring.study.bookreview.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.bookreview.dto.BookReviewRequestDto;
-import spring.study.bookreview.dto.BookReviewResponseDto;
-import spring.study.bookreview.entity.BookReview;
 import spring.study.bookreview.repository.BookReviewRepository;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BookReviewServiceTest {
@@ -60,19 +52,6 @@ class BookReviewServiceTest {
         request.setFinishedDate(LocalDate.of(2026, 8, 24));
         request.setContent("  오래 남는 독후감 내용입니다.  ");
         return request;
-    }
-
-    private BookReview persisted(BookReview source, Long id) {
-        return BookReview.builder()
-                .id(id)
-                .author(source.getAuthor())
-                .reviewTitle(source.getReviewTitle())
-                .bookTitle(source.getBookTitle())
-                .bookAuthor(source.getBookAuthor())
-                .rating(source.getRating())
-                .finishedDate(source.getFinishedDate())
-                .content(source.getContent())
-                .build();
     }
 
     private Member member(Long id, Role role) {

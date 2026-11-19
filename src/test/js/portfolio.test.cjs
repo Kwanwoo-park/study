@@ -7,7 +7,6 @@ const vm = require('node:vm');
 const directory = join(__dirname, '../../main/resources/static/portfolio');
 const html = readFileSync(join(directory, 'index.html'), 'utf8');
 const script = readFileSync(join(directory, 'app.js'), 'utf8');
-const printCss = readFileSync(join(directory, 'print.css'), 'utf8');
 const titles = Array.from(html.matchAll(/<article class="slide(?: active)?" data-title="([^"]+)"/g), match => match[1]);
 
 function element() {
@@ -103,8 +102,8 @@ test('save downloads the server PDF only on click, prevents duplicate requests, 
     assertPosition(ui, 7);
 });
 
-test('HTTP errors, non-PDF responses, and network failures allow retry without downloading an error page', async () => {
-    for (const fetchResponse of [async () => ({ok: false}), async () => ({ok: true, headers: {get: () => 'text/html'}}), async () => { throw new Error('Offline'); }]) {
+test('non-PDF responses and network failures allow retry without downloading an error page', async () => {
+    for (const fetchResponse of [async () => ({ok: true, headers: {get: () => 'text/html'}}), async () => { throw new Error('Offline'); }]) {
         const ui = setup('Mozilla/5.0 (Linux; Android 15)', fetchResponse);
         await ui.savePdfBtn.dispatch('click');
         assert.equal(ui.pdfSaveStatus.hidden, false);

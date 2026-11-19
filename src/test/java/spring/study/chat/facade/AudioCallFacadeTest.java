@@ -9,7 +9,6 @@ import spring.study.chat.domain.AudioCall;
 import spring.study.chat.domain.AudioCallMutation;
 import spring.study.chat.domain.AudioCallParticipant;
 import spring.study.chat.domain.AudioCallParticipantStatus;
-import spring.study.chat.dto.AudioCallPreferenceRequest;
 import spring.study.chat.dto.AudioCallSignalRequest;
 import spring.study.chat.dto.AudioCallSignalResponse;
 import spring.study.chat.dto.AudioCallSignalType;
@@ -22,7 +21,6 @@ import spring.study.chat.service.ChatRoomService;
 import spring.study.chat.service.IceServerService;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
-import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.time.Duration;
@@ -32,7 +30,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -163,14 +160,6 @@ class AudioCallFacadeTest {
     private AudioCallSignalRequest signal(AudioCallSignalType type, String targetEmail, String sdp) {
         return new AudioCallSignalRequest(
                 "call-1", "room-1", type, sdp, null, null, null, targetEmail);
-    }
-
-    private void assertCallInvitation(Member member) {
-        ArgumentCaptor<AudioCallSignalResponse> response = ArgumentCaptor.forClass(AudioCallSignalResponse.class);
-        verify(messagingTemplate).convertAndSendToUser(
-                eq(member.getEmail()), eq("/queue/audio-call"), response.capture());
-        assertEquals(AudioCallSignalType.CALL, response.getValue().type());
-        assertEquals(caller.getEmail(), response.getValue().senderEmail());
     }
 
     private void assertSessionSignal(Member member, AudioCallSignalType type, String senderEmail) {

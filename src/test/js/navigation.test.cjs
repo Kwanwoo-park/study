@@ -49,7 +49,7 @@ test('all application scripts parse and only bottom navigation uses location.rep
     }
 });
 
-test('bottom navigation and its logout keep replacing the current history entry', async () => {
+test('bottom navigation replaces history while profile menus and notification targets preserve it', async () => {
     const {context, replaced, navigated} = environment();
     vm.runInContext(source('common/common.js'), context);
     context.fnMain();
@@ -58,26 +58,22 @@ test('bottom navigation and its logout keep replacing the current history entry'
     context.fnChatting();
     context.fnNotification();
     context.fnDetail('member@example.test');
-    context.fetch = async () => ({json: async () => ({result: 1})});
-    context.fnNavigationLogout();
-    await flush();
-    assert.deepEqual(replaced, ['/board/main', '/member/search', '/board/write', '/chat/chatList',
-        '/notification/list', '/member/detail?email=member@example.test', '/member/login']);
-    assert.deepEqual(navigated, []);
-});
 
-test('profile menus and notification targets preserve the previous page', () => {
-    const {context, replaced, navigated} = environment();
-    vm.runInContext(source('common/common.js'), context);
     context.fnMyReports();
     context.fnReportApply();
     context.fnForbidden();
     context.fnNotificationMove('CHAT', 'room-1');
     context.fnNotificationMove('FAVORITE', 12);
     context.fnNotificationMove('TRAN', '9191000');
+
+    context.fetch = async () => ({json: async () => ({result: 1})});
+    context.fnNavigationLogout();
+    await flush();
+
+    assert.deepEqual(replaced, ['/board/main', '/member/search', '/board/write', '/chat/chatList',
+        '/notification/list', '/member/detail?email=member@example.test', '/member/login']);
     assert.deepEqual(navigated, ['/report/my', '/admin/report', '/forbidden/list',
         '/chat/chatRoom?roomId=room-1', '/board/view?id=12', '/account/transactions?account=9191000']);
-    assert.deepEqual(replaced, []);
 });
 
 test('password recovery navigates only after server email verification and stores the proof', async () => {

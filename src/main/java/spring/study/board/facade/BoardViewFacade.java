@@ -84,6 +84,8 @@ public class BoardViewFacade {
             model.addAttribute("board", board);
             model.addAttribute("like", favoriteService.existFavorite(member, board));
             model.addAttribute("member", member.getEmail());
+            model.addAttribute("email", member.getEmail());
+            model.addAttribute("profile", member.getProfile());
             model.addAttribute("previous", ids[0]);
             model.addAttribute("next", ids[1]);
         } else {

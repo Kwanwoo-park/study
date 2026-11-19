@@ -684,3 +684,64 @@ body.mobile-view .chatimg {
 body.mobile-view textarea.form-control {
     width: 100%;
 }
+
+body.standalone-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    overflow: hidden;
+}
+
+body.standalone-page > .container {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    margin: 0 auto;
+    padding: 16px;
+    overflow: auto;
+}
+
+body.standalone-list-page > .container {
+    overflow: hidden;
+}
+
+.standalone-page > footer,
+.standalone-page-header {
+    flex: none;
+}
+
+.standalone-page-header .page-back-nav {
+    margin: 0 0 12px;
+}
+
+.standalone-page-header .simple-page-title {
+    margin: 0 0 16px;
+}
+
+.standalone-list {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+}
+
+.standalone-list .list-group-item,
+.standalone-page pre {
+    overflow-wrap: anywhere;
+}
+
+.standalone-page pre {
+    color: var(--text-primary);
+    white-space: pre-wrap;
+}
+
+body.dark-mode.standalone-page .btn-light {
+    color: var(--text-primary);
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+}

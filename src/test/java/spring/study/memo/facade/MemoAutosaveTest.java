@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import spring.study.common.exception.ResourceNotFoundException;
 import spring.study.common.exception.BusinessStateException;
 import spring.study.memo.config.MemoAutosaveProperties;
@@ -75,6 +77,17 @@ class MemoAutosaveTest {
     }
 
     @Test
+    void storageFailuresUsePlainLanguageButKeepTheirTechnicalCause() {
+        IllegalStateException cause = new IllegalStateException("Redis AOF 설정 오류");
+        doThrow(cause).when(redis).requireDurability();
+        ResponseStatusException failure = catchThrowableOfType(() -> facade.saveDraft(10L, request("보존할 내용", 0), owner), ResponseStatusException.class);
+        assertThat(failure.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(failure.getReason()).contains("잠시 후 다시 시도").doesNotContain("DB", "Redis", "AOF");
+        assertThat(failure.getCause()).isSameAs(cause);
+        verify(redis, never()).store(any(), anyString(), anyLong(), anyLong());
+    }
+
+    @Test
     void doesNotFlushEarlyButFlushesAfterTheMaximumDirtyPeriodEvenDuringTyping() {
         facade.saveDraft(10L, request("초안", 0), owner);
         facade.flushDue();
@@ -116,14 +129,17 @@ class MemoAutosaveTest {
     }
 
     @Test
-    void settingsAndManualPersistenceUseTheSameLatestDraftVersion() {
-        facade.saveDraft(10L, request("이미 임시 저장한 본문", 0), owner);
+    void settingsPersistTheLatestDraftWithoutChangingItsText() {
+        String title = "이미 임시 저장한 제목";
+        String content = "이미 임시 저장한 본문";
+        facade.saveDraft(10L, new MemoContentRequestDto(title, content, 0L, UUID.randomUUID().toString()), owner);
         when(database.persist(any())).thenReturn(true);
         MemoResponseDto result = (MemoResponseDto) facade.updateSettings(10L,
                 new MemoSettingsRequestDto(MemoColor.MINT, true, 1L, UUID.randomUUID().toString()), owner).getBody();
         assertThat(result.version()).isEqualTo(2);
         assertThat(result.pending()).isFalse();
-        verify(database).persist(argThat(draft -> draft.memo().content().equals("이미 임시 저장한 본문") && draft.memo().pinned()));
+        verify(database).persist(argThat(draft -> draft.memo().title().equals(title)
+                && draft.memo().content().equals(content) && draft.memo().pinned() && draft.memo().color() == MemoColor.MINT));
     }
 
     @Test

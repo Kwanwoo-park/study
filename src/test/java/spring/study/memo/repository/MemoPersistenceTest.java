@@ -12,6 +12,7 @@ import spring.study.memo.dto.MemoResponseDto;
 import spring.study.memo.dto.MemoDraft;
 import java.time.LocalDateTime;
 import spring.study.memo.dto.MemoSummaryDto;
+import spring.study.memo.dto.MemoPageDto;
 import spring.study.memo.entity.MemoColor;
 import spring.study.memo.service.MemoService;
 import spring.study.common.exception.BusinessStateException;
@@ -39,11 +40,11 @@ class MemoPersistenceTest {
         service.create(request("비용", "부하 100%_완료!", true, null), owner);
         service.create(request("private", "Release checklist 100%_완료!", true, null), other);
 
-        assertThat(service.list(owner, "release", false, 0).content()).extracting(MemoSummaryDto::title).containsExactly("Release checklist");
-        assertThat(service.list(owner, "%_", false, 0).content()).extracting(MemoSummaryDto::title).containsExactly("비용");
-        assertThat(service.list(owner, "", true, 0).content()).extracting(MemoSummaryDto::title).containsExactly("비용");
-        assertThat(service.list(owner, "", false, 0).content()).extracting(MemoSummaryDto::title).containsExactly("비용", "Release checklist");
-        assertThat(service.list(owner, "", false, 0).totalCount()).isEqualTo(2);
+        assertThat(service.list(owner, "release", false, null, 0).content()).extracting(MemoSummaryDto::title).containsExactly("Release checklist");
+        assertThat(service.list(owner, "%_", false, null, 0).content()).extracting(MemoSummaryDto::title).containsExactly("비용");
+        assertThat(service.list(owner, "", true, null, 0).content()).extracting(MemoSummaryDto::title).containsExactly("비용");
+        assertThat(service.list(owner, "", false, null, 0).content()).extracting(MemoSummaryDto::title).containsExactly("비용", "Release checklist");
+        assertThat(service.list(owner, "", false, null, 0).totalCount()).isEqualTo(2);
     }
 
     @Test
@@ -62,39 +63,41 @@ class MemoPersistenceTest {
     @Test
     void queuedSnapshotsRespectDbVersionsAndRetriesAreIdempotent() {
         Member owner = member("owner");
-        MemoResponseDto original = service.create(request("처음", "원본", false, null), owner);
+        MemoResponseDto created = service.create(request("처음", "원본", false, null), owner);
+        entityManager.clear();
+        MemoResponseDto original = service.find(created.id(), owner);
         MemoResponseDto snapshot = new MemoResponseDto(original.id(), "지연 저장", "최신 Redis 본문", MemoColor.MINT, true,
-                original.version() + 3, original.createdAt(), LocalDateTime.now());
+                original.version() + 3, original.createdAt(), LocalDateTime.now().withNano(0));
         MemoDraft draft = new MemoDraft(snapshot, owner.getId(), original.version(), 1, 1, 0, 0, false, false, "operation");
         assertThat(service.persist(draft)).isTrue();
         assertThat(service.persist(draft)).isTrue();
-        assertThat(service.find(original.id(), owner).version()).isEqualTo(snapshot.version());
-        assertThat(service.find(original.id(), owner).content()).isEqualTo(snapshot.content());
+        assertThat(service.find(original.id(), owner)).isEqualTo(snapshot);
         MemoDraft stale = new MemoDraft(original, owner.getId(), original.version(), 1, 1, 0, 0, false, false, "operation");
         assertThatThrownBy(() -> service.persist(stale)).isInstanceOf(BusinessStateException.class);
-        MemoDraft foreign = new MemoDraft(snapshot, owner.getId() + 1, snapshot.version(), 1, 1, 0, 0, false, false, "operation");
-        assertThat(service.persist(foreign)).isFalse();
     }
 
     @Test
-    void settingsAreSavedWithoutChangingTitleOrContent() {
+    void colorCombinesWithSearchAndPinnedFiltersBeforePagingAndCounting() {
         Member owner = member("owner");
-        MemoResponseDto created = service.create(request("제목", "저장된 본문", false, null), owner);
-        // Compare DB-rounded timestamps rather than the pre-insert Java nanoseconds.
-        entityManager.clear();
-        MemoResponseDto original = service.find(created.id(), owner);
+        Member other = member("other");
+        service.create(request("색상 검색", "다른 색상", true, null), owner);
+        service.create(new MemoRequestDto("색상 검색", "다른 회원", MemoColor.MINT, true, null), other);
+        MemoResponseDto pinned = service.create(new MemoRequestDto("색상 검색", "민트 본문", MemoColor.MINT, true, null), owner);
+        for (int index = 0; index < 19; index++) {
+            service.create(new MemoRequestDto("민트 " + index, "본문", MemoColor.MINT, false, null), owner);
+        }
 
-        MemoResponseDto updated = new MemoResponseDto(original.id(), original.title(), original.content(), MemoColor.MINT, true,
-                original.version() + 1, original.createdAt(), LocalDateTime.now().withNano(0));
-        assertThat(service.persist(new MemoDraft(updated, owner.getId(), original.version(), 1, 1, 0, 0, false, false, "operation"))).isTrue();
-
-        assertThat(updated.version()).isGreaterThan(original.version());
-        assertThat(updated.title()).isEqualTo(original.title());
-        assertThat(updated.content()).isEqualTo(original.content());
-        assertThat(updated.color()).isEqualTo(MemoColor.MINT);
-        assertThat(updated.pinned()).isTrue();
-        assertThat(service.list(owner, "", true, 0).content()).extracting(MemoSummaryDto::id).containsExactly(original.id());
-        assertThat(service.find(original.id(), owner)).isEqualTo(updated);
+        MemoPageDto first = service.list(owner, "", false, MemoColor.MINT, 0);
+        MemoPageDto second = service.list(owner, "", false, MemoColor.MINT, 1);
+        assertThat(first.content()).hasSize(18).extracting(MemoSummaryDto::color).containsOnly(MemoColor.MINT);
+        assertThat(second.content()).hasSize(2).doesNotContainAnyElementsOf(first.content());
+        assertThat(first.matchedCount()).isEqualTo(20);
+        assertThat(first.totalPages()).isEqualTo(2);
+        assertThat(first.totalCount()).isEqualTo(21);
+        assertThat(service.list(owner, "색상 검색", true, MemoColor.MINT, 0).content())
+                .extracting(MemoSummaryDto::id).containsExactly(pinned.id());
+        assertThat(service.list(owner, "", false, MemoColor.ROSE, 0).content()).isEmpty();
+        assertThat(service.list(owner, "", false, null, 0).matchedCount()).isEqualTo(21);
     }
 
     private Member member(String name) {

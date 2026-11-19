@@ -75,17 +75,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const details = document.createElement('div');
         details.className = 'todo-details';
         details.append(label);
-        let timestamp = todo.registerTime;
-        let timeLabel = '생성';
-        if (todo.completed) {
-            timestamp = todo.completedAt;
-            timeLabel = '완료';
-        }
-        if (timestamp) {
+        if (todo.completed && todo.completedAt) {
             const time = document.createElement('time');
             time.className = 'todo-time';
-            time.dateTime = timestamp;
-            time.textContent = `${timeLabel} · ${new Date(timestamp).toLocaleString('ko-KR')}`;
+            time.dateTime = todo.completedAt;
+            time.textContent = `완료 · ${new Date(todo.completedAt).toLocaleString('ko-KR')}`;
             details.append(time);
         }
         checkbox.addEventListener('change', function() {

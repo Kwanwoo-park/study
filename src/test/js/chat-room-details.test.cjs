@@ -50,10 +50,7 @@ async function setup(reply = async path => ({body: path.endsWith('/details') ? d
     const nodes = new Map();
     const document = new Events();
     const window = new Events();
-    const requests = [];
     const previews = [];
-    const timers = new Map();
-    let timerId = 0;
     const element = id => {
         if (!nodes.has(id)) {
             const tag = /-(open|close|refresh|more|backdrop)$/.test(id) ? 'button' : 'div';
@@ -82,29 +79,23 @@ async function setup(reply = async path => ({body: path.endsWith('/details') ? d
         previews.push({sources: Array.from(sources), index});
         element('chatImageModal').classList.remove('is-hidden');
     };
-    let previewCloses = 0;
     window.closeChatImageModal = () => {
-        previewCloses++;
         element('chatImageModal').classList.add('is-hidden');
         window.dispatchEvent({type: 'chat:image-preview-closed'});
     };
     vm.runInNewContext(script, {
         document, window, URL, AbortController,
-        setTimeout: callback => { timers.set(++timerId, callback); return timerId; },
-        clearTimeout: id => timers.delete(id),
-        fetch: async (path, options) => {
-            requests.push({path, options});
+        setTimeout: () => 1,
+        clearTimeout() {},
+        fetch: async path => {
             const result = await reply(path);
             const status = result.status || 200;
             return {status, ok: status === 200, json: async () => result.body};
         },
     });
     return {
-        element: name => element(`chat-details-${name}`), document, window, requests, previews,
-        previewCloses: () => previewCloses,
+        element: name => element(`chat-details-${name}`), previews,
         open: async () => { element('chat-details-open').emit('click'); await flush(); },
-        change: detail => window.dispatchEvent({type: 'chat:room-details-change', detail}),
-        flushTimers: () => { for (const callback of timers.values()) callback(); timers.clear(); },
     };
 }
 

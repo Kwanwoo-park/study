@@ -4,23 +4,14 @@ import org.junit.jupiter.api.Test;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountStatus;
 import spring.study.account.entity.AccountType;
-import spring.study.account.repository.AccountRepository;
-import spring.study.account.repository.AccountTransactionRepository;
-import spring.study.notification.service.NotificationService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 
 class AccountInterestServiceTest {
-    private final AccountRepository accountRepository = mock(AccountRepository.class);
-    private final AccountTransactionRepository transactionRepository = mock(AccountTransactionRepository.class);
-    private final NotificationService notificationService = mock(NotificationService.class);
-    private final AccountService accountService = new AccountService(accountRepository);
-
     @Test
     void installmentSavingsShouldAccrueFivePercentForOneYear() {
         LocalDateTime openedAt = LocalDateTime.of(2025, 1, 1, 0, 0);

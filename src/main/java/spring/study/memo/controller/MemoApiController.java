@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.memo.dto.MemoRequestDto;
 import spring.study.memo.dto.MemoSettingsRequestDto;
 import spring.study.memo.dto.MemoContentRequestDto;
+import spring.study.memo.entity.MemoColor;
 import spring.study.memo.facade.MemoFacade;
 import spring.study.member.entity.Member;
 
@@ -26,8 +27,9 @@ public class MemoApiController {
     public ResponseEntity<?> list(@AuthenticationPrincipal Member member,
                                   @RequestParam(defaultValue = "") String query,
                                   @RequestParam(defaultValue = "false") boolean pinnedOnly,
+                                  @RequestParam(required = false) MemoColor color,
                                   @RequestParam(defaultValue = "0") int page) {
-        return memoFacade.list(member, query, pinnedOnly, page);
+        return memoFacade.list(member, query, pinnedOnly, color, page);
     }
 
     @GetMapping("/{id}")

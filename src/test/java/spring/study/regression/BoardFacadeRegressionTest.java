@@ -74,16 +74,4 @@ class BoardFacadeRegressionTest {
         verify(boardService, never()).deleteById(anyLong());
     }
 
-    private Member member(Long id, String email) {
-        return Member.builder()
-                .id(id)
-                .email(email)
-                .pwd("pwd")
-                .name("member")
-                .role(Role.USER)
-                .phone("010-0000-0000")
-                .birth("2000-01-01")
-                .profile("p")
-                .build();
-    }
 }

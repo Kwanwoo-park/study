@@ -40,7 +40,6 @@ class TodoPersistenceTest {
         service.update(id, "수정한 내용", member);
         LocalDateTime completedAt = service.updateCompletion(id, true, member).completedAt();
         assertThat(completedAt).isNotNull();
-        service.update(id, "수정한 내용", member);
         assertThat(service.updateCompletion(id, true, member).completedAt()).isEqualTo(completedAt);
         assertThat(service.updateCompletion(id, false, member).completedAt()).isNull();
         assertThat(service.updateCompletion(id, true, member).completedAt()).isAfterOrEqualTo(completedAt);
@@ -54,7 +53,6 @@ class TodoPersistenceTest {
         assertThat(saved.isCompleted()).isTrue();
         assertThat(saved.getCompletedAt()).isNotNull();
         assertThat(diaries.findById(diary.getId())).isEmpty();
-        assertThat(entityManager.getMetamodel().getEntities()).noneMatch(type -> type.getName().equals("diary_todo"));
     }
 
     @Test

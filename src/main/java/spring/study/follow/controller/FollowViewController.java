@@ -23,6 +23,7 @@ public class FollowViewController {
 
         model.addAttribute("targetEmail", memberRequestDto.getEmail());
         model.addAttribute("email", member.getEmail());
+        model.addAttribute("profile", member.getProfile());
 
         return "follow/follower";
     }
@@ -34,6 +35,7 @@ public class FollowViewController {
 
         model.addAttribute("targetEmail", memberRequestDto.getEmail());
         model.addAttribute("email", member.getEmail());
+        model.addAttribute("profile", member.getProfile());
 
         return "follow/following";
     }

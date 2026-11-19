@@ -23,6 +23,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import spring.study.memo.config.MemoSecurityConfig;
 import spring.study.memo.dto.MemoResponseDto;
+import spring.study.memo.dto.MemoPageDto;
 import spring.study.memo.entity.MemoColor;
 import spring.study.memo.facade.MemoFacade;
 import spring.study.admin.facade.SystemIncidentFacade;
@@ -42,6 +43,7 @@ import spring.study.memo.dto.MemoDraft;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -101,6 +103,20 @@ class MemoSecurityTest {
         mvc.perform(withCsrf(patch("/api/memos/1/draft")).with(user(ordinary)).contentType("application/json").content(JSON))
                 .andExpect(status().isOk()).andExpect(jsonPath("pending").value(false));
         verify(service, never()).persist(any());
+    }
+
+    @Test
+    void listAcceptsAnOptionalColorAndRejectsUnknownColors() throws Exception {
+        when(service.list(eq(admin), anyString(), anyBoolean(), nullable(MemoColor.class), anyInt()))
+                .thenReturn(new MemoPageDto(List.of(), 0, 0, 0, 0, 0));
+        mvc.perform(get("/api/memos").with(user(admin)).param("color", "MINT").param("query", "note")
+                        .param("pinnedOnly", "true").param("page", "2"))
+                .andExpect(status().isOk());
+        verify(service).list(admin, "note", true, MemoColor.MINT, 2);
+        mvc.perform(get("/api/memos").with(user(admin))).andExpect(status().isOk());
+        verify(service).list(admin, "", false, null, 0);
+        mvc.perform(get("/api/memos").with(user(admin)).param("color", "UNKNOWN"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

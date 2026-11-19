@@ -81,9 +81,8 @@ public class MemoDraftService {
         try {
             return operation.get();
         } catch (DataAccessException | IllegalStateException exception) {
-            String message = exception instanceof IllegalStateException ? exception.getMessage() : "Redis에 임시 저장하지 못했습니다. 입력 내용은 유지됩니다. 잠시 후 다시 시도해 주세요";
-
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, message, exception);
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "일시적으로 메모를 불러오거나 저장하지 못했어요. 작성 중인 내용은 복사해 보관한 뒤 잠시 후 다시 시도해 주세요", exception);
         }
     }
 }

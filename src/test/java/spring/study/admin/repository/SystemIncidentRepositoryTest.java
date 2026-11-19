@@ -25,50 +25,34 @@ class SystemIncidentRepositoryTest {
     @Autowired EntityManager entityManager;
 
     @Test
-    void onlyUnacknowledgedIncidentsAreListedAndAcknowledgingPreservesHistory() {
-        LocalDateTime now = LocalDateTime.of(2026, 11, 17, 9, 0);
-        SystemIncident older = repository.save(incident(now.minusHours(2)));
-        SystemIncident newer = repository.save(incident(now.minusHours(1)));
-        for (int index = 0; index < 50; index++) {
-            SystemIncident acknowledged = incident(now.plusSeconds(index));
-            acknowledged.acknowledge(now.plusMinutes(1));
-            repository.save(acknowledged);
-        }
-        repository.flush();
-        entityManager.clear();
-
-        assertThat(service.findRecentUnacknowledged()).extracting(SystemIncident::getId)
-                .containsExactly(newer.getId(), older.getId());
-        assertThat(service.countUnacknowledged()).isEqualTo(2);
-
-        service.acknowledge(newer.getId());
-        repository.flush();
-        entityManager.clear();
-        assertThat(service.findRecentUnacknowledged()).extracting(SystemIncident::getId)
-                .containsExactly(older.getId());
-
-        assertThat(service.acknowledgeAll()).isEqualTo(1);
-        assertThat(service.findRecentUnacknowledged()).isEmpty();
-        assertThat(service.countUnacknowledged()).isZero();
-        assertThat(repository.count()).isEqualTo(52);
-        assertThat(repository.findById(older.getId()).orElseThrow().isAcknowledged()).isTrue();
-        assertThat(repository.findById(newer.getId()).orElseThrow().isAcknowledged()).isTrue();
-    }
-
-    @Test
-    void listsOnlyThirtyNewestIncidentsButAcknowledgesAllPendingIncidents() {
+    void listsThirtyNewestPendingIncidentsAndAcknowledgesAllWithoutDeletingHistory() {
         LocalDateTime first = LocalDateTime.of(2026, 11, 17, 9, 0);
-        for (int index = 0; index < 31; index++) repository.save(incident(first.plusSeconds(index)));
+        for (int index = 0; index < 32; index++) {
+            repository.save(incident(first.plusSeconds(index)));
+        }
+        SystemIncident acknowledged = incident(first.plusMinutes(1));
+        acknowledged.acknowledge(first.plusMinutes(2));
+        repository.save(acknowledged);
         repository.flush();
         entityManager.clear();
 
         List<SystemIncident> recent = service.findRecentUnacknowledged();
-        assertThat(recent).hasSize(30);
+        assertThat(recent).hasSize(30).noneMatch(SystemIncident::isAcknowledged);
         assertThat(recent).extracting(SystemIncident::getOccurredAt)
-                .isSortedAccordingTo(Comparator.reverseOrder()).doesNotContain(first);
+                .isSortedAccordingTo(Comparator.reverseOrder()).doesNotContain(first, first.plusSeconds(1));
+        assertThat(service.countUnacknowledged()).isEqualTo(32);
+
+        Long newestId = recent.get(0).getId();
+        service.acknowledge(newestId);
+        repository.flush();
+        entityManager.clear();
+        assertThat(service.findRecentUnacknowledged()).extracting(SystemIncident::getId).doesNotContain(newestId);
         assertThat(service.countUnacknowledged()).isEqualTo(31);
+
         assertThat(service.acknowledgeAll()).isEqualTo(31);
         assertThat(service.findRecentUnacknowledged()).isEmpty();
+        assertThat(service.countUnacknowledged()).isZero();
+        assertThat(repository.findAll()).hasSize(33).allMatch(SystemIncident::isAcknowledged);
     }
 
     private SystemIncident incident(LocalDateTime time) {

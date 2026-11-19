@@ -1,6 +1,5 @@
 package spring.study.diary.facade;
 
-import jakarta.persistence.OneToMany;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import spring.study.aws.service.ImageS3Service;
 import spring.study.diary.dto.DiaryImageRequestDto;
 import spring.study.diary.dto.DiaryRequestDto;
 import spring.study.diary.dto.DiaryResponseDto;
-import spring.study.diary.entity.Diary;
 import spring.study.diary.entity.DiaryImage;
 import spring.study.diary.repository.DiaryImageRepository;
 import spring.study.diary.repository.DiaryRepository;
@@ -33,8 +31,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({DiaryFacade.class, DiaryService.class, DiaryImageService.class})
 class DiaryImagePersistenceTest {
     @Autowired private DiaryFacade facade;
-    @Autowired private DiaryService diaries;
-    @Autowired private DiaryImageService imageService;
     @Autowired private DiaryRepository diaryRepository;
     @Autowired private DiaryImageRepository images;
     @Autowired private TestEntityManager em;

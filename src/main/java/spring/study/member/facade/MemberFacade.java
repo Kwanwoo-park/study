@@ -114,27 +114,16 @@ public class MemberFacade {
         Member member = (Member) memberService.loadUserByUsername(dto.getEmail());
 
         if (!encoder.matches(dto.getPassword(), member.getPassword())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -1L,
-                    "message", "잘못된 비밀번호 입니다"
-            ));
+            return failure(HttpStatus.BAD_REQUEST, -1L, "잘못된 비밀번호 입니다");
         }
 
         if (member.isAccessBlocked()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -2L,
-                    "message", "차단된 계정입니다"
-            ));
+            return failure(HttpStatus.BAD_REQUEST, -2L, "차단된 계정입니다");
         }
 
         member = memberService.updateLastLoginTime(member.getId());
-
         establishSession(member, request, response, ipAddress);
-
-        return ResponseEntity.ok(Map.of(
-                "result", member.getId(),
-                "member", member
-        ));
+        return memberResponse(member);
     }
 
     @Transactional
@@ -146,67 +135,37 @@ public class MemberFacade {
         if (!StringUtils.hasText(dto.getBirth())) return invalidInput("생년월일이 입력되지 않았습니다");
 
         if (dto.getBirth().equals("1900-01-01")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -2L,
-                    "message", "유효하지 않은 생년월일 입니다"
-            ));
+            return failure(HttpStatus.BAD_REQUEST, -2L, "유효하지 않은 생년월일 입니다");
         }
 
         if (forbiddenService.findWordList(Status.APPROVAL, dto.getName()) != 0) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
-                    "result", -1L,
-                    "message", "금칙어를 사용하였습니다"
-            ));
+            return failure(HttpStatus.UNPROCESSABLE_ENTITY, -1L, "금칙어를 사용하였습니다");
         }
 
         if (!emailVerificationService.consume(EmailVerificationPurpose.EMAIL, dto.getEmail(), dto.getVerificationToken())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -403L, "message", "5분 이내에 이메일 인증을 완료한 후 가입해 주세요"
-            ));
+            return failure(HttpStatus.FORBIDDEN, -403L, "5분 이내에 이메일 인증을 완료한 후 가입해 주세요");
         }
 
         MemberResponseDto response = userService.createUser(dto);
-
-        if (response != null) {
-            notificationService.createNotification(memberService.findAdministrator(), dto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
-
-            return ResponseEntity.ok(Map.of(
-                    "result", response.getId()
-            ));
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "result", -2L,
-                    "message", "회원가입에 실패하였습니다"
-            ));
+        if (response == null) {
+            return failure(HttpStatus.INTERNAL_SERVER_ERROR, -2L, "회원가입에 실패하였습니다");
         }
+
+        notificationService.createNotification(memberService.findAdministrator(), dto.getName() + "님이 회원가입 하였습니다", Group.ADMIN);
+        return ResponseEntity.ok(Map.of("result", response.getId()));
     }
 
     public ResponseEntity<?> duplicateCheck(String email) {
-        if (email.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "이메일이 없습니다"
-            ));
+        if (email.isBlank()) return invalidInput("이메일이 없습니다");
+        if (memberService.existEmail(email)) {
+            return failure(HttpStatus.CONFLICT, -10L, "이미 존재하는 이메일입니다");
         }
-
-        if (!memberService.existEmail(email)) {
-            return ResponseEntity.ok(Map.of(
-                    "result", 10L
-            ));
-        } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "result", -10L,
-                    "message", "이미 존재하는 이메일입니다"
-            ));
-        }
+        return ResponseEntity.ok(Map.of("result", 10L));
     }
 
     public ResponseEntity<?> changeProfileImage(MultipartFile file, Member member) {
         if (imageS3Service.fileFormatCheck(file)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "지원하지 않는 파일 포맷입니다"
-            ));
+            return invalidInput("지원하지 않는 파일 포맷입니다");
         }
 
         String imageUrl = "", oldProfile;
@@ -220,69 +179,40 @@ public class MemberFacade {
         } catch (Exception e) {
             imageS3Service.deleteImage(imageUrl);
             log.error("profile image change failed", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "result", -10L,
-                    "message", "이미지 업로드 중 오류가 발생하였습니다"
-            ));
+            return failure(HttpStatus.INTERNAL_SERVER_ERROR, -10L, "이미지 업로드 중 오류가 발생하였습니다");
         }
 
         imageS3Service.deleteImage(oldProfile);
 
-        return ResponseEntity.ok(Map.of(
-                "result", member.getId()
-        ));
+        return ResponseEntity.ok(Map.of("result", member.getId()));
     }
 
     public ResponseEntity<?> findEmail(String email) {
-        if (email.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -10L,
-                    "message", "이메일이 없습니다"
-            ));
-        }
-
-        Member member = memberService.findMember(email);
-
-        return ResponseEntity.ok(Map.of(
-                "result", member.getId(),
-                "member", member
-        ));
+        if (email.isBlank()) return invalidInput("이메일이 없습니다");
+        return memberResponse(memberService.findMember(email));
     }
 
     public ResponseEntity<?> findInfo(String birth, String phone) {
         if (!StringUtils.hasText(birth)) return invalidInput("생년월일이 입력되지 않았습니다");
         if (!StringUtils.hasText(phone)) return invalidInput("전화번호가 입력되지 않았습니다");
 
-        phone = userService.replacePhoneNumber(phone);
-        Member member = memberService.findMember(phone, birth);
+        Member member = memberService.findMember(userService.replacePhoneNumber(phone), birth);
 
         if (member == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "result", -10L,
-                    "message", "존재하지 않는 회원 정보입니다"
-            ));
-        } else {
-            return ResponseEntity.ok(Map.of(
-                    "result", member.getId(),
-                    "member", member
-            ));
+            return failure(HttpStatus.NOT_FOUND, -10L, "존재하지 않는 회원 정보입니다");
         }
+        return memberResponse(member);
     }
 
     public ResponseEntity<?> updatePassword(String password, Member member) {
         if (!StringUtils.hasText(password)) return invalidInput("비밀번호가 입력되지 않았습니다");
 
-        return ResponseEntity.ok(Map.of(
-                "result", userService.updatePwd(member.getId(), password)
-        ));
+        return ResponseEntity.ok(Map.of("result", userService.updatePwd(member.getId(), password)));
     }
 
     public ResponseEntity<?> updateVisibility(CommonVisibility visibility, Member member) {
         if (visibility == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -1L,
-                    "message", "공개 설정을 선택해 주세요."
-            ));
+            return failure(HttpStatus.BAD_REQUEST, -1L, "공개 설정을 선택해 주세요.");
         }
 
         long memberId = memberService.updateVisibility(member.getId(), visibility);
@@ -299,25 +229,16 @@ public class MemberFacade {
         if (!StringUtils.hasText(dto.getBirth())) return invalidInput("생년월일이 입력되지 않았습니다");
 
         if (dto.getBirth().equals("1900-01-01")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "result", -2L,
-                    "message", "유효하지 않은 생년월일 입니다"
-            ));
+            return failure(HttpStatus.BAD_REQUEST, -2L, "유효하지 않은 생년월일 입니다");
         }
 
         Member member = memberService.findMember(dto.getEmail());
         int result = memberService.updatePhoneAndBirth(member.getId(), dto.getPhone(), dto.getBirth());
 
-        if (result != -2) {
-            return ResponseEntity.ok(Map.of(
-                    "result", member.getId()
-            ));
-        } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "result", -2L,
-                    "message", "이미 존재하는 전화번호입니다"
-            ));
+        if (result == -2) {
+            return failure(HttpStatus.CONFLICT, -2L, "이미 존재하는 전화번호입니다");
         }
+        return ResponseEntity.ok(Map.of("result", member.getId()));
     }
 
     public ResponseEntity<?> search(String name, Member viewer) {
@@ -358,13 +279,7 @@ public class MemberFacade {
 
         accountService.deleteByMember(member);
 
-        for (Board board : member.getBoard()) {
-            imageS3Service.deleteImage(board.getImg());
-            boardImgService.deleteBoard(board);
-            favoriteService.deleteByBoard(board);
-            replyService.deleteReplay(board.getComment());
-            commentService.deleteComment(board);
-        }
+        removeAuthoredBoardDependencies(member);
 
         appealService.detachSanctions(member);
         appealService.deleteByMember(member);
@@ -393,12 +308,7 @@ public class MemberFacade {
 
         collectionService.deleteByMember(member);
 
-        for (Diary diary : member.getDiaries()) {
-            imageS3Service.deleteImgSrc(diary.getImages().stream().map(DiaryImage::getImageUrl).toList());
-            diaryImageService.deleteByDiary(diary);
-        }
-
-        diaryService.deleteByMember(member);
+        removeDiaries(member);
         todoService.deleteByMember(member);
         memoService.deleteByMember(member);
 
@@ -406,8 +316,34 @@ public class MemberFacade {
         memberService.deleteById(member.getId());
     }
 
+    private void removeAuthoredBoardDependencies(Member member) {
+        for (Board board : member.getBoard()) {
+            imageS3Service.deleteImage(board.getImg());
+            boardImgService.deleteBoard(board);
+            favoriteService.deleteByBoard(board);
+            replyService.deleteReplay(board.getComment());
+            commentService.deleteComment(board);
+        }
+    }
+
+    private void removeDiaries(Member member) {
+        for (Diary diary : member.getDiaries()) {
+            imageS3Service.deleteImgSrc(diary.getImages().stream().map(DiaryImage::getImageUrl).toList());
+            diaryImageService.deleteByDiary(diary);
+        }
+        diaryService.deleteByMember(member);
+    }
+
     private ResponseEntity<?> invalidInput(String message) {
-        return ResponseEntity.badRequest().body(Map.of("result", -10L, "message", message));
+        return failure(HttpStatus.BAD_REQUEST, -10L, message);
+    }
+
+    private ResponseEntity<?> failure(HttpStatus status, long result, String message) {
+        return ResponseEntity.status(status).body(Map.of("result", result, "message", message));
+    }
+
+    private ResponseEntity<?> memberResponse(Member member) {
+        return ResponseEntity.ok(Map.of("result", member.getId(), "member", member));
     }
 
     public ResponseEntity<?> logout(Member member, HttpServletRequest request, HttpServletResponse response) {
@@ -420,23 +356,17 @@ public class MemberFacade {
 
     public ResponseEntity<?> recoverPassword(MemberRequestDto requestDto, Member loginMember) {
         if (loginMember != null) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "result", -10L,
-                    "message", "회원 설정의 비밀번호 변경 절차를 이용해주세요"
-            ));
+            return invalidInput("회원 설정의 비밀번호 변경 절차를 이용해주세요");
         }
 
         Member member = memberService.findMember(requestDto.getEmail());
-        if (requestDto.getPassword() == null || requestDto.getPassword().isBlank()) {
-            return updatePassword(requestDto.getPassword(), member);
-        }
-        if (!emailVerificationService.consume(EmailVerificationPurpose.EMAIL, requestDto.getEmail(), requestDto.getVerificationToken())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -403L, "message", "5분 이내에 이메일 인증을 완료한 후 비밀번호를 변경해 주세요"
-            ));
+        String password = requestDto.getPassword();
+        if (StringUtils.hasText(password)
+                && !emailVerificationService.consume(EmailVerificationPurpose.EMAIL, requestDto.getEmail(), requestDto.getVerificationToken())) {
+            return failure(HttpStatus.FORBIDDEN, -403L, "5분 이내에 이메일 인증을 완료한 후 비밀번호를 변경해 주세요");
         }
 
-        return updatePassword(requestDto.getPassword(), member);
+        return updatePassword(password, member);
     }
 
     public ResponseEntity<?> sendPasswordVerification(Member member) {
@@ -458,13 +388,9 @@ public class MemberFacade {
     }
 
     public ResponseEntity<?> updateAuthenticatedPassword(String password, Member member, HttpServletRequest request, HttpServletResponse response) {
-        if (password == null || password.isBlank()) {
-            return updatePassword(password, member);
-        } else if (!emailVerificationService.consumePasswordChange(member.getId().toString())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "result", -10L,
-                    "message", "이메일 인증 후 비밀번호를 변경할 수 있습니다"
-            ));
+        if (!StringUtils.hasText(password)) return invalidInput("비밀번호가 입력되지 않았습니다");
+        if (!emailVerificationService.consumePasswordChange(member.getId().toString())) {
+            return failure(HttpStatus.FORBIDDEN, -10L, "이메일 인증 후 비밀번호를 변경할 수 있습니다");
         }
 
         ResponseEntity<?> result = updatePassword(password, member);

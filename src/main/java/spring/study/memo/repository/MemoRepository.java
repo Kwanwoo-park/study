@@ -27,10 +27,12 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     @Query("select new spring.study.memo.dto.MemoSummaryDto(m.id, m.title, substring(m.content, 1, 160), " +
             "m.color, m.pinned, m.version, m.registerTime, m.updateTime) from Memo m " +
             "where m.owner = :owner and (:pinnedOnly = false or m.pinned = true) " +
+            "and (:color is null or m.color = :color) " +
             "and (:query = '' or lower(m.title) like :pattern escape '!' or lower(m.content) like :pattern escape '!')")
     @Transactional(readOnly = true)
     Page<MemoSummaryDto> search(@Param("owner") Member owner, @Param("query") String query,
                                     @Param("pattern") String pattern, @Param("pinnedOnly") boolean pinnedOnly,
+                                    @Param("color") MemoColor color,
                                     Pageable pageable);
 
     @Transactional(readOnly = true)

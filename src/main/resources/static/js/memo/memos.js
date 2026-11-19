@@ -7,6 +7,8 @@
     const title = byId('title');
     const content = byId('content');
     const colors = [...document.querySelectorAll('.memo-color')];
+    const saveHint = '입력을 멈추면 자동으로 저장돼요. 바로 저장하려면 ‘지금 저장’을 눌러주세요.';
+    const conflictHint = '다른 화면에서 메모가 변경됐어요. 작성한 내용을 복사한 뒤 저장본을 다시 열어 주세요.';
     let active = null;
     let baseline = null;
     let busy = false;
@@ -27,6 +29,7 @@
     let totalPages = 0;
     let query = '';
     let pinnedOnly = false;
+    let listColor = '';
     let listRequest = 0;
     let searchTimer;
     let allowLeave = false;
@@ -68,11 +71,11 @@
     function saveState(changed) {
         if (busy) return '처리하고 있어요…';
         if (saving && saveMode === 'draft') return '임시 저장 중…';
-        if (saving) return 'DB 저장 중…';
+        if (saving) return '저장 중…';
         if (active?.conflicted || blocked) return '저장 확인 필요 · 내용은 유지됩니다';
         if (changed) return '자동 저장 대기 중';
-        if (active?.pending) return '임시 저장됨 · DB 반영 대기';
-        if (active?.id) return 'DB 저장 완료';
+        if (active?.pending) return '임시 저장됨';
+        if (active?.id) return '저장 완료';
         return '새 메모';
     }
 
@@ -80,7 +83,7 @@
         const changed = dirty();
         const locked = busy || saving || Boolean(blocked);
         byId('save').disabled = locked || !active || (!changed && !active.pending);
-        byId('save-label').textContent = busy || saving ? '처리 중…' : 'DB에 지금 저장';
+        byId('save-label').textContent = busy || saving ? '처리 중…' : '지금 저장';
         byId('delete').disabled = busy || saving || !active?.id;
         byId('pin').disabled = locked || Boolean(retryRequest);
         byId('pin').setAttribute('aria-pressed', String(Boolean(active?.pinned)));
@@ -155,9 +158,9 @@
 
     function createDraft() {
         if (!canDiscard()) return;
-        select({id: null, title: '', content: '', color: 'LAVENDER', pinned: false, version: null, creationKey: crypto.randomUUID()});
+        select({id: null, title: '', content: '', color: listColor || 'LAVENDER', pinned: false, version: null, creationKey: crypto.randomUUID()});
         title.focus();
-        status('입력을 1초 멈추면 임시 저장됩니다. DB에 지금 저장 버튼으로 즉시 저장할 수도 있어요.');
+        status(saveHint);
     }
 
     async function request(path = '', options = {}, csrfRetried = false) {
@@ -178,20 +181,26 @@
         }
         if (!response.ok || !body) {
             if (response.status === 403) csrfPromise = null;
-            const message = response.status === 401 ? '로그인이 만료되었습니다. 다시 로그인해 주세요. 작성 내용은 복사해서 보관해 주세요.'
-                : response.status === 403 && body?.code === 'FORBIDDEN' ? '메모를 사용할 권한이 없습니다. 계정 상태를 확인해 주세요.'
-                : response.status === 403 ? '사용 권한 또는 요청 인증을 확인할 수 없습니다. 작성 내용을 보관한 뒤 새로고침해 주세요.'
-                : body?.message || '요청을 처리하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.';
-            const error = new Error(message);
+            const error = new Error(requestErrorMessage(response.status, body));
             error.status = response.status;
             throw error;
         }
         return body;
     }
 
+    function requestErrorMessage(code, body) {
+        if (code === 401) return '로그인이 만료되었습니다. 다시 로그인해 주세요. 작성 내용은 복사해서 보관해 주세요.';
+        if (code === 403) {
+            if (body?.code === 'FORBIDDEN') return '메모를 사용할 권한이 없습니다. 계정 상태를 확인해 주세요.';
+            return '사용 권한 또는 요청 인증을 확인할 수 없습니다. 작성 내용을 보관한 뒤 새로고침해 주세요.';
+        }
+        return body?.message || '요청을 처리하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.';
+    }
+
     function renderList(notes) {
         notes = notes.map(note => note.id === active?.id && active.version > note.version
             ? {...note, title: active.title, preview: active.content.slice(0, 160), color: active.color, pinned: active.pinned, version: active.version} : note);
+        if (listColor) notes = notes.filter(note => note.color === listColor);
         listedMemos = notes;
         const list = byId('list');
         list.replaceChildren();
@@ -223,9 +232,8 @@
         if (!notes.length) {
             const empty = document.createElement('p');
             empty.className = 'memo-list-empty';
-            empty.textContent = query ? '검색 결과가 없어요.\n다른 검색어로 찾아보세요.'
-                : pinnedOnly ? '고정한 메모가 아직 없어요.\n중요한 메모의 핀 버튼을 눌러보세요.'
-                : '아직 메모가 없어요.\n상단의 + 새 메모로 시작해 보세요.';
+            empty.textContent = '아직 메모가 없어요.\n상단의 + 새 메모로 시작해 보세요.';
+            if (query || pinnedOnly || listColor) empty.textContent = '조건에 맞는 메모가 없어요.\n검색어나 필터를 바꿔보세요.';
             list.append(empty);
         }
         markSelection();
@@ -237,6 +245,7 @@
         byId('prev').disabled = true;
         byId('next').disabled = true;
         const parameters = new URLSearchParams({query, pinnedOnly: String(pinnedOnly), page: String(targetPage)});
+        if (listColor) parameters.set('color', listColor);
         try {
             const data = await request(`?${parameters}`);
             if (sequence !== listRequest) return false;
@@ -263,7 +272,7 @@
 
     async function openMemo(id, reload = false) {
         if (active?.id === id && !reload || !canDiscard()) return;
-        if (reload && active?.conflicted && !window.confirm('현재 내용을 복사해 두셨나요? 저장본을 다시 열면 화면의 내용과 충돌한 초안이 교체됩니다.')) return;
+        if (reload && active?.conflicted && !window.confirm('작성 중인 내용을 복사해 두셨나요? 저장본을 다시 열면 지금 편집 중인 내용이 저장된 내용으로 바뀝니다.')) return;
         busy = true;
         updateControls();
         try {
@@ -271,8 +280,7 @@
                 ? await request(`/${encodeURIComponent(id)}/reload?version=${encodeURIComponent(active.version)}`, {method: 'POST'})
                 : await request(`/${encodeURIComponent(id)}`);
             select(memo);
-            status(memo.conflicted ? 'DB 저장 충돌이 있습니다. 내용을 복사한 뒤 저장본을 다시 열어 주세요.'
-                : '제목·본문은 자동 임시 저장되며, 10초간 갱신이 없으면 DB에 반영됩니다.');
+            status(memo.conflicted ? conflictHint : saveHint);
             if (memo.conflicted) { blocked = true; byId('reload').hidden = false; }
         } catch (error) {
             status(error.message, true);
@@ -317,15 +325,27 @@
             status('제목은 120자, 내용은 20,000자 이내로 작성해 주세요.', true);
             return false;
         }
-        const snapshot = values();
-        const isNew = !active.id;
+        return executeSave(createSaveOperation(mode, active.id, values()));
+    }
+
+    function createSaveOperation(mode, id, snapshot) {
+        const isNew = !id;
         const operationKey = crypto.randomUUID();
-        const payload = isNew || mode === 'manual' ? {...snapshot, title: normalizedTitle(snapshot.title), operationKey}
-            : mode === 'settings' ? {color: snapshot.color, pinned: snapshot.pinned, version: snapshot.version, operationKey}
-            : {title: normalizedTitle(snapshot.title), content: snapshot.content, version: snapshot.version, operationKey};
-        const path = isNew ? mode === 'draft' ? '?draft=true' : ''
-            : `/${encodeURIComponent(active.id)}${mode === 'draft' ? '/draft' : mode === 'settings' ? '/settings' : ''}`;
-        return executeSave({mode, snapshot, payload, path, isNew, method: isNew ? 'POST' : mode === 'manual' ? 'PUT' : 'PATCH'});
+        const operation = {mode, snapshot, isNew};
+        const path = isNew ? '' : `/${encodeURIComponent(id)}`;
+        const version = snapshot.version;
+
+        if (mode === 'settings' && !isNew) {
+            return {...operation, method: 'PATCH', path: path + '/settings',
+                payload: {color: snapshot.color, pinned: snapshot.pinned, version, operationKey}};
+        }
+        if (mode === 'draft' && !isNew) {
+            return {...operation, method: 'PATCH', path: path + '/draft',
+                payload: {title: normalizedTitle(snapshot.title), content: snapshot.content, version, operationKey}};
+        }
+        return {...operation, method: isNew ? 'POST' : 'PUT',
+            path: isNew && mode === 'draft' ? '?draft=true' : path,
+            payload: {...snapshot, title: normalizedTitle(snapshot.title), operationKey}};
     }
 
     async function executeSave(operation) {
@@ -344,10 +364,18 @@
                 ? {...active, ...data, title: operation.payload.title, content: operation.payload.content} : data;
             Object.assign(active, memo);
             // A response acknowledges its snapshot, never text entered while that request was in flight.
-            baseline = operation.mode === 'settings' && !operation.isNew
-                ? {...baseline, color: memo.color, pinned: memo.pinned}
-                : {...operation.snapshot, title: normalizedTitle(operation.snapshot.title) === memo.title ? operation.snapshot.title : memo.title,
-                    content: memo.content, color: memo.color, pinned: memo.pinned};
+            if (operation.mode === 'settings' && !operation.isNew) {
+                baseline = {...baseline, color: memo.color, pinned: memo.pinned};
+            } else {
+                const snapshotTitle = operation.snapshot.title;
+                baseline = {
+                    ...operation.snapshot,
+                    title: normalizedTitle(snapshotTitle) === memo.title ? snapshotTitle : memo.title,
+                    content: memo.content,
+                    color: memo.color,
+                    pinned: memo.pinned,
+                };
+            }
             retryRequest = null;
             retryAttempt = 0;
             blocked = memo.conflicted ? 409 : false;
@@ -356,7 +384,7 @@
             updateLocalCard(memo);
             // Creating a row or changing list ordering is exceptional; body autosaves never reload the list.
             if (operation.isNew || operation.mode === 'settings') loadList(operation.isNew ? 0 : page);
-            status(memo.pending ? 'Redis에 임시 저장됐어요. DB 반영은 서버에서 이어서 처리합니다.' : 'DB에 저장했어요.');
+            status(memo.pending ? '내용을 임시로 저장했어요. 저장을 마무리하고 있어요.' : '메모를 저장했어요.');
             return true;
         } catch (error) {
             status(error.message, true);
@@ -410,10 +438,10 @@
                 blocked = true;
                 active.conflicted = true;
                 byId('reload').hidden = false;
-                status('다른 저장 내용과 충돌했습니다. 작성 내용을 보관한 뒤 저장본을 다시 열어 주세요.', true);
+                status(conflictHint, true);
             } else {
                 active.pending = saved.pending;
-                if (!saved.pending) status('DB 반영까지 완료됐어요.');
+                if (!saved.pending) status('메모를 저장했어요.');
             }
         } catch (error) { status(error.message, true); }
         finally { updateControls(); scheduleStatus(); }
@@ -468,6 +496,10 @@
     });
     byId('filter-all').addEventListener('click', () => filter(false));
     byId('filter-pinned').addEventListener('click', () => filter(true));
+    byId('list-color').addEventListener('change', () => {
+        listColor = byId('list-color').value;
+        return loadList(0);
+    });
     byId('refresh').addEventListener('click', async () => {
         if (await loadList()) status('메모 목록을 새로 불러왔어요. 편집 중인 내용은 그대로 유지됩니다.');
     });
@@ -493,7 +525,7 @@
         }
     });
     document.addEventListener('click', event => {
-        if (!event.target.closest('a[data-page-back]')) return;
+        if (!event.target.closest('a[data-page-back], a[data-memo-navigation]')) return;
         if (!canDiscard()) {
             event.preventDefault();
             event.stopImmediatePropagation();

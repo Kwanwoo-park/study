@@ -6,7 +6,7 @@
     <meta name="referrer" content="same-origin">
     <title>내 메모 · Kwanwoo</title>
     <link rel="stylesheet" href="/css/common/common.css">
-    <link rel="stylesheet" href="/css/memo/memos.css?v=20261112">
+    <link rel="stylesheet" href="/css/memo/memos.css?v=20261118-todo-link">
 </head>
 <body class="memo-page">
 <script src="/js/common/theme.js"></script>
@@ -31,6 +31,7 @@
         </div>
         <div class="memo-top-actions">
             <button type="button" class="memo-icon-button" id="memo-theme" aria-label="다크 모드 전환" aria-pressed="false"><svg aria-hidden="true"><use href="#memo-icon-moon"/></svg></button>
+            <a id="memo-todo" class="memo-button memo-button-soft" href="/todo" data-memo-navigation>To-do list</a>
             <button type="button" class="memo-button memo-button-primary" id="memo-new"><svg aria-hidden="true"><use href="#memo-icon-plus"/></svg>새 메모</button>
         </div>
     </header>
@@ -55,6 +56,16 @@
                     <div class="memo-filters" role="group" aria-label="메모 필터"><button type="button" id="memo-filter-all" class="is-active" aria-pressed="true">모든 메모</button><button type="button" id="memo-filter-pinned" aria-pressed="false"><svg aria-hidden="true"><use href="#memo-icon-pin"/></svg>고정됨</button></div>
                     <button type="button" class="memo-icon-button" id="memo-refresh" aria-label="메모 목록 새로고침"><svg aria-hidden="true"><use href="#memo-icon-refresh"/></svg></button>
                 </div>
+                <label class="memo-color-filter" for="memo-list-color">
+                    <span>색상별 조회</span>
+                    <select id="memo-list-color">
+                        <option value="">전체 색상</option>
+                        <option value="LAVENDER">라벤더</option>
+                        <option value="MINT">민트</option>
+                        <option value="AMBER">앰버</option>
+                        <option value="ROSE">로즈</option>
+                    </select>
+                </label>
                 <div class="memo-list-heading"><span>MY NOTES</span><span id="memo-results">불러오는 중</span></div>
             </div>
             <div class="memo-list" id="memo-list" aria-busy="true"><p class="memo-list-empty">메모를 불러오고 있어요…</p></div>
@@ -80,12 +91,12 @@
                     <p class="memo-editor-meta" id="memo-editor-meta">아직 저장하지 않은 메모입니다.</p>
                     <label class="memo-sr-only" for="memo-content">메모 내용</label><textarea id="memo-content" class="memo-content-input" maxlength="20000" placeholder="여기에 생각을 적어보세요.&#10;&#10;해야 할 일, 해결한 문제, 문득 떠오른 아이디어…&#10;어떤 이야기든 좋아요." spellcheck="false"></textarea>
                 </div>
-                <footer class="memo-editor-footer"><div><span id="memo-character-count">0 / 20,000자</span><small>자동 임시 저장 · ⌘ / Ctrl + S로 DB 저장</small></div><div class="memo-save-actions"><button type="button" class="memo-tool-button" id="memo-reload" hidden>저장본 다시 열기</button><button type="submit" class="memo-button memo-button-primary" id="memo-save" disabled><svg aria-hidden="true"><use href="#memo-icon-check"/></svg><span id="memo-save-label">DB에 지금 저장</span></button></div></footer>
+                <footer class="memo-editor-footer"><div><span id="memo-character-count">0 / 20,000자</span><small>자동 저장 · ⌘ / Ctrl + S로 바로 저장</small></div><div class="memo-save-actions"><button type="button" class="memo-tool-button" id="memo-reload" hidden>저장본 다시 열기</button><button type="submit" class="memo-button memo-button-primary" id="memo-save" disabled><svg aria-hidden="true"><use href="#memo-icon-check"/></svg><span id="memo-save-label">지금 저장</span></button></div></footer>
             </form>
         </section>
     </div>
-    <p class="memo-status" id="memo-status" role="status" aria-live="polite">본인 메모만 표시됩니다. 입력을 멈추면 자동으로 임시 저장됩니다.</p>
+    <p class="memo-status" id="memo-status" role="status" aria-live="polite">나만 볼 수 있는 메모예요. 입력을 멈추면 자동으로 저장돼요.</p>
 </main>
-<script src="/js/memo/memos.js?v=20261116" defer></script>
+<script src="/js/memo/memos.js?v=20261118-save-flow" defer></script>
 </body>
 </html>
