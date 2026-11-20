@@ -7,7 +7,7 @@
   <!--부트스트랩 css 추가-->
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
-  <link rel="stylesheet" href="/css/admin/admin.css?v=20260925-diagnostics">
+  <link rel="stylesheet" href="/css/admin/admin.css?v=system-monitoring">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
   <script src="/js/common/theme.js"></script>
@@ -25,12 +25,102 @@
         <a class="btn btn-primary" href="/admin/github">GitHub 내역</a>
         <button type="button" class="btn btn-primary" onclick="window.location.href = '/admin/forbidden/word/apply'">Forbbiden apply</button>
       </div>
-      <section class="admin-system-panel">
-        <div class="admin-system-header">
-          <h2>서버 상태</h2>
-          <span id="system-status-updated" class="admin-system-updated">불러오는 중</span>
+      <section class="admin-system-panel" aria-labelledby="system-status-title">
+        <header class="admin-system-header">
+          <div>
+            <span class="admin-section-label">SERVER MONITORING</span>
+            <h2 id="system-status-title">서버 상태</h2>
+          </div>
+          <time id="system-status-updated" class="admin-system-updated">불러오는 중</time>
+        </header>
+        <p id="system-status-error" class="admin-system-error" role="status" hidden></p>
+        <div id="system-status" class="admin-system-grid">
+          <article class="admin-system-card admin-system-trend">
+            <div class="admin-system-card-heading">
+              <h3>리소스 사용 추이</h3>
+              <span>최근 30분 · 30초 간격</span>
+            </div>
+            <div class="admin-system-legend">
+              <span class="admin-usage-cpu">CPU</span>
+              <span class="admin-usage-memory">메모리</span>
+            </div>
+            <div class="admin-usage-chart">
+              <div class="admin-usage-axis-y" aria-hidden="true">
+                <span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span>
+              </div>
+              <svg viewBox="0 0 1000 160" preserveAspectRatio="none" role="img" aria-label="최근 30분 CPU와 메모리 사용률 추이">
+                <path class="admin-usage-gridlines" d="M0 0H1000 M0 40H1000 M0 80H1000 M0 120H1000 M0 160H1000"/>
+                <path id="system-cpu-trend" class="admin-usage-line admin-usage-cpu"/>
+                <path id="system-memory-trend" class="admin-usage-line admin-usage-memory"/>
+                <circle id="system-cpu-point" class="admin-usage-point admin-usage-cpu" r="4" visibility="hidden"/>
+                <circle id="system-memory-point" class="admin-usage-point admin-usage-memory" r="4" visibility="hidden"/>
+              </svg>
+              <div class="admin-usage-axis-x" aria-hidden="true">
+                <time id="system-usage-start">—</time><time id="system-usage-middle">—</time><time id="system-usage-end">—</time>
+              </div>
+            </div>
+            <p id="system-usage-note" class="admin-system-note">측정값을 기다리는 중입니다.</p>
+          </article>
+          <article class="admin-system-card admin-system-disk">
+            <div class="admin-system-card-heading">
+              <h3>디스크 용량</h3>
+              <button type="button" id="system-disk-details" class="admin-system-detail-button">파일 보기 <span aria-hidden="true">›</span></button>
+            </div>
+            <div class="admin-disk-usage">
+              <div>
+                <strong id="system-disk-percent" class="admin-system-value">—</strong>
+                <span id="system-disk-capacity" class="admin-system-unit">—</span>
+                <div class="admin-system-legend admin-disk-legend">
+                  <span class="admin-disk-used">사용 <b id="system-disk-used">—</b></span>
+                  <span class="admin-disk-free">여유 <b id="system-disk-free">—</b></span>
+                </div>
+              </div>
+              <div id="system-disk-meter" class="admin-disk-meter" aria-hidden="true">
+                <span></span><span class="admin-disk-threshold"></span>
+              </div>
+            </div>
+            <p id="system-disk-note" class="admin-system-note">주의 기준 80%</p>
+          </article>
+          <article class="admin-system-card">
+            <div class="admin-system-card-heading"><h3>CPU</h3></div>
+            <div class="admin-system-breakdown">
+              <div class="admin-system-ring admin-usage-cpu" id="system-cpu-ring"><strong id="system-cpu-percent">—</strong></div>
+              <div><strong id="system-cpu-cores">—</strong><span id="system-cpu-process" class="admin-system-unit">—</span></div>
+            </div>
+          </article>
+          <article class="admin-system-card">
+            <div class="admin-system-card-heading">
+              <h3>메모리</h3>
+              <button type="button" id="system-memory-details" class="admin-system-detail-button">프로세스 보기 <span aria-hidden="true">›</span></button>
+            </div>
+            <div class="admin-system-breakdown">
+              <div class="admin-system-ring admin-usage-memory" id="system-memory-ring"><strong id="system-memory-percent">—</strong></div>
+              <div><strong id="system-memory-capacity">—</strong><span class="admin-system-unit">사용 / 전체</span></div>
+            </div>
+          </article>
+          <article class="admin-system-card">
+            <div class="admin-system-card-heading"><h3>JVM 힙</h3></div>
+            <div class="admin-system-breakdown">
+              <div class="admin-system-ring admin-usage-heap" id="system-heap-ring"><strong id="system-heap-percent">—</strong></div>
+              <div><strong id="system-heap-capacity">—</strong><span class="admin-system-unit">사용 / 최대</span></div>
+            </div>
+          </article>
+          <article class="admin-system-card admin-system-summary">
+            <h3>가동 시간</h3>
+            <strong id="system-uptime" class="admin-system-value">—</strong>
+            <span id="system-started-at" class="admin-system-unit">—</span>
+          </article>
+          <article class="admin-system-card admin-system-summary">
+            <h3>현재 접속</h3>
+            <strong id="system-sessions" class="admin-system-value">—</strong>
+            <span id="system-websockets" class="admin-system-unit">—</span>
+          </article>
+          <article class="admin-system-card admin-system-summary">
+            <h3>작업 대기열</h3>
+            <strong id="system-queue" class="admin-system-value">—</strong>
+            <span id="system-failed" class="admin-system-unit">—</span>
+          </article>
         </div>
-        <div id="system-status" class="admin-system-grid"></div>
       </section>
       <div id="system-details" class="admin-diagnostics-overlay" hidden>
         <section class="admin-diagnostics-dialog" role="dialog" aria-modal="true" aria-labelledby="system-details-title">
@@ -113,7 +203,8 @@
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
 <script src="/js/admin/system-details.js?v=20261116"></script>
-<script src="/js/admin/main.js?v=20261118-activity"></script>
+<script src="/js/admin/system-status.js?v=system-monitoring"></script>
+<script src="/js/admin/main.js?v=system-monitoring"></script>
 <script src="/js/common/common.js?v=20261116-navigation"></script>
 </body>
 </html>

@@ -134,8 +134,40 @@ function loadPage(path) {
     vm.runInContext(helper, context);
     vm.runInContext(readFileSync(join(scripts, path), 'utf8'), context, { filename: path });
     if (docEvents.DOMContentLoaded) docEvents.DOMContentLoaded();
-    return { context, element, calls, alerts, messages };
+    return { context, element, calls, alerts, messages, docEvents };
 }
+
+test('diary Cmd/Ctrl+S submits the same form for writing and editing without repeating the save', async () => {
+    for (const [modifier, id, endpoint, method] of [
+        ['metaKey', '', '/api/diary/write', 'POST'],
+        ['ctrlKey', '42', '/api/diary/update', 'PATCH'],
+    ]) {
+        const page = loadPage('diary/write.js');
+        const form = page.element('diaryForm');
+        form.dataset.diaryId = id;
+        page.element('title').value = '오늘의 일기';
+        page.element('content').value = '저장할 본문';
+        let submitted;
+        let prevented = 0;
+        page.element('submit').addEventListener('click', () => { submitted = form.emit('submit'); });
+        const shortcut = { key: 's', [modifier]: true, preventDefault: () => prevented++ };
+
+        page.docEvents.keydown({ ...shortcut, shiftKey: true });
+        assert.equal(prevented, 0);
+        page.docEvents.keydown({ ...shortcut, repeat: true });
+        assert.equal(prevented, 1);
+        assert.equal(submitted, undefined);
+
+        page.docEvents.keydown(shortcut);
+        await submitted;
+        assert.equal(prevented, 2);
+        assert.equal(page.calls.length, 1);
+        assert.equal(page.calls[0].url, endpoint);
+        assert.equal(page.calls[0].method, method);
+        assert.equal(JSON.parse(page.calls[0].body).title, '오늘의 일기');
+        assert.equal(page.context.location.href, '/diary/list');
+    }
+});
 
 const pageCases = [
     { script: 'board/write.js', endpoint: '/api/boardImg/save', load: (p, input) => p.context.fnLoad(input), save: p => p.context.fnImgSave() },

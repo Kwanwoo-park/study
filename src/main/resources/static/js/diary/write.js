@@ -162,6 +162,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    document.addEventListener('keydown', function(event) {
+        const saveShortcut = (event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey
+                && event.key.toLowerCase() === 's';
+        if (!saveShortcut) return;
+
+        event.preventDefault();
+        if (!event.repeat && !event.isComposing) submitButton.click();
+    });
+
     if (deleteButton) {
         deleteButton.addEventListener('click', async function() {
             if (isPreparingImages || isSaving) return;

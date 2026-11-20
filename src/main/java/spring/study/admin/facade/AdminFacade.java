@@ -1,11 +1,11 @@
 package spring.study.admin.facade;
 
-import com.sun.management.OperatingSystemMXBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import spring.study.admin.component.SystemResourceMonitor;
 import spring.study.admin.dto.AdminNewBoardResponseDto;
 import spring.study.admin.dto.SystemIncidentResponseDto;
 import spring.study.admin.service.SystemIncidentService;
@@ -39,7 +39,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +58,7 @@ public class AdminFacade {
     private final ChatPresenceService chatPresenceService;
     private final KafkaOutboxEventService outboxEventService;
     private final SystemDiagnosticsService systemDiagnosticsService;
+    private final SystemResourceMonitor systemResourceMonitor;
     private final NotificationService notificationService;
 
     public ResponseEntity<?> memberOnline() {
@@ -120,11 +120,9 @@ public class AdminFacade {
     }
 
     public ResponseEntity<?> systemStatus() {
-        Map<String, Object> status = new HashMap<>();
+        Map<String, Object> status = systemResourceMonitor.status();
 
         status.put("result", 1L);
-        status.put("cpu", CpuUsedPercent());
-        status.put("memory", MemoryUsedPercent());
         status.put("disk", DiskUsedPercent());
         status.put("jvm", JVMHeap());
         status.put("traffic", Traffic());
@@ -253,30 +251,6 @@ public class AdminFacade {
         ));
     }
 
-    private Map<String, Object> CpuUsedPercent() {
-        OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-
-        return Map.of(
-                "systemPercent", percent(osBean.getCpuLoad()),
-                "processPercent", percent(osBean.getProcessCpuLoad()),
-                "cores", osBean.getAvailableProcessors()
-        );
-    }
-
-    private Map<String, Object> MemoryUsedPercent() {
-        OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-
-        long totalMemory = osBean.getTotalMemorySize();
-        long freeMemory = osBean.getFreeMemorySize();
-        long usedMemory = totalMemory - freeMemory;
-
-        return Map.of(
-                "usedBytes", usedMemory,
-                "totalBytes", totalMemory,
-                "usedPercent", percent(usedMemory, totalMemory)
-        );
-    }
-
     private Map<String, Object> DiskUsedPercent() {
         File root = new File("/");
 
@@ -322,14 +296,6 @@ public class AdminFacade {
                 "kafkaPending", kafka.pending(),
                 "kafkaDeadLetters", kafka.failed()
         );
-    }
-
-    private double percent(double ratio) {
-        if (Double.isNaN(ratio) || ratio < 0) {
-            return 0D;
-        }
-
-        return Math.round(ratio * 1000D) / 10D;
     }
 
     private double percent(long used, long total) {

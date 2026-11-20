@@ -16,8 +16,10 @@ import java.util.List;
 public class PortfolioPdfRenderer {
     @Value("${PORTFOLIO_PDF_RENDERER_DIRECTORY:tools/portfolio-pdf}")
     private String rendererDirectory = "tools/portfolio-pdf";
+
     @Value("${PORTFOLIO_PDF_NODE:node}")
     private String nodeExecutable = "node";
+
     private volatile Process activeProcess;
     private boolean closed;
 
