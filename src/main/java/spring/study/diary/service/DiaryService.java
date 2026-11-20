@@ -2,6 +2,7 @@ package spring.study.diary.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import spring.study.diary.repository.DiaryRepository;
 import spring.study.member.entity.Member;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +60,14 @@ public class DiaryService {
     @Transactional(readOnly = true)
     public List<DiaryListResponseDto> findListByMember(Member member, int page, int size) {
         return findByMember(member, page, size).stream().map(DiaryListResponseDto::new).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<DiaryListResponseDto> findForWeek(Member member, LocalDate start, LocalDate end) {
+        return diaryRepository.findByMemberAndRegisterTimeGreaterThanEqualAndRegisterTimeLessThan(
+                member, start.atStartOfDay(), end.atStartOfDay(),
+                PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "registerTime", "id")))
+                .map(DiaryListResponseDto::new);
     }
 
     @Transactional(readOnly = true)

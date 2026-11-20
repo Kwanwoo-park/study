@@ -19,7 +19,9 @@ test('acknowledging incidents refreshes the pending list and all-read leaves an 
         requestMethod: 'GET', requestPath: `/incident/${id}`, httpStatus: 500, message: 'test incident'}));
     const list = new Element(), count = new Element(), all = new Element();
     all.innerText = '전체 확인';
-    const elements = {'system-incident-list': list, 'incident-unacknowledged-count': count, 'incident-acknowledge-all': all};
+    const deployment = new Element();
+    const elements = {'system-incident-list': list, 'incident-unacknowledged-count': count, 'incident-acknowledge-all': all,
+        'admin-deployment-info': deployment};
     const context = vm.createContext({
         window: {}, console, confirm: () => true,
         alert(message) {throw new Error(message);},
@@ -35,13 +37,16 @@ test('acknowledging incidents refreshes the pending list and all-read leaves an 
             }
             assert.equal(url, '/api/admin/system/incidents');
             const pending = incidents.filter(incident => !incident.acknowledged).reverse();
-            return {ok: true, json: async () => ({result: 1, list: pending, unacknowledgedCount: pending.length})};
+            return {ok: true, json: async () => ({result: 1, list: pending, unacknowledgedCount: pending.length,
+                deployment: {commit: '123456789abcdef', startedAt: '2026-11-17T08:00:00', dirty: true}})};
         },
     });
     vm.runInContext(readFileSync(join(__dirname, '../../main/resources/static/js/admin/main.js'), 'utf8'), context);
 
     await context.loadSystemIncidents();
     assert.equal(list.children.length, 2);
+    assert.match(deployment.textContent, /123456789abc · 빌드 당시 미커밋 변경 포함/);
+    assert.match(list.children[0].children[0].children[1].innerText, /이번 기동 이후/);
     assert.equal(count.innerText, '2건 미확인');
     assert.equal(all.disabled, false);
 

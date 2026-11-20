@@ -6,6 +6,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,8 +20,11 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 import spring.study.board.controller.BoardViewController;
+import spring.study.board.dto.BoardBookmarkDto;
 import spring.study.board.entity.Board;
+import spring.study.board.facade.BoardBookmarkFacade;
 import spring.study.board.facade.BoardViewFacade;
+import spring.study.board.service.BoardBookmarkService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.controller.CommentViewController;
 import spring.study.common.component.MobileViewModelAdvice;
@@ -29,16 +34,26 @@ import spring.study.favorite.controller.FavoriteViewController;
 import spring.study.favorite.service.FavoriteService;
 import spring.study.follow.controller.FollowViewController;
 import spring.study.follow.service.FollowService;
+import spring.study.diary.controller.DiaryViewController;
+import spring.study.diary.facade.DiaryFacade;
+import spring.study.diary.service.DiaryService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
+import spring.study.todo.controller.TodoViewController;
+import spring.study.todo.dto.TodoResponseDto;
+import spring.study.todo.facade.WeekReviewFacade;
+import spring.study.todo.service.TodoService;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,6 +66,9 @@ class StandalonePageViewTest {
     @Autowired JwtManager jwtManager;
     @Autowired BoardService boards;
     @Autowired VisibilityAccessPolicy visibility;
+    @Autowired BoardBookmarkService bookmarks;
+    @Autowired TodoService todos;
+    @Autowired DiaryService diaries;
 
     @Test
     void directPagesRenderTheViewersNavigationThemeAndContentEvenForAnotherMembersPage() throws Exception {
@@ -86,13 +104,41 @@ class StandalonePageViewTest {
         }
     }
 
+    @Test
+    void bookmarkAndWeekViewsRenderForTheViewerAndDraftsUseTheViewersId() throws Exception {
+        Member viewer = Member.builder().id(7L).email("weekly@example.test").profile("/img/viewer.png").role(Role.USER).build();
+        when(jwtManager.getLoginMember(any())).thenReturn(viewer);
+        when(bookmarks.list(viewer, 0)).thenReturn(new PageImpl<>(List.of(new BoardBookmarkDto(42L, "작성자", "저장한 글"))));
+        LocalDateTime today = LocalDateTime.now();
+        when(todos.findCompletedForWeek(eq(viewer), any(), any())).thenReturn(new PageImpl<>(List.of(
+                new TodoResponseDto(1L, "이번 주 완료", true, today, today, null))));
+        when(diaries.findForWeek(eq(viewer), any(), any())).thenReturn(Page.empty());
+        MockMvc mvc = MockMvcBuilders.webAppContextSetup(context).build();
+
+        mvc.perform(get("/board/bookmarks")).andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(content().string(containsString("저장한 글")));
+        mvc.perform(get("/todo/week")).andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(content().string(containsString("이번 주 완료")));
+        mvc.perform(get("/board/write")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-draft-key=\"board:7\"")));
+        mvc.perform(get("/diary/write")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-draft-key=\"diary:7:new\"")));
+    }
+
     @Configuration
     @EnableWebMvc
-    @Import({BoardViewController.class, BoardViewFacade.class, CommentViewController.class,
-            FavoriteViewController.class, FollowViewController.class, MobileViewModelAdvice.class})
+    @Import({BoardViewController.class, BoardViewFacade.class, BoardBookmarkFacade.class, CommentViewController.class,
+            FavoriteViewController.class, FollowViewController.class, MobileViewModelAdvice.class,
+            TodoViewController.class, WeekReviewFacade.class, DiaryViewController.class})
     static class Config {
         @Bean JwtManager jwtManager() { return mock(JwtManager.class); }
         @Bean BoardService boards() { return mock(BoardService.class); }
+        @Bean BoardBookmarkService bookmarks() { return mock(BoardBookmarkService.class); }
+        @Bean TodoService todos() { return mock(TodoService.class); }
+        @Bean DiaryService diaries() { return mock(DiaryService.class); }
+        @Bean DiaryFacade diaryFacade() { return mock(DiaryFacade.class); }
         @Bean FavoriteService favorites() { return mock(FavoriteService.class); }
         @Bean FollowService follows() { return mock(FollowService.class); }
         @Bean VisibilityAccessPolicy visibility() { return mock(VisibilityAccessPolicy.class); }

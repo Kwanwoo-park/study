@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>주간 회고</title>
+    <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/common.css">
+    <link rel="stylesheet" href="/css/todo/list.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
+<main class="container todo-page">
+    <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
+    <header class="todo-page-header">
+        <div>
+            <h1 class="simple-page-title">나의 주간 회고</h1>
+            <p th:text="|${weekStart} ~ ${weekEnd}|"></p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="/todo">내 할 일</a>
+    </header>
+    <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="회고 기간">
+        <a th:if="${weeksAgo < 52}" class="btn btn-outline-primary btn-sm" th:href="@{/todo/week(weeksAgo=${weeksAgo + 1})}">지난주</a>
+        <a th:if="${weeksAgo > 0}" class="btn btn-outline-primary btn-sm" th:href="@{/todo/week(weeksAgo=${weeksAgo - 1})}">다음 주</a>
+        <a th:if="${weeksAgo > 0}" class="btn btn-outline-secondary btn-sm" href="/todo/week">이번 주</a>
+    </nav>
+    <section class="todo-section mb-3">
+        <header class="todo-section-header">
+            <h2>완료한 할 일</h2><span class="todo-count" th:text="|${completed.totalElements}개|"></span>
+        </header>
+        <p th:if="${completed.empty}" class="todo-empty">이 주에 완료한 할 일이 아직 없어요.</p>
+        <ul class="todo-list">
+            <li class="todo-row" th:each="item : ${completed.content}">
+                <span th:text="${item.content}"></span>
+                <time class="todo-time" th:text="${#temporals.format(item.completedAt, 'MM-dd HH:mm')}"></time>
+            </li>
+        </ul>
+        <p th:if="${completed.hasNext()}" class="todo-empty">최근 완료한 100개를 표시합니다.</p>
+    </section>
+    <section class="todo-section">
+        <header class="todo-section-header">
+            <h2>작성한 일기</h2><span class="todo-count" th:text="|${diaries.totalElements}개|"></span>
+        </header>
+        <p th:if="${diaries.empty}" class="todo-empty">이 주에 작성한 일기가 아직 없어요.</p>
+        <ul class="todo-list">
+            <li class="todo-row" th:each="diary : ${diaries.content}">
+                <a th:href="@{/diary/write(id=${diary.id})}" th:text="${diary.title}"></a>
+                <time class="todo-time" th:text="${#temporals.format(diary.registerTime, 'MM-dd')}"></time>
+            </li>
+        </ul>
+        <p th:if="${diaries.hasNext()}" class="todo-empty">최근 작성한 100개를 표시합니다.</p>
+    </section>
+</main>
+<script src="/js/common/common.js?v=20261116-navigation"></script>
+</body>
+</html>

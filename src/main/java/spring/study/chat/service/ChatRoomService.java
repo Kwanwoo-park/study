@@ -1,6 +1,7 @@
 package spring.study.chat.service;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -59,6 +60,11 @@ public class ChatRoomService {
     @Transactional(readOnly = true)
     public ChatRoom find(String roomId) {
         return chatRoomRepository.findByRoomId(roomId);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public ChatRoom findForUpdate(String roomId) {
+        return chatRoomRepository.findForUpdateByRoomId(roomId);
     }
 
     @Transactional(readOnly = true)

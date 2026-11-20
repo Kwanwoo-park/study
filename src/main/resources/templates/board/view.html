@@ -66,6 +66,9 @@
 				<img th:id="'like' + ${board.id}" th:if="${like}" th:src="@{/img/} + ic_favorite.png" class="icon" th:onclick="fnLike([[${board.id}]])">
 				<img th:id="'like' + ${board.id}" th:unless="${like}" th:src="@{/img/} + ic_favorite_border.png" class="icon" th:onclick="fnLike([[${board.id}]])">
 				<img th:id="'comment' + ${board.id}" th:src="@{/img/} + ic_chat_black.png" class="icon" th:onclick="fnComment([[${board.id}]])">
+				<button class="btn btn-outline-secondary btn-sm" type="button"
+				        th:attr="data-board-bookmark=${board.id},data-saved=${bookmarked},aria-pressed=${bookmarked}"
+				        th:text="${bookmarked ? '저장 취소' : '나만 저장'}">나만 저장</button>
 				<a th:unless="${#strings.equals(board.member.email, member)}"
 				   class="btn btn-outline-danger btn-sm report-button"
 				   th:href="@{/report(targetType='BOARD',targetId=${board.id})}">신고</a>
@@ -97,6 +100,7 @@
 			<script src="/js/comment/panel.js?v=20261118-thread"></script>
 			<script src="/js/comment/modal.js?v=20261118-thread"></script>
 			<script src="/js/board/content.js?v=20261011"></script>
+			<script src="/js/board/bookmarks.js"></script>
 			<script src="/js/board/view.js?v=20261116-navigation"></script>
 			<script src="/js/common/common.js?v=20261116-navigation"></script>
 			<script th:if="${board.img.size > 1}" th:inline="javascript">

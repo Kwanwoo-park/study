@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessageRequestDto {
     private String id;
+    private String replyToId;
     private String message;
     private MessageType type;
     private String email;
@@ -24,8 +25,10 @@ public class ChatMessageRequestDto {
     private List<String> list;
 
     @Builder
-    public ChatMessageRequestDto(String id, String message, MessageType type, String roomId, String email, ChatRoom room, LocalDateTime registerTime, Member member, List<String> list) {
+    public ChatMessageRequestDto(String id, String message, MessageType type, String roomId, String email, ChatRoom room,
+                                 LocalDateTime registerTime, Member member, List<String> list, String replyToId) {
         this.id = id;
+        this.replyToId = replyToId;
         this.message = message;
         this.type = type;
         this.email = email;
@@ -39,6 +42,7 @@ public class ChatMessageRequestDto {
     public ChatMessage toEntity() {
         return ChatMessage.builder()
                 .id(id)
+                .replyToId(replyToId)
                 .message(message)
                 .type(type)
                 .member(member)
@@ -46,15 +50,4 @@ public class ChatMessageRequestDto {
                 .build();
     }
 
-    @Override
-    public String toString() {
-        return "ChatRoomResponseDto{" +
-                "id=" + id +
-                ", roomId='" + roomId + '\'' +
-                ", message='" + message + '\'' +
-                ", email=" + email + '\'' +
-                ", registerTime=" + registerTime +
-                ", list=" + list +
-                '}';
-    }
 }

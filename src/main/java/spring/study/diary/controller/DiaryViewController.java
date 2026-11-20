@@ -29,6 +29,7 @@ public class DiaryViewController {
         }
 
         addMemberModel(model, member);
+        model.addAttribute("draftOwnerId", member.getId());
         if (id != null) {
             model.addAttribute("diary", diaryFacade.findDetail(id, member));
         }

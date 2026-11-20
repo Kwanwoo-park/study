@@ -3,6 +3,7 @@ package spring.study.account.facade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -163,6 +164,21 @@ public class AccountFacade {
                     "message", settlement.matured() ? "만기 해지가 완료되었습니다" : "중도 해지가 완료되었습니다"
             ));
         });
+    }
+
+    public ResponseEntity<?> previewTermination(String number, String settlementNumber, Member member) {
+        try {
+            if (settlementNumber == null || settlementNumber.isBlank())
+                throw new IllegalArgumentException("정산받을 입출금 계좌를 선택해주세요");
+            LocalDateTime time = LocalDateTime.now();
+            AccountSettlementResult preview = accountService.previewTermination(number, settlementNumber, member, time);
+            return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                    .body(Map.of("result", 10L, "settlement", preview, "calculatedAt", time));
+        } catch (SecurityException error) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("result", -10L, "message", error.getMessage()));
+        } catch (IllegalArgumentException | ArithmeticException error) {
+            return ResponseEntity.badRequest().body(Map.of("result", -10L, "message", error.getMessage()));
+        }
     }
 
     @Transactional(readOnly = true)

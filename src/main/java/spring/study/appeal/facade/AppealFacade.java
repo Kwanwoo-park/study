@@ -54,7 +54,7 @@ public class AppealFacade {
 
             return ResponseEntity.ok(Map.of(
                     "result", 1L,
-                    "expiresInSeconds", 300,
+                    "expiresInSeconds", EmailVerificationService.CODE_TTL.toSeconds(),
                     "message", "가입된 이메일이라면 인증번호가 발송됩니다. 인증번호는 5분 동안 유효합니다"
             ));
         } catch (ResponseStatusException exception) {
@@ -70,8 +70,7 @@ public class AppealFacade {
             return ResponseEntity.ok(Map.of(
                     "result", 1L,
                     "verificationToken", verificationToken,
-                    "expiresInSeconds", 300,
-                    "message", "이메일 인증이 완료되었습니다. 5분 이내에 상소문을 제출해주세요"
+                    "message", "이메일 인증이 완료되었습니다. 시간 제한 없이 상소문을 작성할 수 있어요"
             ));
         } catch (ResponseStatusException exception) {
             return statusFailure(exception, "이메일 인증에 실패했습니다");
@@ -155,7 +154,7 @@ public class AppealFacade {
     }
 
     private ResponseStatusException appealVerificationRequired() {
-        return new ResponseStatusException(HttpStatus.FORBIDDEN, "5분 이내에 이메일 인증을 완료한 후 상소문을 제출해주세요");
+        return new ResponseStatusException(HttpStatus.FORBIDDEN, "이메일 인증을 완료한 후 상소문을 제출해주세요");
     }
 
 }

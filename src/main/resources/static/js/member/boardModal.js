@@ -123,6 +123,7 @@
             const canEdit = board.member.email === data.email;
             const currentImage = imageList[currentImageIndex];
             const liked = data.like;
+            const saved = data.bookmarked === true;
             const hasMultipleImages = imageList.length > 1;
             global.preloadAdjacentImages(imageList, currentImageIndex);
 
@@ -174,6 +175,8 @@
                     <div class="icon-box">
                         <img id="like${board.id}" src="/img/${liked ? 'ic_favorite.png' : 'ic_favorite_border.png'}" class="icon" onclick="fnLike(${board.id})">
                         <img id="comment${board.id}" src="/img/ic_chat_black.png" class="icon" onclick="fnComment(${board.id})">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-board-bookmark="${board.id}"
+                                data-saved="${saved}" aria-pressed="${saved}">${saved ? '저장 취소' : '나만 저장'}</button>
                         ${!canEdit ? `<a class="btn btn-outline-danger btn-sm report-button" href="/report?targetType=BOARD&targetId=${encodeURIComponent(board.id)}&returnUrl=${encodeURIComponent(basePageUrl)}">신고</a>` : ''}
                     </div>
 

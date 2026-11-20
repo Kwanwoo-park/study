@@ -514,6 +514,7 @@ JS만 실행:
 - 온라인 session과 활성 채팅방 접속 수
 - Kafka outbox pending/dead letter 수
 - S3 image cleanup pending 수
+- 실행 중인 JAR에 빌드 시 기록한 Git 커밋과 서버 시작 시각. 미커밋 변경으로 빌드했으면 따로 표시하고, Git 정보 없이 빌드하거나 IDE에서 직접 실행하면 커밋을 추측하지 않습니다.
 
 ### 서버 장애 기록
 
@@ -525,7 +526,7 @@ JS만 실행:
 - 같은 미확인 장애의 반복 발생 횟수
 - 관리자 확인 여부와 확인 시각
 
-최근 50건은 `GET /api/admin/system/incidents`, 확인 처리는 `PATCH /api/admin/system/incidents/{id}/acknowledge`에서 제공합니다. 클라이언트 연결 종료에 따른 `ClientAbortException`과 일반 `IOException`은 장애 DB에 쌓지 않고 debug log로 처리합니다.
+최근 미확인 기록 최대 30건은 `GET /api/admin/system/incidents`, 확인 처리는 `PATCH /api/admin/system/incidents/{id}/acknowledge`에서 제공합니다. 관리자 화면에서는 장애 발생 시각이 현재 서버의 기동 전인지 후인지 표시합니다. 같은 버전을 재시작해도 기준 시각은 갱신됩니다. 클라이언트 연결 종료에 따른 `ClientAbortException`과 일반 `IOException`은 장애 DB에 쌓지 않고 debug log로 처리합니다.
 
 ### 운영 보안
 

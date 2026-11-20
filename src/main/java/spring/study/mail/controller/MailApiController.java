@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.mail.facade.MailFacade;
 
-import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -15,12 +15,12 @@ public class MailApiController {
     private final MailFacade mailFacade;
 
     @PostMapping("/confirm")
-    public ResponseEntity<HashMap<String, String>> mailConfirm(@RequestBody MemberRequestDto memberRequestDto) throws Exception {
+    public ResponseEntity<Map<String, Object>> mailConfirm(@RequestBody MemberRequestDto memberRequestDto) {
         return mailFacade.confirm(memberRequestDto.getEmail());
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<HashMap<String, String>> verify(@RequestBody MemberRequestDto request) {
+    public ResponseEntity<Map<String, Object>> verify(@RequestBody MemberRequestDto request) {
         return mailFacade.verify(request.getEmail(), request.getCode());
     }
 }

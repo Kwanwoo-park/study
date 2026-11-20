@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import spring.study.account.dto.AccountTranDto;
+import spring.study.account.dto.AccountSettlementResult;
 import spring.study.account.entity.Account;
 import spring.study.account.entity.AccountTransaction;
 import spring.study.account.entity.AccountTransactionStatus;
@@ -78,6 +79,30 @@ class AccountMoneySafetyTest {
         assertThat(target.getAmount()).isEqualTo(10_000L);
         verifyNoInteractions(repository, notifications);
         verify(transactionService, never()).cancelTransaction(any(), any(), any(), any());
+    }
+
+    @Test
+    void previewIsReadOnlyAndMatchesSettlementAtTheSameTime() {
+        Member owner = Member.builder().id(1L).build();
+        Member other = Member.builder().id(2L).build();
+        Account source = account("100", owner, AccountType.TIME_DEPOSIT, 1_000_000L);
+        Account target = account("200", owner, AccountType.DEPOSIT_WITHDRAWAL, 20_000L);
+        LocalDateTime opened = LocalDateTime.of(2026, 1, 1, 0, 0);
+        LocalDateTime at = opened.plusMonths(6);
+        source.setOpenedAt(opened);
+        source.setMaturityAt(opened.plusYears(1));
+        source.setLastInterestCalculatedAt(opened);
+        when(repository.findById("100")).thenReturn(Optional.of(source));
+        when(repository.findById("200")).thenReturn(Optional.of(target));
+        AccountService service = new AccountService(repository);
+
+        AccountSettlementResult preview = service.previewTermination("100", "200", owner, at);
+        assertThat(source.getAmount()).isEqualTo(1_000_000L);
+        assertThat(source.getLastInterestCalculatedAt()).isEqualTo(opened);
+        assertThat(target.getAmount()).isEqualTo(20_000L);
+        assertThat(facade.previewTermination("100", "200", other).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        verifyNoInteractions(transactionService, notifications);
+        assertThat(service.terminateInterestAccount(source, target, owner, at)).isEqualTo(preview);
     }
 
     private Account account(String number, Member owner, AccountType type, long amount) {

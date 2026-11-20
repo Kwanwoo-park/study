@@ -9,24 +9,28 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import spring.study.diary.entity.Diary;
 import spring.study.diary.repository.DiaryRepository;
+import spring.study.diary.service.DiaryService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.repository.MemberRepository;
 import spring.study.todo.entity.Todo;
+import spring.study.todo.entity.TodoDueFilter;
 import spring.study.todo.service.TodoService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY, connection = EmbeddedDatabaseConnection.H2)
-@Import(TodoService.class)
+@Import({TodoService.class, DiaryService.class})
 class TodoPersistenceTest {
     @Autowired private TodoRepository repository;
     @Autowired private TodoService service;
     @Autowired private MemberRepository members;
     @Autowired private DiaryRepository diaries;
+    @Autowired private DiaryService diaryService;
     @Autowired private EntityManager entityManager;
 
     @Test
@@ -76,6 +80,35 @@ class TodoPersistenceTest {
         assertThat(service.findByMember(owner, true, 1, 1).getContent())
                 .extracting(todo -> todo.id()).containsExactly(completedOld.getId());
         assertThat(service.findById(completedOld.getId(), owner).completedAt()).isEqualTo(time.minusHours(1));
+    }
+
+    @Test
+    void dueFiltersAndWeeklyReviewShowOnlyTheOwnersMatchingRecords() {
+        Member owner = members.saveAndFlush(member("week-owner@example.test", "01022223333"));
+        Member other = members.saveAndFlush(member("week-other@example.test", "01033334444"));
+        LocalDate today = LocalDate.now();
+        Long dueToday = service.create("오늘 할 일", today, owner).id();
+        Long overdue = service.create("지난 일", today.minusDays(1), owner).id();
+        Long future = service.create("다음 일", today.plusDays(1), owner).id();
+        service.create("다른 사람의 오늘", today, other);
+        Long completed = service.create("완료", today, owner).id();
+        service.updateCompletion(completed, true, owner);
+        Diary diary = diaries.saveAndFlush(Diary.builder().member(owner).title("이번 주 기록").content("본문").build());
+        diaries.saveAndFlush(Diary.builder().member(other).title("다른 기록").content("본문").build());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(service.findByDueDate(owner, TodoDueFilter.TODAY, 0, 20).getContent())
+                .extracting(item -> item.id()).containsExactly(dueToday);
+        assertThat(service.findByDueDate(owner, TodoDueFilter.OVERDUE, 0, 20).getContent())
+                .extracting(item -> item.id()).containsExactly(overdue);
+        assertThat(service.findByDueDate(owner, TodoDueFilter.UPCOMING, 0, 20).getContent())
+                .extracting(item -> item.id()).containsExactly(future);
+        assertThat(service.findCompletedForWeek(owner, today, today.plusDays(1)).getContent())
+                .extracting(item -> item.id()).containsExactly(completed);
+        assertThat(diaryService.findForWeek(owner, today, today.plusDays(1)).getContent())
+                .extracting(item -> item.getId()).containsExactly(diary.getId());
+        assertThat(service.updateDueDate(dueToday, null, owner).dueDate()).isNull();
     }
 
     private Todo create(Member member, String content, LocalDateTime createdAt, LocalDateTime completedAt) {

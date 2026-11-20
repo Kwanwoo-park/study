@@ -21,14 +21,12 @@ import spring.study.member.service.MemberService;
 import spring.study.mail.entity.EmailVerificationPurpose;
 import spring.study.mail.service.EmailVerificationService;
 
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class MemberPasswordChangeControllerTest {
@@ -64,6 +62,17 @@ class MemberPasswordChangeControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         verify(memberFacade, never()).updatePassword("new-password", member);
         verify(cookieService, never()).clearAuthenticationCookies(httpResponse);
+    }
+
+    @Test
+    void unauthenticatedRecoveryDoesNotLookUpTheAccountBeforeProof() {
+        MemberRequestDto request = MemberRequestDto.builder().email("member@example.com").password("new-password").build();
+        request.setVerificationToken("invalid-proof");
+        ResponseEntity<?> response = controller.updatePasswordAction(request, httpRequest, httpResponse);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        verify(emailVerificationService).consume(EmailVerificationPurpose.EMAIL, "member@example.com", "invalid-proof");
+        verifyNoInteractions(memberService);
     }
 
 }

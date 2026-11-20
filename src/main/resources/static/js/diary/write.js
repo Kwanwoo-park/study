@@ -1,10 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('diaryForm');
+    const draft = window.TextDraft?.bind(form);
     const maxImageCount = 10;
     const imageInput = document.getElementById('imageInput');
     const imageSelectButton = document.getElementById('imageSelectButton');
     const imagePreviewList = document.getElementById('imagePreviewList');
     const imageCount = document.getElementById('imageCount');
+    const titleField = document.getElementById('title');
+    const contentField = document.getElementById('content');
+    const visibilityField = document.getElementById('visibility');
     const submitButton = form.querySelector('button[type="submit"]');
     const deleteButton = document.getElementById('diaryDeleteButton');
     let selectedFiles = [];
@@ -18,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         imageSelectButton.disabled = busy || count >= maxImageCount;
         imageInput.disabled = busy;
         submitButton.disabled = busy;
+        titleField.readOnly = contentField.readOnly = visibilityField.disabled = isSaving;
         if (deleteButton) deleteButton.disabled = busy;
         imagePreviewList.querySelectorAll('.image-remove-button').forEach(button => {
             button.disabled = busy;
@@ -132,9 +137,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const existingImageUrls = Array.from(imagePreviewList.querySelectorAll('[data-existing-url]'))
                     .map(item => item.dataset.existingUrl);
             const payload = {
-                title: document.getElementById('title').value.trim(),
-                content: document.getElementById('content').value,
-                visibility: document.getElementById('visibility').value,
+                title: titleField.value.trim(),
+                content: contentField.value,
+                visibility: visibilityField.value,
                 images: existingImageUrls.concat(uploadedImageUrls)
                         .map(imageUrl => ({ imageUrl }))
             };
@@ -153,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 throw new Error(body.message || '일기를 저장하지 못했습니다');
             }
+            draft?.clear();
             window.location.href = '/diary/list';
         } catch (error) {
             showMessage(error.message);
@@ -189,6 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) {
                     throw new Error(body.message || '일기를 삭제하지 못했습니다');
                 }
+                draft?.clear();
                 window.location.href = '/diary/list';
             } catch (error) {
                 showMessage(error.message);

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
     <link rel="stylesheet" href="/css/common/common.css?v=20260830">
-    <link rel="stylesheet" href="/css/chat/chat.css?v=20260916">
-    <link rel="stylesheet" href="/css/chat/room-details.css?v=20260912">
+    <link rel="stylesheet" href="/css/chat/chat.css?v=replies-polls">
+    <link rel="stylesheet" href="/css/chat/room-details.css?v=room-polls">
     <title>Chatting Room</title>
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
@@ -72,8 +72,16 @@
         </div>
         <div id="audio-call-remotes" class="audio-call-remotes" aria-hidden="true"></div>
     </section>
+    <div class="chat-send-feedback">
+        <span id="chat-send-status" role="status"></span>
+        <button type="button" id="chat-send-retry" class="btn btn-outline-primary btn-sm" hidden>다시 시도</button>
+    </div>
+    <div id="chat-reply-draft" class="chat-reply-draft" hidden>
+        <span id="chat-reply-draft-text"></span>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="chat-reply-cancel">답장 취소</button>
+    </div>
     <div class="chat-room-controls">
-        <textarea class="form-control" id="chat" name="chat" rows="1" cols="" placeholder="보낼 메세지를 입력하세요." onkeydown="send(event)"></textarea>
+        <textarea class="form-control" id="chat" name="chat" rows="1" maxlength="255" placeholder="보낼 메시지를 입력하세요." onkeydown="send(event)"></textarea>
         <button type="button" value="전송" class="btn btn-primary" onclick="sendMsg()">전송</button>
         <input type="file" id="upload" name="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>
         <button type="button" class="btn btn-primary" id="btn">이미지 전송</button>
@@ -100,6 +108,28 @@
                     <p id="chat-details-members-status" class="chat-details-muted" role="status"></p>
                     <ul id="chat-details-members" class="chat-details-members"></ul>
                 </section>
+                <section aria-labelledby="chat-polls-title">
+                    <div class="d-flex justify-content-between gap-2">
+                        <h3 id="chat-polls-title">일정 투표</h3>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="chat-polls-refresh">새로고침</button>
+                    </div>
+                    <details id="chat-polls-create">
+                        <summary>투표 만들기</summary>
+                        <form id="chat-poll-form" class="chat-poll-form">
+                            <label for="chat-poll-title">질문</label>
+                            <input id="chat-poll-title" class="form-control" maxlength="100" required placeholder="예: 어느 날에 모일까요?">
+                            <label for="chat-poll-options">선택지 2~5개 · 한 줄에 하나씩</label>
+                            <textarea id="chat-poll-options" class="form-control" rows="3" maxlength="410" required></textarea>
+                            <label for="chat-poll-duration">투표 기간</label>
+                            <select id="chat-poll-duration" class="form-control">
+                                <option value="1">1시간</option><option value="24" selected>1일</option><option value="168">7일</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm">투표 올리기</button>
+                        </form>
+                    </details>
+                    <p id="chat-polls-status" class="chat-details-muted" role="status"></p>
+                    <div id="chat-polls-list" class="chat-polls-list"></div>
+                </section>
                 <section aria-labelledby="chat-details-images-title">
                     <h3 id="chat-details-images-title">주고받은 사진</h3>
                     <p class="chat-details-muted">최근 등록된 사진부터 표시합니다. 삭제한 메시지의 사진은 제외됩니다.</p>
@@ -117,8 +147,10 @@
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
     <script src="/js/common/image-upload.js?v=20261116"></script>
-    <script src="/js/chat/chat.js?v=20261116-navigation"></script>
+    <script src="/js/chat/quotes.js"></script>
+    <script src="/js/chat/chat.js?v=replies-polls"></script>
     <script src="/js/chat/room-details.js?v=20261116"></script>
+    <script src="/js/chat/polls.js"></script>
     <script src="/js/chat/audio-call.js?v=20261116"></script>
 </body>
 <footer>

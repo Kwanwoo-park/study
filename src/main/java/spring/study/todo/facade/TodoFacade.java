@@ -7,8 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.member.entity.Member;
 import spring.study.todo.dto.TodoResponseDto;
+import spring.study.todo.entity.TodoDueFilter;
 import spring.study.todo.service.TodoService;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @Service
@@ -16,8 +18,10 @@ import java.util.Map;
 public class TodoFacade {
     private final TodoService todoService;
 
-    public ResponseEntity<?> list(Member member, Boolean completed, int page, int size) {
-        Page<TodoResponseDto> todos = todoService.findByMember(member, completed, page, size);
+    public ResponseEntity<?> list(Member member, Boolean completed, TodoDueFilter due, int page, int size) {
+        Page<TodoResponseDto> todos = due == null || Boolean.TRUE.equals(completed)
+                ? todoService.findByMember(member, completed, page, size)
+                : todoService.findByDueDate(member, due, page, size);
 
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(Map.of(
                 "result", 10L,
@@ -33,8 +37,12 @@ public class TodoFacade {
         return todoResponse(todoService.findById(id, member));
     }
 
-    public ResponseEntity<?> create(String content, Member member) {
-        return todoResponse(todoService.create(content, member));
+    public ResponseEntity<?> create(String content, LocalDate dueDate, Member member) {
+        return todoResponse(todoService.create(content, dueDate, member));
+    }
+
+    public ResponseEntity<?> updateDueDate(Long id, LocalDate dueDate, Member member) {
+        return todoResponse(todoService.updateDueDate(id, dueDate, member));
     }
 
     public ResponseEntity<?> update(Long id, String content, Member member) {

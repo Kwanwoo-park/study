@@ -17,7 +17,10 @@
             <h1 class="simple-page-title">내 To-do list</h1>
             <p>일기와 별개로 관리하는, 나만의 할 일 목록입니다.</p>
         </div>
-        <a class="btn btn-outline-secondary btn-sm" href="/diary/list">내 일기</a>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary btn-sm" href="/diary/list">내 일기</a>
+            <a class="btn btn-outline-primary btn-sm" href="/todo/week">주간 회고</a>
+        </div>
     </header>
 
     <form id="todoCreateForm" class="todo-create-form">
@@ -27,6 +30,8 @@
                    placeholder="할 일을 입력하세요" required autocomplete="off" aria-describedby="todoHelp">
             <button class="btn btn-primary" type="submit">추가</button>
         </div>
+        <label for="todoDueDate">마감일 (선택)</label>
+        <input id="todoDueDate" class="form-control" type="date">
         <small id="todoHelp">최대 255자 · 완료한 일은 체크해 주세요.</small>
     </form>
 
@@ -35,7 +40,13 @@
         <header class="todo-section-header">
             <div>
                 <h2 id="todoPendingTitle">미완료</h2>
-                <p>최근 생성한 순서</p>
+                <label for="todoDueFilter" class="sr-only">마감일로 보기</label>
+                <select class="form-control form-control-sm" id="todoDueFilter">
+                    <option value="">전체 미완료</option>
+                    <option value="TODAY">오늘 할 일</option>
+                    <option value="OVERDUE">기한 지남</option>
+                    <option value="UPCOMING">예정</option>
+                </select>
             </div>
             <span id="todoPendingCount" class="todo-count"></span>
         </header>
@@ -67,7 +78,7 @@
     </section>
     <noscript>할 일 목록을 사용하려면 JavaScript를 활성화해 주세요.</noscript>
 </main>
-<script src="/js/todo/list.js?v=20261118-completion-time"></script>
+<script src="/js/todo/list.js?v=due-date"></script>
 <script src="/js/common/common.js?v=20261116-navigation"></script>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>
 </body>

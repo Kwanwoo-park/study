@@ -29,6 +29,9 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
     @Column(name = "message_id")
     private String id;
 
+    @Column(name = "reply_to_id")
+    private String replyToId;
+
     @NotNull
     private String message;
 
@@ -61,13 +64,14 @@ public class ChatMessage extends BasetimeEntity implements Serializable, Persist
     private boolean newEntity = true;
 
     @Builder
-    public ChatMessage(String id, String message, MessageType type, Member member, ChatRoom room) {
+    public ChatMessage(String id, String message, MessageType type, Member member, ChatRoom room, String replyToId) {
         this.id = id;
         this.message = message;
         this.type = type;
         this.status = ChatMessageStatus.ACTIVE;
         this.member = member;
         this.room = room;
+        this.replyToId = replyToId;
     }
 
     @Override

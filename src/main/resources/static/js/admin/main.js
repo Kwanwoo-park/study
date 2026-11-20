@@ -32,14 +32,24 @@ async function loadSystemIncidents() {
         incidentCount.classList.toggle('has-incidents', unacknowledgedCount > 0);
         acknowledgeAllButton.disabled = unacknowledgedCount === 0;
         acknowledgeAllButton.dataset.unacknowledgedCount = String(unacknowledgedCount);
-        renderSystemIncidents(data.list);
+        renderDeployment(data.deployment);
+        renderSystemIncidents(data.list, data.deployment);
     } catch (error) {
         console.error(error);
         incidentList.innerHTML = '<div class="admin-incident-empty error">장애 기록을 불러오지 못했습니다.</div>';
     }
 }
 
-function renderSystemIncidents(incidents) {
+function renderDeployment(info) {
+    const element = document.getElementById('admin-deployment-info');
+    if (!element || !info) return;
+    let version = info.commit ? info.commit.slice(0, 12) : '빌드 정보 없음';
+    if (info.dirty) version += ' · 빌드 당시 미커밋 변경 포함';
+    element.title = info.commit || '';
+    element.textContent = `실행 버전 ${version} · 서버 시작 ${formatDateTime(info.startedAt)}`;
+}
+
+function renderSystemIncidents(incidents, deployment) {
     const incidentList = document.getElementById('system-incident-list');
     incidentList.replaceChildren();
 
@@ -51,10 +61,10 @@ function renderSystemIncidents(incidents) {
         return;
     }
 
-    incidents.forEach(incident => incidentList.append(createIncidentCard(incident)));
+    incidents.forEach(incident => incidentList.append(createIncidentCard(incident, deployment)));
 }
 
-function createIncidentCard(incident) {
+function createIncidentCard(incident, deployment) {
     const card = document.createElement('article');
     const header = document.createElement('div');
     const status = document.createElement('span');
@@ -70,6 +80,9 @@ function createIncidentCard(incident) {
     status.className = 'admin-incident-http-status';
     status.innerText = String(incident.httpStatus || 500);
     time.innerText = formatDateTime(incident.occurredAt);
+    if (incident.occurredAt && deployment?.startedAt) {
+        time.innerText += incident.occurredAt >= deployment.startedAt ? ' · 이번 기동 이후' : ' · 이번 기동 이전';
+    }
     route.className = 'admin-incident-route';
     route.innerText = `${incident.requestMethod || 'UNKNOWN'} ${incident.requestPath || 'UNKNOWN'}`;
     ip.className = 'admin-incident-ip';

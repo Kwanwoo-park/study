@@ -98,11 +98,15 @@ public class AccountInterest implements Serializable {
     }
 
     long settle(LocalDateTime settlementTime) {
-        long payableInterest = accruedInterest.setScale(0, RoundingMode.DOWN).longValue();
+        long payableInterest = payableInterest(accruedInterest);
         paidAt = settlementTime;
         paidAmount = payableInterest;
 
         return payableInterest;
+    }
+
+    static long payableInterest(BigDecimal accrued) {
+        return accrued.setScale(0, RoundingMode.DOWN).longValueExact();
     }
 
     void configureTerm(LocalDateTime openedAt, int termMonths) {

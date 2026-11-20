@@ -45,6 +45,10 @@ public class ChatRoom implements Serializable {
     @OneToMany(mappedBy = "room")
     private List<ChatRoomMember> chatRoomMembers = new ArrayList<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "room", cascade = CascadeType.REMOVE)
+    private List<ChatPoll> polls = new ArrayList<>();
+
     @Builder
     public ChatRoom(Long id, String roomId, String name, Long count) {
         this.id = id;

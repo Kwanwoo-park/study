@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.facade.BoardFacade;
+import spring.study.board.facade.BoardBookmarkFacade;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.facade.ModerationFacade;
 import spring.study.common.service.JwtManager;
@@ -25,6 +26,21 @@ public class BoardApiController {
     private final JwtManager jwtManager;
     private final CommonFacade commonFacade;
     private final ModerationFacade moderationFacade;
+    private final BoardBookmarkFacade bookmarkFacade;
+
+    @PutMapping("/bookmarks/{boardId}")
+    public ResponseEntity<?> bookmark(@PathVariable Long boardId, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+        return bookmarkFacade.save(boardId, member);
+    }
+
+    @DeleteMapping("/bookmarks/{boardId}")
+    public ResponseEntity<?> deleteBookmark(@PathVariable Long boardId, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+        return bookmarkFacade.delete(boardId, member);
+    }
 
     @GetMapping("/load")
     public ResponseEntity<?> getBoards(@RequestParam(defaultValue = "0", name = "cursor") int cursor, @RequestParam(defaultValue = "10", name = "limit") int limit, HttpServletRequest request) {

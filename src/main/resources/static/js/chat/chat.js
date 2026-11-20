@@ -6,6 +6,8 @@ const flag = document.querySelector("#flag").value;
 const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
 const newMessageNotice = document.getElementById("new-message-notice");
+const chatSendStatus = document.getElementById('chat-send-status');
+const chatSendRetry = document.getElementById('chat-send-retry');
 
 const maxSize = 10;
 const CHAT_LIMIT = 10;
@@ -37,8 +39,15 @@ let reconnectTimer = null;
 let reconnectAttempt = 0;
 let pageLeaving = false;
 let isSendingImages = false;
+let hasConnected = false;
+let latestMessage = null;
+let recoveringMessages = false;
+let checkingText = false;
+let pendingText = null;
+let receiptTimer = null;
 
 btn.addEventListener('click', () => upload.click());
+chatSendRetry.addEventListener('click', sendPendingText);
 newMessageNotice.addEventListener('click', () => {
     scrollToBottom();
     hideNewMessageNotice();
@@ -59,6 +68,8 @@ window.onload = function() {
 window.addEventListener('pagehide', () => {
     pageLeaving = true;
     clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+    clearTimeout(receiptTimer);
     deactivateChatPresence();
 });
 
@@ -66,7 +77,10 @@ window.addEventListener('pageshow', event => {
     if (!event.persisted) return;
     pageLeaving = false;
     if (!client || !client.connected) connectChatSocket();
+    else recoverMessages(latestMessage?.id);
+    if (pendingText) checkTextReceipt(pendingText);
     activateChatPresence();
+    presenceRefreshInterval = setInterval(activateChatPresence, PRESENCE_REFRESH_INTERVAL_MS);
 });
 
 container.addEventListener('scroll', () => {
@@ -93,6 +107,9 @@ function connectChatSocket() {
 }
 
 function onConnected() {
+    const reconnecting = hasConnected;
+    const lastSeenId = latestMessage?.id;
+    hasConnected = true;
     reconnectAttempt = 0;
     reconnectTimer = null;
     client.subscribe("/sub/chat/room/" + roomId, onMessageReceived);
@@ -103,6 +120,7 @@ function onConnected() {
 
     if (flag == 'true')
         enterRoom();
+    if (reconnecting) recoverMessages(lastSeenId);
 }
 
 function onError(error) {
@@ -156,6 +174,10 @@ function deactivateChatPresence() {
 function onMessageReceived(e) {
     const json = JSON.parse(e.body);
 
+    if (json.action === 'POLL_UPDATED') {
+        window.dispatchEvent(new Event('chat:polls-updated'));
+        return;
+    }
     if (json.action) {
         applyChatMessageEvent(json);
         return;
@@ -167,7 +189,7 @@ function onMessageReceived(e) {
 
 async function loadMoreChat() {
     try {
-        const res = await fetch(`/api/chat/load?roomId=${encodeURIComponent(roomId)}&cursor=${nextCursor - 1}&limit=${CHAT_LIMIT}`, {
+        const res = await fetch(`/api/chat/load?roomId=${encodeURIComponent(roomId)}&cursor=0&limit=${CHAT_LIMIT}`, {
             credentials: "include",
         });
         const data = await res.json();
@@ -210,6 +232,39 @@ async function loadPreviousChat() {
     }
 }
 
+async function recoverMessages(after) {
+    if (recoveringMessages) return;
+    if (!after) {
+        await loadMoreChat();
+        return;
+    }
+    recoveringMessages = true;
+    try {
+        const messages = document.querySelector('.list-group-flush');
+        const stickToBottom = isScrolledToBottom();
+        do {
+            const url = `/api/chat/missed?roomId=${encodeURIComponent(roomId)}&after=${encodeURIComponent(after)}`;
+            const response = await fetch(url, {credentials: 'include'});
+            if (!response.ok) throw new Error('누락된 메시지를 불러오지 못했습니다.');
+            const data = await response.json();
+            for (const item of data.message) {
+                if (registerMessageForRender(item)) insertChatMessage(messages, item, data.img[item.id]);
+            }
+            after = data.hasMore ? data.message.at(-1)?.id : null;
+        } while (after && !pageLeaving);
+        refreshDateSeparators();
+        if (stickToBottom) {
+            scrollToBottom();
+            markCurrentRoomRead();
+        }
+    } catch (error) {
+        console.error('채팅 복구 오류:', error);
+        if (!pendingText) setSendStatus('최근 메시지를 확인하지 못했어요. 새로고침해 주세요.');
+    } finally {
+        recoveringMessages = false;
+    }
+}
+
 function enterRoom() {
     const enterMsg = {
         type : "ENTER",
@@ -220,8 +275,8 @@ function enterRoom() {
     msgSend(enterMsg);
 }
 
- function send(e) {
-    if (e.keyCode == 13 && !e.shiftKey) {
+function send(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
 
         sendMsg();
@@ -243,43 +298,82 @@ function msgSend(msg) {
     client.send("/api/chat/message/send", {}, JSON.stringify(msg));
 }
 
-function sendMsg() {
-    let content = document.getElementById('chat').value;
+async function sendMsg() {
+    if (checkingText || pendingText) return;
+    const input = document.getElementById('chat');
+    const content = input.value;
+    const replyToId = window.ChatQuotes?.current();
+    if (!content.trim()) return;
+    if (!client?.connected) {
+        setSendStatus('연결된 후 다시 전송해 주세요.');
+        return;
+    }
 
-    fetch(`/api/chat/message/check?message=`+content, {
-        credentials: "include",
-    })
-    .then((response) => response.json())
-    .then((json) => {
-        if (content != '') {
-            document.getElementById('chat').value = null;
-        }
-
-        if (json['result'] == -1 || json['result'] == -2)
-            content = "<부적절한 내용이 포함되어 검열되었습니다>";
-        else if (json['result'] == -3) {
-            alert("금칙어를 사용하여 계정이 정지되었습니다");
+    checkingText = true;
+    try {
+        const response = await fetch('/api/chat/message/check', {
+            method: 'POST', credentials: 'include',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: content})
+        });
+        const data = await response.json();
+        if (data.result === -3) {
+            alert('금칙어를 사용하여 계정이 정지되었습니다');
             window.location.reload();
-            return ;
+            return;
         }
-        else if (json['result'] == -10) {
-            alert("다시 시도하여주십시오");
+        const censored = data.result === -1 || data.result === -2;
+        if (!censored && (!response.ok || data.result !== 1)) {
+            throw new Error(data.message || '메시지를 보낼 수 없습니다.');
         }
+        pendingText = {id: crypto.randomUUID(), type: 'TALK', roomId, message: censored ? CENSORED_MESSAGE : content};
+        if (replyToId) {
+            pendingText.replyToId = replyToId;
+            window.ChatQuotes.clear(replyToId);
+        }
+        if (input.value === content) input.value = '';
+        sendPendingText();
+    } catch (error) {
+        setSendStatus(error.message || '메시지를 보내지 못했습니다.');
+    } finally {
+        checkingText = false;
+    }
+}
 
-        let talkMsg = {
-            type : "TALK",
-            roomId : roomId,
-            email : email,
-            message : content
-        };
+function sendPendingText() {
+    if (!pendingText) return;
+    if (!client?.connected) {
+        setSendStatus('연결이 끊겼어요. 연결된 후 다시 시도해 주세요.', true);
+        return;
+    }
+    try {
+        const message = pendingText;
+        setSendStatus('전송 중…');
+        msgSend(message);
+        clearTimeout(receiptTimer);
+        receiptTimer = setTimeout(() => checkTextReceipt(message), 8000);
+    } catch (error) {
+        setSendStatus('전송에 실패했어요. 다시 시도해 주세요.', true);
+    }
+}
 
-        msgSend(talkMsg);
-    })
-    .catch((error) => {
-        alert("다시 시도하여주십시오");
-    })
+async function checkTextReceipt(message) {
+    try {
+        const response = await fetch(`/api/chat/message/${encodeURIComponent(message.id)}/receipt?roomId=${encodeURIComponent(roomId)}`,
+            {credentials: 'include'});
+        if (response.ok) {
+            fnDraw(await response.json());
+            return;
+        }
+    } catch (error) {
+        console.error('메시지 저장 확인 오류:', error);
+    }
+    if (pendingText === message) setSendStatus('저장 여부를 확인하지 못했어요. 다시 시도해 주세요.', true);
+}
 
-    return 0;
+function setSendStatus(message, retry = false) {
+    chatSendStatus.textContent = message;
+    chatSendRetry.hidden = !retry;
 }
 
 function fnDraw(data) {
@@ -289,7 +383,7 @@ function fnDraw(data) {
     const mine = isMyMessage(data);
     const shouldStickToBottom = isScrolledToBottom();
 
-    msgArea.append(createChatMessage(data, data.list));
+    insertChatMessage(msgArea, data, data.list);
     refreshDateSeparators();
     if (data.status === 'DELETED_FOR_ALL') return;
 
@@ -303,6 +397,46 @@ function fnDraw(data) {
     } else {
         showNewMessageNotice(data);
     }
+}
+
+function insertChatMessage(list, data, images) {
+    const row = createChatMessage(data, images);
+    const rows = list.querySelectorAll('.chat-message-row');
+    if (!rows.length || !comesAfter(rows[rows.length - 1], row)) {
+        list.append(row);
+        return;
+    }
+    list.insertBefore(row, Array.from(rows).find(item => comesAfter(item, row)));
+}
+
+async function jumpToChatReference(id) {
+    try {
+        const response = await fetch(`/api/chat/message/${encodeURIComponent(id)}/reference?roomId=${encodeURIComponent(roomId)}`,
+            {credentials: 'include', cache: 'no-store'});
+        if (response.status === 404 || response.status === 403) {
+            window.ChatQuotes.invalidate(id);
+            return;
+        }
+        if (!response.ok) throw new Error('메시지를 불러오지 못했습니다.');
+        const {message, img} = await response.json();
+        if (!document.getElementById('chat-message-' + id)) {
+            const list = document.querySelector('.list-group-flush');
+            renderedMessageIds.add(id);
+            insertChatMessage(list, message, img[id]);
+            refreshDateSeparators();
+        }
+        const row = document.getElementById('chat-message-' + id);
+        row.tabIndex = -1;
+        row.focus({preventScroll: true});
+        row.scrollIntoView({block: 'center'});
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function comesAfter(item, earlier) {
+    return item.dataset.messageOrder > earlier.dataset.messageOrder
+        || (item.dataset.messageOrder === earlier.dataset.messageOrder && item.dataset.messageId > earlier.dataset.messageId);
 }
 
 function fnLoadDraw(json) {
@@ -328,6 +462,7 @@ function createChatMessage(data, images) {
         const name = document.createElement('span');
         name.innerText = data.member.name;
         appendMessageHeader(area, profile, name, data);
+        if (data.replyToId && window.ChatQuotes) area.append(window.ChatQuotes.quote(data.replyToId, jumpToChatReference));
         appendChatMessageMain(area, data, normalizeChatImageSources(images));
         appendEditedIndicator(area, data);
         appendMessageTime(area, data);
@@ -340,9 +475,18 @@ const renderedMessageIds = new Set();
 
 function registerMessageForRender(data) {
     if (!data || !data.id) return true;
+    if (pendingText?.id === data.id && isMyMessage(data)) {
+        clearTimeout(receiptTimer);
+        pendingText = null;
+        setSendStatus('');
+    }
     if (renderedMessageIds.has(data.id)) return false;
 
     renderedMessageIds.add(data.id);
+    const time = data.registerTime;
+    if (!latestMessage || time > latestMessage.time || (time === latestMessage.time && data.id > latestMessage.id)) {
+        latestMessage = {id: data.id, time};
+    }
     return true;
 }
 
@@ -352,9 +496,11 @@ function applyMessageDirection(messageLi, messageArea, data) {
     messageLi.className = "list-group-item chat-message-row " + directionClass;
     messageLi.dataset.messageDate = getMessageDateKey(data);
     messageLi.dataset.messageTime = getMessageDate(data).toISOString();
+    messageLi.dataset.messageOrder = data.registerTime;
     messageLi.dataset.mine = String(isMyMessage(data));
     messageLi.dataset.messageId = data.id || '';
     messageLi.dataset.messageType = data.type || '';
+    messageLi.dataset.messageAuthor = data.member?.name || '';
     messageLi.id = data.id ? 'chat-message-' + data.id : '';
     messageArea.className = "chat-message-content";
 }
@@ -641,6 +787,7 @@ function appendMessageActions(messageArea, data) {
     toggle.setAttribute('aria-expanded', 'false');
     toggle.innerText = '⋮';
     menu.className = 'chat-message-actions-menu';
+    if (window.ChatQuotes) menu.append(createMessageActionButton('답장', () => window.ChatQuotes.select(data.id)));
 
     if (canEditMessage(data)) {
         menu.append(createMessageActionButton('수정', () => editChatMessage(data.id)));
@@ -784,6 +931,7 @@ async function deleteChatMessage(messageId, scope) {
         }
 
         if (scope === 'ME') {
+            window.ChatQuotes?.invalidate(messageId);
             removeChatMessageRow(messageId);
             window.dispatchEvent(new CustomEvent('chat:room-details-change', {detail: {roomId, id: messageId, action: 'DELETED_FOR_ME'}}));
         } else if (json.event) {
@@ -798,6 +946,7 @@ function applyChatMessageEvent(event) {
     if (!event || !event.id) return;
 
     if (event.action === 'DELETED_FOR_ALL') {
+        window.ChatQuotes?.invalidate(event.id);
         window.dispatchEvent(new CustomEvent('chat:room-details-change', {detail: event}));
         const row = document.getElementById('chat-message-' + event.id);
         const messageArea = row ? row.querySelector('.chat-message-content') : null;
@@ -815,6 +964,7 @@ function applyChatMessageEvent(event) {
 
     const messageText = row.querySelector('.chat-message-text');
     if (messageText) messageText.innerText = event.message;
+    window.ChatQuotes?.refresh();
 
     const messageArea = row.querySelector('.chat-message-content');
     if (messageArea) {
@@ -857,6 +1007,7 @@ function appendMessageTime(messageArea, data) {
 }
 
 function refreshDateSeparators() {
+    window.ChatQuotes?.refresh();
     const msgArea = document.querySelector('.list-group-flush');
     msgArea.querySelectorAll('.chat-date-separator').forEach(separator => separator.remove());
 

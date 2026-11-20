@@ -1,12 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>Welcome to Kwanwoo.site</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="게시글을 나누고 채팅으로 이야기를 이어가며, 해야 할 일을 정리하는 커뮤니티입니다.">
+  <title>Kwanwoo Study · 서비스 소개</title>
+  <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/home.css">
 </head>
-<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<body class="study-home">
+<script src="/js/common/theme.js"></script>
+<header class="home-header home-width">
+  <a class="home-brand" href="/">Kwanwoo <span>Study</span></a>
+  <a href="/member/login">로그인</a>
+</header>
+<main class="home-width">
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="home-intro">
+      <p class="home-label">KWANWOO STUDY COMMUNITY</p>
+      <h1 id="home-title">읽고, 대화하고,<br>할 일로 남기는 공간.</h1>
+      <p>피드에서 관심사를 나누고 채팅으로 이야기를 이어가세요. 기억해 둘 일은 나만의 To-do에 정리할 수 있어요.</p>
+      <div class="home-actions">
+        <a class="home-button home-primary" href="/member/login">서비스 시작</a>
+        <a class="home-button" href="#demo">가입 없이 체험하기</a>
+      </div>
+    </div>
+    <div class="home-flow" aria-label="서비스 이용 흐름">
+      <span class="home-label">한 가지 이야기가 이어지는 방식</span>
+      <ol>
+        <li><strong>피드에서 발견</strong><span>관심 있는 글을 만나요.</span></li>
+        <li><strong>채팅에서 대화</strong><span>서로의 생각을 더 나눠요.</span></li>
+        <li><strong>To-do로 정리</strong><span>내가 할 일을 따로 적어요.</span></li>
+      </ol>
+    </div>
+  </section>
+  <section id="demo" class="home-demo" aria-labelledby="demo-title">
+    <p class="home-label">읽기 전용 체험 · 가상 데이터</p>
+    <h2 id="demo-title">주말 독서 모임을 예로 살펴봐요</h2>
+    <p>아래 내용은 예시입니다. 실제 게시글·메시지·할 일에는 영향을 주지 않아요.</p>
+    <div class="home-examples">
+      <article class="home-example">
+        <h3>피드</h3>
+        <p class="home-meta">하늘 · 예시 게시글</p>
+        <h4>이번 주말에 같이 책 읽을 분?</h4>
+        <p>짧게 읽고 서로 마음에 든 문장을 나눠 보고 싶어요.</p>
+        <details><summary>예시 댓글 보기</summary><p>다온: 좋아요! 토요일 오후는 어때요?</p></details>
+      </article>
+      <article class="home-example">
+        <h3>채팅</h3>
+        <p class="home-meta">하늘 · 다온의 예시 대화</p>
+        <p class="home-bubble">토요일 오후에 만나요. 읽을 책은 각자 하나씩 골라 와요!</p>
+        <p class="home-bubble home-reply">좋아요. 오늘 저녁에 책을 골라 둘게요.</p>
+      </article>
+      <article class="home-example">
+        <h3>나만의 To-do</h3>
+        <p class="home-meta">다온의 예시 목록 · 비공개</p>
+        <ul class="home-tasks">
+          <li><span class="home-task-status">미완료</span> 읽을 책 고르기</li>
+          <li><span class="home-task-status">완료</span> 모임 시간 확인하기</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+</main>
+<footer class="home-footer home-width">
+  <span>Kwanwoo Study</span>
+  <a href="/portfolio/">개발 포트폴리오 · PDF</a>
+</footer>
 </body>
-<script type="text/javascript">
-    window.location.href = "/member/login";
-</script>
 </html>

@@ -37,3 +37,11 @@
 .board-content-toggle:focus-visible {
     text-decoration: underline;
 }
+.board-bookmark-preview {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}

@@ -2,6 +2,7 @@ package spring.study.chat.facade;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatFacade {
+    private static final int CHAT_RECOVERY_PAGE_SIZE = 100;
     private final ChatRoomService roomService;
     private final ChatRoomMemberService roomMemberService;
     private final ChatMessageService messageService;
@@ -92,6 +94,48 @@ public class ChatFacade {
                 "nextCursor", nextCursor,
                 "img", messageImgService.findMessageImg(visibleImageMessages(list))
         ));
+    }
+
+    public ResponseEntity<?> loadMissedChatting(String roomId, String after, Member member) {
+        ChatRoom room = requireAccessibleRoom(roomId, member);
+        ChatMessage cursor = messageService.findById(after);
+        if (!room.getId().equals(cursor.getRoom().getId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채팅 기록을 찾을 수 없습니다");
+        }
+        List<ChatMessageResponseDto> messages = messageService.loadAfter(room, member, cursor, CHAT_RECOVERY_PAGE_SIZE + 1);
+        boolean hasMore = messages.size() > CHAT_RECOVERY_PAGE_SIZE;
+        if (hasMore) messages = messages.subList(0, CHAT_RECOVERY_PAGE_SIZE);
+        return ResponseEntity.ok(Map.of(
+                "message", messages,
+                "img", messageImgService.findMessageImg(visibleImageMessages(messages)),
+                "hasMore", hasMore
+        ));
+    }
+
+    public ResponseEntity<?> textReceipt(String roomId, String id, Member member) {
+        ChatRoom room = requireAccessibleRoom(roomId, member);
+        ChatMessage saved = messageService.findExisting(id).orElse(null);
+        if (saved == null || saved.getType() != MessageType.TALK || !room.getId().equals(saved.getRoom().getId())
+                || !member.getId().equals(saved.getMember().getId()) || messageHiddenService.existHiddenMessage(saved, member)) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(new ChatMessageResponseDto(saved));
+    }
+
+    public ResponseEntity<?> messageReference(String roomId, String id, Member member) {
+        ChatRoom room = requireAccessibleRoom(roomId, member);
+        ChatMessage source = messageService.findReference(room, member, id).orElse(null);
+        if (source == null) return ResponseEntity.notFound().build();
+        ChatMessageResponseDto message = new ChatMessageResponseDto(source);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(Map.of(
+                "message", message, "img", messageImgService.findMessageImg(visibleImageMessages(List.of(message)))));
+    }
+
+    private ChatRoom requireAccessibleRoom(String roomId, Member member) {
+        ChatRoom room = roomService.find(roomId);
+        if (room == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채팅방이 존재하지 않습니다");
+        requireParticipant(room, member);
+        return room;
     }
 
     public ResponseEntity<?> createRoom(String name, Member member) {

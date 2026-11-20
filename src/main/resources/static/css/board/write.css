@@ -2,23 +2,28 @@
     align-items: center;
 }
 
+.board-write-form { width: min(640px, 100%); }
+
 .imgDiv {
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    margin-top: 300px;
+    margin: 0 0 12px;
 }
 
 .btnDiv {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
 }
 
-img {
-    width: 500px;
-    height: 500px;
+.imgDiv img {
+    width: min(72%, 500px);
+    max-height: 400px;
+    object-fit: contain;
 }
 
 .arrow {

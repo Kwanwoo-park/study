@@ -18,6 +18,15 @@ import java.util.Optional;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, String> {
     @Query("""
+            select m from message m
+            where m.room = :room and m.id = :id
+              and m.status = spring.study.chat.entity.ChatMessageStatus.ACTIVE
+              and not exists (select h.id from ChatMessageHidden h where h.message = m and h.member = :member)
+            """)
+    @Transactional(readOnly = true)
+    Optional<ChatMessage> findVisibleReference(@Param("room") ChatRoom room, @Param("member") Member member, @Param("id") String id);
+
+    @Query("""
             select m
             from message m
             where m.room = :room
@@ -31,6 +40,23 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
     List<ChatMessage> findVisibleByRoom(@Param("room") ChatRoom room,
                                         @Param("member") Member member,
                                         Pageable pageable);
+
+    @Query("""
+            select m from message m
+            where m.room = :room
+              and (m.registerTime > :time or (m.registerTime = :time and m.id > :id))
+              and not exists (
+                  select h.id from ChatMessageHidden h
+                  where h.message = m and h.member = :member
+              )
+            order by m.registerTime, m.id
+            """)
+    @Transactional(readOnly = true)
+    List<ChatMessage> findVisibleAfter(@Param("room") ChatRoom room,
+                                       @Param("member") Member member,
+                                       @Param("time") LocalDateTime time,
+                                       @Param("id") String id,
+                                       Pageable pageable);
 
     @Query("""
             select count(m)

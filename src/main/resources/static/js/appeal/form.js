@@ -68,7 +68,7 @@
             verificationCode.value = '';
             verificationCode.readOnly = false;
             verificationConfirm.disabled = false;
-            startVerificationTimer(Number(data.expiresInSeconds || 300), false);
+            startVerificationTimer(Number(data.expiresInSeconds || 300));
             startResendCooldown(60);
             showMessage(data.message, 'success');
             verificationCode.focus();
@@ -107,7 +107,10 @@
             email.readOnly = true;
             verificationCode.readOnly = true;
             verificationSend.disabled = true;
-            startVerificationTimer(Number(data.expiresInSeconds || 300), true);
+            stopVerificationTimer();
+            verificationStatus.textContent = '이메일 인증 완료';
+            verificationStatus.classList.remove('expired');
+            verificationStatus.classList.add('verified');
             showMessage(data.message, 'success');
         } catch (error) {
             console.error(error);
@@ -117,39 +120,32 @@
         }
     }
 
-    function startVerificationTimer(seconds, verified) {
-        window.clearInterval(verificationTimer);
+    function startVerificationTimer(seconds) {
+        stopVerificationTimer();
+        verificationStatus.classList.remove('verified', 'expired');
         let remaining = Math.max(0, Number(seconds));
 
         const update = () => {
-            const minutes = String(Math.floor(remaining / 60)).padStart(2, '0');
-            const secs = String(remaining % 60).padStart(2, '0');
-            verificationStatus.textContent = verified
-                ? `인증 완료 · 상소문 제출까지 ${minutes}:${secs}`
-                : `인증번호 유효시간 ${minutes}:${secs}`;
-            verificationStatus.classList.toggle('verified', verified);
-            verificationStatus.classList.remove('expired');
-
             if (remaining <= 0) {
-                window.clearInterval(verificationTimer);
-                verificationTimer = null;
-                verificationToken = null;
-                email.readOnly = false;
-                verificationCode.readOnly = false;
-                verificationConfirm.disabled = false;
-                verificationStatus.textContent = verified
-                    ? '이메일 인증이 만료되었습니다. 다시 인증해주세요.'
-                    : '인증번호가 만료되었습니다. 다시 발급해주세요.';
-                verificationStatus.classList.remove('verified');
+                stopVerificationTimer();
+                verificationStatus.textContent = '인증번호가 만료되었습니다. 다시 발급해주세요.';
                 verificationStatus.classList.add('expired');
                 if (resendSeconds <= 0) verificationSend.disabled = false;
                 return;
             }
+            const minutes = String(Math.floor(remaining / 60)).padStart(2, '0');
+            const secs = String(remaining % 60).padStart(2, '0');
+            verificationStatus.textContent = `인증번호 유효시간 ${minutes}:${secs}`;
             remaining--;
         };
 
-        update();
         verificationTimer = window.setInterval(update, 1000);
+        update();
+    }
+
+    function stopVerificationTimer() {
+        window.clearInterval(verificationTimer);
+        verificationTimer = null;
     }
 
     function startResendCooldown(seconds) {
@@ -180,8 +176,7 @@
             verificationCode.readOnly = false;
             verificationConfirm.disabled = false;
         }
-        window.clearInterval(verificationTimer);
-        verificationTimer = null;
+        stopVerificationTimer();
         verificationStatus.textContent = '인증번호를 발송해주세요.';
         verificationStatus.classList.remove('verified', 'expired');
     }
@@ -246,7 +241,7 @@
         };
         if (!payload.email || (!authenticated && !payload.verificationToken) || !payload.title || !payload.content) {
             showMessage(!authenticated && !payload.verificationToken
-                ? '5분 이내에 이메일 인증을 완료해주세요.'
+                ? '상소문을 제출하기 전에 이메일을 인증해주세요.'
                 : '필수 항목을 모두 입력해주세요.', 'error');
             return;
         }
@@ -270,8 +265,8 @@
             title.value = '';
             content.value = '';
             contentCount.textContent = '0';
-            verificationToken = null;
             if (authenticated) await loadContext();
+            else clearSubmittedVerification('새 상소문을 작성하려면 이메일을 다시 인증해주세요.', false);
         } catch (error) {
             console.error(error);
             if (!authenticated) clearSubmittedVerification();
@@ -281,16 +276,16 @@
         }
     }
 
-    function clearSubmittedVerification() {
+    function clearSubmittedVerification(text = '제출에 실패하여 이메일 인증이 해제되었습니다. 다시 인증해주세요.', failed = true) {
         verificationToken = null;
         email.readOnly = false;
+        verificationCode.value = '';
         verificationCode.readOnly = false;
         verificationConfirm.disabled = false;
-        window.clearInterval(verificationTimer);
-        verificationTimer = null;
-        verificationStatus.textContent = '제출에 실패하여 이메일 인증이 해제되었습니다. 다시 인증해주세요.';
+        stopVerificationTimer();
+        verificationStatus.textContent = text;
         verificationStatus.classList.remove('verified');
-        verificationStatus.classList.add('expired');
+        verificationStatus.classList.toggle('expired', failed);
         if (resendSeconds <= 0) verificationSend.disabled = false;
     }
 

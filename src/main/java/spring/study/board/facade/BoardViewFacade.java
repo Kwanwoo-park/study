@@ -14,6 +14,7 @@ import spring.study.follow.service.FollowService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.board.service.BoardService;
+import spring.study.board.service.BoardBookmarkService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class BoardViewFacade {
     private final FavoriteService favoriteService;
     private final FollowService followService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
+    private final BoardBookmarkService bookmarkService;
 
     public String getBoardListPage(Model model, Integer page, Integer size, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
@@ -63,6 +65,7 @@ public class BoardViewFacade {
         model.addAttribute("profile", member.getProfile());
         model.addAttribute("email", member.getEmail());
 
+        model.addAttribute("draftOwnerId", member.getId());
         return "board/write";
     }
 
@@ -83,6 +86,7 @@ public class BoardViewFacade {
 
             model.addAttribute("board", board);
             model.addAttribute("like", favoriteService.existFavorite(member, board));
+            model.addAttribute("bookmarked", bookmarkService.contains(member, board.getId()));
             model.addAttribute("member", member.getEmail());
             model.addAttribute("email", member.getEmail());
             model.addAttribute("profile", member.getProfile());

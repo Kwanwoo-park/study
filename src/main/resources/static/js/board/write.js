@@ -4,28 +4,29 @@ let id;
 let img;
 let left, right, size, imageCounter;
 let isPreparingImages = false;
+let isPublishing = false;
 
 const upload = document.getElementById("upload");
 const btn = document.getElementById("btn");
-const img_btn = document.getElementById("img_btn");
 const previous = document.getElementById('previous');
 const submit = document.getElementById('submit');
 const content = document.getElementById('content')
 const visibility = document.getElementById('visibility');
-const visibilityGroup = document.getElementById('visibilityGroup');
+const boardDraft = window.TextDraft?.bind(document.getElementById('boardWriteForm'));
 
 const maxSize = 10;
 
 btn.addEventListener('click', () => upload.click());
 
 function fnSave() {
-    if (isPreparingImages) return;
+    if (isPreparingImages || isPublishing) return;
+    setPublishing(true);
     const data = {
         content: content.value,
         visibility: visibility.value
     }
 
-    fetch(`/api/board/write`, {
+    return fetch(`/api/board/write`, {
         method: 'POST',
         headers: {
             "Content-Type": "application/json; charset=utf-8",
@@ -47,18 +48,25 @@ function fnSave() {
         else if (id == -10) {
             alert("다시 시도하여주십시오.");
         }
-        else {
+        else if (id > 0) {
             if (file.length) {
-                img_btn.click();
+                return fnImgSave();
             } else {
+                boardDraft?.clear();
                 alert("게시글이 저장되었습니다.");
                 window.location.href = `/board/main`;
             }
-        }
+        } else alert(json.message || '게시글을 저장하지 못했습니다.');
     })
     .catch((error) => {
         alert("다시 시도하여주십시오.");
-    });
+    }).finally(() => setPublishing(false));
+}
+
+function setPublishing(active) {
+    isPublishing = active;
+    submit.disabled = btn.disabled = upload.disabled = previous.disabled = visibility.disabled = active;
+    content.readOnly = active;
 }
 
 function fnImgSave() {
@@ -68,7 +76,7 @@ function fnImgSave() {
         return;
     }
 
-    fetch(`/api/boardImg/save?id=` + id, {
+    return fetch(`/api/boardImg/save?id=` + id, {
         method: 'POST',
         body: ImageUpload.buildFormData(file),
         credentials: "include",
@@ -76,22 +84,23 @@ function fnImgSave() {
     .then((response) => response.json())
     .then((json) => {
         if (json['result'] > 0) {
+            boardDraft?.clear();
             alert("게시글 사진 등록 완료");
             window.location.href = `/board/main`;
         } else if (json['result'] == -2) {
             alert("게시글 사진 갯수 초과")
-            fnDelete(id)
+            return fnDelete(id);
         } else if (json['result'] == -99) {
             alert(json['message']);
-            fnDelete(id)
+            return fnDelete(id);
         } else {
             alert(json['message'] || "게시글 사진 등록 실패");
-            fnDelete(id)
+            return fnDelete(id);
         }
     })
     .catch((error) => {
         alert("게시글 사진 등록 실패");
-        if (id) fnDelete(id);
+        if (id) return fnDelete(id);
     })
 }
 
@@ -129,14 +138,9 @@ function updateImageCounter() {
 }
 
 function fnPrevious() {
-    if (isPreparingImages) return;
+    if (isPreparingImages || isPublishing) return;
     btn.style.display = 'inline';
-    imgDiv.style.marginTop = '300px';
-
     previous.style.display = 'none';
-    submit.style.display = 'none';
-    content.style.display = 'none';
-    visibilityGroup.style.display = 'none';
 
     if (left)
         left.style.display = 'none';
@@ -158,7 +162,7 @@ function fnPrevious() {
 }
 
 async function fnLoad(input) {
-    if (isPreparingImages) return;
+    if (isPreparingImages || isPublishing) return;
     const selectedFiles = Array.from(input.files);
     if (selectedFiles.length === 0) {
         return;
@@ -184,16 +188,8 @@ async function fnLoad(input) {
 
     size = file.length;
 
-    imgDiv.append(document.createElement('br'));
-    imgDiv.append(document.createElement('br'));
-
-    imgDiv.style.marginTop = 0;
-
     btn.style.display = 'none';
     previous.style.display = 'flex';
-    submit.style.display = 'flex';
-    content.style.display = 'inline';
-    visibilityGroup.style.display = 'block';
 
     fidx = 0;
 
@@ -243,7 +239,7 @@ async function fnLoad(input) {
 }
 
 function fnDelete(boardId) {
-    fetch(`/api/board/view/delete?id=` + boardId, {
+    return fetch(`/api/board/view/delete?id=` + boardId, {
         method: 'DELETE',
         headers: {
             "Content-Type": "application/json; charset=utf-8",

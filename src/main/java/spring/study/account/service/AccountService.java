@@ -173,6 +173,19 @@ public class AccountService {
         return new AccountSettlementResult(source.getAccount(), settlementAccount.getAccount(), principal, interest, settlementAmount, matured);
     }
 
+    @Transactional(readOnly = true)
+    public AccountSettlementResult previewTermination(String number, String settlementNumber, Member member, LocalDateTime time) {
+        Account source = accountRepository.findById(number).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
+        Account settlement = accountRepository.findById(settlementNumber).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계좌입니다"));
+        validateSettlement(source, settlement, member);
+        long principal = source.getAmount();
+        long interest = source.estimatePayableInterest(time);
+        long total = Math.addExact(principal, interest);
+        Math.addExact(settlement.getAmount(), total);
+        boolean matured = source.getMaturityAt() != null && !time.isBefore(source.getMaturityAt());
+        return new AccountSettlementResult(number, settlementNumber, principal, interest, total, matured);
+    }
+
     @Transactional
     public void markMaturedAccounts(LocalDateTime now) {
         accountRepository.findByAccountStatusAndInterestDetail_MaturityAtLessThanEqual(AccountStatus.ACTIVE, now)

@@ -18,7 +18,10 @@
         <header class="board-page-header">
             <div class="board-page-header-content">
                 <h1 class="simple-page-title">게시글</h1>
-                <a class="btn btn-outline-primary btn-sm" href="/book-reviews">독후감</a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-primary btn-sm" href="/book-reviews">독후감</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="/board/bookmarks">저장한 글</a>
+                </div>
             </div>
         </header>
     </div>
@@ -34,7 +37,8 @@
         <script src="/js/follow/actions.js?v=20261116"></script>
         <script src="/js/favorite/modal.js?v=20261116"></script>
         <script src="/js/board/content.js?v=20261011"></script>
-	    <script src="/js/board/main.js?v=20261118-post-rendering"></script>
+        <script src="/js/board/bookmarks.js"></script>
+	    <script src="/js/board/main.js?v=bookmarks"></script>
 	    <script src="/js/common/common.js?v=20261116-navigation"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

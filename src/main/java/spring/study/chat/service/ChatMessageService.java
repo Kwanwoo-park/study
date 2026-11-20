@@ -61,15 +61,20 @@ public class ChatMessageService {
             if (saved != null && (saved.isEdited() || saved.getStatus() == ChatMessageStatus.DELETED_FOR_ALL))
                 continue;
 
-            if (saved != null)
+            if (saved != null) {
+                if (!saved.getRoom().getRoomId().equals(message.getRoomId()) || !saved.getMember().getEmail().equals(message.getEmail()))
+                    continue;
                 message.setMessage(saved.getMessage());
+                message.setRegisterTime(saved.getRegisterTime());
+                message.setReplyToId(saved.getReplyToId());
+            }
 
             ChatRoom room = rooms.get(message.getRoomId());
             Member member = members.get(message.getEmail());
 
             if (room == null || member == null) {
-                log.warn("Skipping chat event because its room or member no longer exists. messageId={}, roomId={}, email={}",
-                        message.getId(), message.getRoomId(), message.getEmail());
+                log.warn("Skipping chat event because its room or member no longer exists. messageId={}, roomId={}",
+                        message.getId(), message.getRoomId());
                 continue;
             }
 
@@ -82,7 +87,11 @@ public class ChatMessageService {
             }
         }
 
-        chatMessageRepository.saveAll(newMessages);
+        Map<String, LocalDateTime> savedTimes = new HashMap<>();
+        chatMessageRepository.saveAll(newMessages).forEach(message -> savedTimes.put(message.getId(), message.getRegisterTime()));
+        for (ChatMessageRequestDto message : validMessages) {
+            if (savedTimes.containsKey(message.getId())) message.setRegisterTime(savedTimes.get(message.getId()));
+        }
         updateRoomSummaries(validMessages, rooms);
 
         return validMessages;
@@ -91,6 +100,18 @@ public class ChatMessageService {
     @Transactional(readOnly = true)
     public ChatMessage findById(String id) {
         return chatMessageRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "메시지를 찾을 수 없습니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<ChatMessage> findExisting(String id) {
+        return chatMessageRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<ChatMessage> findReference(ChatRoom room, Member member, String id) {
+        if (id == null || id.isBlank() || id.length() > 255) return Optional.empty();
+        return chatMessageRepository.findVisibleReference(room, member, id)
+                .filter(message -> message.getType() == MessageType.TALK || message.getType() == MessageType.IMAGE);
     }
 
     @Transactional(readOnly = true)
@@ -108,11 +129,17 @@ public class ChatMessageService {
         return chatMessageRepository.findVisibleByRoom(
                         room,
                         member,
-                        PageRequest.of(cursor, limit, Sort.by("registerTime").descending())
+                        PageRequest.of(cursor, limit, Sort.by("registerTime", "id").descending())
                 )
                 .stream()
                 .map(ChatMessageResponseDto::new)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChatMessageResponseDto> loadAfter(ChatRoom room, Member member, ChatMessage cursor, int limit) {
+        return chatMessageRepository.findVisibleAfter(room, member, cursor.getRegisterTime(), cursor.getId(), PageRequest.of(0, limit))
+                .stream().map(ChatMessageResponseDto::new).toList();
     }
 
     @Transactional(readOnly = true)

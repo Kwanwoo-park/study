@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import spring.study.member.entity.Member;
 import spring.study.todo.entity.Todo;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface TodoRepository extends JpaRepository<Todo, Long> {
@@ -15,6 +17,15 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 
     @Transactional(readOnly = true)
     Page<Todo> findByMemberAndCompleted(Member member, boolean completed, Pageable pageable);
+
+    Page<Todo> findByMemberAndCompletedFalseAndDueDateBefore(Member member, LocalDate today, Pageable pageable);
+
+    Page<Todo> findByMemberAndCompletedFalseAndDueDate(Member member, LocalDate today, Pageable pageable);
+
+    Page<Todo> findByMemberAndCompletedFalseAndDueDateAfter(Member member, LocalDate today, Pageable pageable);
+
+    Page<Todo> findByMemberAndCompletedTrueAndCompletedAtGreaterThanEqualAndCompletedAtLessThan(
+            Member member, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
     @Transactional(readOnly = true)
     Optional<Todo> findByIdAndMember(Long id, Member member);

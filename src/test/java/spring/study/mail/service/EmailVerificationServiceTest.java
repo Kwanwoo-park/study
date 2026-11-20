@@ -3,13 +3,13 @@ package spring.study.mail.service;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentMatchers;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.http.HttpStatus;
-import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,7 +45,7 @@ class EmailVerificationServiceTest {
 
     @ParameterizedTest
     @EnumSource(EmailVerificationPurpose.class)
-    void codeAndPurposeSpecificSingleUseProofKeepTheirExpiry(EmailVerificationPurpose purpose) throws Exception {
+    void codesExpireAndSingleUseProofsFollowTheirPurposePolicy(EmailVerificationPurpose purpose) throws Exception {
         when(values.setIfAbsent(anyString(), eq("1"), eq(Duration.ofMinutes(1)))).thenReturn(true);
         String subject = subject(purpose);
         service.send(purpose, subject, EMAIL);
@@ -72,9 +73,18 @@ class EmailVerificationServiceTest {
         } else {
             String token = service.verify(purpose, subject, code);
             assertThat(token).hasSize(43);
-            String tokenKey = purpose.getKeyPrefix() + (purpose == EmailVerificationPurpose.EMAIL ? "token:" : "verified:") + digest(token);
-            verify(values).set(tokenKey, subject, Duration.ofMinutes(5));
-            when(values.getAndDelete(tokenKey)).thenReturn(subject, (String) null);
+            if (purpose == EmailVerificationPurpose.APPEAL) {
+                String proofKey = "verification:appeal:verified:7";
+                verify(values).set(proofKey, digest(token));
+                when(redis.execute(ArgumentMatchers.<RedisScript<Long>>any(), eq(List.of(proofKey)), eq(digest(token))))
+                        .thenReturn(1L, 0L);
+                assertThat(service.consume(purpose, "8", token)).isFalse();
+                assertThat(service.consume(purpose, subject, "wrong-token")).isFalse();
+            } else {
+                String tokenKey = purpose.getKeyPrefix() + "token:" + digest(token);
+                verify(values).set(tokenKey, subject, Duration.ofMinutes(5));
+                when(values.getAndDelete(tokenKey)).thenReturn(subject, (String) null);
+            }
             assertThat(service.consume(purpose, subject, token)).isTrue();
             assertThat(service.consume(purpose, subject, token)).isFalse();
             assertThatThrownBy(() -> service.verify(purpose, subject, code)).isInstanceOf(ResponseStatusException.class);
@@ -96,6 +106,7 @@ class EmailVerificationServiceTest {
                                 purpose == EmailVerificationPurpose.EMAIL ? HttpStatus.BAD_REQUEST : HttpStatus.TOO_MANY_REQUESTS));
         verify(redis).delete(codeKey(purpose));
         verify(values, never()).set(anyString(), anyString(), any(Duration.class));
+        verify(values, never()).set(anyString(), anyString());
     }
 
     private void verifyCode(EmailVerificationPurpose purpose, String code) {

@@ -108,7 +108,7 @@ function createPostInfo(board, data, content) {
     const registration = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
 
     info.append(
-        createPostActions(board, data.email, data.like[id]),
+        createPostActions(board, data.email, data.like[id], data.bookmarkedIds?.includes(id) === true),
         createPostCount('like', '좋아요', 'like_cnt' + id, data.like_count[id], '개', () => fnHref(id)),
         postElement('span', 'name', board.member.name),
         content,
@@ -118,7 +118,7 @@ function createPostInfo(board, data, content) {
     return info;
 }
 
-function createPostActions(board, viewerEmail, liked) {
+function createPostActions(board, viewerEmail, liked, saved) {
     const actions = postElement('div', 'icon-box');
     const like = postElement('img', 'icon');
     like.id = 'like' + board.id;
@@ -130,6 +130,7 @@ function createPostActions(board, viewerEmail, liked) {
     comment.src = '/img/ic_chat_black.png';
     comment.onclick = () => fnComment(board.id);
     actions.append(like, comment);
+    if (window.BoardBookmarks) actions.append(window.BoardBookmarks.button(board.id, saved));
 
     if (board.member.email !== viewerEmail) {
         const report = postElement('button', 'btn btn-outline-danger btn-sm report-button', '신고');

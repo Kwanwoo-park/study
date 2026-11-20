@@ -5,6 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -21,16 +22,23 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
 public class EmailVerificationService {
-    private static final Duration CODE_TTL = Duration.ofMinutes(5);
-    private static final Duration RESEND_COOLDOWN = Duration.ofMinutes(1);
+    public static final Duration CODE_TTL = Duration.ofMinutes(5);
+    public static final Duration RESEND_COOLDOWN = Duration.ofMinutes(1);
     private static final Duration PASSWORD_VERIFIED_TTL = Duration.ofMinutes(10);
     private static final int MAX_ATTEMPTS = 5;
     private static final String EMAIL_CODE_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final DefaultRedisScript<Long> CONSUME_APPEAL_PROOF = new DefaultRedisScript<>("""
+            if redis.call('GET', KEYS[1]) == ARGV[1] then
+                return redis.call('DEL', KEYS[1])
+            end
+            return 0
+            """, Long.class);
 
     private final RedisTemplate<String, String> redisTemplate;
     private final JavaMailSender emailSender;
@@ -78,7 +86,12 @@ public class EmailVerificationService {
 
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 
-        redisTemplate.opsForValue().set(tokenKey(purpose, token), subject.trim(), CODE_TTL);
+        if (purpose == EmailVerificationPurpose.APPEAL) {
+            // Keep one outstanding, single-use proof per member without a writing deadline.
+            redisTemplate.opsForValue().set(key(purpose, subject.trim(), "verified"), digest(token));
+        } else {
+            redisTemplate.opsForValue().set(tokenKey(purpose, token), subject.trim(), CODE_TTL);
+        }
 
         return token;
     }
@@ -88,6 +101,10 @@ public class EmailVerificationService {
             return false;
         }
 
+        if (purpose == EmailVerificationPurpose.APPEAL) {
+            Long consumed = redisTemplate.execute(CONSUME_APPEAL_PROOF, List.of(key(purpose, subject.trim(), "verified")), digest(token));
+            return Long.valueOf(1).equals(consumed);
+        }
         return subject.trim().equals(redisTemplate.opsForValue().getAndDelete(tokenKey(purpose, token)));
     }
 

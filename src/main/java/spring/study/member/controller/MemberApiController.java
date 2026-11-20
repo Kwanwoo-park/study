@@ -55,7 +55,10 @@ public class MemberApiController {
     }
 
     @GetMapping("/find/email")
-    public ResponseEntity<?> findAction(@RequestParam() String email) {
+    public ResponseEntity<?> findAction(@RequestParam String email, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+        if (!member.getEmail().equals(email)) return commonFacade.wrongAccess();
         return memberFacade.findEmail(email);
     }
 

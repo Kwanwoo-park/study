@@ -565,13 +565,30 @@
     async function terminateAccount(account, settlementAccount) {
         if (isLoading || !settlementAccount) return;
 
-        if (!window.confirm('원금과 해지일까지의 이자를 선택한 입출금 계좌로 정산할까요?')) {
-            return;
-        }
-
         isLoading = true;
         try {
-            const response = await fetch(`/api/account/${encodeURIComponent(account)}/terminate`, {
+            const accountPath = `/api/account/${encodeURIComponent(account)}`;
+            const params = new URLSearchParams({settlementAccount});
+            const previewResponse = await fetch(`${accountPath}/termination-preview?${params}`, {
+                credentials: 'include', cache: 'no-store'
+            });
+            const preview = await previewResponse.json();
+            if (!previewResponse.ok || preview.result < 0) {
+                alert(preview.message || '정산액을 확인하지 못했습니다.');
+                return;
+            }
+            const estimate = preview.settlement;
+            const message = [
+                estimate.matured ? '만기 해지 정산 미리보기' : '중도 해지 정산 미리보기',
+                `원금 ${formatAmount(estimate.principal)}원 + 이자 ${formatAmount(estimate.interest)}원`,
+                `예상 입금액 ${formatAmount(estimate.settlementAmount)}원`,
+                `받을 계좌 ${formatAccountNumber(estimate.settlementAccount)}`,
+                '실제 정산액은 해지 시점에 다시 계산됩니다.',
+                '해지할까요?'
+            ].join('\n');
+            if (!window.confirm(message)) return;
+
+            const response = await fetch(`${accountPath}/terminate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json; charset=utf-8',

@@ -79,6 +79,15 @@ public class AccountApiController {
         return accountFacade.terminate(account, dto.getSettlementAccount(), member);
     }
 
+    @GetMapping("/{account}/termination-preview")
+    public ResponseEntity<?> previewTermination(@PathVariable String account, @RequestParam String settlementAccount,
+                                                HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return accountFacade.previewTermination(account, settlementAccount, member);
+    }
+
     @GetMapping("/transactions")
     public ResponseEntity<?> getTransactions(@RequestParam String account, @RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);

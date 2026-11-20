@@ -18,7 +18,7 @@
     </header>
 
     <form id="diaryForm"
-          th:attr="data-diary-id=${diary != null ? diary.id : ''}">
+          th:attr="data-diary-id=${diary != null ? diary.id : ''},data-draft-key=|diary:${draftOwnerId}:${diary != null ? diary.id : 'new'}|">
         <div class="form-group">
             <label for="title">제목</label>
             <input id="title"
@@ -26,7 +26,7 @@
                    type="text"
                    maxlength="200"
                    required
-                   th:value="${diary != null ? diary.title : ''}">
+                   th:value="${diary != null ? diary.title : ''}" data-draft-field>
         </div>
         <div class="form-group">
             <label for="content">본문</label>
@@ -34,12 +34,12 @@
                       class="form-control"
                       rows="14"
                       required
-                      th:text="${diary != null ? diary.content : ''}"></textarea>
+                      th:text="${diary != null ? diary.content : ''}" data-draft-field></textarea>
         </div>
 
         <div class="form-group diary-visibility-field">
             <label for="visibility">공개 설정</label>
-            <select id="visibility" class="form-control">
+            <select id="visibility" class="form-control" th:attr="data-draft-field=${diary == null ? 'true' : null}">
                 <option value="PRIVATE"
                         th:selected="${diary != null && diary.visibility != null && diary.visibility.name() == 'PRIVATE'}">비공개</option>
                 <option value="PUBLIC"
@@ -69,6 +69,12 @@
             <p id="imageCount" class="diary-field-help">0 / 10</p>
         </section>
 
+        <div class="mb-3">
+            <label><input type="checkbox" data-draft-opt-in> 이 브라우저에만 글 임시저장</label>
+            <small class="d-block">공용 기기에서는 켜지 않는 것을 권장합니다. 사진은 임시저장되지 않습니다.</small>
+            <p class="small" data-draft-status role="status"></p>
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-draft-clear hidden>임시저장 지우기</button>
+        </div>
         <div id="diaryMessage" class="mb-3" role="status" aria-live="polite"></div>
         <div class="diary-form-actions">
             <button class="btn btn-primary" type="submit" aria-keyshortcuts="Meta+S Control+S" title="Cmd/Ctrl + S"
@@ -81,7 +87,8 @@
     </form>
 </main>
 <script src="/js/common/image-upload.js?v=20261116"></script>
-<script src="/js/diary/write.js?v=20261120-save-shortcut"></script>
+<script src="/js/common/text-draft.js"></script>
+<script src="/js/diary/write.js?v=text-draft"></script>
 <script src="/js/common/common.js?v=20261116-navigation"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

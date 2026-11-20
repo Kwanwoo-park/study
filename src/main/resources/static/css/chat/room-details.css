@@ -34,3 +34,19 @@ body.chat-details-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .chat-details-panel, .chat-details-backdrop { transition: none; }
 }
+.chat-poll-form, .chat-polls-list, .chat-poll-card {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.chat-poll-card {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-muted);
+    overflow-wrap: anywhere;
+}
+
+.chat-poll-card button[aria-pressed="true"] { font-weight: 700; border-width: 2px; }
+.chat-poll-form label, .chat-poll-card p { margin: 0; }

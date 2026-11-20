@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.dto.BoardResponseDto;
 import spring.study.board.entity.Board;
+import spring.study.board.service.BoardBookmarkService;
 import spring.study.board.service.BoardImgService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.service.CommentService;
@@ -38,6 +39,7 @@ public class BoardFacade {
     private final FavoriteService favoriteService;
     private final ImageS3Service imageS3Service;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
+    private final BoardBookmarkService bookmarkService;
 
     public ResponseEntity<?> load(int cursor, int limit, Member member) {
         List<Member> memberList = followService.getMemberList(member);
@@ -51,6 +53,7 @@ public class BoardFacade {
                 "nextCursor", nextCursor,
                 "totalCount", totalCount,
                 "like", checkFavorite(list, member),
+                "bookmarkedIds", bookmarkService.findSavedIds(member, list.stream().map(Board::getId).toList()),
                 "like_count", favoriteService.countFavorites(list),
                 "comment_count", commentService.countComments(list),
                 "email", member.getEmail(),
@@ -102,6 +105,7 @@ public class BoardFacade {
                 "result", 10,
                 "board", new BoardResponseDto(board),
                 "like", favoriteService.existFavorite(member, board),
+                "bookmarked", bookmarkService.contains(member, id),
                 "like_count", favoriteService.countFavorites(board),
                 "comment_count", commentService.countComments(board),
                 "email", member.getEmail(),

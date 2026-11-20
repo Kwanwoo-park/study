@@ -7,30 +7,32 @@
 	<!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 	<link rel="stylesheet" href="/css/common/common.css?v=20260830">
-    <link rel="stylesheet" href="/css/board/write.css?v=20260830">
+    <link rel="stylesheet" href="/css/board/write.css?v=text-draft">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
     <th:block th:replace="~{fragments/common :: memberNavi(${email}, ${profile})}"></th:block>
     <div class="container">
         <th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
         <h1 class="simple-page-title">게시글 작성</h1>
-        <form method="post" enctype="multipart/form-data">
+        <form id="boardWriteForm" class="board-write-form" method="post" enctype="multipart/form-data" th:attr="data-draft-key=|board:${draftOwnerId}|">
             <div class="imgDiv">
                 <input type="file" id="upload" name="file" accept="image/*" onchange="fnLoad(this)" class="is-hidden" multiple/>
-                <button type="button" class="btn btn-primary" id="btn">Image</button>
+                <button type="button" class="btn btn-outline-primary" id="btn">사진 선택</button>
             </div>
-            <textarea class="form-control is-hidden" rows="5" cols="" id="content" name="content"></textarea>
-            <div class="form-group is-hidden" id="visibilityGroup">
+            <label for="content">본문</label>
+            <textarea class="form-control" rows="5" id="content" name="content" data-draft-field></textarea>
+            <div class="form-group" id="visibilityGroup">
                 <label for="visibility">공개 설정</label>
-                <select id="visibility" class="form-control">
+                <select id="visibility" class="form-control" data-draft-field>
                     <option value="PRIVATE">비공개</option>
                     <option value="PUBLIC" selected>공개</option>
                 </select>
             </div>
+            <p class="small" data-draft-status role="status"></p>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-draft-clear hidden>임시저장 지우기</button>
             <div class="btnDiv">
-                <button type="button" class="btn btn-success is-hidden" onclick="fnPrevious()" id="previous">Previous</button>
-                <button type="button" class="btn btn-primary is-hidden" onclick="fnSave()" id="submit">Submit</button>
-                <button type="button" class="btn btn-primary is-hidden" onclick="fnImgSave()" id="img_btn">Image Save</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="fnPrevious()" id="previous" style="display: none">사진 다시 선택</button>
+                <button type="button" class="btn btn-primary" onclick="fnSave()" id="submit">게시하기</button>
             </div>
         </form>
 	</div>
@@ -39,7 +41,8 @@
 	<script src="/js/lib/bootstrap.min.js"></script>
     <script src="/js/common/image-swipe.js"></script>
     <script src="/js/common/image-upload.js?v=20261116"></script>
-	<script src="/js/board/write.js?v=20261116-navigation"></script>
+    <script src="/js/common/text-draft.js"></script>
+	<script src="/js/board/write.js?v=text-draft"></script>
 	<script src="/js/common/common.js?v=20261116-navigation"></script>
 </body>
 <th:block th:replace="~{fragments/common :: pageFooter}"></th:block>

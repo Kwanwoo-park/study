@@ -10,22 +10,25 @@
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <div class="container">
-    <h1>Member Register</h1>
-    <form action="/register/action" method="post">
+    <h1>회원가입</h1>
+    <form id="registerForm" method="post">
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>
-            <button type="button" id="email_check" class="btn btn-primary inline-action-button">Duplicate Check</button>
-            <button type="button" id="email_certification" class="btn btn-primary inline-action-button is-hidden">Email Certification</button>
+            <button type="button" id="email_check" class="btn btn-primary inline-action-button">이메일 확인</button>
+            <button type="button" id="email_certification" class="btn btn-primary inline-action-button is-hidden">인증번호 받기</button>
+            <button type="button" id="changeEmail" class="btn btn-outline-secondary inline-action-button is-hidden">이메일 변경</button>
             <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+            <p class="mt-2 mb-1" id="emailVerificationStatus" role="status">가입할 이메일을 확인해 주세요.</p>
+            <small id="emailVerificationClock" class="d-block"></small>
             <div class="form-group last mb-4 check_input is-hidden" id="check">
-                <label for="memailconfirm" id="memailconfirmTxt">인증번호를 입력해주세요</label>
-                <input type="text" class="form-control" id="memailconfirm">
+                <label for="memailconfirm">이메일로 받은 인증번호</label>
+                <input type="text" class="form-control" id="memailconfirm" autocomplete="one-time-code">
                 <button type="button" id="verifyEmail" class="btn btn-primary">인증 확인</button>
             </div>
         </div>
         <div class="mb-3">
             <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Password" autocomplete="new-password" required>
         </div>
         <div class="mb-3">
             <label for="name" class="form-label">Name</label>
@@ -38,14 +41,15 @@
         <div class="mb-3">
             <label for="birth" class="form-label">Birth</label>
             <input type="date" class="form-control" id="birth" name="birth" value="1900-01-01" max="9999-12-31" required>
+                <small>전화번호와 생년월일은 계정을 찾을 때 사용합니다.</small>
         </div>
         <button type="button" class="btn btn-success" onclick="history.back(-1)">Previous</button>
-        <button type="button" id="submit" class="btn btn-primary is-hidden">Submit</button>
+        <button type="submit" id="submit" class="btn btn-primary is-hidden">가입하기</button>
     </form>
 </div>
 <!--부트스트랩 js, jquery 추가-->
 <script src="/js/lib/jquery.min.js"></script>
 <script src="/js/lib/bootstrap.min.js"></script>
-<script src="/js/member/register.js?v=20261116-navigation"></script>
+<script src="/js/member/register.js?v=verification-status"></script>
 </body>
 </html>

@@ -107,6 +107,10 @@ public class Account implements Serializable {
         return interestDetail.calculateAccruedInterestAt(amount, accountStatus, calculationTime);
     }
 
+    public long estimatePayableInterest(LocalDateTime calculationTime) {
+        return AccountInterest.payableInterest(calculateAccruedInterestAt(calculationTime));
+    }
+
     public void accrueInterestUntil(LocalDateTime calculationTime) {
         if (!isInterestBearing() || accountStatus == AccountStatus.TERMINATED || accountStatus == AccountStatus.DELETED) {
             return;

@@ -5,7 +5,16 @@ const appealLink = document.getElementById('appealLink');
 
 const url = new URL(window.location.href);
 const urlParams = url.searchParams;
-const redirectUrl = urlParams.get('url');
+const requestedUrl = urlParams.get('url');
+
+function loginDestination() {
+    if (!requestedUrl) return '/board/main';
+    try {
+        const target = new URL(requestedUrl, url.origin);
+        if (target.origin === url.origin) return target.href;
+    } catch (error) { /* An invalid destination falls back to the feed. */ }
+    return '/board/main';
+}
 
 const updateAppealLink = () => {
     const enteredEmail = email.value.trim();
@@ -34,13 +43,8 @@ button.addEventListener('click', (event) => {
         .then((response) => response.json())
         .then((json) => {
             if (json['result'] > 0) {
-                if (redirectUrl) {
-                    window.location.href = redirectUrl;
-                }
-                else {
-                    alert(json.member.name + "님 환영합니다!");
-                    window.location.href = `/board/main`
-                }
+                if (!requestedUrl) alert(json.member.name + "님 환영합니다!");
+                window.location.href = loginDestination();
             } else if (json['result'] == -10) {
                 alert('Login error occurred. Please try again later');
             }
@@ -58,26 +62,7 @@ button.addEventListener('click', (event) => {
     }
 });
 
-const removeUnsupportedPasswordCharacters = () => {
-    const sanitizedValue = password.value.replace(/[^\x21-\x7E]/g, '');
-    if (sanitizedValue === password.value) return;
-
-    const cursorPosition = password.selectionStart;
-    const removedBeforeCursor = cursorPosition == null
-        ? 0
-        : password.value.slice(0, cursorPosition).replace(/[\x21-\x7E]/g, '').length;
-
-    password.value = sanitizedValue;
-    if (cursorPosition != null) {
-        const nextCursorPosition = Math.max(0, cursorPosition - removedBeforeCursor);
-        password.setSelectionRange(nextCursorPosition, nextCursorPosition);
-    }
-};
-
-password.addEventListener('input', removeUnsupportedPasswordCharacters);
-password.addEventListener('compositionend', removeUnsupportedPasswordCharacters);
-
 password.addEventListener('keydown', (event) => {
-    if (event.key == 'Enter')
+    if (event.key === 'Enter' && !event.isComposing)
         button.click();
 });

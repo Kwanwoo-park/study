@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 public class ChatMessageResponseDto {
     private String id;
+    private String replyToId;
     private String message;
     private MessageType type;
     private Member member;
@@ -26,6 +27,7 @@ public class ChatMessageResponseDto {
 
     public ChatMessageResponseDto(ChatMessage entity) {
         this.id = entity.getId();
+        this.replyToId = entity.getReplyToId();
         this.message = entity.displayMessage();
         this.type = entity.getType();
         this.member = entity.getMember();

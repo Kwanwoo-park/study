@@ -359,13 +359,14 @@ public class MemberFacade {
             return invalidInput("회원 설정의 비밀번호 변경 절차를 이용해주세요");
         }
 
-        Member member = memberService.findMember(requestDto.getEmail());
         String password = requestDto.getPassword();
-        if (StringUtils.hasText(password)
-                && !emailVerificationService.consume(EmailVerificationPurpose.EMAIL, requestDto.getEmail(), requestDto.getVerificationToken())) {
-            return failure(HttpStatus.FORBIDDEN, -403L, "5분 이내에 이메일 인증을 완료한 후 비밀번호를 변경해 주세요");
-        }
+        if (!StringUtils.hasText(password)) return invalidInput("비밀번호가 입력되지 않았습니다");
+        String failureMessage = "5분 이내에 가입한 이메일의 인증을 완료한 후 다시 시도해 주세요";
+        if (!emailVerificationService.consume(EmailVerificationPurpose.EMAIL, requestDto.getEmail(), requestDto.getVerificationToken()))
+            return failure(HttpStatus.FORBIDDEN, -403L, failureMessage);
 
+        Member member = memberService.findMemberOrNull(requestDto.getEmail());
+        if (member == null) return failure(HttpStatus.FORBIDDEN, -403L, failureMessage);
         return updatePassword(password, member);
     }
 

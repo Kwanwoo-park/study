@@ -2,6 +2,7 @@ package spring.study.diary.repository;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import spring.study.diary.entity.Diary;
@@ -9,6 +10,7 @@ import spring.study.member.entity.Member;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Repository
 public interface DiaryRepository extends JpaRepository<Diary, Long> {
@@ -17,6 +19,9 @@ public interface DiaryRepository extends JpaRepository<Diary, Long> {
 
     @Transactional(readOnly = true)
     List<Diary> findByMemberAndTitleContainingIgnoreCase(Member member, String title, Pageable pageable);
+
+    Page<Diary> findByMemberAndRegisterTimeGreaterThanEqualAndRegisterTimeLessThan(
+            Member member, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
     @Transactional(readOnly = true)
     Optional<Diary> findByIdAndMember(Long id, Member member);

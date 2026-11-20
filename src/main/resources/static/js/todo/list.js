@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const root = document.getElementById('todoPage');
     const form = document.getElementById('todoCreateForm');
     const content = document.getElementById('todoContent');
+    const dueDate = document.getElementById('todoDueDate');
+    const dueFilter = document.getElementById('todoDueFilter');
     const message = document.getElementById('todoMessage');
     const sections = [createSection('todoPending', false), createSection('todoCompleted', true)];
     let mutating = false;
@@ -75,6 +77,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const details = document.createElement('div');
         details.className = 'todo-details';
         details.append(label);
+        if (todo.dueDate) {
+            const time = document.createElement('time');
+            time.className = 'todo-time';
+            time.dateTime = todo.dueDate;
+            time.textContent = `마감 · ${todo.dueDate}`;
+            details.append(time);
+        }
         if (todo.completed && todo.completedAt) {
             const time = document.createElement('time');
             time.className = 'todo-time';
@@ -93,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
         actions.className = 'todo-row-actions';
         actions.append(
                 button('수정', 'btn btn-outline-secondary btn-sm', () => edit(row, todo)),
+                button('마감일', 'btn btn-outline-secondary btn-sm', () => edit(row, todo, true)),
                 button('삭제', 'btn btn-outline-danger btn-sm', () => {
                     if (!isLoading() && !mutating && window.confirm('이 할 일을 삭제할까요?')) {
                         mutate(`/api/todo/${todo.id}`, 'DELETE', undefined, '할 일을 삭제했습니다.');
@@ -103,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return row;
     }
 
-    function edit(row, todo) {
+    function edit(row, todo, editingDate = false) {
         if (isLoading() || mutating) return;
         const editForm = document.createElement('form');
         editForm.className = 'todo-edit-form';
@@ -114,6 +124,12 @@ document.addEventListener('DOMContentLoaded', function() {
         input.required = true;
         input.value = todo.content;
         input.setAttribute('aria-label', '할 일 내용 수정');
+        if (editingDate) {
+            input.type = 'date';
+            input.required = false;
+            input.value = todo.dueDate || '';
+            input.setAttribute('aria-label', '마감일 수정 (비우면 해제)');
+        }
         const save = document.createElement('button');
         save.type = 'submit';
         save.className = 'btn btn-primary btn-sm';
@@ -122,6 +138,10 @@ document.addEventListener('DOMContentLoaded', function() {
         editForm.append(input, save, button('취소', 'btn btn-outline-secondary btn-sm', cancel));
         editForm.addEventListener('submit', function(event) {
             event.preventDefault();
+            if (editingDate) {
+                mutate(`/api/todo/${todo.id}/due-date`, 'PATCH', {dueDate: input.value || null}, '마감일을 변경했습니다.');
+                return;
+            }
             if (!input.value.trim()) {
                 showMessage('할 일을 입력해주세요.', true);
                 input.focus();
@@ -150,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateControls();
         try {
             const query = new URLSearchParams({page: String(section.page), size: '20', completed: String(section.completed)});
+            if (!section.completed && dueFilter.value) query.set('due', dueFilter.value);
             const body = await requestJson(`/api/todo?${query}`, {signal: section.controller.signal});
             if (requestGeneration !== section.generation) return false;
             section.totalPages = body.totalPages;
@@ -206,10 +227,17 @@ document.addEventListener('DOMContentLoaded', function() {
             content.focus();
             return;
         }
-        mutate('/api/todo', 'POST', { content: content.value.trim() }, '할 일을 추가했습니다.', () => {
+        const payload = {content: content.value.trim()};
+        if (dueDate.value) payload.dueDate = dueDate.value;
+        mutate('/api/todo', 'POST', payload, '할 일을 추가했습니다.', () => {
             content.value = '';
+            dueDate.value = '';
+            dueFilter.value = '';
             sections[0].page = 0;
         });
+    });
+    dueFilter.addEventListener('change', () => {
+        if (!mutating) load(sections[0], 0);
     });
     sections.forEach(section => {
         section.previous.addEventListener('click', () => { if (!section.previous.disabled) load(section, section.page - 1); });

@@ -66,6 +66,44 @@ tasks.named('test') {
 	dependsOn tasks.named('jsTest')
 }
 
+def buildRevision = providers.provider {
+	if (!file('.git').exists()) return [commit: '', dirty: false]
+	def readGit = { List<String> args ->
+		ByteArrayOutputStream output = new ByteArrayOutputStream()
+		try {
+			def result = exec {
+				commandLine(['git', '--no-optional-locks'] + args)
+				standardOutput = output
+				errorOutput = new ByteArrayOutputStream()
+				ignoreExitValue = true
+			}
+			return result.exitValue == 0 ? output.toString('UTF-8').trim() : null
+		} catch (GradleException ignored) {
+			return null
+		}
+	}
+	String commit = readGit(['rev-parse', '--verify', 'HEAD'])
+	if (!(commit ==~ /[a-f0-9]{40,64}/)) return [commit: '', dirty: false]
+	String changes = readGit(['status', '--porcelain', '--untracked-files=normal'])
+	return [commit: commit, dirty: changes == null || !changes.isEmpty()]
+}
+
+def deploymentMetadata = tasks.register('deploymentMetadata') {
+	def metadataFile = layout.buildDirectory.file('generated/deployment/study-build.properties')
+	inputs.property('revision', buildRevision)
+	outputs.file(metadataFile)
+	doLast {
+		def revision = buildRevision.get()
+		File destination = metadataFile.get().asFile
+		destination.parentFile.mkdirs()
+		destination.setText("commit=${revision.commit}\ndirty=${revision.dirty}\n", 'UTF-8')
+	}
+}
+
+tasks.named('bootJar') {
+	from(deploymentMetadata) { into('BOOT-INF/classes/META-INF') }
+}
+
 tasks.register('regressionTest') {
 	group = 'verification'
 	description = 'Compatibility alias for the essential Java and JavaScript suite.'

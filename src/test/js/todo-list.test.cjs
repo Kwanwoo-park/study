@@ -63,8 +63,8 @@ async function setup(reply = async () => ({body: page()})) {
     const window = new Element();
     window.confirm = () => true;
     const nodes = new Map();
-    const tags = {todoCreateForm: 'form', todoContent: 'input'};
-    const ids = ['todoPage', 'todoCreateForm', 'todoContent', 'todoMessage'];
+    const tags = {todoCreateForm: 'form', todoContent: 'input', todoDueDate: 'input', todoDueFilter: 'select'};
+    const ids = ['todoPage', 'todoCreateForm', 'todoContent', 'todoDueDate', 'todoDueFilter', 'todoMessage'];
     for (const prefix of ['todoPending', 'todoCompleted']) {
         for (const part of ['List', 'Empty', 'Count', 'Previous', 'Next', 'PageNumber', 'Retry']) ids.push(prefix + part);
         tags[prefix + 'List'] = 'ul';

@@ -103,6 +103,29 @@ public class ChatApiController {
         return chatFacade.loadPreviousChatting(roomId, member, cursor, limit);
     }
 
+    @GetMapping("/missed")
+    public ResponseEntity<?> loadMissedChatting(@RequestParam String roomId, @RequestParam String after, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return chatFacade.loadMissedChatting(roomId, after, member);
+    }
+
+    @GetMapping("/message/{id}/receipt")
+    public ResponseEntity<?> textReceipt(@PathVariable String id, @RequestParam String roomId, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return chatFacade.textReceipt(roomId, id, member);
+    }
+
+    @GetMapping("/message/{id}/reference")
+    public ResponseEntity<?> messageReference(@PathVariable String id, @RequestParam String roomId, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+        return chatFacade.messageReference(roomId, id, member);
+    }
+
     @PostMapping("/createRoom")
     public ResponseEntity<?> createRoom(@RequestParam String name, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
@@ -128,6 +151,11 @@ public class ChatApiController {
         if (validation != null) return validation;
 
         return ResponseEntity.ok(Map.of("result", 1L));
+    }
+
+    @PostMapping("/message/check")
+    public ResponseEntity<?> messageCheck(@RequestBody ChatMessageRequestDto message, HttpServletRequest request, HttpServletResponse response) {
+        return messageCheck(message.getMessage(), request, response);
     }
 
     @PostMapping("/sendImage")

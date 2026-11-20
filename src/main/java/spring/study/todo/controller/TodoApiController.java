@@ -10,8 +10,10 @@ import spring.study.common.facade.CommonFacade;
 import spring.study.common.service.JwtManager;
 import spring.study.member.entity.Member;
 import spring.study.todo.dto.TodoCompletionRequestDto;
+import spring.study.todo.dto.TodoDueDateRequestDto;
 import spring.study.todo.dto.TodoRequestDto;
 import spring.study.todo.facade.TodoFacade;
+import spring.study.todo.entity.TodoDueFilter;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,12 +25,13 @@ public class TodoApiController {
 
     @GetMapping
     public ResponseEntity<?> list(@RequestParam(required = false) Boolean completed,
+                                  @RequestParam(required = false) TodoDueFilter due,
                                   @RequestParam(defaultValue = "0") int page,
                                   @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return todoFacade.list(member, completed, page, size);
+        return todoFacade.list(member, completed, due, page, size);
     }
 
     @GetMapping("/{id}")
@@ -45,7 +48,15 @@ public class TodoApiController {
         if (member == null) return commonFacade.unauthorized();
         if (errors.hasErrors()) return commonFacade.validationFailure(errors, "할 일을 확인해주세요");
 
-        return todoFacade.create(dto.content(), member);
+        return todoFacade.create(dto.content(), dto.dueDate(), member);
+    }
+
+    @PatchMapping("/{id}/due-date")
+    public ResponseEntity<?> updateDueDate(@PathVariable Long id, @RequestBody TodoDueDateRequestDto dto, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return todoFacade.updateDueDate(id, dto.dueDate(), member);
     }
 
     @PatchMapping("/{id}")

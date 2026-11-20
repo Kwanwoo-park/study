@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import spring.study.admin.component.SystemResourceMonitor;
+import spring.study.admin.component.DeploymentMetadata;
 import spring.study.admin.dto.AdminNewBoardResponseDto;
 import spring.study.admin.dto.SystemIncidentResponseDto;
 import spring.study.admin.service.SystemIncidentService;
@@ -59,6 +60,7 @@ public class AdminFacade {
     private final KafkaOutboxEventService outboxEventService;
     private final SystemDiagnosticsService systemDiagnosticsService;
     private final SystemResourceMonitor systemResourceMonitor;
+    private final DeploymentMetadata deploymentMetadata;
     private final NotificationService notificationService;
 
     public ResponseEntity<?> memberOnline() {
@@ -125,6 +127,7 @@ public class AdminFacade {
         status.put("result", 1L);
         status.put("disk", DiskUsedPercent());
         status.put("jvm", JVMHeap());
+        status.put("deployment", deploymentMetadata.snapshot());
         status.put("traffic", Traffic());
         status.put("queues", KafkaQueue());
 
@@ -153,6 +156,7 @@ public class AdminFacade {
         return ResponseEntity.ok(Map.of(
                 "result", 1L,
                 "unacknowledgedCount", systemIncidentService.countUnacknowledged(),
+                "deployment", deploymentMetadata.snapshot(),
                 "list", systemIncidentService.findRecentUnacknowledged().stream()
                         .map(incident ->
                                 new SystemIncidentResponseDto(incident, ipLocationService.find(incident.getRequestIp()))
