@@ -3,7 +3,7 @@ package spring.study.kafka.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -26,7 +26,7 @@ public class KafkaProducerConfig {
     private final String server;
     private final ObjectMapper mapper;
 
-    public KafkaProducerConfig(@Value("${bootstrap-servers}") String server, ObjectMapper mapper) {
+    public KafkaProducerConfig(@Qualifier("kafkaBootstrapServers") String server, ObjectMapper mapper) {
         this.server = server;
         this.mapper = mapper;
     }

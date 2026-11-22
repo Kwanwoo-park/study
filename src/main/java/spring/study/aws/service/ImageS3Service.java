@@ -13,6 +13,7 @@ import spring.study.board.entity.BoardImg;
 import spring.study.chat.entity.ChatMessageImg;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -58,17 +59,25 @@ public class ImageS3Service {
             throw new IOException("image extension is empty");
         }
 
-        String changedName = UUID.randomUUID() + originName;
+        return uploadImageToS3(image, UUID.randomUUID() + originName);
+    }
 
+    public String uploadImageToS3(MultipartFile image, String objectKey) throws IOException {
+        String ext = StringUtils.getFilenameExtension(objectKey);
+        if (ext == null || ext.isBlank()) throw new IOException("image extension is empty");
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType("image/" + ext.toLowerCase());
         metadata.setContentLength(image.getSize());
 
-        amazonS3.putObject(new PutObjectRequest(
-                bucketName, changedName, image.getInputStream(), metadata
-        ));
+        try (InputStream stream = image.getInputStream()) {
+            amazonS3.putObject(new PutObjectRequest(bucketName, objectKey, stream, metadata));
+        }
 
-        return amazonS3.getUrl(bucketName, changedName).toString();
+        return imageUrl(objectKey);
+    }
+
+    public String imageUrl(String objectKey) {
+        return amazonS3.getUrl(bucketName, objectKey).toString();
     }
 
     public byte[] readImage(String name) throws IOException {

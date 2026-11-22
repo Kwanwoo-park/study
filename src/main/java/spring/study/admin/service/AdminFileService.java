@@ -42,7 +42,7 @@ public class AdminFileService {
     private final AdminFileRepository adminFileRepository;
     private final AmazonS3 amazonS3;
 
-    @Value("${admin.files.s3.bucket}")
+    @Value("${admin.files.s3.bucket:}")
     private String bucket;
 
     @Transactional(readOnly = true)

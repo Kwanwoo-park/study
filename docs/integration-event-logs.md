@@ -21,7 +21,7 @@ API는 `GET /api/admin/event-logs`이며 페이지와 API 모두 ADMIN 권한이
 
 `broker=KAFKA|REDIS`, `operation=QUEUE|PUBLISH|CONSUME|CONSUMER_RETRY|REPLAY`, `outcome`으로 필터링합니다. `hours`는 1~720이며 실제 조회는 설정된 보관 기간 이내로 제한됩니다. 50개씩 기록 ID 내림차순으로 반환하고 `nextBeforeId`를 다음 요청의 `beforeId`로 넘깁니다. UI는 이전/다음, 수동 새로고침, 선택적인 10초 갱신을 지원합니다. 과거 페이지나 숨겨진 탭에서는 자동 갱신하지 않습니다. 시간은 서버 기준입니다.
 
-기본 최근 7일을 MySQL `integration_event_log`에 저장합니다. 현재 프로젝트의 `spring.jpa.hibernate.ddl-auto=update`에서는 테이블을 자동 생성합니다. 자동 DDL을 사용하지 않는 환경은 배포 전 [수동 SQL](sql/integration-event-log.sql)을 적용하세요. Flyway는 추가하지 않습니다. 과거 이벤트는 소급 복원되지 않습니다.
+기본 최근 7일을 MySQL `integration_event_log`에 저장합니다. `spring.jpa.hibernate.ddl-auto=update`이면 Hibernate가 테이블을 생성합니다. 스키마를 별도로 관리하는 환경은 테이블·인덱스 정의를 반영한 DDL을 배포 전에 적용합니다. [이벤트 로그 엔티티](../src/main/java/spring/study/admin/entity/IntegrationEventLog.java)
 
 ## 장애 격리
 

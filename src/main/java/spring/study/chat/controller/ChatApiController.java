@@ -11,9 +11,11 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.study.chat.entity.ChatMessageDeleteScope;
 import spring.study.chat.dto.ChatMessageRequestDto;
 import spring.study.chat.dto.AudioCallPreferenceRequest;
+import spring.study.chat.entity.MessageType;
 import spring.study.chat.facade.ChatFacade;
 import spring.study.chat.facade.AudioCallFacade;
 import spring.study.chat.facade.ChatRoomFacade;
+import spring.study.chat.facade.ChatSendFacade;
 import spring.study.common.facade.CommonFacade;
 import spring.study.common.facade.ModerationFacade;
 import spring.study.common.service.JwtManager;
@@ -35,6 +37,7 @@ public class ChatApiController {
     private final ChatRoomFacade chatRoomFacade;
     private final AudioCallFacade audioCallFacade;
     private final ModerationFacade moderationFacade;
+    private final ChatSendFacade chatSendFacade;
 
     @GetMapping("/rooms")
     public ResponseEntity<?> rooms(HttpServletRequest request) {
@@ -112,11 +115,11 @@ public class ChatApiController {
     }
 
     @GetMapping("/message/{id}/receipt")
-    public ResponseEntity<?> textReceipt(@PathVariable String id, @RequestParam String roomId, HttpServletRequest request) {
+    public ResponseEntity<?> messageReceipt(@PathVariable String id, @RequestParam String roomId, HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return chatFacade.textReceipt(roomId, id, member);
+        return chatFacade.messageReceipt(roomId, id, member);
     }
 
     @GetMapping("/message/{id}/reference")
@@ -142,6 +145,24 @@ public class ChatApiController {
         return chatFacade.createRoom(memberRequestDto, member);
     }
 
+    @PutMapping("/rooms/{roomId}/membership")
+    public ResponseEntity<?> joinRoom(@PathVariable String roomId, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return chatSendFacade.messageSend(ChatMessageRequestDto.builder()
+                .type(MessageType.ENTER).roomId(roomId).email(member.getEmail()).build());
+    }
+
+    @DeleteMapping("/rooms/{roomId}/membership")
+    public ResponseEntity<?> leaveRoom(@PathVariable String roomId, HttpServletRequest request) {
+        Member member = jwtManager.getLoginMember(request);
+        if (member == null) return commonFacade.unauthorized();
+
+        return chatSendFacade.messageSend(ChatMessageRequestDto.builder()
+                .type(MessageType.QUIT).roomId(roomId).email(member.getEmail()).build());
+    }
+
     @GetMapping("/message/check")
     public ResponseEntity<?> messageCheck(@RequestParam String message, HttpServletRequest request, HttpServletResponse response) {
         Member member = jwtManager.getLoginMember(request);
@@ -159,11 +180,12 @@ public class ChatApiController {
     }
 
     @PostMapping("/sendImage")
-    public ResponseEntity<?> sendImage(@RequestPart List<MultipartFile> file, HttpServletRequest request) {
+    public ResponseEntity<?> sendImage(@RequestPart List<MultipartFile> file, @RequestParam(required = false) String roomId,
+                                       HttpServletRequest request) {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return commonFacade.unauthorized();
 
-        return chatFacade.sendImage(file);
+        return chatFacade.sendImage(file, roomId, member);
     }
 
     @DeleteMapping("/message/delete")

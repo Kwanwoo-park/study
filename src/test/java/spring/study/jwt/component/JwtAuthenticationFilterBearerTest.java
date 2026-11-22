@@ -57,7 +57,8 @@ class JwtAuthenticationFilterBearerTest {
                 cookieService,
                 mock(RefreshTokenService.class),
                 memberTokenCacheService,
-                onlineUserService
+                onlineUserService,
+                mock(RefreshTokenRotation.class)
         );
     }
 

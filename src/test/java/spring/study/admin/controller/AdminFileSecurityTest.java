@@ -38,6 +38,7 @@ import spring.study.common.service.JwtManager;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.component.JwtAuthenticationFilter;
 import spring.study.jwt.component.JwtTokenProvider;
+import spring.study.jwt.component.RefreshTokenRotation;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
@@ -149,7 +150,7 @@ class AdminFileSecurityTest {
 
         @Bean
         JwtAuthenticationFilter jwtFilter() {
-            return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(MemberService.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class));
+            return new JwtAuthenticationFilter(mock(JwtTokenProvider.class), mock(MemberService.class), mock(JwtCookieService.class), mock(RefreshTokenService.class), mock(MemberTokenCacheService.class), mock(OnlineUserService.class), mock(RefreshTokenRotation.class));
         }
 
         @Bean

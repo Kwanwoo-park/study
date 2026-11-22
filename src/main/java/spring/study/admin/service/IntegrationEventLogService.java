@@ -36,11 +36,11 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 @RequiredArgsConstructor
 public class IntegrationEventLogService {
-    @Value("${admin.event-log.enabled:}")
+    @Value("${admin.event-log.enabled:true}")
     private boolean enabled;
-    @Value("${admin.event-log.capacity:}")
+    @Value("${admin.event-log.capacity:30}")
     private int capacity;
-    @Value("${admin.event-log.retention-days:}")
+    @Value("${admin.event-log.retention-days:7}")
     private int retentionDays;
 
     private final IntegrationEventLogRepository integrationEventLogRepository;

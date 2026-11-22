@@ -47,11 +47,20 @@ dependencies {
 	testImplementation 'org.projectlombok:lombok:1.18.32'
 }
 
-tasks.withType(Test).configureEach {
-	useJUnitPlatform()
+tasks.named('test', Test) {
+	useJUnitPlatform { excludeTags 'infrastructure' }
 	// Tests use embedded H2, independently of the deployment's MySQL settings.
 	systemProperty 'spring.jpa.database-platform', 'org.hibernate.dialect.H2Dialect'
 	systemProperty 'spring.jpa.properties.hibernate.dialect', 'org.hibernate.dialect.H2Dialect'
+}
+
+tasks.register('infrastructureTest', Test) {
+	group = 'verification'
+	description = 'Checks the MySQL migration, Redis AOF restart, and Kafka outage recovery.'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform { includeTags 'infrastructure' }
+	outputs.upToDateWhen { false }
 }
 
 tasks.register('jsTest', Exec) {
@@ -102,6 +111,10 @@ def deploymentMetadata = tasks.register('deploymentMetadata') {
 
 tasks.named('bootJar') {
 	from(deploymentMetadata) { into('BOOT-INF/classes/META-INF') }
+}
+
+tasks.withType(Jar).configureEach {
+	exclude '**/application*.properties', '**/application*.yml', '**/application*.yaml'
 }
 
 tasks.register('regressionTest') {

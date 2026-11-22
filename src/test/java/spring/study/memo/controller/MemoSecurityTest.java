@@ -33,6 +33,7 @@ import spring.study.common.component.GlobalExceptionHandler;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.component.JwtAuthenticationFilter;
 import spring.study.jwt.component.JwtTokenProvider;
+import spring.study.jwt.component.RefreshTokenRotation;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
@@ -176,7 +177,7 @@ class MemoSecurityTest {
         @Bean SystemIncidentFacade incidents() { return mock(SystemIncidentFacade.class); }
         @Bean JwtTokenProvider tokenProvider() { return new JwtTokenProvider(new ObjectMapper()); }
         @Bean MemberTokenCacheService members() { return mock(MemberTokenCacheService.class); }
-        @Bean JwtAuthenticationFilter jwtFilter(JwtTokenProvider provider, MemberTokenCacheService members) { return new JwtAuthenticationFilter(provider, mock(MemberService.class), new JwtCookieService(), mock(RefreshTokenService.class), members, mock(OnlineUserService.class)); }
+        @Bean JwtAuthenticationFilter jwtFilter(JwtTokenProvider provider, MemberTokenCacheService members) { return new JwtAuthenticationFilter(provider, mock(MemberService.class), new JwtCookieService(), mock(RefreshTokenService.class), members, mock(OnlineUserService.class), mock(RefreshTokenRotation.class)); }
         @Bean InternalResourceViewResolver views() { return new InternalResourceViewResolver("/templates/", ".html"); }
     }
 }

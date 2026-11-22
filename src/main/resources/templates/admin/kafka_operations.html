@@ -78,6 +78,14 @@
     </div>
   </section>
   <section id="kafka-panel-failures" class="event-log-panel" role="tabpanel" aria-labelledby="kafka-tab-failures" hidden>
+    <h2>Outbox 발행 최종 실패</h2>
+    <p id="kafka-outbox-status" role="status"></p>
+    <div id="kafka-outbox-failures" class="kafka-table"></div>
+    <div class="event-log-actions">
+      <button id="kafka-outbox-latest" type="button" class="btn btn-outline-secondary" disabled>최신 기록</button>
+      <button id="kafka-outbox-next" type="button" class="btn btn-outline-secondary" disabled>이전 기록</button>
+    </div>
+    <h2>Kafka 소비 실패</h2>
     <div class="event-log-tools"><h2>소비 실패 기록</h2><label>상태 <select id="kafka-filter"><option value="">전체</option><option value="NEW">미처리</option><option value="REPLAY_PENDING">재발행 대기</option><option value="REPLAYED">재발행됨</option><option value="REPLAY_FAILED">재발행 실패</option></select></label></div>
     <p class="event-log-note">재발행은 원래 발생 순서와 다르게 처리될 수 있습니다. ‘재발행됨’은 Kafka 발행 완료를 뜻하며, 이후 소비가 실패하면 새 실패 기록이 생성됩니다.</p>
     <p id="kafka-list-status" role="status" aria-live="polite"></p>

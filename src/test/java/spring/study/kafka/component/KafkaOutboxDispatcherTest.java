@@ -1,6 +1,7 @@
 package spring.study.kafka.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -35,7 +36,7 @@ class KafkaOutboxDispatcherTest {
         KafkaOutboxEventRepository repository = mock(KafkaOutboxEventRepository.class);
         KafkaTemplate<String, Object> kafka = mock(KafkaTemplate.class);
         IntegrationEventLogService logs = mock(IntegrationEventLogService.class);
-        KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(new KafkaOutboxEventService(repository), mock(NotificationService.class), kafka, new ObjectMapper(), logs);
+        KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(new KafkaOutboxEventService(repository, mock(ApplicationEventPublisher.class)), mock(NotificationService.class), kafka, new ObjectMapper(), logs);
         KafkaOutboxEvent event = new KafkaOutboxEvent("topic", "room", KafkaOutboxPayloadType.CHAT_MESSAGE, "{}");
         when(repository.findForUpdateByDeadLetteredFalseAndNextAttemptAtIsNullOrDeadLetteredFalseAndNextAttemptAtLessThanEqualOrderByIdAsc(any(), any())).thenReturn(List.of(event));
         when(kafka.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.completedFuture(null));
@@ -51,7 +52,7 @@ class KafkaOutboxDispatcherTest {
         KafkaOutboxEventRepository repository = mock(KafkaOutboxEventRepository.class);
         KafkaTemplate<String, Object> kafka = mock(KafkaTemplate.class);
         IntegrationEventLogService logs = mock(IntegrationEventLogService.class);
-        KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(new KafkaOutboxEventService(repository), mock(NotificationService.class), kafka, new ObjectMapper(), logs);
+        KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(new KafkaOutboxEventService(repository, mock(ApplicationEventPublisher.class)), mock(NotificationService.class), kafka, new ObjectMapper(), logs);
         KafkaOutboxEvent event = new KafkaOutboxEvent("topic", "room", KafkaOutboxPayloadType.CHAT_MESSAGE, "{}");
         for (int i = 0; i < 9; i++) event.recordFailure("failed", LocalDateTime.now());
         when(repository.findForUpdateByDeadLetteredFalseAndNextAttemptAtIsNullOrDeadLetteredFalseAndNextAttemptAtLessThanEqualOrderByIdAsc(any(), any())).thenReturn(List.of(event));
@@ -67,7 +68,7 @@ class KafkaOutboxDispatcherTest {
         NotificationService notificationService = mock(NotificationService.class);
         KafkaTemplate<String, Object> kafkaTemplate = mock(KafkaTemplate.class);
         IntegrationEventLogService logs = mock(IntegrationEventLogService.class);
-        KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(new KafkaOutboxEventService(repository), notificationService, kafkaTemplate, new ObjectMapper(), logs);
+        KafkaOutboxDispatcher dispatcher = new KafkaOutboxDispatcher(new KafkaOutboxEventService(repository, mock(ApplicationEventPublisher.class)), notificationService, kafkaTemplate, new ObjectMapper(), logs);
         KafkaOutboxEvent event = new KafkaOutboxEvent("topic", "room-1", KafkaOutboxPayloadType.CHAT_MESSAGE, "{}");
         LocalDateTime beforeDispatch = LocalDateTime.now();
         when(repository.findForUpdateByDeadLetteredFalseAndNextAttemptAtIsNullOrDeadLetteredFalseAndNextAttemptAtLessThanEqualOrderByIdAsc(any(LocalDateTime.class), any(Pageable.class))).thenReturn(List.of(event));

@@ -39,7 +39,7 @@ public class KafkaConsumerConfig {
     private final int chatBatchFetchMaxWaitMs;
     private final KafkaOperationsProperties operations;
 
-    public KafkaConsumerConfig(@Value("${bootstrap-servers}") String server,
+    public KafkaConsumerConfig(@Qualifier("kafkaBootstrapServers") String server,
                                @Value("${group-id}") String groupId,
                                ObjectMapper mapper,
                                @Value("${chat.kafka.batch.max-records}") int chatBatchMaxRecords,

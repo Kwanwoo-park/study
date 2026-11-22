@@ -5,6 +5,7 @@
     const groupStates = {STABLE: '안정', EMPTY: '연결된 소비자 없음', DEAD: '종료', UNKNOWN: '미확인',
         PREPARING_REBALANCE: '리밸런싱 준비', COMPLETING_REBALANCE: '리밸런싱 중'};
     let page = 0, cursors = [null], next = null, listLoading = false, overviewLoading = false, replaying = false;
+    let outboxCursor = null, outboxNext = null, outboxLoading = false;
     let snapshot = null, selectedTopic = null, selectedConsumer = null;
     const node = (tag, text, className) => { const n = document.createElement(tag); n.textContent = text; if (className) n.className = className; return n; };
     const time = value => value ? new Date(value).toLocaleString('ko-KR') : '-';
@@ -123,17 +124,43 @@
         el('prev').disabled = listLoading || replaying || page === 0;
         el('next').disabled = listLoading || replaying || next == null;
         el('filter').disabled = listLoading || replaying;
-        el('refresh').disabled = listLoading || replaying || overviewLoading;
+        el('refresh').disabled = listLoading || replaying || overviewLoading || outboxLoading;
+        el('outbox-latest').disabled = outboxLoading || replaying || outboxCursor == null;
+        el('outbox-next').disabled = outboxLoading || replaying || outboxNext == null;
     }
-    async function replay(entry, button) {
+    async function replay(path, button, status, reload) {
         if (replaying || !window.confirm('이 이벤트를 다시 발행할까요? 원래 발생 순서와 다르게 처리될 수 있습니다.')) return;
         replaying = true; button.disabled = true; controls();
         try {
             const csrf = await request('/api/admin/kafka/csrf');
-            const result = await request(`/api/admin/kafka/dead-letters/${entry.id}/replay`, {method: 'POST', headers: {[csrf.headerName]: csrf.token}});
-            await load(page, cursors[page]); await overview(); el('list-status').textContent = result.message;
-        } catch (error) { el('list-status').textContent = error.message; button.disabled = false; }
+            const result = await request(path, {method: 'POST', headers: {[csrf.headerName]: csrf.token}});
+            await reload(); await overview(); el(status).textContent = result.message;
+        } catch (error) { el(status).textContent = error.message; button.disabled = false; }
         finally { replaying = false; controls(); }
+    }
+
+    async function loadOutbox(before = null) {
+        if (outboxLoading) return;
+        outboxLoading = true; controls();
+        el('outbox-status').textContent = '불러오는 중…';
+        try {
+            const query = before == null ? '' : `?beforeId=${encodeURIComponent(before)}`;
+            const data = await request(`/api/admin/kafka/outbox-failures${query}`);
+            outboxCursor = before; outboxNext = data.nextBeforeId;
+            table('outbox-failures', ['Outbox ID', '토픽', '등록 시각', '시도 횟수', '재발행'],
+                data.entries.map(entry => {
+                    const button = node('button', '재발행 요청', 'btn btn-outline-primary');
+                    button.type = 'button';
+                    button.addEventListener('click', () => replay(`/api/admin/kafka/outbox-failures/${entry.id}/replay`,
+                        button, 'outbox-status', () => loadOutbox(outboxCursor)));
+                    return [`#${entry.id}`, entry.topic, time(entry.createdAt), entry.attemptCount, button];
+                }), '발행 최종 실패 기록이 없습니다.');
+            el('outbox-status').textContent = '';
+        } catch (error) {
+            el('outbox-failures').replaceChildren();
+            el('outbox-status').textContent = error.message;
+            outboxNext = null;
+        } finally { outboxLoading = false; controls(); }
     }
     function card(entry) {
         const item = node('article', '', 'event-log-card'), header = node('div', '', 'event-log-card-header');
@@ -141,7 +168,13 @@
         item.append(header, node('p', `파티션 ${entry.partition} · offset ${entry.offset} · 기록 ${time(entry.createdAt)}`));
         if (entry.errorType) item.append(node('p', `오류 유형: ${entry.errorType}`, 'event-log-meta'));
         item.append(node('p', `재발행 시도 ${entry.attempts}회 · 다음 시도 ${time(entry.nextAttemptAt)} · 발행 완료 ${time(entry.replayedAt)}`, 'event-log-meta'));
-        if (entry.replayable) { const button = node('button', '재발행 요청', 'btn btn-outline-primary'); button.type = 'button'; button.addEventListener('click', () => replay(entry, button)); item.append(button); }
+        if (entry.replayable) {
+            const button = node('button', '재발행 요청', 'btn btn-outline-primary');
+            button.type = 'button';
+            button.addEventListener('click', () => replay(`/api/admin/kafka/dead-letters/${entry.id}/replay`,
+                button, 'list-status', () => load(page, cursors[page])));
+            item.append(button);
+        }
         return item;
     }
     async function load(target = 0, before = null) {
@@ -162,7 +195,12 @@
     el('prev').addEventListener('click', () => { if (page > 0) load(page - 1, cursors[page - 1]); });
     el('next').addEventListener('click', () => { if (next != null) load(page + 1, next); });
     el('filter').addEventListener('change', () => load());
-    el('refresh').addEventListener('click', () => { overview(); load(page, cursors[page]); });
+    el('outbox-latest').addEventListener('click', () => loadOutbox());
+    el('outbox-next').addEventListener('click', () => { if (outboxNext != null) loadOutbox(outboxNext); });
+    el('refresh').addEventListener('click', () => {
+        overview(); load(page, cursors[page]);
+        if (!el('panel-failures').hidden) loadOutbox(outboxCursor);
+    });
     const timer = setInterval(() => { if (!document.hidden && !replaying && el('auto-refresh').checked) { overview(); if (page === 0) load(); } }, 15000);
     window.addEventListener('pagehide', () => clearInterval(timer));
     const tabs = ['overview', 'brokers', 'topics', 'consumers', 'failures'];
@@ -174,6 +212,7 @@
             el('panel-' + tab).hidden = !active;
         });
         if (focus) el('tab-' + selected).focus();
+        if (selected === 'failures') loadOutbox(outboxCursor);
     }
     tabs.forEach((tab, index) => {
         el('tab-' + tab).addEventListener('click', () => selectTab(tab));

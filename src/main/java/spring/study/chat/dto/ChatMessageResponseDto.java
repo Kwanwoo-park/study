@@ -1,6 +1,8 @@
 package spring.study.chat.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
+import lombok.Setter;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.member.entity.Member;
@@ -8,6 +10,7 @@ import spring.study.chat.entity.MessageType;
 import spring.study.chat.entity.ChatMessageStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 public class ChatMessageResponseDto {
@@ -24,6 +27,9 @@ public class ChatMessageResponseDto {
     private boolean censored;
     private boolean editedByAdmin;
     private boolean deletedByAdmin;
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<String> list;
 
     public ChatMessageResponseDto(ChatMessage entity) {
         this.id = entity.getId();

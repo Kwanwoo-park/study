@@ -16,7 +16,6 @@ import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
-import spring.study.jwt.entity.RefreshToken;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -35,6 +34,7 @@ class JwtAuthenticationLifecycleTest {
     private final JwtCookieService cookies = new JwtCookieService();
     private final RefreshTokenService refreshTokens = mock(RefreshTokenService.class);
     private final MemberTokenCacheService cache = mock(MemberTokenCacheService.class);
+    private final RefreshTokenRotation rotation = mock(RefreshTokenRotation.class);
     private final Member member = Member.builder().id(9L).email("member@example.test").role(Role.USER).build();
     private JwtAuthenticationFilter filter;
 
@@ -47,7 +47,7 @@ class JwtAuthenticationLifecycleTest {
         ReflectionTestUtils.setField(provider, "refreshTokenDays", 14L);
         provider.initializeSecret();
         provider = spy(provider);
-        filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokens, cache, mock(OnlineUserService.class));
+        filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokens, cache, mock(OnlineUserService.class), rotation);
     }
 
     @AfterEach
@@ -90,8 +90,7 @@ class JwtAuthenticationLifecycleTest {
         request.setCookies(new Cookie(JwtCookieService.ACCESS_COOKIE, expiredAccess),
                 new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
         if (remainingDays == 1) {
-            when(refreshTokens.findOldToken(refresh.jti()))
-                    .thenReturn(new RefreshToken(refresh.jti(), member.getId(), Duration.ofDays(1), null));
+            when(rotation.rotate(eq(refresh.jti()), anyString(), eq(member), any(Duration.class), any())).thenReturn(true);
         }
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -110,6 +109,23 @@ class JwtAuthenticationLifecycleTest {
             assertThat(cookies.readCurrentRefreshToken(request)).isEqualTo(refresh.value());
             verify(provider, never()).createRefreshToken(any());
         }
+    }
+
+    @Test
+    void overlappingRotationDoesNotClearTheWinningRequestsCookies() throws Exception {
+        ReflectionTestUtils.setField(provider, "refreshTokenDays", 1L);
+        IssuedToken refresh = provider.createRefreshToken(member);
+        when(refreshTokens.isValid(refresh.jti(), member.getId())).thenReturn(true);
+        when(cache.findOrLoad(eq(member.getId()), any(Duration.class))).thenReturn(Optional.of(member));
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/board/main");
+        request.setCookies(new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, mock(FilterChain.class));
+
+        verify(rotation).rotate(eq(refresh.jti()), anyString(), eq(member), any(Duration.class), any());
+        assertThat(response.getHeaders("Set-Cookie")).isEmpty();
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
     @Test

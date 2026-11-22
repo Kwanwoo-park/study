@@ -2,18 +2,16 @@
 
 Spring Boot 3.0.5와 Java 17로 구현한 웹·모바일 커뮤니티 서비스입니다.
 
-소셜 피드, 실시간 채팅·알림, 1:1 WebRTC 음성 통화, 계좌 상품, 신고·제재·상소와 관리자 운영 기능을 제공합니다. MySQL outbox, Kafka, Redis, WebSocket, SSE, Coturn, AWS S3를 조합해 이벤트 유실 복구와 네트워크 간 실시간 통신까지 구현했습니다.
+소셜 피드, 개인 기록과 할 일, 실시간 채팅·알림, WebRTC 1:1·그룹 음성 통화, 계좌 상품, 신고·제재·상소와 관리자 운영 기능을 제공합니다. MySQL outbox, Kafka, Redis, WebSocket, SSE, Coturn, AWS S3를 사용합니다.
 
 [운영 서비스](https://www.kwanwoo.site) · [웹 포트폴리오](https://www.kwanwoo.site/portfolio)
-
-> 현재 통화 기능은 **1:1 음성 통화**까지 구현되어 있습니다. 영상 통화는 아직 포함하지 않습니다.
 
 ## 목차
 
 - [프로젝트 핵심](#프로젝트-핵심)
 - [시스템 아키텍처](#시스템-아키텍처)
 - [채팅 및 알림 처리 흐름](#채팅-및-알림-처리-흐름)
-- [1:1 음성 통화 흐름](#11-음성-통화-흐름)
+- [음성 통화 흐름](#음성-통화-흐름)
 - [주요 기능](#주요-기능)
 - [웹과 모바일 인증](#웹과-모바일-인증)
 - [기술 스택](#기술-스택)
@@ -28,9 +26,9 @@ Spring Boot 3.0.5와 Java 17로 구현한 웹·모바일 커뮤니티 서비스�
 - Thymeleaf 웹과 iOS/Android 앱이 같은 도메인 API를 사용합니다.
 - 웹은 `HttpOnly` Cookie JWT, 모바일은 Bearer JWT와 Refresh Token 회전 방식을 사용합니다.
 - 채팅·알림 이벤트는 Kafka 발행 전에 MySQL outbox에 기록해 Kafka 장애 시에도 복구할 수 있습니다.
-- 채팅은 `roomId`를 Kafka key로 사용하고 최대 100건을 batch 저장한 뒤 WebSocket으로 전달합니다.
+- 텍스트 채팅은 메시지와 outbox를 같은 MySQL 트랜잭션에 저장합니다. Kafka의 `roomId` key와 배치 소비를 거쳐 WebSocket으로 전달하며, 재전송과 재접속 복구는 메시지 ID를 기준으로 처리합니다.
 - 알림은 Kafka Consumer가 Redis Pub/Sub에 전달하고 각 서버 인스턴스가 SSE 연결로 전송합니다.
-- 1:1 음성 통화는 STOMP로 시그널링하고 WebRTC 미디어는 P2P 또는 Coturn으로 전달합니다.
+- 1:1·그룹 음성 통화는 STOMP로 시그널링하고 참여자 간 WebRTC 미디어는 P2P 또는 Coturn으로 전달합니다.
 - Redis Lua script로 통화 생성·상태 전이·종료를 원자적으로 처리합니다.
 - 관리자 화면에서 시스템 자원, outbox 대기/dead letter, 장애 IP와 반복 횟수, 통화 강제 종료를 관리합니다.
 
@@ -47,7 +45,7 @@ Web / iOS / Android
           ▼
 Spring Boot Application
   ├─ MySQL : 도메인 데이터, JWT Refresh Token, Kafka outbox
-  ├─ Redis : 회원·채팅방 접속 상태, 통화 상태, 캐시, 알림 Pub/Sub
+  ├─ Redis : 접속·통화 상태, 캐시, 메모 초안, 알림 Pub/Sub
   ├─ Kafka : 채팅·알림 이벤트 전달 및 채팅 batch 소비
   ├─ AWS S3 : 게시글·채팅·프로필·컬렉션·다이어리 이미지
   └─ Coturn : WebRTC 직접 연결 실패 시 음성 미디어 중계
@@ -57,48 +55,44 @@ Spring Boot Application
 
 | 구성 요소 | 책임 |
 | --- | --- |
-| MySQL | 회원, 게시글, 댓글, 채팅, 알림, 신고, 제재, 상소, 계좌와 outbox 영속화 |
-| Redis | 온라인·채팅방 접속 상태, 회원 캐시, 통화 상태/TTL, 알림 Pub/Sub |
-| Kafka | 채팅·알림 이벤트 비동기 전달, `roomId` key 기반 채팅 순서 유지 |
+| MySQL | 회원, 콘텐츠, 개인 기록, 채팅, 알림, 신고·제재, 계좌와 outbox 영속화 |
+| Redis | 온라인·채팅방 접속 상태, 회원 캐시, 통화 상태/TTL, 메모 초안, 알림 Pub/Sub |
+| Kafka | 채팅·알림 이벤트 비동기 전달, `roomId` key로 같은 방의 이벤트를 같은 파티션에 배치 |
 | AWS S3 | 서비스 이미지 저장 |
 | Coturn | 서로 다른 NAT/방화벽 환경에서 WebRTC 미디어 relay |
 
-Redis는 채팅 메시지 임시 큐로 사용하지 않습니다. 전달 전 이벤트는 MySQL outbox에 저장하고 최종 채팅 메시지는 MySQL에 영속화합니다.
+서버 코드는 `src/main/java/spring/study` 아래 도메인별 패키지에 있습니다. HTTP 요청은 대체로 Controller → Facade → Service → Repository 순서로 처리합니다. `src/main/resources` 아래의 `templates`와 `static/js`에 Thymeleaf 화면과 JavaScript가 있습니다.
 
 ## 채팅 및 알림 처리 흐름
 
-### 채팅
+### 텍스트 메시지 저장과 전달
 
 ```text
-Web STOMP / Mobile REST
-  └─ ChatSendFacade
-       ├─ 방·회원·금칙어 검증
-       ├─ 메시지 ID와 등록 시각 부여
-       ├─ 미접속 사용자 알림 생성
-       └─ KafkaOutboxEvent를 MySQL에 저장
-            └─ 저장/트랜잭션 commit 후 즉시 dispatch 요청
-                 └─ Kafka topic (key = roomId)
-                      └─ Batch Consumer (최대 100건)
-                           └─ ChatMessageBatchService @Transactional
-                                ├─ 방·회원 일괄 조회
-                                ├─ 메시지 ID 기준 중복 저장 방지
-                                ├─ JPA batch insert
-                                └─ 채팅방 마지막 메시지·시간 갱신
-                                     └─ commit된 결과를 /sub/chat/room/{roomId}로 전송
+STOMP /api/chat/message/send
+  └─ ChatSendFacade (TALK)
+       ├─ 방 참여 권한·메시지 길이·ID·금칙어 검증
+       ├─ 한 MySQL 트랜잭션에서 메시지, 방 요약, outbox와 알림 저장
+       └─ 커밋 후 디스패치 요청 → Kafka topic (key = roomId)
+            └─ MessageConsumer → ChatMessageService.saveBatch
+                 └─ 커밋된 메시지를 /sub/chat/room/{roomId}로 전달
 ```
 
-- Producer는 `acks=all`, idempotence, `max.in.flight.requests.per.connection=5`를 사용합니다.
-- 같은 방의 메시지는 `roomId` key를 사용하므로 같은 partition에 기록됩니다.
-- Consumer는 batch listener와 `max.poll.records=100`을 사용합니다.
-- Hibernate JDBC batch와 insert 순서 정렬을 사용해 메시지 저장 비용을 줄입니다.
-- 이미 저장된 메시지 ID와 같은 poll 안의 중복 ID는 다시 insert하지 않습니다.
-- MySQL 저장 트랜잭션을 마친 결과만 WebSocket 방 구독자에게 전달합니다.
+- 브라우저는 텍스트와 이미지를 같은 UUID로 다시 보내고 `GET /api/chat/message/{id}/receipt`로 MySQL 저장 여부를 확인할 수 있습니다. 재접속 시 `GET /api/chat/missed`가 마지막 메시지 이후 기록을 시각·ID 순서로 반환합니다.
+- Producer는 `acks=all`과 멱등 발행을 사용합니다. 소비 배치 크기는 `chat.kafka.batch.max-records`로 지정합니다.
+- Consumer는 저장된 텍스트·이미지 메시지를 재사용하고, DB에 없는 입퇴장 이벤트와 이전 버전의 메시지는 배치로 저장합니다. 같은 배치의 중복 ID와 수정·삭제된 메시지의 오래된 생성 이벤트는 걸러냅니다.
 - Consumer 실패는 재시도 후 Kafka DLT에 보관하며 관리자 `/admin/kafka`에서 지연 확인·실패 재발행을 지원합니다.
-- 채팅 ID와 알림 이벤트 ID로 실시간 중복 전달을 줄이고, 재발행 시 삭제·수정된 채팅이나 오래된 알림 상태를 다시 노출하지 않습니다.
+- 채팅 ID와 알림 이벤트 ID로 실시간 중복 전달을 줄입니다. 알림 소비자는 DB에서 최신 상태를 확인한 뒤 전달합니다.
 
 토픽 생성 정책, 재발행 상태, 중복 방지의 범위와 배포 설정은 [Kafka 운영 문서](docs/kafka-operations.md)를 참고하세요.
 
-모바일은 `POST /api/chat/send`, 웹은 STOMP `/api/chat/message/send`를 사용하지만 이후 outbox/Kafka 처리 흐름은 같습니다.
+메시지 전송은 `/ws/chat`의 STOMP destination을 사용합니다. REST API는 방·메시지 조회, 저장 확인, 이미지 업로드, 수정·삭제에 사용합니다.
+
+### 채팅방 권한과 이미지 전송
+
+- 웹은 `PUT /api/chat/rooms/{roomId}/membership`으로 입장을 확인하고 구독을 시작합니다. `DELETE`는 해당 방에서 나갑니다. STOMP 연결은 인증이 필요하며, 방 구독과 전달 시점에 현재 참여 권한을 확인합니다.
+- 이미지 업로드는 `POST /api/chat/sendImage?roomId={roomId}`에서 로그인 회원과 방에 임시 첨부를 연결합니다. 이전 클라이언트가 방 ID를 생략하면 업로드한 회원만 자신이 참여 중인 방에서 사진을 사용할 수 있습니다.
+- STOMP 이미지 메시지는 업로드에서 받은 ID를 사용합니다. 서버가 저장된 이미지 URL을 사용해 메시지와 outbox를 함께 저장하므로 같은 ID를 다시 보내도 첨부가 한 번만 반영됩니다.
+- 미완료 업로드는 1시간 뒤에, 업로드 완료 후 전송하지 않은 첨부는 24시간 뒤에 정리 대상이 됩니다. S3 삭제가 실패하면 다시 시도합니다.
 
 ### Kafka outbox 복구 정책
 
@@ -118,13 +112,11 @@ Web STOMP / Mobile REST
 - Kafka 장애 중에는 다음 재시도 시각까지 전역 발행을 잠시 막아 반복 연결 비용을 줄입니다.
 - 성공한 outbox 행은 삭제하고, dead letter는 관리자 대시보드의 queue 지표로 확인합니다.
 
-설정 override가 필요한 경우 다음 속성을 사용합니다.
+안전 조회 주기는 다음 설정으로 조정할 수 있습니다.
 
 ```properties
 kafka.outbox.safety-poll-initial-ms=30000
 kafka.outbox.safety-poll-max-ms=300000
-kafka.outbox.retry-base-delay-ms=5000
-kafka.outbox.retry-max-delay-ms=1800000
 ```
 
 ### 알림
@@ -139,25 +131,25 @@ kafka.outbox.retry-max-delay-ms=1800000
 
 알림 저장과 outbox 저장을 같은 트랜잭션에 포함하며, 읽지 않은 개수·그룹별 조회·전체 읽음·개별 읽음 기능을 제공합니다. 채팅, 좋아요, 신고/관리자, 음성 통화 등의 알림 그룹을 지원합니다.
 
-## 1:1 음성 통화 흐름
+## 음성 통화 흐름
 
 ```text
-Caller / Receiver
+Caller / Invitees
   ├─ STOMP /api/audio/signal
   │    └─ Spring Boot → /user/queue/audio-call
   │         └─ CALL / ACCEPT / REJECT / OFFER / ANSWER / ICE_CANDIDATE / HANGUP
   ├─ Redis AudioCallStateStore
-  │    └─ RINGING → CONNECTING → ACTIVE → 종료
+  │    └─ 초대·수락·이탈 상태와 참여 세션 관리
   └─ WebRTC media
-       ├─ STUN으로 직접 P2P 연결 시도
+       ├─ 참여자 쌍별로 STUN을 통한 P2P 연결 시도
        └─ 실패하면 Coturn UDP/TCP relay
 ```
 
-- 통화는 참여자가 2명인 1:1 채팅방에서만 시작할 수 있습니다.
+- 참여자가 2명 이상인 채팅방에서 통화를 시작할 수 있습니다. 통화 수신을 허용하고 다른 통화에 참여 중이지 않은 방 멤버를 초대합니다.
 - `RINGING` 상태 TTL은 45초이며, 통화 중 상태 TTL은 12시간입니다.
-- Redis Lua script가 발신자·수신자 키와 통화 상태를 함께 변경해 1인 1통화를 보장합니다.
-- 통화를 시작하거나 받은 WebSocket session만 SDP, ICE, 종료 신호를 보낼 수 있습니다.
-- 통화 중 `KEEP_ALIVE`로 TTL을 갱신하고 WebSocket 연결 해제 시 상대에게 종료 신호를 보냅니다.
+- Redis Lua가 참여자별 키와 통화 상태를 원자적으로 갱신해 한 회원이 한 통화에만 참여하도록 합니다.
+- 참여 세션에서 보낸 SDP·ICE는 지정된 상대 참여자에게 전달합니다.
+- 통화 중 `KEEP_ALIVE`로 TTL을 갱신합니다. 연결이 끊기면 남은 참여자에게 이탈 또는 통화 종료를 알립니다.
 - 수신자가 다른 화면에 있어도 실시간 알림과 `GET /api/chat/audio/incoming`으로 수신 통화를 복원할 수 있습니다.
 - 관리자는 `DELETE /api/admin/chat/audio-call/{callId}`로 비정상 통화를 강제 종료할 수 있습니다.
 - `GET /api/chat/audio/ice-servers`는 로그인 회원에게만 만료 시간이 있는 HMAC TURN 자격증명을 발급합니다.
@@ -178,7 +170,9 @@ Caller / Receiver
 
 ### 게시글, 관계와 기록
 
+- 가입 전 첫 화면에서 피드·채팅·할 일의 예시를 볼 수 있는 체험
 - 게시글 작성·조회·수정·삭제와 조회수
+- 개인 게시글 북마크와 저장함
 - AWS S3 이미지 업로드 및 정리 작업
 - 좋아요 API와 좋아요 사용자 모달
 - 댓글·대댓글 작성·수정·삭제와 전체 댓글 모달
@@ -192,15 +186,20 @@ Caller / Receiver
 - 고정·색상 즉시 반영, 수동 DB 저장, 버전 충돌·응답 유실·장애 재시도 처리
 - 배포 전 Redis 영속화/삭제 정책과 DB 변경 사항은 [개인 메모 운영 안내](docs/memo-service.md) 참고
 
+### 할 일과 주간 회고
+
+- 개인 할 일 작성·수정, 완료 처리, 마감일 설정과 기한 필터
+- 주간 회고에서 그 주에 완료한 할 일과 작성한 다이어리 조회. [할 일 화면과 API](docs/todo-service.md)
+
 ### 채팅과 알림
 
-- 채팅방 생성, 1:1 채팅방, 목록·이전 메시지 cursor 조회
-- 웹 STOMP와 모바일 REST 메시지 전송
-- 채팅 이미지, 메시지 수정, 나에게/모두에게 삭제
+- 그룹·1:1 채팅방 생성, 방 목록과 이전 메시지 조회, 재접속 후 누락 메시지 복구
+- STOMP 메시지 전송, 동일 ID로 텍스트 재전송과 저장 확인
+- 메시지 인용, 투표, 이미지, 수정, 나에게/모두에게 삭제
 - Redis 기반 채팅방 접속·읽음 상태
-- MySQL outbox, Kafka room key, batch Consumer 기반 저장
+- MySQL outbox, Kafka 배치 소비와 WebSocket 전달
 - SSE 실시간 알림, 읽지 않은 개수, 그룹별 조회와 읽음 처리
-- 1:1 WebRTC 음성 통화, 수신 알림, 음소거·입출력 장치 선택과 강제 종료
+- 1:1·그룹 WebRTC 음성 통화, 수신 알림, 음소거·입출력 장치 선택과 강제 종료
 
 ### 신고, 제재, 상소와 관리자
 
@@ -220,7 +219,7 @@ Caller / Receiver
 - 거래 취소 시 소유자·상태·기간을 검증하고 반대 거래 생성
 - 예금·적금 금리, 만기, 누적 예상 이자 표시
 - 적금 월 자동이체와 잔액 부족 알림
-- 예금·적금 해지 시 원금과 이자를 지정 계좌로 정산
+- 예금·적금 해지 금액 미리보기와 지정 계좌로 원금·이자 정산
 
 ## 웹과 모바일 인증
 
@@ -228,10 +227,10 @@ Caller / Receiver
 
 | 클라이언트 | Access Token | Refresh Token | 로그인 API |
 | --- | --- | --- | --- |
-| Web | `HttpOnly` Cookie | `HttpOnly` Cookie + MySQL jti | `/api/member/**`, OAuth2 redirect |
+| Web | `HttpOnly` Cookie | `HttpOnly` Cookie + MySQL jti | `PATCH /api/member/login`, OAuth2 redirect |
 | Mobile | `Authorization: Bearer ...` | 응답 body + MySQL jti | `/api/mobile/auth/login`, `/refresh`, `/logout` |
 
-웹 재로그인(일반 로그인·OAuth2)은 현재 브라우저가 보낸 Refresh Token만 새 토큰으로 교체하며 다른 기기의 토큰은 유지합니다. 로그인·로그아웃 요청 직전에는 filter가 별도로 토큰을 재발급하지 않습니다. 일반 요청에서 Access Token이 만료되었을 때의 Refresh Token rotation은 유지합니다.
+웹 재로그인(일반 로그인·OAuth2)은 현재 브라우저가 보낸 Refresh Token만 새 토큰으로 교체하며 다른 기기의 토큰을 유지합니다. 로그인·로그아웃 요청 자체가 토큰 발급과 폐기를 처리합니다. 일반 요청에서 Access Token을 갱신할 때 Refresh Token 만료가 하루 이내면 교체합니다. 웹과 모바일 모두 기존 토큰 폐기와 교체 토큰 저장을 한 DB 트랜잭션으로 처리합니다.
 
 모바일 OAuth는 `/api/mobile/auth/oauth/{provider}`로 시작하고 성공 후 일회용 code를 `/api/mobile/auth/oauth/exchange`에서 앱 token으로 교환합니다. WebSocket도 별도 모바일 서버가 필요하지 않으며 인증된 연결에서 동일한 `/ws/chat` endpoint와 STOMP destination을 사용할 수 있습니다.
 
@@ -268,17 +267,17 @@ Caller / Receiver
 
 ### 사전 준비
 
-- Java 17
-- Docker와 Docker Compose
-- Docker Compose를 사용하지 않으면 MySQL, Redis, Kafka를 별도로 실행해야 합니다.
-- 이미지/OAuth/메일/TURN 기능은 각 외부 서비스 설정이 필요합니다.
+- 빌드에는 JDK 17과 저장소의 Gradle Wrapper를 사용합니다. `build`에 포함된 JavaScript 테스트에는 Node.js 22.13 이상이 필요합니다.
+- 앱 기동에는 MySQL, Redis, Kafka와 애플리케이션 설정이 필요합니다. 인프라는 Docker Compose로 시작하거나 별도로 실행할 수 있습니다.
+- `application.properties`, `application-oauth.properties`와 `.env`는 Git 추적 대상에서 제외되어 있습니다. 새 체크아웃에서 앱을 실행하려면 환경별 설정을 준비합니다.
 
 ### Docker Compose
 
-저장소 root에 commit하지 않는 `.env` 파일을 만들고 배포 환경 값을 입력합니다.
+저장소 루트의 `.env`에 Compose가 참조하는 값을 설정합니다.
 
 ```env
 MYSQL_ROOT_PASSWORD=<database-password>
+STUDY_CONFIG_DIR=/path/to/study-config
 
 TURN_SHARED_SECRET=<cryptographically-secure-random-secret>
 TURN_REALM=turn.example.com
@@ -286,27 +285,36 @@ TURN_EXTERNAL_IP=<turn-server-public-ip>
 WEBRTC_TURN_URLS=turn:turn.example.com:3478?transport=udp,turn:turn.example.com:3478?transport=tcp
 ```
 
-`TURN_SHARED_SECRET`은 임의의 짧은 문자열이 아니라 충분히 긴 암호학적 난수를 사용하고 애플리케이션과 Coturn에 같은 값을 주입해야 합니다. `TURN_EXTERNAL_IP`에는 클라이언트가 인터넷에서 접근할 TURN 서버의 공인 IPv4 또는 Elastic IP를 넣습니다.
+`TURN_SHARED_SECRET`에는 충분히 긴 난수를 사용하고 Spring 설정과 Coturn에 같은 값을 전달합니다. `TURN_EXTERNAL_IP`는 클라이언트에서 접근할 TURN 서버의 주소입니다.
+
+Compose는 `STUDY_CONFIG_DIR`의 디렉터리를 앱 컨테이너의 `/config`에 읽기 전용으로 마운트합니다. 경로 기본값은 `./config`입니다. 디렉터리를 만든 뒤 아래 애플리케이션 설정을 참고해 환경에 맞는 `application.properties`를 넣습니다.
 
 ```bash
+docker-compose config --services
 docker-compose up -d --build
 ```
 
-애플리케이션은 기본적으로 `http://localhost:8080`에서 실행됩니다.
+앱의 기본 접속 주소는 `http://localhost:8080`입니다. 로컬 MySQL이 이미 `3306`을 쓰고 있다면 Compose의 DB 포트 매핑과 충돌합니다. 인프라만 Compose로 실행할 때는 `docker-compose up -d db redis kafka`를 사용하며, 호스트에서 실행하는 앱의 Kafka 주소는 `localhost:29092`입니다.
 
 ### 애플리케이션 설정
 
-운영 배포 전 다음 설정을 실제 환경 값 또는 환경 변수 placeholder로 연결해야 합니다. 비밀값은 저장소에 commit하지 않습니다.
+빌드에서 `application*.properties`, `application*.yml`, `application*.yaml`을 JAR과 Docker 컨텍스트에서 제외합니다. 애플리케이션과 OAuth 설정은 실행 때 읽을 디렉터리에서 관리합니다.
+
+데이터베이스, Redis, Kafka, JWT, WebRTC 설정의 주요 속성은 다음과 같습니다. 개발용 DB의 스키마를 Hibernate로 반영하려면 `spring.jpa.hibernate.ddl-auto=update`를 지정합니다.
 
 ```properties
 # database / redis / kafka
 spring.datasource.url=<jdbc-url>
 spring.datasource.username=<database-user>
 spring.datasource.password=<database-password>
+spring.jpa.properties.hibernate.jdbc.batch_size=100
 spring.data.redis.host=<redis-host>
 spring.data.redis.port=<redis-port>
-bootstrap-servers=<kafka-bootstrap-servers>
+spring.kafka.bootstrap-servers=<kafka-bootstrap-servers>
 group-id=<kafka-consumer-group>
+chat.kafka.batch.max-records=100
+chat.kafka.batch.fetch-min-bytes=32768
+chat.kafka.batch.fetch-max-wait-ms=1000
 
 # authentication
 security.jwt.secret=<at-least-32-byte-secret>
@@ -322,7 +330,13 @@ webrtc.ice.turn-shared-secret=<same-value-as-coturn>
 webrtc.ice.turn-credential-ttl-seconds=<seconds>
 ```
 
-AWS S3, Google/Naver OAuth2와 mail 계정도 각 환경의 property 또는 secret manager로 주입해야 합니다.
+Compose에서 전달하는 `SPRING_KAFKA_BOOTSTRAP_SERVERS`, `WEBRTC_TURN_URLS`, `TURN_SHARED_SECRET`을 앱이 읽습니다. 이전 `bootstrap-servers` 설정은 `spring.kafka.bootstrap-servers`를 지정하지 않은 환경에서 계속 사용할 수 있습니다.
+
+WebSocket은 기본적으로 동일 출처에서 연결합니다. 외부 웹 출처를 허용해야 하면 `chat.websocket.allowed-origins`에 HTTPS 주소를 쉼표로 구분해 지정합니다.
+
+AWS S3는 `cloud.aws.credentials.accessKey`, `cloud.aws.credentials.secretKey`, `cloud.aws.s3.bucketName`, `cloud.aws.region.static`을 읽습니다. Google/Naver OAuth2는 활성 프로필의 `spring.security.oauth2.client` 설정을 사용하고 메일에는 `naver.id`와 `naver.password`가 필요합니다. HTTPS 운영에서는 `security.jwt.secure-cookie=true`를 사용합니다. HTTP 로컬 개발에서는 해당 값을 `false`로 설정할 수 있습니다.
+
+메모 자동 저장은 기본적으로 Redis AOF와 `noeviction` 정책을 확인합니다. 기본 Compose의 Redis에는 AOF 설정이 없으므로 메모까지 확인하려면 Redis 설정을 준비합니다. [메모용 Redis 설정](docs/memo-service.md#운영-redis-설정--배포-전-확인)
 
 ### 관리자 파일 보관함
 
@@ -358,7 +372,8 @@ spring.servlet.multipart.max-request-size=210MB
 
 ```bash
 ./gradlew clean build
-java -jar build/libs/study-0.0.1-SNAPSHOT.jar
+SPRING_CONFIG_ADDITIONAL_LOCATION=file:/path/to/study-config/ \
+  java -jar build/libs/study-0.0.1-SNAPSHOT.jar
 ```
 
 테스트를 제외한 빌드:
@@ -368,6 +383,10 @@ java -jar build/libs/study-0.0.1-SNAPSHOT.jar
 ```
 
 Windows PowerShell에서는 `./gradlew` 대신 `.\gradlew.bat`를 사용할 수 있습니다.
+
+### MySQL 스키마 변경
+
+스키마를 별도로 관리하는 기존 MySQL 환경에서는 버전별 SQL을 배포 전에 적용합니다. 채팅 마이그레이션은 기존 방을 유지하면서 1:1 방 구분과 임시 첨부 테이블을 추가하고 `study_schema_migration`에 적용 버전을 기록합니다. 새 개발 DB는 Hibernate의 `ddl-auto=update`로 초기화할 수 있습니다. [채팅 마이그레이션](src/main/resources/db/mysql/V20261123_01__chat_access_and_image_upload.sql)
 
 ### 포트폴리오 PDF 저장
 
@@ -380,7 +399,7 @@ Windows PowerShell에서는 `./gradlew` 대신 `.\gradlew.bat`를 사용할 수 
 - 캐시는 서버 재시작 시 초기화됩니다. 여러 서버를 운영하면 각 인스턴스가 별도 캐시를 가집니다. DB·S3·영구 볼륨은 사용하지 않습니다.
 - **Gradle 빌드·일반 테스트에서는 PDF를 생성하지 않습니다.** Docker 이미지 빌드에서는 실행 도구만 설치하며 PDF는 첫 저장 요청 시 생성합니다.
 
-Docker Compose 배포는 Dockerfile에 Node·Chromium·한글 폰트 설치가 포함되어 있습니다. Playwright 실행을 위해 런타임 이미지는 Alpine에서 Debian 기반으로 변경했습니다. 별도의 PDF 포트나 공개 URL 설정은 필요 없습니다.
+Docker 런타임 이미지에는 Node와 Chromium이 포함됩니다. PDF의 한글은 저장소에 포함된 Noto Sans KR 폰트를 사용합니다.
 
 Docker를 사용하지 않는다면 Node.js 22.13 이상(권장 24 LTS)을 설치한 뒤, 프로젝트 루트에서 최초 한 번 실행합니다. 도구 버전 변경 시에도 다시 실행하세요.
 
@@ -429,7 +448,7 @@ STUN만으로는 대칭 NAT, 회사/통신사 방화벽 등 일부 네트워크�
 
 ## 테스트
 
-핵심 테스트는 **Java 101건 + JavaScript 40건 = 총 141건**입니다. 파라미터별 실행을 포함한 개수입니다. JDK 17과 Node.js 22.13 이상이 필요합니다. JS 테스트는 Node 기본 모듈만 사용합니다.
+핵심 테스트는 **Java 120건 + JavaScript 45건 = 총 165건**입니다. 파라미터별 실행을 포함한 개수입니다. JDK 17과 Node.js 22.13 이상이 필요합니다. Java 테스트는 H2를 사용하고 JavaScript 테스트는 Node 기본 모듈에서 실행합니다.
 
 Java와 JS 함께 실행 (`build`에도 동일하게 포함):
 
@@ -449,43 +468,47 @@ JS만 실행:
 ./gradlew regressionTest
 ```
 
+MySQL 스키마 변경, Redis 재시작, Kafka 장애 복구는 `./gradlew infrastructureTest`로 확인합니다. [통합 테스트 실행](docs/testing.md#인프라-통합-테스트)
+
 주요 범위는 인증·이메일 인증, 계좌 잔액·거래 권한·이자·자동이체, 채팅 수정/삭제·음성 통화, 신고·상소, Kafka outbox 재시도, 알림 읽음 동기화, 관리자 파일·개인 메모 권한과 자동 저장, 모바일 이미지 업로드입니다. 선택 기준과 분야별 개수는 [핵심 테스트 구성](docs/testing.md)을 참고하세요. Node 실행 경로가 별도라면 `./gradlew test -PnodeExecutable=/절대경로/node`로 지정할 수 있습니다.
 
 ## 주요 경로
 
 ### 화면
 
-- `/` : 메인
-- `/member/login`, `/member/register` : 로그인·회원가입
-- `/member/detail`, `/member/search` : 내 정보·회원 검색
-- `/board/main`, `/board/all`, `/board/write` : 게시글
-- `/chat/chatList`, `/chat/chatRoom` : 채팅과 음성 통화
-- `/notification/list` : 알림
-- `/favorites`, `/collection` : 좋아요·컬렉션
-- `/diary`, `/diary/write` : 다이어리
-- `/account`, `/account/transfer`, `/account/transactions` : 계좌
-- `/report`, `/report/my`, `/appeal` : 신고·내 신고·상소
-- `/admin/administrator` : 관리자 대시보드
-- `/admin/forbidden/word/apply` : 금칙어 적용 검토
-- `/admin/appeal` : 상소 목록
-- `/portfolio` : 웹 포트폴리오
+| 화면 | 경로 |
+| --- | --- |
+| 소개와 읽기 전용 체험 | `/` |
+| 로그인·회원가입 | `/member/login`, `/member/register` |
+| 내 정보·회원 검색 | `/member/detail`, `/member/search` |
+| 게시글·저장함 | `/board/main`, `/board/all`, `/board/write`, `/board/bookmarks` |
+| 채팅과 음성 통화 | `/chat/chatList`, `/chat/chatRoom` |
+| 알림·좋아요·컬렉션 | `/notification/list`, `/favorites`, `/collection` |
+| 다이어리·독후감 | `/diary`, `/diary/write`, `/book-reviews` |
+| 개인 메모·할 일·주간 회고 | `/memos`, `/todo`, `/todo/week` |
+| 계좌 | `/account`, `/account/transfer`, `/account/transactions` |
+| 신고·내 신고·상소 | `/report`, `/report/my`, `/appeal` |
+| 관리자 대시보드·금칙어 검토·상소 목록 | `/admin/administrator`, `/admin/forbidden/word/apply`, `/admin/appeal` |
+| 관리자 운영 도구 | `/admin/kafka`, `/admin/event-logs`, `/admin/files`, `/admin/github` |
+| 웹 포트폴리오 | `/portfolio` |
 
 ### REST API
 
-- `/api/portfolio/pdf` : 현재 포트폴리오 PDF 생성·캐시·다운로드
-- `/api/mobile/auth/**` : 모바일 로그인·token 회전·OAuth 교환
-- `/api/member/**` : 회원·비밀번호 인증
-- `/api/board/**`, `/api/boardImg/**` : 게시글·이미지
-- `/api/comment/**`, `/api/reply/**` : 댓글·대댓글
-- `/api/favorite/**`, `/api/follow/**`, `/api/collection/**` : 관계·저장
-- `/api/diary/**` : 다이어리
-- `/api/chat/**` : 채팅, 모바일 메시지, 접속 상태, ICE server, 수신 통화
-- `/api/notification/**` : 알림·SSE
-- `/api/report/**`, `/api/appeal/**` : 신고·상소
-- `/api/forbidden/word/**` : 금칙어
-- `/api/account/**` : 계좌·거래·해지
-- `/api/admin/**` : 관리자·시스템 상태·장애·통화 종료
-- `/api/mail/**` : 메일 인증
+| 기능 | 경로 |
+| --- | --- |
+| 포트폴리오 PDF 생성·캐시·다운로드 | `/api/portfolio/pdf` |
+| 모바일 로그인·토큰 갱신·OAuth 교환 | `/api/mobile/auth/**` |
+| 회원·비밀번호·메일 인증 | `/api/member/**`, `/api/mail/**` |
+| 게시글·이미지·댓글·대댓글 | `/api/board/**`, `/api/boardImg/**`, `/api/comment/**`, `/api/reply/**` |
+| 좋아요·팔로우·컬렉션 | `/api/favorite/**`, `/api/follow/**`, `/api/collection/**` |
+| 다이어리·독후감 | `/api/diary/**`, `/api/book-reviews/**` |
+| 채팅방·메시지 조회, 이미지, 투표, 접속 상태, 음성 통화 설정 | `/api/chat/**` |
+| 재접속 복구·텍스트 저장 확인 | `/api/chat/missed`, `/api/chat/message/{id}/receipt` |
+| 개인 메모·할 일 | `/api/memos/**`, `/api/todo/**` |
+| 알림·SSE | `/api/notification/**` |
+| 신고·상소·금칙어 | `/api/report/**`, `/api/appeal/**`, `/api/forbidden/word/**` |
+| 계좌·거래·해지 | `/api/account/**` |
+| 관리자·시스템 상태·장애·통화 종료 | `/api/admin/**` |
 
 회원가입·비밀번호 찾기는 `POST /api/mail/confirm`에 `{ "email": "..." }`을 보내 인증번호를 발송하고,
 `POST /api/mail/verify`에 `{ "email": "...", "code": "..." }`을 보내 받은 `verificationToken`을 가입/비밀번호 재설정 요청에 포함합니다.
@@ -502,7 +525,9 @@ JS만 실행:
 
 ## 운영 및 장애 대응
 
-- [Kafka · Redis 이벤트 로그](docs/integration-event-logs.md): 관리자 전용 발행·수신 결과 조회, 실패·재시도 추적, 최근 7일 보관.
+- Kafka의 토픽·소비 지연과 실패 재발행을 확인할 수 있습니다. [Kafka 운영 문서](docs/kafka-operations.md)
+- Kafka·Redis의 발행·수신 결과와 재시도는 최근 7일간 조회할 수 있습니다. [이벤트 로그 운영 문서](docs/integration-event-logs.md)
+- 관리자 비공개 S3 버킷과 GitHub 조회는 별도 설정을 사용합니다. [관리자 파일 스토리지](docs/admin-file-storage.md) · [GitHub 변경 이력](docs/admin-github-history.md)
 
 ### 관리자 시스템 상태
 
@@ -514,7 +539,7 @@ JS만 실행:
 - 온라인 session과 활성 채팅방 접속 수
 - Kafka outbox pending/dead letter 수
 - S3 image cleanup pending 수
-- 실행 중인 JAR에 빌드 시 기록한 Git 커밋과 서버 시작 시각. 미커밋 변경으로 빌드했으면 따로 표시하고, Git 정보 없이 빌드하거나 IDE에서 직접 실행하면 커밋을 추측하지 않습니다.
+- 서버 시작 시각과 JAR 빌드 시 기록한 Git 커밋. Git 정보가 있는 체크아웃에서 `bootJar`를 실행하면 미커밋 변경 여부도 기록합니다. 기본 Docker 빌드 컨텍스트는 `.git`을 제외하므로 이 경로로 빌드한 JAR의 커밋 값은 비어 있습니다.
 
 ### 서버 장애 기록
 
@@ -530,7 +555,7 @@ JS만 실행:
 
 ### 운영 보안
 
-- 운영 `JWT_SECRET`은 최소 32바이트 난수로 설정합니다.
+- 운영 `security.jwt.secret`은 최소 32바이트 난수로 설정합니다.
 - HTTPS 환경에서는 `security.jwt.secure-cookie=true`를 유지합니다.
 - OAuth, AWS, database, mail, JWT, TURN secret을 source code나 README에 기록하지 않습니다.
 - JPA 설정은 현재 `ddl-auto=update`이므로 운영에서는 migration 도구나 명시적 DDL 관리 방식으로 전환하는 것이 안전합니다.

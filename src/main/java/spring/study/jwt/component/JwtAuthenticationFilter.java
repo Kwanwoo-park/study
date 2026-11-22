@@ -42,6 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final RefreshTokenService refreshTokenService;
     private final MemberTokenCacheService memberTokenCacheService;
     private final OnlineUserService onlineUserService;
+    private final RefreshTokenRotation rotation;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -122,9 +123,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (tokenProvider.shouldRotateRefreshToken(claims.expiresAt())) {
                 IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
 
-                if (!rotate(claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ClientIpResolver.resolve(request))) {
-                    cookieService.clearAuthenticationCookies(response);
-
+                if (!rotation.rotate(claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ClientIpResolver.resolve(request))) {
+                    // An overlapping request may already have installed the replacement cookies.
                     return null;
                 }
 
@@ -145,22 +145,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             return null;
         }
-    }
-
-    private boolean rotate (String oldJti, String newJti, Member member, Duration ttl, String ipAddress) {
-        RefreshToken oldToken = refreshTokenService.findOldToken(oldJti);
-        Instant now = Instant.now();
-
-        if (oldToken == null || !oldToken.getMemberId().equals(member.getId()) || !oldToken.getExpiresAt().isAfter(now)) {
-            return false;
-        }
-
-        refreshTokenService.deleteOldToken(oldToken);
-        memberService.updateLastLoginTime(member.getId());
-        refreshTokenService.save(newJti, member, ttl, ipAddress);
-        memberTokenCacheService.save(member, ttl);
-
-        return true;
     }
 
     private Member loadActiveMember(TokenClaims claims) {

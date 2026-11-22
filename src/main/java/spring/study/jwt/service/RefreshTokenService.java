@@ -48,6 +48,15 @@ public class RefreshTokenService {
         return refreshTokenRepository.existsByJtiAndMemberIdAndExpiresAtAfter(jti, memberId, Instant.now());
     }
 
+    public boolean replace(String oldJti, String newJti, Member member, Duration ttl, String ipAddress) {
+        RefreshToken current = refreshTokenRepository.findForUpdateByJtiAndMemberId(oldJti, member.getId()).orElse(null);
+        if (current == null || !current.getExpiresAt().isAfter(Instant.now())) return false;
+
+        refreshTokenRepository.delete(current);
+        refreshTokenRepository.saveAndFlush(new RefreshToken(newJti, member.getId(), ttl, ipAddress));
+        return true;
+    }
+
     @Transactional(readOnly = true)
     public List<RefreshToken> findByExpiresAtLessThanEqual(Instant now) {
         return refreshTokenRepository.findByExpiresAtLessThanEqual(now);

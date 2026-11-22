@@ -62,6 +62,8 @@ public class ChatPageFacade {
             return "redirect:/chat/chatList";
 
         boolean participant = roomMemberService.exist(member, room);
+        if (!participant && !room.allowsJoin(member)) return "redirect:/chat/chatList";
+
         List<ChatRoomMember> participants = roomMemberService.find(room);
         model.addAttribute("room", room.getRoomId());
         model.addAttribute("member", member.getEmail());

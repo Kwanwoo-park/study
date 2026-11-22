@@ -2,10 +2,11 @@ package spring.study.common.facade;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletResponse;
+import spring.study.common.component.ModerationPolicy;
 import spring.study.common.service.ModerationService;
 import spring.study.forbidden.entity.Status;
 import spring.study.forbidden.service.ForbiddenService;
@@ -34,7 +35,13 @@ class ModerationFacadeTest {
     @Mock private MemberTokenCacheService tokenCacheService;
     @Mock private RefreshTokenService refreshTokenService;
     @Mock private JwtCookieService jwtCookieService;
-    @InjectMocks private ModerationFacade moderationFacade;
+    private ModerationFacade moderationFacade;
+
+    @BeforeEach
+    void configurePolicy() {
+        moderationFacade = new ModerationFacade(new ModerationPolicy(forbiddenService, moderationService,
+                notificationService, memberService, tokenCacheService, refreshTokenService), jwtCookieService);
+    }
 
     @Test
     void accumulatedRiskBlocksMemberAndInvalidatesAuthentication() {

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   db:
     image: mysql:8.0.33
@@ -95,6 +93,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/config/
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/spring?characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -110,6 +109,12 @@ services:
       ADMIN_FILES_S3_BUCKET: ${ADMIN_FILES_S3_BUCKET:-}
     volumes:
       - app-data:/app/data/img
+      - type: bind
+        source: ${STUDY_CONFIG_DIR:-./config}
+        target: /config
+        read_only: true
+        bind:
+          create_host_path: false
     networks:
       - backend
 

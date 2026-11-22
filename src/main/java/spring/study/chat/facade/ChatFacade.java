@@ -6,6 +6,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +22,7 @@ import spring.study.chat.entity.MessageType;
 import spring.study.chat.entity.ChatMessageDeleteScope;
 import spring.study.chat.entity.ChatMessageStatus;
 import spring.study.chat.service.*;
+import spring.study.common.component.TransactionRunner;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -41,6 +43,8 @@ public class ChatFacade {
     private final MemberService memberService;
     private final ImageS3Service imageS3Service;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatImageUploadService imageUploads;
+    private final TransactionRunner transactions;
 
     public ResponseEntity<?> loadChatting(String roomId, Member member, int cursor, int limit) {
         ChatRoom room = roomService.find(roomId);
@@ -112,14 +116,19 @@ public class ChatFacade {
         ));
     }
 
-    public ResponseEntity<?> textReceipt(String roomId, String id, Member member) {
+    public ResponseEntity<?> messageReceipt(String roomId, String id, Member member) {
         ChatRoom room = requireAccessibleRoom(roomId, member);
         ChatMessage saved = messageService.findExisting(id).orElse(null);
-        if (saved == null || saved.getType() != MessageType.TALK || !room.getId().equals(saved.getRoom().getId())
+        if (saved == null || (saved.getType() != MessageType.TALK && saved.getType() != MessageType.IMAGE)
+                || !room.getId().equals(saved.getRoom().getId())
                 || !member.getId().equals(saved.getMember().getId()) || messageHiddenService.existHiddenMessage(saved, member)) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(new ChatMessageResponseDto(saved));
+        ChatMessageResponseDto message = new ChatMessageResponseDto(saved);
+        if (!visibleImageMessages(List.of(message)).isEmpty()) {
+            message.setList(messageImgService.findMessage(id).stream().map(ChatMessageImg::getImgSrc).toList());
+        }
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(message);
     }
 
     public ResponseEntity<?> messageReference(String roomId, String id, Member member) {
@@ -160,9 +169,7 @@ public class ChatFacade {
             ));
         }
 
-        String name = member.getEmail() + " " + searchMember.getEmail();
-
-        ChatRoom room = roomService.createRoom(name, 2L);
+        ChatRoom room = roomService.createDirectRoom(member, searchMember);
 
         roomMemberService.save(member, room);
         roomMemberService.save(searchMember, room);
@@ -173,7 +180,9 @@ public class ChatFacade {
         ));
     }
 
-    public ResponseEntity<?> sendImage(List<MultipartFile> files) {
+    public ResponseEntity<?> sendImage(List<MultipartFile> files, String roomId, Member member) {
+        if (member.isAccessBlocked()) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        Long uploadRoomId = roomId == null ? null : requireAccessibleRoom(roomId, member).getId();
         int check = imageS3Service.fileSizeCheck(files);
 
         if (check == -1) {
@@ -196,28 +205,35 @@ public class ChatFacade {
         }
 
         List<ChatMessageImg> list = new ArrayList<>();
-        List<String> uploadedUrls = new ArrayList<>();
+        List<String> objectKeys = new ArrayList<>();
         String messageId = UUID.randomUUID().toString();
 
-        try {
-            for (MultipartFile file : files) {
-                String imageUrl = imageS3Service.uploadImageToS3(file);
-                uploadedUrls.add(imageUrl);
-                list.add(ChatMessageImg.builder()
-                        .imgSrc(imageUrl)
-                        .messageId(messageId)
-                        .build());
-            }
-
+        for (int index = 0; index < files.size(); index++) {
+            String extension = StringUtils.getFilenameExtension(files.get(index).getOriginalFilename());
+            String key = "chat-" + messageId + "-" + index + "." + extension.toLowerCase(Locale.ROOT);
+            objectKeys.add(key);
+            list.add(ChatMessageImg.builder().imgSrc(imageS3Service.imageUrl(key)).messageId(messageId).build());
+        }
+        transactions.write(() -> {
+            imageUploads.reserve(messageId, member.getId(), uploadRoomId);
             messageImgService.saveAll(list);
+            return null;
+        });
 
+        try {
+            for (int index = 0; index < files.size(); index++) {
+                imageS3Service.uploadImageToS3(files.get(index), objectKeys.get(index));
+            }
+            if (!imageUploads.markReady(messageId)) {
+                throw new IllegalStateException("Chat image upload expired before it completed");
+            }
             return ResponseEntity.ok(Map.of(
                     "result", 1,
                     "messageId", messageId,
                     "list", list.stream().map(ChatMessageImg::getImgSrc).toList()
             ));
         } catch (Exception e) {
-            imageS3Service.deleteImgSrc(uploadedUrls);
+            imageUploads.abandon(messageId);
             log.error("Chat image upload failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "result", -1,

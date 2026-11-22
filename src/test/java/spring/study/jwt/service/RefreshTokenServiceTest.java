@@ -13,9 +13,12 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.component.JwtAuthenticationFilter;
 import spring.study.jwt.component.JwtTokenProvider;
+import spring.study.jwt.component.RefreshTokenRotation;
 import spring.study.jwt.entity.RefreshToken;
 import spring.study.jwt.entity.TokenName;
 import spring.study.jwt.facade.JwtAuthenticationFacade;
@@ -27,9 +30,14 @@ import spring.study.member.service.MemberService;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import spring.study.jwt.dto.IssuedToken;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
@@ -44,13 +52,16 @@ import static org.mockito.ArgumentMatchers.eq;
         replace = AutoConfigureTestDatabase.Replace.ANY,
         connection = EmbeddedDatabaseConnection.H2
 )
-@Import(RefreshTokenService.class)
+@Import({RefreshTokenService.class, RefreshTokenRotation.class})
 class RefreshTokenServiceTest {
     @Autowired
     private RefreshTokenService refreshTokenService;
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private RefreshTokenRotation rotation;
 
     @MockBean
     private MemberService memberService;
@@ -103,7 +114,7 @@ class RefreshTokenServiceTest {
                 .thenReturn(Optional.of(member));
         JwtCookieService cookies = new JwtCookieService();
         JwtAuthenticationFacade authentication = new JwtAuthenticationFacade(provider, memberService, memberTokenCacheService, refreshTokenService, cookies);
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class));
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(provider, memberService, cookies, refreshTokenService, memberTokenCacheService, mock(OnlineUserService.class), rotation);
         MockHttpServletRequest request = new MockHttpServletRequest("PATCH", "/api/member/updatePassword/authenticated");
         request.setCookies(new Cookie(JwtCookieService.REFRESH_COOKIE, refresh.value()));
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -116,6 +127,55 @@ class RefreshTokenServiceTest {
             assertThat(refreshTokenRepository.count()).isZero();
         } finally {
             SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void onlyOneConcurrentRequestCanReplaceTheSameRefreshToken() throws Exception {
+        Member member = member(21L);
+        Duration ttl = Duration.ofDays(1);
+        refreshTokenService.save("old-token", member, ttl);
+        var start = new CountDownLatch(1);
+        var workers = Executors.newFixedThreadPool(2);
+        try {
+            var first = workers.submit(() -> {
+                start.await();
+                return rotation.rotate("old-token", "first-new-token", member, ttl, null);
+            });
+            var second = workers.submit(() -> {
+                start.await();
+                return rotation.rotate("old-token", "second-new-token", member, ttl, null);
+            });
+            start.countDown();
+
+            boolean firstWon = first.get(10, TimeUnit.SECONDS);
+            boolean secondWon = second.get(10, TimeUnit.SECONDS);
+            assertThat(firstWon).isNotEqualTo(secondWon);
+            assertThat(refreshTokenService.isValid("old-token", member.getId())).isFalse();
+            assertThat(refreshTokenService.isValid("first-new-token", member.getId())).isEqualTo(firstWon);
+            assertThat(refreshTokenService.isValid("second-new-token", member.getId())).isEqualTo(secondWon);
+        } finally {
+            workers.shutdownNow();
+            refreshTokenService.revoke(member.getId());
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void failureDuringRotationRollsBackDeletionAndReplacement() {
+        Member member = member(22L);
+        Duration ttl = Duration.ofDays(1);
+        refreshTokenService.save("token-to-keep", member, ttl);
+        doThrow(new IllegalStateException("cache unavailable")).when(memberTokenCacheService).save(member, ttl);
+
+        try {
+            assertThatThrownBy(() -> rotation.rotate("token-to-keep", "replacement", member, ttl, null))
+                    .isInstanceOf(IllegalStateException.class);
+            assertThat(refreshTokenService.isValid("token-to-keep", member.getId())).isTrue();
+            assertThat(refreshTokenService.isValid("replacement", member.getId())).isFalse();
+        } finally {
+            refreshTokenService.revoke(member.getId());
         }
     }
 

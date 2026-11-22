@@ -8,6 +8,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import spring.study.common.exception.JwtValidationException;
 import spring.study.jwt.component.JwtTokenProvider;
+import spring.study.jwt.component.RefreshTokenRotation;
 import spring.study.jwt.dto.*;
 import spring.study.jwt.entity.RefreshToken;
 import spring.study.jwt.entity.TokenName;
@@ -33,6 +34,7 @@ public class MobileAuthFacade {
     private final MemberTokenCacheService memberTokenCacheService;
     private final OnlineUserService onlineUserService;
     private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRotation rotation;
 
     public ResponseEntity<?> me(Member member) {
         if (member == null) return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
@@ -163,26 +165,11 @@ public class MobileAuthFacade {
             return new AuthenticationTokens(accessToken.value(), refreshTokenValue, accessToken.expiresAt(), claims.expiresAt());
         }
         IssuedToken refreshToken = tokenProvider.createRefreshToken(member);
-        if (!rotate(
+        if (!rotation.rotate(
                 claims.jti(), refreshToken.jti(), member, tokenProvider.refreshTokenDuration(), ipAddress)) {
             throw new JwtValidationException("Could not rotate refresh token");
         }
         return toAuthenticationTokens(accessToken, refreshToken);
     }
 
-    private boolean rotate (String oldJti, String newJti, Member member, Duration ttl, String ipAddress) {
-        RefreshToken oldToken = refreshTokenService.findOldToken(oldJti);
-        Instant now = Instant.now();
-
-        if (oldToken == null || !oldToken.getMemberId().equals(member.getId()) || !oldToken.getExpiresAt().isAfter(now)) {
-            return false;
-        }
-
-        refreshTokenService.deleteOldToken(oldToken);
-        memberService.updateLastLoginTime(member.getId());
-        refreshTokenService.save(newJti, member, ttl, ipAddress);
-        memberTokenCacheService.save(member, ttl);
-
-        return true;
-    }
 }

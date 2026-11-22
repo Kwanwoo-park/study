@@ -27,13 +27,21 @@ public class ChatRoomService {
 
     @Transactional
     public ChatRoom createRoom(String name, Long count) {
-        String randomId = UUID.randomUUID().toString();
+        return createRoom(name, count, false);
+    }
 
+    @Transactional
+    public ChatRoom createDirectRoom(Member first, Member second) {
+        return createRoom(first.getEmail() + " " + second.getEmail(), 2L, true);
+    }
+
+    private ChatRoom createRoom(String name, long count, boolean direct) {
         ChatRoom room = ChatRoom.builder()
-                .roomId(randomId)
+                .roomId(UUID.randomUUID().toString())
                 .name(name)
                 .count(count)
                 .build();
+        room.setDirectRoom(direct);
 
         return chatRoomRepository.save(room);
     }

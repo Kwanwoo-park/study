@@ -6,10 +6,12 @@
 
 - 화면: `/todo` (`/todo/list`도 동일). 회원 상세의 `To-do list` 메뉴와 메모 화면 상단의 `To-do list` 버튼에서 접근합니다.
 - 미완료·완료 구역을 함께 표시하며 각각 20개씩 페이지를 나눕니다. 미완료는 생성 시각 내림차순, 완료는 완료 시각 내림차순으로 표시합니다.
-- `GET /api/todo?page=0&size=20`: 본인 목록. `completed=true/false`로 완료 상태를 필터링합니다.
+- `/todo/week`에서 월요일부터 일요일까지 완료한 할 일과 작성한 다이어리를 조회합니다. `weeksAgo`는 현재 주부터 최대 52주 전까지 선택합니다.
+- `GET /api/todo?page=0&size=20`으로 본인 목록을 조회합니다. `completed=true/false`로 완료 상태를 고르고, 미완료 항목에는 `due=OVERDUE`, `TODAY`, `UPCOMING` 필터를 사용할 수 있습니다. 기한 필터 결과는 마감일·ID 오름차순입니다.
 - `GET /api/todo/{id}`: 본인의 할 일 한 건 조회.
-- `POST /api/todo`: `{ "content": "할 일" }`로 미완료 항목 작성.
+- `POST /api/todo`에 `{ "content": "할 일", "dueDate": "2026-11-30" }`를 보내 작성합니다. 마감일은 선택 항목입니다.
 - `PATCH /api/todo/{id}`: `{ "content": "수정 내용" }`로 내용만 변경.
+- `PATCH /api/todo/{id}/due-date`에 `{ "dueDate": "2026-11-30" }`를 보내 마감일을 변경합니다. `null`을 보내면 마감일을 지웁니다.
 - `PATCH /api/todo/{id}/completion`: `{ "completed": true }`로 완료 여부만 변경. `false`로 되돌릴 수 있습니다.
 - `DELETE /api/todo/{id}`: 본인 항목 삭제.
 
@@ -17,13 +19,15 @@
 
 완료로 바뀔 때 `completedAt`을 기록하고, 미완료로 되돌리면 지웁니다. 내용 수정이나 이미 완료된 항목에 대한 중복 완료 요청은 완료 시각을 바꾸지 않습니다. 다시 완료하면 새 완료 시각을 기록합니다.
 
-## 기존 To-do의 완료 시각 추가
+## 기존 To-do의 완료 시각과 마감일 추가
 
 `ddl-auto=update` 환경에서는 새 컬럼과 인덱스가 생성됩니다. 수동 관리 환경에서는 아래 컬럼·인덱스가 없는 경우에만 각각 추가합니다. 아래의 과거 일기 테이블 전환 작업을 다시 실행할 필요는 없습니다.
 
 ```sql
 ALTER TABLE todo ADD COLUMN completed_at DATETIME(6) NULL;
 CREATE INDEX idx_todo_member_completed_at ON todo (member_id, completed, completed_at, id);
+ALTER TABLE todo ADD COLUMN due_date DATE NULL;
+CREATE INDEX idx_todo_member_due_date ON todo (member_id, completed, due_date, id);
 ```
 
 기존 완료 항목은 정확한 완료 시각을 기록하지 않았으므로 복원할 수 없습니다. 기존 수정 시각으로 보완하려면 컬럼 추가 후 아래 SQL을 한 번 실행합니다. 이미 완료 시각이 있는 항목은 바꾸지 않습니다. 보완하지 않은 기존 항목은 완료 구역 마지막에 표시됩니다. 이 SQL은 자동 실행되지 않습니다.
@@ -34,7 +38,7 @@ SET completed_at = COALESCE(update_time, register_time, CURRENT_TIMESTAMP(6))
 WHERE completed = TRUE AND completed_at IS NULL;
 ```
 
-## 기존 환경 배포 순서
+## 일기 안의 할 일을 사용하던 버전에서 전환
 
 이 문서의 SQL은 자동 실행되지 않습니다. Flyway나 시작 시 데이터 삭제 작업을 추가하지 않았습니다.
 
@@ -54,12 +58,14 @@ CREATE TABLE IF NOT EXISTS todo (
     content VARCHAR(255) NOT NULL,
     completed BIT NOT NULL,
     completed_at DATETIME(6) NULL,
+    due_date DATE NULL,
     register_time DATETIME(6) NULL,
     update_time DATETIME(6) NULL,
     PRIMARY KEY (id),
     INDEX idx_todo_member_id (member_id, id),
     INDEX idx_todo_member_completed_id (member_id, completed, id),
     INDEX idx_todo_member_completed_at (member_id, completed, completed_at, id),
+    INDEX idx_todo_member_due_date (member_id, completed, due_date, id),
     CONSTRAINT fk_todo_member FOREIGN KEY (member_id) REFERENCES member (member_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

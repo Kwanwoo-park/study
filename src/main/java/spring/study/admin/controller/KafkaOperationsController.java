@@ -36,4 +36,14 @@ public class KafkaOperationsController {
     public ResponseEntity<?> replay(@PathVariable long id, @AuthenticationPrincipal Member administrator) {
         return facade.replay(id, administrator);
     }
+
+    @GetMapping("/outbox-failures")
+    public ResponseEntity<?> outboxFailures(@RequestParam(required = false) Long beforeId) {
+        return facade.outboxFailures(beforeId);
+    }
+
+    @PostMapping("/outbox-failures/{id}/replay")
+    public ResponseEntity<?> requeueOutbox(@PathVariable long id) {
+        return facade.requeueOutbox(id);
+    }
 }

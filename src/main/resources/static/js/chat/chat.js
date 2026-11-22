@@ -8,6 +8,7 @@ const btn = document.getElementById("btn");
 const newMessageNotice = document.getElementById("new-message-notice");
 const chatSendStatus = document.getElementById('chat-send-status');
 const chatSendRetry = document.getElementById('chat-send-retry');
+const chatSendDismiss = document.getElementById('chat-send-dismiss') ?? createSendDismissButton();
 
 const maxSize = 10;
 const CHAT_LIMIT = 10;
@@ -43,11 +44,16 @@ let hasConnected = false;
 let latestMessage = null;
 let recoveringMessages = false;
 let checkingText = false;
-let pendingText = null;
+let pendingMessage = null;
 let receiptTimer = null;
 
 btn.addEventListener('click', () => upload.click());
-chatSendRetry.addEventListener('click', sendPendingText);
+chatSendRetry.addEventListener('click', sendPendingMessage);
+chatSendDismiss.addEventListener('click', () => {
+    clearTimeout(receiptTimer);
+    pendingMessage = null;
+    setSendStatus('');
+});
 newMessageNotice.addEventListener('click', () => {
     scrollToBottom();
     hideNewMessageNotice();
@@ -58,7 +64,8 @@ document.addEventListener('click', closeChatActionMenus);
 
 initChatImageModal();
 
-window.onload = function() {
+window.onload = async function() {
+    if (!await roomMembership) return;
     loadMoreChat().then(() => {
         activateChatPresence();
         presenceRefreshInterval = setInterval(activateChatPresence, PRESENCE_REFRESH_INTERVAL_MS);
@@ -78,7 +85,7 @@ window.addEventListener('pageshow', event => {
     pageLeaving = false;
     if (!client || !client.connected) connectChatSocket();
     else recoverMessages(latestMessage?.id);
-    if (pendingText) checkTextReceipt(pendingText);
+    if (pendingMessage) checkMessageReceipt(pendingMessage);
     activateChatPresence();
     presenceRefreshInterval = setInterval(activateChatPresence, PRESENCE_REFRESH_INTERVAL_MS);
 });
@@ -94,7 +101,18 @@ container.addEventListener('scroll', () => {
     }
 })
 
-connectChatSocket();
+const roomMembership = prepareRoom();
+
+function prepareRoom() {
+    if (flag !== 'true') {
+        connectChatSocket();
+        return Promise.resolve(true);
+    }
+    return updateMembership('PUT').then(joined => {
+        if (joined) connectChatSocket();
+        return joined;
+    });
+}
 
 function connectChatSocket() {
     if (pageLeaving || reconnectTimer) return;
@@ -118,9 +136,10 @@ function onConnected() {
         window.audioCallClient.onStompConnected(client);
     }
 
-    if (flag == 'true')
-        enterRoom();
-    if (reconnecting) recoverMessages(lastSeenId);
+    if (reconnecting || lastSeenId) {
+        recoverMessages(lastSeenId);
+        if (pendingMessage) checkMessageReceipt(pendingMessage);
+    }
 }
 
 function onError(error) {
@@ -259,20 +278,23 @@ async function recoverMessages(after) {
         }
     } catch (error) {
         console.error('채팅 복구 오류:', error);
-        if (!pendingText) setSendStatus('최근 메시지를 확인하지 못했어요. 새로고침해 주세요.');
+        if (!pendingMessage) setSendStatus('최근 메시지를 확인하지 못했어요. 새로고침해 주세요.');
     } finally {
         recoveringMessages = false;
     }
 }
 
-function enterRoom() {
-    const enterMsg = {
-        type : "ENTER",
-        roomId : roomId,
-        email : email
-    };
-
-    msgSend(enterMsg);
+async function updateMembership(method) {
+    try {
+        const response = await fetch(`/api/chat/rooms/${encodeURIComponent(roomId)}/membership`,
+            {method, credentials: 'include'});
+        if (response.ok) return true;
+        const result = await response.json().catch(() => ({}));
+        setSendStatus(result.message || '채팅방 참여 상태를 변경할 수 없어요.');
+    } catch (error) {
+        setSendStatus('채팅방 참여 상태를 변경하지 못했어요. 다시 시도해 주세요.');
+    }
+    return false;
 }
 
 function send(e) {
@@ -283,15 +305,8 @@ function send(e) {
     }
 }
 
-function quit() {
-    const quitMsg = {
-        type : "QUIT",
-        roomId : roomId,
-        email : email
-    };
-
-    msgSend(quitMsg)
-    history.back(-1);
+async function quit() {
+    if (await updateMembership('DELETE')) history.back();
 }
 
 function msgSend(msg) {
@@ -299,7 +314,7 @@ function msgSend(msg) {
 }
 
 async function sendMsg() {
-    if (checkingText || pendingText) return;
+    if (checkingText || pendingMessage || isSendingImages) return;
     const input = document.getElementById('chat');
     const content = input.value;
     const replyToId = window.ChatQuotes?.current();
@@ -326,13 +341,13 @@ async function sendMsg() {
         if (!censored && (!response.ok || data.result !== 1)) {
             throw new Error(data.message || '메시지를 보낼 수 없습니다.');
         }
-        pendingText = {id: crypto.randomUUID(), type: 'TALK', roomId, message: censored ? CENSORED_MESSAGE : content};
+        pendingMessage = {id: crypto.randomUUID(), type: 'TALK', roomId, message: censored ? CENSORED_MESSAGE : content};
         if (replyToId) {
-            pendingText.replyToId = replyToId;
+            pendingMessage.replyToId = replyToId;
             window.ChatQuotes.clear(replyToId);
         }
         if (input.value === content) input.value = '';
-        sendPendingText();
+        sendPendingMessage();
     } catch (error) {
         setSendStatus(error.message || '메시지를 보내지 못했습니다.');
     } finally {
@@ -340,24 +355,24 @@ async function sendMsg() {
     }
 }
 
-function sendPendingText() {
-    if (!pendingText) return;
+function sendPendingMessage() {
+    if (!pendingMessage) return;
     if (!client?.connected) {
         setSendStatus('연결이 끊겼어요. 연결된 후 다시 시도해 주세요.', true);
         return;
     }
     try {
-        const message = pendingText;
+        const message = pendingMessage;
         setSendStatus('전송 중…');
         msgSend(message);
         clearTimeout(receiptTimer);
-        receiptTimer = setTimeout(() => checkTextReceipt(message), 8000);
+        receiptTimer = setTimeout(() => checkMessageReceipt(message), 8000);
     } catch (error) {
         setSendStatus('전송에 실패했어요. 다시 시도해 주세요.', true);
     }
 }
 
-async function checkTextReceipt(message) {
+async function checkMessageReceipt(message) {
     try {
         const response = await fetch(`/api/chat/message/${encodeURIComponent(message.id)}/receipt?roomId=${encodeURIComponent(roomId)}`,
             {credentials: 'include'});
@@ -368,12 +383,24 @@ async function checkTextReceipt(message) {
     } catch (error) {
         console.error('메시지 저장 확인 오류:', error);
     }
-    if (pendingText === message) setSendStatus('저장 여부를 확인하지 못했어요. 다시 시도해 주세요.', true);
+    if (pendingMessage === message) setSendStatus('저장 여부를 확인하지 못했어요. 다시 시도해 주세요.', true);
+}
+
+function createSendDismissButton() {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = 'chat-send-dismiss';
+    button.className = 'btn btn-outline-secondary btn-sm';
+    button.hidden = true;
+    button.textContent = '닫기';
+    chatSendRetry.after(button);
+    return button;
 }
 
 function setSendStatus(message, retry = false) {
     chatSendStatus.textContent = message;
     chatSendRetry.hidden = !retry;
+    chatSendDismiss.hidden = !retry;
 }
 
 function fnDraw(data) {
@@ -475,9 +502,9 @@ const renderedMessageIds = new Set();
 
 function registerMessageForRender(data) {
     if (!data || !data.id) return true;
-    if (pendingText?.id === data.id && isMyMessage(data)) {
+    if (pendingMessage?.id === data.id && isMyMessage(data)) {
         clearTimeout(receiptTimer);
-        pendingText = null;
+        pendingMessage = null;
         setSendStatus('');
     }
     if (renderedMessageIds.has(data.id)) return false;
@@ -1100,7 +1127,7 @@ function getMessageDate(data) {
 }
 
 async function fnLoad(input) {
-    if (isSendingImages) return;
+    if (isSendingImages || pendingMessage || checkingText) return;
     const selectedFiles = Array.from(input.files);
     if (selectedFiles.length === 0) return;
 
@@ -1114,22 +1141,15 @@ async function fnLoad(input) {
     try {
         const files = await ImageUpload.snapshotFiles(selectedFiles.slice(0, maxSize));
         input.value = '';
-        const response = await fetch(`/api/chat/sendImage`, {
+        const response = await fetch(`/api/chat/sendImage?roomId=${encodeURIComponent(roomId)}`, {
             method: 'POST',
             body: ImageUpload.buildFormData(files),
             credentials: "include",
         });
         const json = await response.json();
         if (response.ok && json['result'] > 0) {
-            const talkMsg = {
-                id: json['messageId'],
-                type : "IMAGE",
-                roomId : roomId,
-                email : email,
-                message: "사진을 보냈습니다",
-                list: json['list']
-            };
-            msgSend(talkMsg)
+            pendingMessage = {id: json.messageId, type: 'IMAGE', roomId};
+            sendPendingMessage();
         }
         else {
             alert(json.message || "이미지 전송 실패");

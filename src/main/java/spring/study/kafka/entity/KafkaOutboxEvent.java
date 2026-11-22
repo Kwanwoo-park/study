@@ -71,4 +71,11 @@ public class KafkaOutboxEvent {
         deadLettered = attemptCount >= MAX_ATTEMPT_COUNT;
         nextAttemptAt = deadLettered ? null : retryAt;
     }
+
+    public void requeue(LocalDateTime now) {
+        attemptCount = 0;
+        lastError = null;
+        deadLettered = false;
+        nextAttemptAt = now;
+    }
 }

@@ -6,4 +6,9 @@ build
 tmp
 output
 .idea
-.env
+.env*
+config
+out
+src/**/resources/application*.properties
+src/**/resources/application*.yml
+src/**/resources/application*.yaml

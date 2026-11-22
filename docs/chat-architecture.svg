@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080" role="img" aria-labelledby="title desc">
   <title id="title">Outbox 기반 채팅과 WebRTC 음성 통화 아키텍처</title>
-  <desc id="desc">웹과 모바일 클라이언트의 채팅 메시지를 MySQL outbox에 먼저 저장하고 Kafka 배치 처리 후 WebSocket으로 전달하며, 음성 통화는 STOMP 시그널링과 Redis 상태 관리 및 STUN TURN 연결을 사용하는 구조</desc>
+  <desc id="desc">텍스트 메시지와 outbox를 MySQL에 함께 저장한 뒤 Kafka를 거쳐 WebSocket으로 전달합니다. 1:1·그룹 음성 통화는 STOMP와 Redis로 참여자를 제어하고 WebRTC로 참여자 쌍을 연결합니다.</desc>
   <defs>
     <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f8fafc"/>
@@ -59,21 +59,21 @@
   <rect x="76" y="212" width="238" height="196" class="client"/>
   <text x="195" y="258" text-anchor="middle" class="node-title light">Web · Mobile</text>
   <text x="195" y="294" text-anchor="middle" class="node-copy light">Cookie / Bearer JWT</text>
-  <text x="195" y="326" text-anchor="middle" class="node-copy light">REST · STOMP / WSS</text>
+  <text x="195" y="326" text-anchor="middle" class="node-copy light">STOMP 메시지 전송</text>
   <rect x="120" y="350" width="150" height="34" rx="17" fill="#2563eb"/>
   <text x="195" y="373" text-anchor="middle" class="pill">1. SEND</text>
 
   <rect x="374" y="192" width="276" height="236" class="primary"/>
   <text x="512" y="238" text-anchor="middle" class="node-title">Spring Boot</text>
-  <text x="512" y="274" text-anchor="middle" class="node-copy">방·회원·금칙어 검증</text>
-  <text x="512" y="306" text-anchor="middle" class="node-copy">메시지 ID·시간 부여</text>
-  <text x="512" y="338" text-anchor="middle" class="node-copy">알림 DB 저장</text>
+  <text x="512" y="274" text-anchor="middle" class="node-copy">방 참여·메시지 검증</text>
+  <text x="512" y="306" text-anchor="middle" class="node-copy">텍스트·이미지·방 요약 저장</text>
+  <text x="512" y="338" text-anchor="middle" class="node-copy">미접속 참여자 알림 생성</text>
   <rect x="421" y="365" width="182" height="36" rx="18" fill="#0f766e"/>
-  <text x="512" y="389" text-anchor="middle" class="pill">MessageProducer</text>
+  <text x="512" y="389" text-anchor="middle" class="pill">ChatSendFacade</text>
 
   <rect x="712" y="192" width="290" height="236" class="data"/>
   <text x="857" y="238" text-anchor="middle" class="node-title">MySQL Outbox</text>
-  <text x="857" y="274" text-anchor="middle" class="node-copy">Kafka 발행 전 이벤트 저장</text>
+  <text x="857" y="274" text-anchor="middle" class="node-copy">메시지와 같은 트랜잭션에 저장</text>
   <text x="857" y="306" text-anchor="middle" class="node-copy">nextAttemptAt · attemptCount</text>
   <text x="857" y="338" text-anchor="middle" class="node-copy">10회 실패 시 dead letter</text>
   <rect x="770" y="365" width="174" height="36" rx="18" fill="#2563eb"/>
@@ -101,13 +101,13 @@
 
   <rect x="1078" y="486" width="286" height="154" class="primary"/>
   <text x="1221" y="528" text-anchor="middle" class="node-title">Batch Consumer</text>
-  <text x="1221" y="562" text-anchor="middle" class="node-copy">최대 100건 poll · 중복 ID 제외</text>
-  <text x="1221" y="592" text-anchor="middle" class="node-copy">JPA batch insert · 방 요약 갱신</text>
+  <text x="1221" y="562" text-anchor="middle" class="node-copy">배치 조회 · 중복 ID 제외</text>
+  <text x="1221" y="592" text-anchor="middle" class="node-copy">저장된 텍스트·이미지 재사용</text>
   <text x="1221" y="620" text-anchor="middle" class="node-copy">알림은 Redis Pub/Sub로 전달</text>
 
   <rect x="716" y="486" width="286" height="154" class="data"/>
   <text x="859" y="528" text-anchor="middle" class="node-title">MySQL</text>
-  <text x="859" y="562" text-anchor="middle" class="node-copy">채팅 메시지·방 요약</text>
+  <text x="859" y="562" text-anchor="middle" class="node-copy">입퇴장·이전 버전 메시지 저장</text>
   <text x="859" y="592" text-anchor="middle" class="node-copy">회원·알림·도메인 데이터</text>
   <text x="859" y="620" text-anchor="middle" class="node-copy">commit 완료 후 결과 반환</text>
 
@@ -120,20 +120,20 @@
   <path d="M1457 408 V456 Q1457 468 1445 468 H1221 V486" class="flow"/>
   <text x="1370" y="458" class="label">4. batch poll</text>
   <path d="M1078 563 H1002" class="flow"/>
-  <text x="1040" y="546" text-anchor="middle" class="label">5. save</text>
+  <text x="1040" y="546" text-anchor="middle" class="label">5. DB</text>
   <path d="M716 563 H650" class="delivery"/>
   <text x="683" y="546" text-anchor="middle" class="label blue">6. commit</text>
   <path d="M374 563 H332 Q304 563 304 535 V436 Q304 408 276 408 H195" class="delivery"/>
   <text x="315" y="462" class="label blue">7. WS / SSE</text>
 
   <line x1="52" y1="720" x2="1548" y2="720" class="divider"/>
-  <text x="82" y="762" class="lane-title voice">1:1 AUDIO CALL PIPELINE</text>
+  <text x="82" y="762" class="lane-title voice">WEBRTC AUDIO CALL PIPELINE</text>
 
   <rect x="76" y="802" width="250" height="178" class="client"/>
-  <text x="201" y="848" text-anchor="middle" class="node-title light">Caller · Receiver</text>
-  <text x="201" y="884" text-anchor="middle" class="node-copy light">WebRTC peer connection</text>
+  <text x="201" y="848" text-anchor="middle" class="node-title light">Caller · Invitees</text>
+  <text x="201" y="884" text-anchor="middle" class="node-copy light">1:1·그룹 참여자 쌍별 연결</text>
   <text x="201" y="916" text-anchor="middle" class="node-copy light">마이크 · 음소거 · 기기 선택</text>
-  <text x="201" y="948" text-anchor="middle" class="node-copy light">연결 해제 시 자동 종료</text>
+  <text x="201" y="948" text-anchor="middle" class="node-copy light">참여자 이탈·통화 종료 안내</text>
 
   <rect x="422" y="802" width="288" height="178" class="voice-card"/>
   <text x="566" y="848" text-anchor="middle" class="node-title">STOMP Signaling</text>

@@ -35,6 +35,13 @@ public class ChatRoomMemberService {
     }
 
     @Transactional(readOnly = true)
+    public boolean canReceive(String email, String roomId) {
+        return chatRoomMemberRepository.findSubscriber(email, roomId)
+                .filter(member -> !member.isAccessBlocked())
+                .isPresent();
+    }
+
+    @Transactional(readOnly = true)
     public ChatRoomMember find(Member member, ChatRoom room) {
         return chatRoomMemberRepository.findByMemberAndRoom(member, room);
     }

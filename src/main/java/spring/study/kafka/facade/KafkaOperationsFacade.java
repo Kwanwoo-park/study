@@ -12,6 +12,7 @@ import spring.study.kafka.config.KafkaOperationsProperties;
 import spring.study.kafka.dto.*;
 import spring.study.kafka.entity.KafkaDeadLetter;
 import spring.study.kafka.entity.KafkaDeadLetterStatus;
+import spring.study.kafka.entity.KafkaOutboxEvent;
 import spring.study.kafka.service.KafkaDeadLetterService;
 import spring.study.kafka.service.KafkaClusterService;
 import spring.study.kafka.service.KafkaOutboxEventService;
@@ -58,6 +59,18 @@ public class KafkaOperationsFacade {
         eventLogService.afterCommit(IntegrationEventLogRoute.kafka(entry.getSourceTopic()), IntegrationEventLogOperation.REPLAY, IntegrationEventLogOutcome.QUEUED, entry.getId(), 1, 0, null);
 
         return ResponseEntity.accepted().cacheControl(CacheControl.noStore()).body(Map.of("message", "재발행 요청을 저장했습니다. 처리 상태를 확인해 주세요."));
+    }
+
+    public ResponseEntity<?> outboxFailures(Long beforeId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(outboxEventService.failures(beforeId));
+    }
+
+    public ResponseEntity<?> requeueOutbox(long id) {
+        KafkaOutboxEvent event = outboxEventService.requeueFailed(id);
+        eventLogService.record(IntegrationEventLogRoute.kafka(event.getTopic()), IntegrationEventLogOperation.QUEUE,
+                IntegrationEventLogOutcome.QUEUED, event.getId(), 1, 0, null, null);
+        return ResponseEntity.accepted().cacheControl(CacheControl.noStore())
+                .body(Map.of("message", "Outbox를 발행 대기열에 추가했습니다."));
     }
 
     private KafkaOverview kafkaOverview() {

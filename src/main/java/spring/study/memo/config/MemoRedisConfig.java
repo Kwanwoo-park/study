@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -18,10 +19,11 @@ public class MemoRedisConfig {
     public LettuceConnectionFactory memoRedisConnectionFactory(
             @Value("${memo.redis.host:${spring.data.redis.host}}") String host,
             @Value("${memo.redis.port:${spring.data.redis.port}}") int port,
-            @Value("${memo.redis.database:0}") int database) {
+            Environment environment) {
         RedisStandaloneConfiguration server = new RedisStandaloneConfiguration(host, port);
 
-        server.setDatabase(database);
+        Integer database = environment.getProperty("memo.redis.database", Integer.class);
+        if (database != null) server.setDatabase(database);
 
         LettuceClientConfiguration client = LettuceClientConfiguration.builder().commandTimeout(Duration.ofSeconds(3)).build();
 

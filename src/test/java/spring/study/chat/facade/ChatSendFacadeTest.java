@@ -4,16 +4,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spring.study.aws.service.ImageS3Service;
 import spring.study.chat.dto.ChatMessageRequestDto;
+import spring.study.chat.entity.ChatImageUpload;
+import spring.study.chat.entity.ChatMessageImg;
 import spring.study.chat.controller.ChatWebSocketApiController;
 import spring.study.chat.entity.ChatMessage;
 import spring.study.chat.entity.ChatRoom;
 import spring.study.chat.entity.MessageType;
 import spring.study.chat.service.ChatMessageImgService;
+import spring.study.chat.service.ChatImageUploadService;
 import spring.study.chat.service.ChatMessageService;
 import spring.study.chat.service.ChatPresenceService;
 import spring.study.chat.service.ChatRoomMemberService;
 import spring.study.chat.service.ChatRoomService;
 import spring.study.common.component.TransactionRunner;
+import spring.study.common.component.ModerationPolicy;
 import spring.study.kafka.component.MessageProducer;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
@@ -22,6 +26,7 @@ import spring.study.notification.entity.Group;
 import spring.study.notification.service.NotificationService;
 
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -30,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -46,6 +52,8 @@ class ChatSendFacadeTest {
     private final NotificationService notificationService = mock(NotificationService.class);
     private final MessageProducer producer = mock(MessageProducer.class);
     private final TransactionRunner transactions = mock(TransactionRunner.class);
+    private final ModerationPolicy moderation = mock(ModerationPolicy.class);
+    private final ChatImageUploadService uploads = mock(ChatImageUploadService.class);
     private final ChatSendFacade chatSendFacade = new ChatSendFacade(
             roomService,
             roomMemberService,
@@ -56,7 +64,9 @@ class ChatSendFacadeTest {
             chatPresenceService,
             notificationService,
             producer,
-            transactions
+            transactions,
+            moderation,
+            uploads
     );
 
     @BeforeEach
@@ -115,6 +125,70 @@ class ChatSendFacadeTest {
                 .type(MessageType.TALK).email(sender.getEmail()).message("hello").build();
         assertThat(chatSendFacade.messageSend(message).getStatusCode().value()).isEqualTo(403);
         verifyNoInteractions(messageService, producer, notificationService);
+    }
+
+    @Test
+    void serverAppliesModerationBeforeStoringOrQueueingText() {
+        Member sender = createMember(1L, "sender@test.com");
+        ChatRoom room = ChatRoom.builder().id(1L).roomId("room").build();
+        when(roomService.findForUpdate("room")).thenReturn(room);
+        when(memberService.findMember(sender.getEmail())).thenReturn(sender);
+        when(roomMemberService.exist(sender, room)).thenReturn(true);
+        when(moderation.validate("reviewed message", sender)).thenReturn(3);
+
+        var request = ChatMessageRequestDto.builder().type(MessageType.TALK).roomId("room")
+                .email(sender.getEmail()).message("reviewed message").build();
+        assertThat(chatSendFacade.messageSend(request).getStatusCode().value()).isEqualTo(403);
+        verify(messageService, never()).save(any());
+        verifyNoInteractions(producer, notificationService);
+    }
+
+    @Test
+    void imageUsesStoredAttachmentsAndRetryDoesNotPublishAgain() {
+        Member sender = createMember(1L, "sender@test.com");
+        ChatRoom room = ChatRoom.builder().id(1L).roomId("room").build();
+        String id = UUID.randomUUID().toString();
+        var upload = new ChatImageUpload(id, sender.getId(), room.getId(), LocalDateTime.now().plusHours(1));
+        assertThat(upload.markReady(LocalDateTime.now())).isTrue();
+        var saved = ChatMessage.builder().id(id).room(room).member(sender).type(MessageType.IMAGE).message("사진을 보냈습니다").build();
+        when(roomService.findForUpdate("room")).thenReturn(room);
+        when(memberService.findMember(sender.getEmail())).thenReturn(sender);
+        when(roomMemberService.exist(sender, room)).thenReturn(true);
+        when(uploads.lock(id)).thenReturn(upload);
+        when(chatMessageImgService.findMessage(id)).thenReturn(List.of(
+                ChatMessageImg.builder().messageId(id).imgSrc("https://images.example.test/stored.png").build()));
+        when(messageService.findExisting(id)).thenReturn(Optional.empty(), Optional.of(saved));
+        when(messageService.save(any())).thenReturn(saved);
+
+        var request = ChatMessageRequestDto.builder().id(id).type(MessageType.IMAGE).roomId("room")
+                .email(sender.getEmail()).list(List.of("https://images.example.test/unrelated.png")).build();
+        assertThat(chatSendFacade.messageSend(request).getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(chatSendFacade.messageSend(request).getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(request.getList()).containsExactly("https://images.example.test/stored.png");
+        verify(uploads).delete(upload);
+        verify(messageService).save(any());
+        verify(producer).sendMessage(request);
+    }
+
+    @Test
+    void joiningALegacyDirectRoomRequiresAnInvitedMember() {
+        Member invited = createMember(1L, "invited@test.com");
+        Member outsider = createMember(2L, "outsider@test.com");
+        ChatRoom room = ChatRoom.builder().id(1L).roomId("room")
+                .name("invited@test.com second@test.com").count(1L).build();
+        when(roomService.findForUpdate("room")).thenReturn(room);
+        when(memberService.findMember(invited.getEmail())).thenReturn(invited);
+        when(memberService.findMember(outsider.getEmail())).thenReturn(outsider);
+        when(roomMemberService.exist(invited, room)).thenReturn(false, true);
+
+        var denied = ChatMessageRequestDto.builder().type(MessageType.ENTER).roomId("room").email(outsider.getEmail()).build();
+        var allowed = ChatMessageRequestDto.builder().type(MessageType.ENTER).roomId("room").email(invited.getEmail()).build();
+        assertThat(chatSendFacade.messageSend(denied).getStatusCode().value()).isEqualTo(403);
+        assertThat(chatSendFacade.messageSend(allowed).getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(chatSendFacade.messageSend(allowed).getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(room.getCount()).isEqualTo(2L);
+        verify(roomMemberService).save(invited, room);
+        verify(producer).sendMessage(allowed);
     }
 
     private Member createMember(Long id, String email) {

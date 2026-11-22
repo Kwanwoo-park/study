@@ -108,6 +108,7 @@ function loadPage(path) {
     submit.type = 'submit';
     element('diaryForm').append(submit);
     element('flag').value = 'false';
+    element('room').value = 'room-1';
     const document = {
         body: new Element(),
         getElementById: element,
@@ -116,7 +117,7 @@ function loadPage(path) {
         createElement: () => new Element(),
         addEventListener: (type, callback) => { docEvents[type] = callback; },
     };
-    const socket = { heartbeat: {}, connect() {}, send: (url, headers, body) => messages.push(JSON.parse(body)) };
+    const socket = { connected: true, heartbeat: {}, connect() {}, send: (url, headers, body) => messages.push(JSON.parse(body)) };
     const context = vm.createContext({
         File, Blob, FormData, document,
         console: { log() {}, debug() {}, info() {}, error() {} },
@@ -125,6 +126,7 @@ function loadPage(path) {
         location: { reload() {}, replace() {} },
         addEventListener() {},
         SockJS: function() {}, Stomp: { over: () => socket },
+        setTimeout() {}, clearTimeout() {},
         fetch: async (url, options) => {
             calls.push({ url, ...options });
             return { ok: true, json: async () => ({ result: 1, imgSrc: '/test.jpg', messageId: 'test', list: ['/test.jpg'], imageUrls: ['/test.jpg'] }) };
@@ -174,7 +176,7 @@ const pageCases = [
     { script: 'member/detail.js', endpoint: '/api/member/detail/action', load: (p, input) => p.context.fnLoad(input), save: p => p.context.fnSave() },
     { script: 'collection/save.js', endpoint: '/api/collection/save/img', load: (p, input) => p.context.fnLoad(input), save: p => p.context.fnSave() },
     { script: 'diary/write.js', endpoint: '/api/diary/image/upload', input: 'imageInput', load: (p, input) => input.emit('change'), save: p => p.element('diaryForm').emit('submit') },
-    { script: 'chat/chat.js', endpoint: '/api/chat/sendImage', load: (p, input) => p.context.fnLoad(input) },
+    { script: 'chat/chat.js', endpoint: '/api/chat/sendImage?roomId=room-1', load: (p, input) => p.context.fnLoad(input) },
 ];
 
 for (const scenario of pageCases) {
@@ -206,7 +208,9 @@ for (const scenario of pageCases) {
         assert.deepEqual([...new Uint8Array(await files[0].arrayBuffer())], [255, 216, 217]);
         assert.equal(page.alerts.filter(message => /실패|없습니다/.test(message)).length, 0);
         assert.equal(input.disabled, false);
-        if (scenario.script === 'chat/chat.js') assert.equal(page.messages[0].type, 'IMAGE');
+        if (scenario.script === 'chat/chat.js') {
+            assert.deepEqual(page.messages[0], {id: 'test', type: 'IMAGE', roomId: 'room-1'});
+        }
     });
 
 }

@@ -19,15 +19,15 @@
 - 브로커: ID, 호스트/포트, 랙, 컨트롤러 여부, 운영 토픽의 리더·복제본 배치 수.
 - 토픽: 이름 검색과 상세 진입. 파티션별 리더·복제본·ISR·시작/최신 오프셋, 공개 가능한 보관/복제 설정.
 - 소비자 그룹: 그룹 검색, 상태·코디네이터·할당 방식·지연. 상세에서 멤버별 클라이언트/호스트/할당과 파티션별 소비 위치 확인.
-- 실패·재처리: 기존 소비 실패 기록과 CSRF 검증을 거친 비동기 재발행을 유지합니다.
+- 실패·재처리 화면에서 Outbox 발행 최종 실패와 Kafka 소비 실패를 조회하고 CSRF 검증을 거쳐 재발행을 요청할 수 있습니다.
 
 이 조회는 기존 운영 토픽 `topic`, `topic2`, `topic.DLT`, `topic2.DLT`와 설정된 main 그룹 및 `{group-id}.dead-letter-store` 그룹에 한정합니다. 임의의 다른 토픽·그룹을 탐색하거나 전체 클러스터의 토픽을 노출하지 않습니다.
 
 ## 계층과 조회 정책
 
 - `KafkaClusterRepository`: Kafka Admin API 호출, 8초 전체 대기 예산, 10초 메타데이터 캐시.
-- `KafkaMonitoringService`: Repository 결과와 DB 통계 결합, 설정 불일치·복제 지연·리더 부재·처리 지연 경고.
-- `KafkaOperationsFacade` / 관리자 Controller: 기존 관리자 인증·응답 구조 유지.
+- `KafkaClusterService`는 `KafkaClusterRepository`에서 브로커 상태를 조회합니다.
+- `KafkaOperationsFacade`는 브로커 상태와 DB 통계를 합쳐 설정 불일치·복제 지연·리더 부재·처리 지연 경고를 제공합니다. `KafkaOperationsController`는 관리자용 조회와 재발행 요청을 받습니다.
 
 한 토픽이나 그룹 조회가 실패해도 확인 가능한 다른 항목은 표시합니다. 예외 원문·접속 설정은 응답에 포함하지 않습니다. 토픽 설정도 보관/복제 관련 허용 목록만 노출하고 sensitive 설정은 제외합니다.
 

@@ -5,11 +5,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.data.annotation.LastModifiedDate;
+import spring.study.member.entity.Member;
+import spring.study.member.entity.Role;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
@@ -17,6 +20,8 @@ import java.util.List;
 @Setter
 @Entity(name = "room")
 public class ChatRoom implements Serializable {
+    private static final Pattern LEGACY_DIRECT_NAME = Pattern.compile("[^\\s@]+@[^\\s@]+ [^\\s@]+@[^\\s@]+");
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,6 +35,10 @@ public class ChatRoom implements Serializable {
 
     @NotNull
     private Long count;
+
+    @JsonIgnore
+    @Column(name = "direct_room")
+    private Boolean directRoom;
 
     @Column(name = "lastMessage")
     private String lastMessage;
@@ -71,5 +80,11 @@ public class ChatRoom implements Serializable {
 
     public void subCount() {
         --this.count;
+    }
+
+    public boolean allowsJoin(Member member) {
+        if (member.getRole() == Role.ADMIN || Boolean.FALSE.equals(directRoom)) return true;
+        if (directRoom == null && !LEGACY_DIRECT_NAME.matcher(name).matches()) return true;
+        return name.startsWith(member.getEmail() + " ") || name.endsWith(" " + member.getEmail());
     }
 }
