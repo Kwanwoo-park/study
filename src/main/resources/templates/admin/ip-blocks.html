@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>IP 영구 차단</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/common/common.css">
+</head>
+<body th:classappend="${isMobile} ? 'mobile-view' : ''">
+<script src="/js/common/theme.js"></script>
+<main class="container">
+  <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
+  <h1>IP 영구 차단</h1>
+  <p id="block-description">등록한 IP는 즉시 차단되며 차단 기간은 무기한입니다.</p>
+  <p th:if="${error}" th:text="${error}" class="alert alert-danger" role="alert"></p>
+  <form method="post" th:attr="action=@{/admin/ip-blocks}" class="mb-4">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+    <div class="mb-3">
+      <label for="ipAddress" class="form-label">차단할 IPv4 또는 IPv6 주소</label>
+      <input id="ipAddress" name="ipAddress" type="text" class="form-control"
+             maxlength="45" autocomplete="off" spellcheck="false" aria-describedby="block-description" required>
+    </div>
+    <button type="submit" class="btn btn-danger">영구 차단</button>
+  </form>
+  <h2>차단 목록</h2>
+  <p th:if="${#lists.isEmpty(blocks)}">차단한 IP가 없습니다.</p>
+  <div th:unless="${#lists.isEmpty(blocks)}" class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr><th scope="col">IP 주소</th><th scope="col">등록 시각</th><th scope="col">등록 경로</th></tr>
+      </thead>
+      <tbody>
+        <tr th:each="block : ${blocks}">
+          <td th:text="${block.ipAddress}"></td>
+          <td th:text="${#temporals.format(block.blockedAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+          <td th:text="${block.blockedByMemberId == null ? '로그인 제한' : '관리자'}"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

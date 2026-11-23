@@ -31,7 +31,7 @@ public class NotificationApiController {
         Member member = jwtManager.getLoginMember(request);
         if (member == null) return null;
 
-        return notificationFacade.stream(member);
+        return notificationFacade.stream(member, request);
     }
 
     @GetMapping("/load")

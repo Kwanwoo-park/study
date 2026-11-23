@@ -1,6 +1,7 @@
 package spring.study.notification.facade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
@@ -13,6 +14,8 @@ import spring.study.admin.entity.IntegrationEventLogOperation;
 import spring.study.admin.entity.IntegrationEventLogOutcome;
 import spring.study.admin.entity.IntegrationEventLogRoute;
 import spring.study.admin.service.IntegrationEventLogService;
+import spring.study.admin.service.IpBlockService;
+import spring.study.common.component.IpBlockClientAddress;
 import spring.study.common.service.EmitterService;
 import spring.study.common.service.OnlineUserService;
 import spring.study.member.entity.Member;
@@ -40,12 +43,15 @@ public class NotificationFacade {
     private final NotificationService notificationService;
     private final EmitterService emitterService;
     private final OnlineUserService onlineUserService;
+    private final IpBlockClientAddress clientAddress;
+    private final IpBlockService blocks;
 
-    public SseEmitter stream(Member member) {
+    public SseEmitter stream(Member member, HttpServletRequest request) {
         String id = member.getId().toString();
         String emitterId = id + "_" + System.currentTimeMillis();
 
-        SseEmitter emitter = emitterService.addEmitter(emitterId);
+        String address = clientAddress.resolve(request);
+        SseEmitter emitter = emitterService.addEmitter(emitterId, () -> blocks.permits(address));
 
         onlineUserService.connectWeb(id);
 

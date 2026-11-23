@@ -28,7 +28,8 @@ updateAppealLink();
 button.addEventListener('click', (event) => {
     event.preventDefault();
 
-    if (email.value != '' && password.value != '') {
+    if (email.value != '' && password.value != '' && !button.disabled) {
+        button.disabled = true;
         fetch(`/api/member/login`, {
             method: 'PATCH',
             headers: {
@@ -48,16 +49,15 @@ button.addEventListener('click', (event) => {
             } else if (json['result'] == -10) {
                 alert('Login error occurred. Please try again later');
             }
-            else if (json['result'] == -2)
-                alert("Access Deny");
-            else if (json['result'] == -3)
-                alert("이메일을 확인해주세요")
             else
-                alert("비밀번호를 확인해주세요")
+                alert(json.message || '이메일이나 비밀번호를 확인해 주세요.');
         })
         .catch((error) => {
             console.error('Error during login:', error);
             alert('Login error occurred. Please try again later');
+        })
+        .finally(() => {
+            button.disabled = false;
         });
     }
 });

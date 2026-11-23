@@ -3,61 +3,64 @@ package spring.study.common.service;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.function.Predicate;
 
 public final class ClientIpResolver {
-    private static final int MAX_IP_LENGTH = 45;
+    public static final String RESOLVED_ADDRESS = ClientIpResolver.class.getName() + ".resolvedAddress";
 
     public static String resolve(HttpServletRequest request) {
-        if (request == null) return "UNKNOWN";
+        return resolve(request, ClientIpResolver::isTrustedProxy);
+    }
 
-        String remoteAddress = normalize(request.getRemoteAddr());
+    public static String resolve(HttpServletRequest request, Predicate<String> trustedProxy) {
+        if (request == null) return "UNKNOWN";
+        if (request.getAttribute(RESOLVED_ADDRESS) instanceof String resolvedAddress) return resolvedAddress;
+
+        String remoteAddress = canonicalAddress(request.getRemoteAddr());
 
         if (remoteAddress == null)
             return "UNKNOWN";
-        else if (!isTrustedProxy(remoteAddress))
-            return limit(remoteAddress);
+        else if (!trustedProxy.test(remoteAddress))
+            return remoteAddress;
 
         String forwardedFor = request.getHeader("X-Forwarded-For");
         if (forwardedFor != null && !forwardedFor.isBlank()) {
-            String resolved = resolveForwardedFor(forwardedFor);
+            String resolved = resolveForwardedFor(forwardedFor, trustedProxy);
 
             if (resolved != null)
-                return limit(resolved);
+                return resolved;
         }
 
-        String realIp = request.getHeader("X-Real-IP");
-        String normalizedRealIp = normalize(realIp);
+        String normalizedRealIp = canonicalAddress(request.getHeader("X-Real-IP"));
 
-        if (normalizedRealIp != null)
-            return limit(normalizedRealIp);
-
-        return limit(remoteAddress);
+        return normalizedRealIp == null ? remoteAddress : normalizedRealIp;
     }
 
-    private static String resolveForwardedFor(String forwardedFor) {
+    private static String resolveForwardedFor(String forwardedFor, Predicate<String> trustedProxy) {
         String[] addresses = forwardedFor.split(",");
         String leftmostValidAddress = null;
 
         for (int index = addresses.length - 1; index >= 0; index--) {
-            String candidate = normalize(addresses[index]);
+            String candidate = canonicalAddress(addresses[index]);
 
             if (candidate == null)
                 continue;
 
             leftmostValidAddress = candidate;
 
-            if (!isTrustedProxy(candidate))
+            if (!trustedProxy.test(candidate))
                 return candidate;
         }
 
         return leftmostValidAddress;
     }
 
-    private static String normalize(String value) {
+    public static String canonicalAddress(String value) {
         if (value == null || value.isBlank())
             return null;
 
-        String normalized = value.replaceAll("[\\r\\n\\t]+", " ").trim();
+        String normalized = value.strip();
 
         if (normalized.startsWith("[") && normalized.endsWith("]")) {
             normalized = normalized.substring(1, normalized.length() - 1);
@@ -66,17 +69,15 @@ public final class ClientIpResolver {
         if (!isIpLiteral(normalized)) return null;
 
         try {
-            InetAddress.getByName(normalized);
-
-            return normalized;
-        } catch (Exception exception) {
+            return InetAddress.getByName(normalized).getHostAddress();
+        } catch (UnknownHostException exception) {
             return null;
         }
     }
 
     private static boolean isIpLiteral(String value) {
         if (value.indexOf(':') >= 0)
-            return value.matches("[0-9a-fA-F:]+");
+            return value.matches("[0-9a-fA-F:.]+");
 
         String[] parts = value.split("\\.", -1);
 
@@ -107,9 +108,5 @@ public final class ClientIpResolver {
     private static boolean isUniqueLocalIpv6(InetAddress address) {
         byte[] bytes = address.getAddress();
         return bytes.length == 16 && (bytes[0] & 0xfe) == 0xfc;
-    }
-
-    private static String limit(String value) {
-        return value.length() <= MAX_IP_LENGTH ? value : value.substring(0, MAX_IP_LENGTH);
     }
 }

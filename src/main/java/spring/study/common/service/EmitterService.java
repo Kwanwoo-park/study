@@ -7,7 +7,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import spring.study.common.repository.EmitterRepository;
 import spring.study.notification.dto.NotificationReadState;
 
+import java.io.IOException;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 
 @Service
 @Slf4j
@@ -42,8 +44,14 @@ public class EmitterService {
         emitterRepository.cleanupExpired();
     }
 
-    public SseEmitter addEmitter(String emitterId) {
-        return emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L));
+    public SseEmitter addEmitter(String emitterId, BooleanSupplier connectionAllowed) {
+        return emitterRepository.save(emitterId, new SseEmitter(60 * 60 * 1000L) {
+            @Override
+            public void send(SseEventBuilder event) throws IOException {
+                if (connectionAllowed.getAsBoolean()) super.send(event);
+                else complete();
+            }
+        });
     }
 
     public void deleteById(String emitterId) {

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.authentication.DisabledException;
 import spring.study.common.exception.JwtValidationException;
 import spring.study.jwt.component.JwtTokenProvider;
 import spring.study.jwt.component.RefreshTokenRotation;
@@ -15,6 +15,7 @@ import spring.study.jwt.entity.TokenName;
 import spring.study.common.service.OnlineUserService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
+import spring.study.member.component.PasswordLoginGuard;
 import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.service.MemberService;
@@ -30,7 +31,7 @@ import java.util.OptionalLong;
 public class MobileAuthFacade {
     private final JwtTokenProvider tokenProvider;
     private final MemberService memberService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordLoginGuard passwordLoginGuard;
     private final MemberTokenCacheService memberTokenCacheService;
     private final OnlineUserService onlineUserService;
     private final RefreshTokenService refreshTokenService;
@@ -48,20 +49,15 @@ public class MobileAuthFacade {
         }
 
         try {
-            Member member = (Member) memberService.loadUserByUsername(request.getEmail());
-            if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-                return error(HttpStatus.UNAUTHORIZED, "이메일이나 비밀번호를 확인해주세요");
-            }
-            if (member.isAccessBlocked()) {
-                return error(HttpStatus.FORBIDDEN, "차단된 계정입니다");
-            }
-
+            Member member = passwordLoginGuard.authenticate(request.getEmail(), request.getPassword(), ipAddress);
             member = memberService.updateLastLoginTime(member.getId());
             AuthenticationTokens tokens = issue(member, ipAddress);
             onlineUserService.markMobileActive(member.getId());
             return ResponseEntity.ok(new MobileAuthResponse(member, tokens));
         } catch (BadCredentialsException exception) {
-            return error(HttpStatus.UNAUTHORIZED, "이메일이나 비밀번호를 확인해주세요");
+            return error(HttpStatus.UNAUTHORIZED, exception.getMessage());
+        } catch (DisabledException exception) {
+            return error(HttpStatus.FORBIDDEN, exception.getMessage());
         }
     }
 

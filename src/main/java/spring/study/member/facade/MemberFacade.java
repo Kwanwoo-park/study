@@ -6,7 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -56,6 +57,7 @@ import spring.study.reply.service.ReplyService;
 import spring.study.todo.service.TodoService;
 import spring.study.mail.service.EmailVerificationService;
 import spring.study.mail.entity.EmailVerificationPurpose;
+import spring.study.member.component.PasswordLoginGuard;
 import spring.study.diary.service.DiaryService;
 import spring.study.diary.service.DiaryImageService;
 import spring.study.sanction.service.MemberSanctionService;
@@ -86,7 +88,7 @@ public class MemberFacade {
     private final AppealService appealService;
     private final BookReviewService bookReviewService;
     private final ImageS3Service imageS3Service;
-    private final BCryptPasswordEncoder encoder;
+    private final PasswordLoginGuard passwordLoginGuard;
     private final JwtTokenProvider tokenProvider;
     private final MemberTokenCacheService memberTokenCacheService;
     private final RefreshTokenService refreshTokenService;
@@ -111,14 +113,13 @@ public class MemberFacade {
         if (!StringUtils.hasText(dto.getEmail())) return invalidInput("이메일이 입력되지 않았습니다");
         if (!StringUtils.hasText(dto.getPassword())) return invalidInput("비밀번호가 입력되지 않았습니다");
 
-        Member member = (Member) memberService.loadUserByUsername(dto.getEmail());
-
-        if (!encoder.matches(dto.getPassword(), member.getPassword())) {
-            return failure(HttpStatus.BAD_REQUEST, -1L, "잘못된 비밀번호 입니다");
-        }
-
-        if (member.isAccessBlocked()) {
-            return failure(HttpStatus.BAD_REQUEST, -2L, "차단된 계정입니다");
+        Member member;
+        try {
+            member = passwordLoginGuard.authenticate(dto.getEmail(), dto.getPassword(), ipAddress);
+        } catch (BadCredentialsException failure) {
+            return failure(HttpStatus.BAD_REQUEST, -1L, failure.getMessage());
+        } catch (DisabledException failure) {
+            return failure(HttpStatus.BAD_REQUEST, -2L, failure.getMessage());
         }
 
         member = memberService.updateLastLoginTime(member.getId());

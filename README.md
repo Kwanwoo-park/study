@@ -334,6 +334,10 @@ Compose에서 전달하는 `SPRING_KAFKA_BOOTSTRAP_SERVERS`, `WEBRTC_TURN_URLS`,
 
 WebSocket은 기본적으로 동일 출처에서 연결합니다. 외부 웹 출처를 허용해야 하면 `chat.websocket.allowed-origins`에 HTTPS 주소를 쉼표로 구분해 지정합니다.
 
+IP 영구 차단은 관리자 화면의 `/admin/ip-blocks`에서 등록합니다. 등록은 IPv4와 IPv6 주소 단위이며, 차단 기록은 MySQL에 만료 없이 보관합니다. 프록시의 전달 헤더를 사용해야 하는 배포에서는 신뢰할 프록시 IP 또는 CIDR만 `security.ip-block.trusted-proxies`에 쉼표로 구분해 지정하고, 프록시에서 클라이언트의 전달 헤더를 정리합니다. 스키마를 수동 관리하는 환경은 배포 전에 [IP 차단 테이블 SQL](src/main/resources/db/mysql/V20261123_02__permanent_ip_blocks.sql)을 적용합니다.
+
+웹과 모바일의 비밀번호 로그인 실패 횟수는 같은 IP에 대해 합산합니다. 다섯 번 연속 실패한 뒤 다음 요청이 오면 자격 증명을 확인하기 전에 해당 IP를 영구 차단합니다. 실패 횟수는 서버가 재시작되어도 유지되며, 한도에 도달하기 전에 인증에 성공하면 초기화됩니다. 스키마를 수동 관리하거나 기존 IP 차단 테이블을 사용 중이면 [로그인 시도 제한 SQL](src/main/resources/db/mysql/V20261123_03__login_ip_attempts.sql)도 적용합니다.
+
 AWS S3는 `cloud.aws.credentials.accessKey`, `cloud.aws.credentials.secretKey`, `cloud.aws.s3.bucketName`, `cloud.aws.region.static`을 읽습니다. Google/Naver OAuth2는 활성 프로필의 `spring.security.oauth2.client` 설정을 사용하고 메일에는 `naver.id`와 `naver.password`가 필요합니다. HTTPS 운영에서는 `security.jwt.secure-cookie=true`를 사용합니다. HTTP 로컬 개발에서는 해당 값을 `false`로 설정할 수 있습니다.
 
 가입 메일의 반송을 확인하려면 발신 계정에서 POP3/SMTP를 사용하도록 설정하고 `naver.password`에 애플리케이션 비밀번호를 넣습니다. 가입 인증은 `pop.naver.com:995`에 TLS로 연결해 받은편지함을 읽습니다. [네이버 POP3/SMTP 설정](https://help.naver.com/service/30029/contents/21340?osType=PC)
