@@ -126,8 +126,7 @@ public class MemberFacade {
         return memberResponse(member);
     }
 
-    @Transactional
-    public ResponseEntity<?> register(MemberRequestDto dto) {
+    public ResponseEntity<?> register(MemberRequestDto dto, String registrationAttempt) {
         if (!StringUtils.hasText(dto.getEmail())) return invalidInput("이메일이 입력되지 않았습니다");
         if (!StringUtils.hasText(dto.getPassword())) return invalidInput("비밀번호가 입력되지 않았습니다");
         if (!StringUtils.hasText(dto.getName())) return invalidInput("이름이 입력되지 않았습니다");
@@ -142,10 +141,16 @@ public class MemberFacade {
             return failure(HttpStatus.UNPROCESSABLE_ENTITY, -1L, "금칙어를 사용하였습니다");
         }
 
-        if (!emailVerificationService.consume(EmailVerificationPurpose.EMAIL, dto.getEmail(), dto.getVerificationToken())) {
-            return failure(HttpStatus.FORBIDDEN, -403L, "5분 이내에 이메일 인증을 완료한 후 가입해 주세요");
+        String email = dto.getEmail().trim();
+        if (!emailVerificationService.consumeRegistration(registrationAttempt, email)) {
+            return failure(HttpStatus.FORBIDDEN, -403L, "가입용 이메일 인증을 완료한 후 5분 이내에 가입해 주세요");
         }
 
+        dto.setEmail(email);
+        return transactions.write(() -> createRegisteredMember(dto));
+    }
+
+    private ResponseEntity<?> createRegisteredMember(MemberRequestDto dto) {
         MemberResponseDto response = userService.createUser(dto);
         if (response == null) {
             return failure(HttpStatus.INTERNAL_SERVER_ERROR, -2L, "회원가입에 실패하였습니다");

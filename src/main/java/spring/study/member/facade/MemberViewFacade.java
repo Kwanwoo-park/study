@@ -45,10 +45,6 @@ public class MemberViewFacade {
         return "member/login";
     }
 
-    public String register() {
-        return "member/register";
-    }
-
     public String detail(String email, Model model, HttpServletRequest request){
         Member member = jwtManager.getLoginMember(request);
 

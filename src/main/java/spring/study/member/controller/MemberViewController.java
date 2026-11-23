@@ -22,11 +22,6 @@ public class MemberViewController {
         return facade.login(model, error, exception, url, request);
     }
 
-    @GetMapping("/register")
-    public String register() {
-        return facade.register();
-    }
-
     @GetMapping("/detail")
     public String detail(@RequestParam String email, Model model, HttpServletRequest request){
         return facade.detail(email, model, request);

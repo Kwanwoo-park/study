@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum EmailVerificationPurpose {
     EMAIL("verification:email:", "이메일 인증"),
+    REGISTRATION("verification:registration:", "회원가입 이메일 인증"),
     APPEAL("verification:appeal:", "상소문 작성 이메일 인증"),
     PASSWORD_CHANGE("verification:password-change:", "비밀번호 변경 이메일 인증");
 

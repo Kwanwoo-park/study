@@ -41,7 +41,8 @@ class MemberRegistrationRegressionTest {
                 .email("new@test.com").password("password").name("new member")
                 .phone("010-1111-2222").birth("2000-01-01").build();
 
-        assertThat(memberFacade.register(request).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        request.setVerificationToken("password-recovery-proof");
+        assertThat(memberFacade.register(request, null).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         verifyNoInteractions(userService);
     }
 
@@ -51,7 +52,7 @@ class MemberRegistrationRegressionTest {
                 .email("new@test.com").password("password").name("   ")
                 .phone("010-1111-2222").birth("2000-01-01").build();
 
-        ResponseEntity<?> result = memberFacade.register(request);
+        ResponseEntity<?> result = memberFacade.register(request, null);
 
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(result.getBody()).isEqualTo(Map.of("result", -10L, "message", "이름이 입력되지 않았습니다"));

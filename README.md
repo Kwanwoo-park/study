@@ -336,6 +336,8 @@ WebSocket은 기본적으로 동일 출처에서 연결합니다. 외부 웹 출
 
 AWS S3는 `cloud.aws.credentials.accessKey`, `cloud.aws.credentials.secretKey`, `cloud.aws.s3.bucketName`, `cloud.aws.region.static`을 읽습니다. Google/Naver OAuth2는 활성 프로필의 `spring.security.oauth2.client` 설정을 사용하고 메일에는 `naver.id`와 `naver.password`가 필요합니다. HTTPS 운영에서는 `security.jwt.secure-cookie=true`를 사용합니다. HTTP 로컬 개발에서는 해당 값을 `false`로 설정할 수 있습니다.
 
+가입 메일의 반송을 확인하려면 발신 계정에서 POP3/SMTP를 사용하도록 설정하고 `naver.password`에 애플리케이션 비밀번호를 넣습니다. 가입 인증은 `pop.naver.com:995`에 TLS로 연결해 받은편지함을 읽습니다. [네이버 POP3/SMTP 설정](https://help.naver.com/service/30029/contents/21340?osType=PC)
+
 메모 자동 저장은 기본적으로 Redis AOF와 `noeviction` 정책을 확인합니다. 기본 Compose의 Redis에는 AOF 설정이 없으므로 메모까지 확인하려면 Redis 설정을 준비합니다. [메모용 Redis 설정](docs/memo-service.md#운영-redis-설정--배포-전-확인)
 
 ### 관리자 파일 보관함
@@ -510,9 +512,9 @@ MySQL 스키마 변경, Redis 재시작, Kafka 장애 복구는 `./gradlew infra
 | 계좌·거래·해지 | `/api/account/**` |
 | 관리자·시스템 상태·장애·통화 종료 | `/api/admin/**` |
 
-회원가입·비밀번호 찾기는 `POST /api/mail/confirm`에 `{ "email": "..." }`을 보내 인증번호를 발송하고,
-`POST /api/mail/verify`에 `{ "email": "...", "code": "..." }`을 보내 받은 `verificationToken`을 가입/비밀번호 재설정 요청에 포함합니다.
-인증번호는 응답에 노출하지 않으며, 인증번호와 일회용 `verificationToken`은 각각 5분 뒤 만료됩니다. 메일 재발송 간격은 1분입니다.
+이메일 회원가입은 `/member/register/verify`에서 가입용 번호를 확인한 뒤 `/member/register`에서 완료합니다. 인증번호와 가입 권한은 각각 5분 동안 유효하고, 가입 권한은 인증한 브라우저 세션에서 한 번 사용할 수 있습니다. 같은 인증번호를 5회 틀리면 해당 발급분은 무효화되며 새 번호를 받아야 합니다. 번호를 확인할 때와 가입을 제출할 때 이번 발송에 대한 표준 반송을 확인합니다. 발송 메일의 `Message-ID`와 수신 주소가 모두 일치하는 영구 반송이 있으면 가입을 거절합니다. 받은편지함 조회에 실패하면 재시도할 수 있는 오류를 반환합니다.
+
+비밀번호 찾기는 `POST /api/mail/confirm`에서 번호를 발송하고 `POST /api/mail/verify`에서 번호를 확인해 일회용 `verificationToken`을 받습니다. 인증번호와 토큰은 각각 5분 동안 유효하며 메일 재발송 간격은 1분입니다.
 
 ### WebSocket 및 SSE
 

@@ -16,6 +16,7 @@ import spring.study.member.dto.MemberRequestDto;
 import spring.study.member.dto.PasswordVerificationRequestDto;
 import spring.study.member.entity.Member;
 import spring.study.member.facade.MemberFacade;
+import spring.study.member.facade.RegistrationEmailFacade;
 
 @RequiredArgsConstructor
 @RestController
@@ -37,8 +38,9 @@ public class MemberApiController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerAction(@RequestBody @Valid MemberRequestDto memberRequestDto) throws Exception {
-        return memberFacade.register(memberRequestDto);
+    public ResponseEntity<?> registerAction(@RequestBody @Valid MemberRequestDto memberRequestDto,
+                                            HttpServletRequest request) {
+        return memberFacade.register(memberRequestDto, RegistrationEmailFacade.currentAttempt(request));
     }
 
     @GetMapping("/duplicateCheck")
