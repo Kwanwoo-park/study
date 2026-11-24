@@ -80,7 +80,7 @@ public class MessageConsumer {
         }
     }
 
-    @KafkaListener(topics = "topic2")
+    @KafkaListener(topics = "topic2", containerFactory = "notificationKafkaListenerContainerFactory")
     @Transactional(readOnly = true)
     public void consumeNotification(ConsumerRecord<String, Notification> record) {
         Notification notification = record.value();
