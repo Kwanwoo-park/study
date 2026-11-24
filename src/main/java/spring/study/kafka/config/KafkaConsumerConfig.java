@@ -24,6 +24,7 @@ import java.time.Duration;
 import spring.study.kafka.component.KafkaEventLogRetryListener;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import spring.study.notification.entity.Notification;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -95,14 +96,21 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(KafkaEventLogRetryListener eventLogs, DeadLetterPublishingRecoverer recoverer) {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, Notification> notificationKafkaListenerContainerFactory(
+            KafkaEventLogRetryListener eventLogs,
+            DeadLetterPublishingRecoverer recoverer) {
 
-        factory.setConsumerFactory(consumerFactory());
+        ConcurrentKafkaListenerContainerFactory<String, Notification> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(
+                baseConsumerConfig(),
+                StringDeserializer::new,
+                () -> new ErrorHandlingDeserializer<>(
+                        new JsonDeserializer<>(Notification.class, mapper, false))
+        ));
+
         factory.getContainerProperties().setMissingTopicsFatal(false);
         factory.setConcurrency(operations.getNotificationConcurrency());
         factory.setCommonErrorHandler(observedErrorHandler(eventLogs, recoverer));
-
         return factory;
     }
 
