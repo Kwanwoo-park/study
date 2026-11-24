@@ -4,6 +4,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import spring.study.admin.entity.IntegrationEventLogOperation;
 import spring.study.admin.entity.IntegrationEventLogOutcome;
 import spring.study.admin.entity.IntegrationEventLogRoute;
@@ -29,6 +30,7 @@ public class KafkaDeadLetterReplayFacade {
         this.template = template;
     }
 
+    @Transactional
     public void publishPending() {
         List<KafkaDeadLetter> entries = deadLetterService.findEntries();
 

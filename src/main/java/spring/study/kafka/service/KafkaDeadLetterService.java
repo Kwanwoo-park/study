@@ -78,7 +78,7 @@ public class KafkaDeadLetterService {
         return entry;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<KafkaDeadLetter> findEntries() {
         return repository.findForUpdateByStatusAndNextAttemptAtLessThanEqualOrderByIdAsc(KafkaDeadLetterStatus.REPLAY_PENDING, LocalDateTime.now(), PageRequest.of(0, 10));
     }
