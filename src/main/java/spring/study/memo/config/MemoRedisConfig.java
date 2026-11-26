@@ -23,7 +23,7 @@ public class MemoRedisConfig {
             @Value("${memo.redis.password:${spring.data.redis.password}}") String redisPassword,
             Environment environment) {
         RedisStandaloneConfiguration server = new RedisStandaloneConfiguration(host, port);
-        server.setPassword(RedisPassword.of(environment.getProperty(redisPassword)));
+        server.setPassword(RedisPassword.of(redisPassword));
 
         Integer database = environment.getProperty("memo.redis.database", Integer.class);
         if (database != null) server.setDatabase(database);
