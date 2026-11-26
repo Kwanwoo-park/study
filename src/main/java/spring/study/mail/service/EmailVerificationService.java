@@ -79,7 +79,8 @@ public class EmailVerificationService {
 
     public void send(EmailVerificationPurpose purpose, String subject, String email) {
         InternetAddress recipient = recipientAddress(email);
-        verificationGuard.recordRequest(emailDigest(recipient.getAddress()));
+        String address = recipient.getAddress();
+        verificationGuard.recordRequest(emailDigest(address), address);
         String cooldownKey = key(purpose, subject, "cooldown");
 
         reserveCooldown(cooldownKey);
@@ -109,7 +110,7 @@ public class EmailVerificationService {
     public String sendRegistrationCode(String email) {
         InternetAddress recipient = recipientAddress(email);
         String address = recipient.getAddress();
-        verificationGuard.recordRequest(emailDigest(address));
+        verificationGuard.recordRequest(emailDigest(address), address);
         String cooldownKey = key(EmailVerificationPurpose.EMAIL, address, "cooldown");
         reserveCooldown(cooldownKey);
 

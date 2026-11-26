@@ -18,6 +18,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import spring.study.admin.config.IpBlockSecurityConfig;
+import spring.study.admin.entity.BlockedIp;
 import spring.study.admin.facade.IpBlockFacade;
 import spring.study.admin.service.IpBlockService;
 import spring.study.common.component.IpBlockClientAddress;
@@ -28,10 +29,15 @@ import spring.study.jwt.component.RefreshTokenRotation;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
+import spring.study.mail.component.EmailVerificationGuard;
+import spring.study.mail.entity.EmailVerificationAttempt;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -49,11 +55,12 @@ class IpBlockSecurityTest {
 
     @Autowired WebApplicationContext context;
     @Autowired IpBlockService blocks;
+    @Autowired EmailVerificationGuard emailVerificationGuard;
     MockMvc mvc;
 
     @BeforeEach
     void setUp() {
-        reset(blocks);
+        reset(blocks, emailVerificationGuard);
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
     }
 
@@ -86,6 +93,30 @@ class IpBlockSecurityTest {
         verify(blocks, never()).block(anyString(), anyLong());
     }
 
+    @Test
+    void administratorPageShowsIpAndEmailBlocksWithTheirTimestamps() throws Exception {
+        String email = "blocked@example.test";
+        Instant blockedAt = Instant.parse("2026-11-26T02:03:04Z");
+        var emailBlock = mock(EmailVerificationAttempt.class);
+        when(emailBlock.getBlockedEmail()).thenReturn(email);
+        when(emailBlock.getBlockedAt()).thenReturn(blockedAt);
+        var legacyBlock = mock(EmailVerificationAttempt.class);
+        when(legacyBlock.getBlockedAt()).thenReturn(blockedAt.minusSeconds(60));
+        when(emailVerificationGuard.listBlocked()).thenReturn(List.of(emailBlock, legacyBlock));
+        when(blocks.list()).thenReturn(List.of(new BlockedIp("203.0.113.12", 7L)));
+
+        mvc.perform(get(PAGE).with(user(member(Role.USER)))).andExpect(status().isForbidden());
+        verifyNoInteractions(emailVerificationGuard);
+
+        String html = mvc.perform(get(PAGE).with(user(member(Role.ADMIN))))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andReturn().getResponse().getContentAsString();
+        String blockedTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(ZoneId.systemDefault()).format(blockedAt);
+        assertThat(html).contains("IP·이메일 영구 차단", "203.0.113.12", email, blockedTime, "주소 미기록");
+    }
+
     private MockHttpServletRequestBuilder withActualCsrf(MockHttpServletRequestBuilder request) throws Exception {
         var page = mvc.perform(get(PAGE).with(user(member(Role.ADMIN))))
                 .andExpect(status().isOk())
@@ -107,6 +138,9 @@ class IpBlockSecurityTest {
     static class Config {
         @Bean
         IpBlockService blocks() { return mock(IpBlockService.class); }
+
+        @Bean
+        EmailVerificationGuard emailVerificationGuard() { return mock(EmailVerificationGuard.class); }
 
         @Bean
         IpBlockClientAddress clientAddress() { return new IpBlockClientAddress(List.of()); }

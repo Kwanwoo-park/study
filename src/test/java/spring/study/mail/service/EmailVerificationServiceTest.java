@@ -146,7 +146,7 @@ class EmailVerificationServiceTest {
     void registrationAndPasswordRecoveryCountRequestsForTheSameAddressBeforeCooldown() {
         String emailDigest = digest(EMAIL);
         doNothing().doNothing().doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
-                .when(guard).recordRequest(emailDigest);
+                .when(guard).recordRequest(eq(emailDigest), anyString());
         when(values.setIfAbsent(anyString(), eq("1"), eq(EmailVerificationService.RESEND_COOLDOWN)))
                 .thenReturn(true, false);
 
@@ -158,7 +158,8 @@ class EmailVerificationServiceTest {
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
 
-        verify(guard, times(3)).recordRequest(emailDigest);
+        verify(guard).recordRequest(emailDigest, "Member@Example.Test");
+        verify(guard, times(2)).recordRequest(emailDigest, EMAIL);
         verify(sender, times(1)).send(message);
     }
 

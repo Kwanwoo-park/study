@@ -522,6 +522,8 @@ MySQL 스키마 변경, Redis 재시작, Kafka 장애 복구는 `./gradlew infra
 
 회원가입, 비밀번호 찾기·변경, 비로그인 상소의 인증번호 발급 요청은 같은 이메일에 대해 합산합니다. 주소의 대소문자를 구분하지 않으며, 1분 재발급 대기 중의 요청도 집계합니다. 최근 24시간 내 세 번째 요청부터 해당 주소의 이메일 인증이 영구 차단되고 이미 발급된 인증번호와 인증 토큰도 사용할 수 없습니다. MySQL 스키마를 수동 관리한다면 배포 전에 [이메일 인증 차단 SQL](src/main/resources/db/mysql/V20261126_01__email_verification_attempts.sql)을 적용합니다.
 
+관리자 메인의 **IP·이메일 영구 차단** 화면에서 이메일 주소와 차단 시각을 확인할 수 있습니다. 해시만 저장된 이전 기록은 주소 미기록으로 표시되며, 같은 주소의 발급 요청이 다시 들어오면 차단 기록에 주소가 채워집니다. MySQL 스키마를 수동 관리한다면 기존 이메일 인증 차단 SQL에 이어 [이메일 주소 표시 SQL](src/main/resources/db/mysql/V20261127_01__blocked_email_address.sql)을 적용합니다.
+
 ### WebSocket 및 SSE
 
 - SockJS/STOMP endpoint: `/ws/chat`

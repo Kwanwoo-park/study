@@ -31,11 +31,15 @@ public class EmailVerificationAttempt {
     @Column(name = "blocked_at")
     private Instant blockedAt;
 
-    public boolean allowRequest(Instant now) {
-        if (blockedAt != null) return false;
+    @Column(name = "blocked_email", length = 254)
+    private String blockedEmail;
 
-        if (previousRequestAt != null && !previousRequestAt.isBefore(now.minus(REQUEST_WINDOW))) {
+    public boolean allowRequest(Instant now, String emailAddress) {
+        if (blockedAt == null && previousRequestAt != null && !previousRequestAt.isBefore(now.minus(REQUEST_WINDOW))) {
             blockedAt = now;
+        }
+        if (blockedAt != null) {
+            if (blockedEmail == null) blockedEmail = emailAddress;
             return false;
         }
 

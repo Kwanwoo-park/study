@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>IP 영구 차단</title>
+  <title>IP·이메일 영구 차단</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
@@ -11,7 +11,7 @@
 <script src="/js/common/theme.js"></script>
 <main class="container">
   <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
-  <h1>IP 영구 차단</h1>
+  <h1>IP·이메일 영구 차단</h1>
   <p id="block-description">등록한 IP는 즉시 차단되며 차단 기간은 무기한입니다.</p>
   <p th:if="${error}" th:text="${error}" class="alert alert-danger" role="alert"></p>
   <form method="post" th:attr="action=@{/admin/ip-blocks}" class="mb-4">
@@ -21,9 +21,9 @@
       <input id="ipAddress" name="ipAddress" type="text" class="form-control"
              maxlength="45" autocomplete="off" spellcheck="false" aria-describedby="block-description" required>
     </div>
-    <button type="submit" class="btn btn-danger">영구 차단</button>
+    <button type="submit" class="btn btn-danger">IP 영구 차단</button>
   </form>
-  <h2>차단 목록</h2>
+  <h2>IP 차단 목록</h2>
   <p th:if="${#lists.isEmpty(blocks)}">차단한 IP가 없습니다.</p>
   <div th:unless="${#lists.isEmpty(blocks)}" class="table-responsive">
     <table class="table">
@@ -39,6 +39,23 @@
       </tbody>
     </table>
   </div>
+  <section class="mt-4" aria-labelledby="email-blocks-title">
+    <h2 id="email-blocks-title">이메일 차단 목록</h2>
+    <p th:if="${#lists.isEmpty(emailBlocks)}">차단된 이메일이 없습니다.</p>
+    <div th:unless="${#lists.isEmpty(emailBlocks)}" class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr><th scope="col">이메일 주소</th><th scope="col">차단 시각</th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="block : ${emailBlocks}">
+            <td class="text-break" th:text="${block.blockedEmail ?: '주소 미기록'}"></td>
+            <td class="text-nowrap" th:text="${#temporals.format(block.blockedAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </main>
 </body>
 </html>

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import spring.study.mail.entity.EmailVerificationAttempt;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface EmailVerificationAttemptRepository extends JpaRepository<EmailVerificationAttempt, String> {
@@ -24,4 +25,6 @@ public interface EmailVerificationAttemptRepository extends JpaRepository<EmailV
     Optional<EmailVerificationAttempt> findCounterForUpdate(@Param("emailDigest") String emailDigest);
 
     boolean existsByEmailDigestAndBlockedAtIsNotNull(String emailDigest);
+
+    List<EmailVerificationAttempt> findAllByBlockedAtIsNotNullOrderByBlockedAtDesc();
 }

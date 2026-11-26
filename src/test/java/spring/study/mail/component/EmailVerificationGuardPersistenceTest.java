@@ -6,12 +6,15 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.common.component.TransactionRunner;
+import spring.study.mail.entity.EmailVerificationAttempt;
 import spring.study.mail.repository.EmailVerificationAttemptRepository;
 
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -32,9 +35,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Import({EmailVerificationGuard.class, TransactionRunner.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class EmailVerificationGuardPersistenceTest {
+    private static final String EMAIL = "blocked@example.test";
+
     @Autowired EmailVerificationGuard guard;
     @Autowired EmailVerificationAttemptRepository attempts;
     @Autowired TransactionRunner transactions;
+    @Autowired JdbcTemplate jdbc;
 
     @Test
     void usesARollingDayAndKeepsTheCommittedBlock() {
@@ -43,26 +49,57 @@ class EmailVerificationGuardPersistenceTest {
         transactions.write(() -> {
             attempts.ensureCounter(emailDigest);
             var attempt = attempts.findCounterForUpdate(emailDigest).orElseThrow();
-            assertThat(attempt.allowRequest(now.minus(Duration.ofHours(25)))).isTrue();
-            assertThat(attempt.allowRequest(now.minus(Duration.ofHours(23)))).isTrue();
+            assertThat(attempt.allowRequest(now.minus(Duration.ofHours(25)), EMAIL)).isTrue();
+            assertThat(attempt.allowRequest(now.minus(Duration.ofHours(23)), EMAIL)).isTrue();
             return null;
         });
 
-        guard.recordRequest(emailDigest);
+        guard.recordRequest(emailDigest, EMAIL);
         assertThat(guard.isBlocked(emailDigest)).isFalse();
+        assertThat(attempts.findById(emailDigest).orElseThrow().getBlockedEmail()).isNull();
 
-        assertThatThrownBy(() -> guard.recordRequest(emailDigest))
+        assertThatThrownBy(() -> guard.recordRequest(emailDigest, EMAIL))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
-        Instant blockedAt = attempts.findById(emailDigest).orElseThrow().getBlockedAt();
-        assertThat(blockedAt).isNotNull();
+        var originalBlock = attempts.findById(emailDigest).orElseThrow();
+        assertThat(originalBlock.getBlockedAt()).isNotNull();
+        assertThat(originalBlock.getBlockedEmail()).isEqualTo(EMAIL);
 
         var newGuard = new EmailVerificationGuard(attempts, transactions);
         assertThatThrownBy(() -> newGuard.requireAllowed(emailDigest))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
-        assertThatThrownBy(() -> newGuard.recordRequest(emailDigest)).isInstanceOf(ResponseStatusException.class);
-        assertThat(attempts.findById(emailDigest).orElseThrow().getBlockedAt()).isEqualTo(blockedAt);
+        assertThatThrownBy(() -> newGuard.recordRequest(emailDigest, "Blocked@example.test"))
+                .isInstanceOf(ResponseStatusException.class);
+        var savedBlock = attempts.findById(emailDigest).orElseThrow();
+        assertThat(savedBlock.getBlockedAt()).isEqualTo(originalBlock.getBlockedAt());
+        assertThat(savedBlock.getBlockedEmail()).isEqualTo(EMAIL);
+    }
+
+    @Test
+    void listsOnlyBlocksNewestFirstAndFillsTheAddressOfALegacyBlock() {
+        String legacyDigest = "c".repeat(64);
+        String pendingDigest = "d".repeat(64);
+        String currentDigest = "e".repeat(64);
+        Instant legacyBlockedAt = Instant.now().minus(Duration.ofDays(2));
+        jdbc.update("INSERT INTO email_verification_attempt (email_digest, blocked_at) VALUES (?, ?)",
+                legacyDigest, Timestamp.from(legacyBlockedAt));
+        var legacyBlock = attempts.findById(legacyDigest).orElseThrow();
+        assertThat(legacyBlock.getBlockedEmail()).isNull();
+
+        guard.recordRequest(pendingDigest, "pending@example.test");
+        guard.recordRequest(currentDigest, EMAIL);
+        guard.recordRequest(currentDigest, EMAIL);
+        assertThatThrownBy(() -> guard.recordRequest(currentDigest, EMAIL)).isInstanceOf(ResponseStatusException.class);
+        assertThat(guard.listBlocked()).extracting(EmailVerificationAttempt::getEmailDigest)
+                .containsSubsequence(currentDigest, legacyDigest).doesNotContain(pendingDigest);
+
+        assertThatThrownBy(() -> guard.recordRequest(legacyDigest, "legacy@example.test"))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
+        var updatedBlock = attempts.findById(legacyDigest).orElseThrow();
+        assertThat(updatedBlock.getBlockedEmail()).isEqualTo("legacy@example.test");
+        assertThat(updatedBlock.getBlockedAt()).isEqualTo(legacyBlock.getBlockedAt());
     }
 
     @Test
@@ -76,7 +113,7 @@ class EmailVerificationGuardPersistenceTest {
                 requests.add(workers.submit(() -> {
                     start.await();
                     try {
-                        guard.recordRequest(emailDigest);
+                        guard.recordRequest(emailDigest, EMAIL);
                         return HttpStatus.OK;
                     } catch (ResponseStatusException rejection) {
                         return HttpStatus.valueOf(rejection.getStatusCode().value());

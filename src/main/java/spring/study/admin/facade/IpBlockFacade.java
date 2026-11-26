@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import spring.study.admin.service.IpBlockService;
 import spring.study.common.component.IpBlockClientAddress;
 import spring.study.common.service.ClientIpResolver;
+import spring.study.mail.component.EmailVerificationGuard;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 
@@ -20,10 +21,12 @@ import spring.study.member.entity.Role;
 public class IpBlockFacade {
     private final IpBlockService blocks;
     private final IpBlockClientAddress clientAddress;
+    private final EmailVerificationGuard emailVerificationGuard;
 
     public String list(Model model, HttpServletResponse response) {
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
         model.addAttribute("blocks", blocks.list());
+        model.addAttribute("emailBlocks", emailVerificationGuard.listBlocked());
         return "admin/ip-blocks";
     }
 
