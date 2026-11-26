@@ -16,6 +16,7 @@ import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
+import spring.study.mail.component.EmailVerificationGuard;
 import spring.study.mail.component.Pop3BounceMailbox;
 import spring.study.mail.entity.EmailVerificationPurpose;
 
@@ -37,7 +38,8 @@ class EmailVerificationServiceTest {
     private final ValueOperations<String, String> values = mock(ValueOperations.class);
     private final JavaMailSender sender = mock(JavaMailSender.class);
     private final Pop3BounceMailbox bounce = mock(Pop3BounceMailbox.class);
-    private final EmailVerificationService service = new EmailVerificationService(redis, sender, bounce);
+    private final EmailVerificationGuard guard = mock(EmailVerificationGuard.class);
+    private final EmailVerificationService service = new EmailVerificationService(redis, sender, bounce, guard);
     private MimeMessage message;
 
     @BeforeEach
@@ -70,30 +72,30 @@ class EmailVerificationServiceTest {
         when(values.increment(attemptKey(purpose))).thenReturn(1L);
 
         if (purpose == EmailVerificationPurpose.PASSWORD_CHANGE) {
-            service.verifyPasswordChange(subject, code);
+            service.verifyPasswordChange(subject, EMAIL, code);
             verify(values).set("verification:password-change:verified:7", "1", Duration.ofMinutes(10));
             when(redis.delete("verification:password-change:verified:7")).thenReturn(true, false);
-            assertThat(service.consumePasswordChange(subject)).isTrue();
-            assertThat(service.consumePasswordChange(subject)).isFalse();
-            assertThatThrownBy(() -> service.verifyPasswordChange(subject, code)).isInstanceOf(ResponseStatusException.class);
+            assertThat(service.consumePasswordChange(subject, EMAIL)).isTrue();
+            assertThat(service.consumePasswordChange(subject, EMAIL)).isFalse();
+            assertThatThrownBy(() -> service.verifyPasswordChange(subject, EMAIL, code)).isInstanceOf(ResponseStatusException.class);
         } else {
-            String token = service.verify(purpose, subject, code);
+            String token = service.verify(purpose, subject, EMAIL, code);
             assertThat(token).hasSize(43);
             if (purpose == EmailVerificationPurpose.APPEAL) {
                 String proofKey = "verification:appeal:verified:7";
                 verify(values).set(proofKey, digest(token));
                 when(redis.execute(ArgumentMatchers.<RedisScript<Long>>any(), eq(List.of(proofKey)), eq(digest(token))))
                         .thenReturn(1L, 0L);
-                assertThat(service.consume(purpose, "8", token)).isFalse();
-                assertThat(service.consume(purpose, subject, "wrong-token")).isFalse();
+                assertThat(service.consume(purpose, "8", "other@example.test", token)).isFalse();
+                assertThat(service.consume(purpose, subject, EMAIL, "wrong-token")).isFalse();
             } else {
                 String tokenKey = purpose.getKeyPrefix() + "token:" + digest(token);
                 verify(values).set(tokenKey, subject, Duration.ofMinutes(5));
                 when(values.getAndDelete(tokenKey)).thenReturn(subject, (String) null);
             }
-            assertThat(service.consume(purpose, subject, token)).isTrue();
-            assertThat(service.consume(purpose, subject, token)).isFalse();
-            assertThatThrownBy(() -> service.verify(purpose, subject, code)).isInstanceOf(ResponseStatusException.class);
+            assertThat(service.consume(purpose, subject, EMAIL, token)).isTrue();
+            assertThat(service.consume(purpose, subject, EMAIL, token)).isFalse();
+            assertThatThrownBy(() -> service.verify(purpose, subject, EMAIL, code)).isInstanceOf(ResponseStatusException.class);
         }
         verify(redis, atLeastOnce()).expire(attemptKey(purpose), Duration.ofMinutes(5));
     }
@@ -138,6 +140,45 @@ class EmailVerificationServiceTest {
 
         assertThatThrownBy(() -> service.sendRegistrationCode(EMAIL)).isInstanceOf(IllegalStateException.class);
         verify(values, never()).set(anyString(), anyString(), any(Duration.class));
+    }
+
+    @Test
+    void registrationAndPasswordRecoveryCountRequestsForTheSameAddressBeforeCooldown() {
+        String emailDigest = digest(EMAIL);
+        doNothing().doNothing().doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
+                .when(guard).recordRequest(emailDigest);
+        when(values.setIfAbsent(anyString(), eq("1"), eq(EmailVerificationService.RESEND_COOLDOWN)))
+                .thenReturn(true, false);
+
+        service.sendRegistrationCode(" Member@Example.Test ");
+        assertThatThrownBy(() -> service.send(EmailVerificationPurpose.EMAIL, EMAIL, EMAIL))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS));
+        assertThatThrownBy(() -> service.sendRegistrationCode(EMAIL))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
+
+        verify(guard, times(3)).recordRequest(emailDigest);
+        verify(sender, times(1)).send(message);
+    }
+
+    @Test
+    void blockedAddressCannotVerifyOrUseAnEarlierRegistrationProof() {
+        String code = "a123A567";
+        when(values.get(registrationKey("pending"))).thenReturn(EMAIL + "\n" + digest(code));
+        when(values.get(registrationKey("verified"))).thenReturn(EMAIL + "\n");
+        when(guard.isBlocked(digest(EMAIL))).thenReturn(true);
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN)).when(guard).requireAllowed(digest(EMAIL));
+
+        assertThat(service.pendingRegistrationEmail("pending")).isNull();
+        assertThat(service.verifiedRegistrationEmail("verified")).isNull();
+        assertThatThrownBy(() -> service.verifyRegistrationCode("pending", code))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
+        assertThatThrownBy(() -> service.consumeRegistration("verified", EMAIL))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
+        verifyNoInteractions(bounce);
     }
 
     @Test
@@ -231,9 +272,9 @@ class EmailVerificationServiceTest {
 
     private void verifyCode(EmailVerificationPurpose purpose, String code) {
         if (purpose == EmailVerificationPurpose.PASSWORD_CHANGE) {
-            service.verifyPasswordChange(subject(purpose), code);
+            service.verifyPasswordChange(subject(purpose), EMAIL, code);
         } else {
-            service.verify(purpose, subject(purpose), code);
+            service.verify(purpose, subject(purpose), EMAIL, code);
         }
     }
 

@@ -24,7 +24,7 @@ public class MailFacade {
     }
 
     public ResponseEntity<Map<String, Object>> verify(String email, String code) {
-        String token = verificationService.verify(EmailVerificationPurpose.EMAIL, email, code);
+        String token = verificationService.verify(EmailVerificationPurpose.EMAIL, email, email, code);
 
         return ResponseEntity.ok(Map.of(
                 "verificationToken", token,

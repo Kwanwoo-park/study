@@ -520,6 +520,8 @@ MySQL 스키마 변경, Redis 재시작, Kafka 장애 복구는 `./gradlew infra
 
 비밀번호 찾기는 `POST /api/mail/confirm`에서 번호를 발송하고 `POST /api/mail/verify`에서 번호를 확인해 일회용 `verificationToken`을 받습니다. 인증번호와 토큰은 각각 5분 동안 유효하며 메일 재발송 간격은 1분입니다.
 
+회원가입, 비밀번호 찾기·변경, 비로그인 상소의 인증번호 발급 요청은 같은 이메일에 대해 합산합니다. 주소의 대소문자를 구분하지 않으며, 1분 재발급 대기 중의 요청도 집계합니다. 최근 24시간 내 세 번째 요청부터 해당 주소의 이메일 인증이 영구 차단되고 이미 발급된 인증번호와 인증 토큰도 사용할 수 없습니다. MySQL 스키마를 수동 관리한다면 배포 전에 [이메일 인증 차단 SQL](src/main/resources/db/mysql/V20261126_01__email_verification_attempts.sql)을 적용합니다.
+
 ### WebSocket 및 SSE
 
 - SockJS/STOMP endpoint: `/ws/chat`

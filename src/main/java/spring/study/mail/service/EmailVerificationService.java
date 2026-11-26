@@ -14,6 +14,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import spring.study.mail.component.EmailVerificationGuard;
 import spring.study.mail.component.Pop3BounceMailbox;
 import spring.study.mail.entity.EmailVerificationPurpose;
 
@@ -70,6 +71,7 @@ public class EmailVerificationService {
     private final RedisTemplate<String, String> redisTemplate;
     private final JavaMailSender emailSender;
     private final Pop3BounceMailbox bounceMailbox;
+    private final EmailVerificationGuard verificationGuard;
     private final SecureRandom random = new SecureRandom();
 
     @Value("${naver.id}")
@@ -77,6 +79,7 @@ public class EmailVerificationService {
 
     public void send(EmailVerificationPurpose purpose, String subject, String email) {
         InternetAddress recipient = recipientAddress(email);
+        verificationGuard.recordRequest(emailDigest(recipient.getAddress()));
         String cooldownKey = key(purpose, subject, "cooldown");
 
         reserveCooldown(cooldownKey);
@@ -106,6 +109,7 @@ public class EmailVerificationService {
     public String sendRegistrationCode(String email) {
         InternetAddress recipient = recipientAddress(email);
         String address = recipient.getAddress();
+        verificationGuard.recordRequest(emailDigest(address));
         String cooldownKey = key(EmailVerificationPurpose.EMAIL, address, "cooldown");
         reserveCooldown(cooldownKey);
 
@@ -132,6 +136,7 @@ public class EmailVerificationService {
         String saved = redisTemplate.opsForValue().get(codeKey);
         RegistrationEmail registration = RegistrationEmail.decode(saved);
         if (registration == null || registration.verified() || code == null || code.isBlank()) throw invalidCode();
+        verificationGuard.requireAllowed(emailDigest(registration.address()));
 
         if (!matchesCode(registration.codeDigest(), code.trim())) {
             Long invalidated = redisTemplate.execute(RECORD_REGISTRATION_FAILURE, List.of(codeKey, attemptKey),
@@ -154,12 +159,14 @@ public class EmailVerificationService {
 
     public String verifiedRegistrationEmail(String attemptId) {
         RegistrationEmail registration = findRegistration(attemptId);
-        return registration != null && registration.verified() ? registration.address() : null;
+        return registration != null && registration.verified()
+                && !verificationGuard.isBlocked(emailDigest(registration.address())) ? registration.address() : null;
     }
 
     public String pendingRegistrationEmail(String attemptId) {
         RegistrationEmail registration = findRegistration(attemptId);
-        return registration != null && !registration.verified() ? registration.address() : null;
+        return registration != null && !registration.verified()
+                && !verificationGuard.isBlocked(emailDigest(registration.address())) ? registration.address() : null;
     }
 
     private RegistrationEmail findRegistration(String attemptId) {
@@ -175,6 +182,7 @@ public class EmailVerificationService {
         String saved = redisTemplate.opsForValue().get(codeKey);
         RegistrationEmail registration = RegistrationEmail.decode(saved);
         if (registration == null || !registration.verified() || !registration.address().equals(email)) return false;
+        verificationGuard.requireAllowed(emailDigest(registration.address()));
 
         rejectBouncedRegistration(attemptId, registration.address(), codeKey, saved);
         return deleteMatchingValue(codeKey, saved);
@@ -204,8 +212,8 @@ public class EmailVerificationService {
         }
     }
 
-    public String verify(EmailVerificationPurpose purpose, String subject, String code) {
-        verifyCode(purpose, subject, code);
+    public String verify(EmailVerificationPurpose purpose, String subject, String email, String code) {
+        verifyCode(purpose, subject, email, code);
 
         byte[] bytes = new byte[32];
 
@@ -223,10 +231,11 @@ public class EmailVerificationService {
         return token;
     }
 
-    public boolean consume(EmailVerificationPurpose purpose, String subject, String token) {
+    public boolean consume(EmailVerificationPurpose purpose, String subject, String email, String token) {
         if (subject == null || subject.isBlank() || token == null || token.isBlank() || token.length() > 100) {
             return false;
         }
+        requireAllowedAddress(email);
 
         if (purpose == EmailVerificationPurpose.APPEAL) {
             return deleteMatchingValue(key(purpose, subject.trim(), "verified"), digest(token));
@@ -234,17 +243,19 @@ public class EmailVerificationService {
         return subject.trim().equals(redisTemplate.opsForValue().getAndDelete(tokenKey(purpose, token)));
     }
 
-    public void verifyPasswordChange(String memberId, String code) {
-        verifyCode(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, code);
+    public void verifyPasswordChange(String memberId, String email, String code) {
+        verifyCode(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, email, code);
 
         redisTemplate.opsForValue().set(key(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, "verified"), "1", PASSWORD_VERIFIED_TTL);
     }
 
-    public boolean consumePasswordChange(String memberId) {
+    public boolean consumePasswordChange(String memberId, String email) {
+        requireAllowedAddress(email);
         return redisTemplate.delete(key(EmailVerificationPurpose.PASSWORD_CHANGE, memberId, "verified"));
     }
 
-    private void verifyCode(EmailVerificationPurpose purpose, String subject, String code) {
+    private void verifyCode(EmailVerificationPurpose purpose, String subject, String email, String code) {
+        requireAllowedAddress(email);
         String codeKey = key(purpose, subject, "code");
         String savedCode = redisTemplate.opsForValue().get(codeKey);
         requireMatchingCode(purpose, subject, code, savedCode);
@@ -362,6 +373,14 @@ public class EmailVerificationService {
         } catch (AddressException invalidAddress) {
             throw new IllegalArgumentException("이메일을 확인해 주세요");
         }
+    }
+
+    private void requireAllowedAddress(String email) {
+        verificationGuard.requireAllowed(emailDigest(recipientAddress(email).getAddress()));
+    }
+
+    private String emailDigest(String address) {
+        return digest(address.toLowerCase(Locale.ROOT));
     }
 
     private String digest(String value) {

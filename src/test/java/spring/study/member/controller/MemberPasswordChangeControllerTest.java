@@ -55,7 +55,7 @@ class MemberPasswordChangeControllerTest {
     void authenticatedPasswordChangeShouldRequireUnusedEmailVerification() {
         MemberRequestDto request = MemberRequestDto.builder().password("new-password").build();
         when(jwtManager.getLoginMember(httpRequest)).thenReturn(member);
-        when(emailVerificationService.consumePasswordChange("7")).thenReturn(false);
+        when(emailVerificationService.consumePasswordChange("7", member.getEmail())).thenReturn(false);
 
         ResponseEntity<?> response = controller.updateAuthenticatedPassword(request, httpRequest, httpResponse);
 
@@ -71,7 +71,7 @@ class MemberPasswordChangeControllerTest {
         ResponseEntity<?> response = controller.updatePasswordAction(request, httpRequest, httpResponse);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        verify(emailVerificationService).consume(EmailVerificationPurpose.EMAIL, "member@example.com", "invalid-proof");
+        verify(emailVerificationService).consume(EmailVerificationPurpose.EMAIL, member.getEmail(), member.getEmail(), "invalid-proof");
         verifyNoInteractions(memberService);
     }
 

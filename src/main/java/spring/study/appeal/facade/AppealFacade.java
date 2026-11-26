@@ -65,7 +65,8 @@ public class AppealFacade {
     public ResponseEntity<?> verifyEmail(AppealVerificationConfirmRequest request) {
         try {
             Member member = findAppealMember(request.email());
-            String verificationToken = verificationService.verify(EmailVerificationPurpose.APPEAL, member.getId().toString(), request.code());
+            String verificationToken = verificationService.verify(
+                    EmailVerificationPurpose.APPEAL, member.getId().toString(), member.getEmail(), request.code());
 
             return ResponseEntity.ok(Map.of(
                     "result", 1L,
@@ -125,7 +126,7 @@ public class AppealFacade {
 
         Member member = findAppealMember(requestDto.getEmail());
 
-        if (!verificationService.consume(EmailVerificationPurpose.APPEAL, member.getId().toString(), token)) {
+        if (!verificationService.consume(EmailVerificationPurpose.APPEAL, member.getId().toString(), member.getEmail(), token)) {
             throw appealVerificationRequired();
         }
 

@@ -45,7 +45,7 @@ class AppealApiControllerTest {
     @Test
     void guestSubmissionPassesVerificationProofToTheServiceWithoutInventingALogin() throws Exception {
         when(memberService.findMemberOrNull(member.getEmail())).thenReturn(member);
-        when(verificationService.consume(EmailVerificationPurpose.APPEAL, "7", "proof")).thenReturn(true);
+        when(verificationService.consume(EmailVerificationPurpose.APPEAL, "7", member.getEmail(), "proof")).thenReturn(true);
         when(service.create(any(), eq(member), isNull())).thenReturn(Appeal.builder()
                 .id(19L).member(member).title("상소").content("상소 내용").build());
 
@@ -54,7 +54,7 @@ class AppealApiControllerTest {
                 """))
                 .andExpect(status().isOk()).andExpect(jsonPath("result").value(19))
                 .andExpect(jsonPath("appeal.memberEmail").value(member.getEmail()));
-        verify(verificationService).consume(EmailVerificationPurpose.APPEAL, "7", "proof");
+        verify(verificationService).consume(EmailVerificationPurpose.APPEAL, "7", member.getEmail(), "proof");
         verify(service).create(argThat(dto -> "proof".equals(dto.getVerificationToken())), eq(member), isNull());
     }
 

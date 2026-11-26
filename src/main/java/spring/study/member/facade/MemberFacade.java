@@ -367,11 +367,12 @@ public class MemberFacade {
 
         String password = requestDto.getPassword();
         if (!StringUtils.hasText(password)) return invalidInput("비밀번호가 입력되지 않았습니다");
+        String email = requestDto.getEmail();
         String failureMessage = "5분 이내에 가입한 이메일의 인증을 완료한 후 다시 시도해 주세요";
-        if (!emailVerificationService.consume(EmailVerificationPurpose.EMAIL, requestDto.getEmail(), requestDto.getVerificationToken()))
+        if (!emailVerificationService.consume(EmailVerificationPurpose.EMAIL, email, email, requestDto.getVerificationToken()))
             return failure(HttpStatus.FORBIDDEN, -403L, failureMessage);
 
-        Member member = memberService.findMemberOrNull(requestDto.getEmail());
+        Member member = memberService.findMemberOrNull(email);
         if (member == null) return failure(HttpStatus.FORBIDDEN, -403L, failureMessage);
         return updatePassword(password, member);
     }
@@ -386,7 +387,7 @@ public class MemberFacade {
     }
 
     public ResponseEntity<?> verifyPasswordChange(String code, Member member) {
-        emailVerificationService.verifyPasswordChange(member.getId().toString(), code);
+        emailVerificationService.verifyPasswordChange(member.getId().toString(), member.getEmail(), code);
 
         return ResponseEntity.ok(Map.of(
                 "result", member.getId(),
@@ -396,7 +397,7 @@ public class MemberFacade {
 
     public ResponseEntity<?> updateAuthenticatedPassword(String password, Member member, HttpServletRequest request, HttpServletResponse response) {
         if (!StringUtils.hasText(password)) return invalidInput("비밀번호가 입력되지 않았습니다");
-        if (!emailVerificationService.consumePasswordChange(member.getId().toString())) {
+        if (!emailVerificationService.consumePasswordChange(member.getId().toString(), member.getEmail())) {
             return failure(HttpStatus.FORBIDDEN, -10L, "이메일 인증 후 비밀번호를 변경할 수 있습니다");
         }
 
