@@ -103,6 +103,26 @@ class EmailVerificationGuardPersistenceTest {
     }
 
     @Test
+    void manualBlockIsImmediateAndRepeatedRegistrationKeepsTheOriginalRecord() {
+        String emailDigest = "f".repeat(64);
+
+        guard.block(emailDigest, EMAIL);
+        var original = attempts.findById(emailDigest).orElseThrow();
+        assertThat(original.getBlockedEmail()).isEqualTo(EMAIL);
+        assertThat(original.getBlockedAt()).isNotNull();
+        assertThat(original.getLastRequestAt()).isNull();
+        assertThat(guard.isBlocked(emailDigest)).isTrue();
+
+        guard.block(emailDigest, "Blocked@example.test");
+        assertThatThrownBy(() -> guard.recordRequest(emailDigest, EMAIL))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
+        var saved = attempts.findById(emailDigest).orElseThrow();
+        assertThat(saved.getBlockedAt()).isEqualTo(original.getBlockedAt());
+        assertThat(saved.getBlockedEmail()).isEqualTo(EMAIL);
+    }
+
+    @Test
     void simultaneousRequestsPermitAtMostTwoForTheSameAddress() throws Exception {
         String emailDigest = "b".repeat(64);
         var workers = Executors.newFixedThreadPool(6);

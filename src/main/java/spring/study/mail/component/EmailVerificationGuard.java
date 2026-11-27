@@ -18,12 +18,17 @@ public class EmailVerificationGuard {
     private final TransactionRunner transactions;
 
     public void recordRequest(String emailDigest, String emailAddress) {
-        boolean allowed = transactions.write(() -> {
-            attempts.ensureCounter(emailDigest);
-            return attempts.findCounterForUpdate(emailDigest).orElseThrow().allowRequest(Instant.now(), emailAddress);
-        });
+        boolean allowed = transactions.write(() ->
+                counterForUpdate(emailDigest).allowRequest(Instant.now(), emailAddress));
 
         if (!allowed) throw blockedEmail();
+    }
+
+    public void block(String emailDigest, String emailAddress) {
+        transactions.write(() -> {
+            counterForUpdate(emailDigest).block(Instant.now(), emailAddress);
+            return null;
+        });
     }
 
     public List<EmailVerificationAttempt> listBlocked() {
@@ -38,7 +43,12 @@ public class EmailVerificationGuard {
         if (isBlocked(emailDigest)) throw blockedEmail();
     }
 
+    private EmailVerificationAttempt counterForUpdate(String emailDigest) {
+        attempts.ensureCounter(emailDigest);
+        return attempts.findCounterForUpdate(emailDigest).orElseThrow();
+    }
+
     private ResponseStatusException blockedEmail() {
-        return new ResponseStatusException(HttpStatus.FORBIDDEN, "인증 요청 횟수를 초과해 이메일 인증이 영구 차단되었습니다.");
+        return new ResponseStatusException(HttpStatus.FORBIDDEN, "이메일 인증이 영구 차단되었습니다.");
     }
 }

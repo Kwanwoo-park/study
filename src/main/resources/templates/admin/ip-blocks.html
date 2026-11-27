@@ -6,55 +6,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
   <link rel="stylesheet" href="/css/common/common.css">
+  <link rel="stylesheet" href="/css/admin/admin.css?v=block-list-cards">
 </head>
 <body th:classappend="${isMobile} ? 'mobile-view' : ''">
 <script src="/js/common/theme.js"></script>
 <main class="container">
   <th:block th:replace="~{fragments/common :: pageBack('/admin/administrator')}"></th:block>
-  <h1>IP·이메일 영구 차단</h1>
-  <p id="block-description">등록한 IP는 즉시 차단되며 차단 기간은 무기한입니다.</p>
-  <p th:if="${error}" th:text="${error}" class="alert alert-danger" role="alert"></p>
-  <form method="post" th:attr="action=@{/admin/ip-blocks}" class="mb-4">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-    <div class="mb-3">
+  <h1 class="simple-page-title mb-0">IP·이메일 영구 차단</h1>
+  <section class="admin-token-dashboard" aria-labelledby="blocked-ip-title">
+    <header class="admin-token-header">
+      <div>
+        <h2 id="blocked-ip-title" class="h4">Blocked IP List</h2>
+        <p id="block-description">등록한 IP는 즉시 차단되며 차단 기간은 무기한입니다.</p>
+      </div>
+    </header>
+    <p th:if="${error}" th:text="${error}" class="alert alert-danger" role="alert"></p>
+    <form method="post" th:attr="action=@{/admin/ip-blocks}" class="mb-3">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
       <label for="ipAddress" class="form-label">차단할 IPv4 또는 IPv6 주소</label>
-      <input id="ipAddress" name="ipAddress" type="text" class="form-control"
-             maxlength="45" autocomplete="off" spellcheck="false" aria-describedby="block-description" required>
-    </div>
-    <button type="submit" class="btn btn-danger">IP 영구 차단</button>
-  </form>
-  <h2>IP 차단 목록</h2>
-  <p th:if="${#lists.isEmpty(blocks)}">차단한 IP가 없습니다.</p>
-  <div th:unless="${#lists.isEmpty(blocks)}" class="table-responsive">
-    <table class="table">
-      <thead>
-        <tr><th scope="col">IP 주소</th><th scope="col">등록 시각</th><th scope="col">등록 경로</th></tr>
-      </thead>
-      <tbody>
-        <tr th:each="block : ${blocks}">
-          <td th:text="${block.ipAddress}"></td>
-          <td th:text="${#temporals.format(block.blockedAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
-          <td th:text="${block.blockedByMemberId == null ? '로그인 제한' : '관리자'}"></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <section class="mt-4" aria-labelledby="email-blocks-title">
-    <h2 id="email-blocks-title">이메일 차단 목록</h2>
-    <p th:if="${#lists.isEmpty(emailBlocks)}">차단된 이메일이 없습니다.</p>
-    <div th:unless="${#lists.isEmpty(emailBlocks)}" class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr><th scope="col">이메일 주소</th><th scope="col">차단 시각</th></tr>
-        </thead>
-        <tbody>
-          <tr th:each="block : ${emailBlocks}">
-            <td class="text-break" th:text="${block.blockedEmail ?: '주소 미기록'}"></td>
-            <td class="text-nowrap" th:text="${#temporals.format(block.blockedAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="admin-block-form-controls">
+        <input id="ipAddress" name="ipAddress" type="text" class="form-control"
+               maxlength="45" autocomplete="off" spellcheck="false" aria-describedby="block-description" required>
+        <button type="submit" class="btn btn-danger">IP 영구 차단</button>
+      </div>
+    </form>
+    <div th:if="${#lists.isEmpty(blocks)}" class="admin-token-empty">차단한 IP가 없습니다.</div>
+    <ul th:unless="${#lists.isEmpty(blocks)}" class="admin-token-list list-unstyled mb-0"
+        aria-labelledby="blocked-ip-title" role="list" tabindex="0">
+      <li class="admin-token-item admin-block-ip-item" th:each="block : ${blocks}">
+        <strong th:text="${block.ipAddress}"></strong>
+        <span th:text="${block.blockedByMemberId == null ? '로그인 제한' : '관리자'}"></span>
+        <time th:attr="datetime=${block.blockedAt}"
+              th:text="|차단 ${#temporals.format(block.blockedAt, 'yyyy-MM-dd HH:mm:ss')}|"></time>
+      </li>
+    </ul>
+  </section>
+  <section class="admin-token-dashboard" aria-labelledby="blocked-email-title">
+    <header class="admin-token-header">
+      <div>
+        <h2 id="blocked-email-title" class="h4">Blocked Email List</h2>
+        <p id="email-block-description">등록한 주소의 이메일 인증은 즉시 영구 차단됩니다.</p>
+      </div>
+    </header>
+    <p th:if="${emailError}" th:text="${emailError}" class="alert alert-danger" role="alert"></p>
+    <form method="post" th:attr="action=@{/admin/ip-blocks/email}" class="mb-3">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <label for="emailAddress" class="form-label">차단할 이메일 주소</label>
+      <div class="admin-block-form-controls">
+        <input id="emailAddress" name="email" type="email" class="form-control"
+               maxlength="254" autocomplete="off" spellcheck="false" aria-describedby="email-block-description" required>
+        <button type="submit" class="btn btn-danger">이메일 영구 차단</button>
+      </div>
+    </form>
+    <div th:if="${#lists.isEmpty(emailBlocks)}" class="admin-token-empty">차단된 이메일이 없습니다.</div>
+    <ul th:unless="${#lists.isEmpty(emailBlocks)}" class="admin-token-list list-unstyled mb-0"
+        aria-labelledby="blocked-email-title" role="list" tabindex="0">
+      <li class="admin-token-item admin-block-email-item" th:each="block : ${emailBlocks}">
+        <strong th:text="${block.blockedEmail ?: '주소 미기록'}"></strong>
+        <time th:attr="datetime=${block.blockedAt}"
+              th:text="|차단 ${#temporals.format(block.blockedAt, 'yyyy-MM-dd HH:mm:ss')}|"></time>
+      </li>
+    </ul>
   </section>
 </main>
 </body>

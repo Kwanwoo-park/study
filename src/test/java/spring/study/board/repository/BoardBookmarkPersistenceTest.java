@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import spring.study.board.dto.BoardBookmarkDto;
 import spring.study.board.entity.Board;
+import spring.study.board.entity.BoardImg;
 import spring.study.board.service.BoardBookmarkService;
 import spring.study.common.entity.CommonVisibility;
 import spring.study.follow.entity.Follow;
@@ -44,6 +45,34 @@ class BoardBookmarkPersistenceTest {
         em.flush();
         em.clear();
         assertThat(bookmarks.contains(reader, board.getId())).isFalse();
+    }
+
+    @Test
+    void bookmarkPagesShowOnlyTheFirstImageAndIncludePostsWithoutImages() {
+        Member author = member("author@example.test", "01011112222");
+        Member reader = member("reader@example.test", "01011113333");
+        Board textOnly = em.persist(Board.builder().content("사진이 없는 글").member(author).build());
+        bookmarks.save(reader, textOnly);
+        for (int index = 0; index < 19; index++) {
+            Board board = em.persist(Board.builder().content("저장한 글 " + index).member(author).build());
+            bookmarks.save(reader, board);
+        }
+        Board withImages = em.persist(Board.builder().content("사진이 있는 글").member(author).build());
+        em.persist(BoardImg.builder().board(withImages).imgSrc("/img/first-photo.webp").build());
+        em.persist(BoardImg.builder().board(withImages).imgSrc("/img/second-photo.webp").build());
+        bookmarks.save(reader, withImages);
+        em.flush();
+        em.clear();
+
+        var firstPage = bookmarks.list(reader, 0);
+        assertThat(firstPage.getTotalElements()).isEqualTo(21);
+        assertThat(firstPage.getContent()).hasSize(20);
+        assertThat(firstPage.getContent().get(0).boardId()).isEqualTo(withImages.getId());
+        assertThat(firstPage.getContent().get(0).thumbnailUrl()).isEqualTo("/img/first-photo.webp");
+        assertThat(bookmarks.list(reader, 1).getContent()).singleElement().satisfies(bookmark -> {
+            assertThat(bookmark.boardId()).isEqualTo(textOnly.getId());
+            assertThat(bookmark.thumbnailUrl()).isNull();
+        });
     }
 
     private Member member(String email, String phone) {

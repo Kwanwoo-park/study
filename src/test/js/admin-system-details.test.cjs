@@ -33,7 +33,11 @@ function setup(respond) {
     };
     const context = {document, URLSearchParams, AbortController,
         formatBytes: value => `${value}B`,
-        fetch: async url => { calls.push(url); return {ok: true, json: async () => respond(url)}; }};
+        fetch: async url => {
+            calls.push(url);
+            const body = respond(url);
+            return {ok: body !== null, json: async () => body};
+        }};
     vm.runInNewContext(fs.readFileSync(path.join(__dirname,
         '../../main/resources/static/js/admin/system-details.js'), 'utf8'), context);
     return {context, elements, calls};
@@ -42,9 +46,14 @@ function setup(respond) {
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 test('disk card navigates folders and pages with bounded requests', async () => {
+    const roots = [
+        {id: 'project', label: '실행 프로젝트'},
+        {id: 'filesystem', label: '파일시스템 루트 (/)'},
+        {id: 'optional', label: '추가 설치 프로그램 (/opt)'}
+    ];
     const app = setup(url => {
         const query = new URL(url, 'https://example.test').searchParams;
-        return {disk: {roots: [{id: 'project', label: '실행 프로젝트'}], root: 'project',
+        return {disk: {roots, root: query.get('root'),
             path: query.get('path'), page: Number(query.get('page')), pageSize: 100,
             totalCount: query.get('path') ? 1 : 101,
             entries: [{name: 'folder', directory: true, sizeBytes: 0, modifiedAt: null}]}};
@@ -62,4 +71,41 @@ test('disk card navigates folders and pages with bounded requests', async () => 
     paging.children[2].trigger('click');
     await tick();
     assert.match(app.calls[3], /page=1/);
+
+    const selector = app.elements['system-details-controls'].children[0];
+    assert.deepEqual(selector.children.map(option => option.value), ['project', 'filesystem', 'optional']);
+    selector.value = 'filesystem';
+    selector.trigger('change');
+    await tick();
+    assert.match(app.calls[4], /root=filesystem&path=&page=0$/);
+
+    app.elements['system-details-content'].children[0].children[1].trigger('click');
+    await tick();
+    const filesystemSelector = app.elements['system-details-controls'].children[0];
+    filesystemSelector.value = 'optional';
+    filesystemSelector.trigger('change');
+    await tick();
+    assert.match(app.calls[6], /root=optional&path=&page=0$/);
+});
+
+test('disk roots remain selectable when a folder cannot be listed', async () => {
+    const roots = [{id: 'project', label: '실행 프로젝트'}, {id: 'filesystem', label: '파일시스템 루트 (/)'}];
+    const app = setup(url => {
+        const query = new URL(url, 'https://example.test').searchParams;
+        if (query.get('path') === 'unavailable') return null;
+        return {disk: {roots, root: query.get('root'), path: '', page: 0, pageSize: 100, totalCount: 1,
+            entries: [{name: 'unavailable', directory: true, sizeBytes: 0, modifiedAt: null}]}};
+    });
+    app.context.openSystemDetails('disk');
+    await tick();
+    app.elements['system-details-content'].children[0].children[1].trigger('click');
+    await tick();
+    assert.match(app.elements['system-details-content'].children[0].textContent, /불러오지 못했습니다/);
+
+    const selector = app.elements['system-details-controls'].children[0];
+    selector.value = 'filesystem';
+    selector.trigger('change');
+    await tick();
+    assert.match(app.calls[2], /root=filesystem&path=&page=0$/);
+    assert.equal(app.elements['system-details-controls'].children[0].value, 'filesystem');
 });

@@ -14,8 +14,9 @@ import java.util.List;
 
 public interface BoardBookmarkRepository extends JpaRepository<BoardBookmark, Long> {
     @Query("""
-            select new spring.study.board.dto.BoardBookmarkDto(b.id, b.member.name, b.content)
+            select new spring.study.board.dto.BoardBookmarkDto(b.id, b.member.name, b.content, firstImage.imgSrc)
             from BoardBookmark bm join bm.board b
+            left join b.img firstImage on firstImage.id = (select min(i.id) from BoardImg i where i.board = b)
             where bm.member = :member and (b.visibility = :visibility or b.member = :member
                 or exists (select f.id from follow f where f.follower = :member and f.following = b.member))
             order by bm.id desc

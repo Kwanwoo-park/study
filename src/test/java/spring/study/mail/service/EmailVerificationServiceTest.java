@@ -164,6 +164,17 @@ class EmailVerificationServiceTest {
     }
 
     @Test
+    void manualBlockUsesTheSameAddressValidationAndDigestAsVerification() {
+        service.blockEmail(" Member@Example.Test ");
+        assertThatThrownBy(() -> service.blockEmail("Member <" + EMAIL + ">"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(guard).block(digest(EMAIL), "Member@Example.Test");
+        verifyNoMoreInteractions(guard);
+        verifyNoInteractions(sender);
+    }
+
+    @Test
     void blockedAddressCannotVerifyOrUseAnEarlierRegistrationProof() {
         String code = "a123A567";
         when(values.get(registrationKey("pending"))).thenReturn(EMAIL + "\n" + digest(code));

@@ -37,6 +37,42 @@
 .board-content-toggle:focus-visible {
     text-decoration: underline;
 }
+
+.board-bookmark-card {
+    gap: 12px;
+}
+
+.board-bookmark-thumbnail {
+    flex-shrink: 0;
+    width: clamp(64px, 20vw, 80px);
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.board-bookmark-summary {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.board-bookmark-heading,
+.board-bookmark-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.board-bookmark-heading {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.board-bookmark-actions .btn {
+    white-space: nowrap;
+}
+
 .board-bookmark-preview {
     white-space: pre-wrap;
     overflow-wrap: anywhere;

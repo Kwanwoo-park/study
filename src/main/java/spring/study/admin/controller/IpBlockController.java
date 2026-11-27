@@ -29,4 +29,10 @@ public class IpBlockController {
                         HttpServletRequest request, HttpServletResponse response, Model model) {
         return facade.block(ipAddress, admin, request, response, model);
     }
+
+    @PostMapping("/email")
+    public String blockEmail(@RequestParam String email, @AuthenticationPrincipal Member admin,
+                             HttpServletResponse response, Model model) {
+        return facade.blockEmail(email, admin, response, model);
+    }
 }

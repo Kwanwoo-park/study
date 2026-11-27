@@ -96,7 +96,11 @@
 .admin-disk-used { --metric-color: var(--monitor-disk); }
 .admin-disk-free { --metric-color: var(--monitor-track); }
 
-.admin-system-trend { grid-column: span 2; }
+.admin-system-trend {
+    --monitor-cpu: #c2410c;
+    --monitor-memory: #1d4ed8;
+    grid-column: span 2;
+}
 
 .admin-system-legend {
     display: flex;
@@ -457,6 +461,29 @@
     color: #b91c1c;
 }
 
+.admin-block-form-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+}
+
+@media (max-width: 575px) {
+    .admin-block-form-controls {
+        grid-template-columns: 1fr;
+        justify-items: start;
+    }
+}
+
+@media (min-width: 768px) {
+    .admin-block-ip-item {
+        grid-template-columns: minmax(0, 1fr) minmax(5.5rem, .35fr) auto;
+    }
+
+    .admin-block-email-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+}
+
 .admin-activity-panel {
     width: 100%;
     margin: 16px 0 40px;
@@ -799,6 +826,11 @@ body.dark-mode .admin-system-panel {
     --monitor-disk: #8598b2;
     --monitor-track: #3a4659;
     --monitor-warning: #fca5a5;
+}
+
+body.dark-mode .admin-system-trend {
+    --monitor-cpu: #fb923c;
+    --monitor-memory: #60a5fa;
 }
 
 body.dark-mode .admin-incident-dashboard {

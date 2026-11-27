@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.mail.component.EmailVerificationGuard;
 import spring.study.mail.component.Pop3BounceMailbox;
+import spring.study.mail.entity.EmailVerificationAttempt;
 import spring.study.mail.entity.EmailVerificationPurpose;
 
 import java.io.UnsupportedEncodingException;
@@ -76,6 +77,15 @@ public class EmailVerificationService {
 
     @Value("${naver.id}")
     private String senderAddress;
+
+    public List<EmailVerificationAttempt> listBlockedEmails() {
+        return verificationGuard.listBlocked();
+    }
+
+    public void blockEmail(String email) {
+        String address = recipientAddress(email).getAddress();
+        verificationGuard.block(emailDigest(address), address);
+    }
 
     public void send(EmailVerificationPurpose purpose, String subject, String email) {
         InternetAddress recipient = recipientAddress(email);

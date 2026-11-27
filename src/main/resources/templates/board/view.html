@@ -7,7 +7,7 @@
 	<!--부트스트랩 css 추가-->
     <link rel="stylesheet" href="/css/lib/bootstrap.min.css">
 	<link rel="stylesheet" href="/css/common/common.css?v=20261118-standalone">
-	<link rel="stylesheet" href="/css/board/view.css?v=20261118-standalone">
+	<link rel="stylesheet" href="/css/board/view.css?v=board-actions">
 	<link rel="stylesheet" href="/css/board/content.css?v=20261011">
 	<link rel="stylesheet" href="/css/comment/modal.css?v=20261118-thread">
     <link rel="stylesheet" href="/css/favorite/modal.css">
@@ -21,38 +21,41 @@
 		<th:block th:replace="~{fragments/common :: notificationBanner}"></th:block>
 		<th:block th:replace="~{fragments/common :: pageBack('/board/main')}"></th:block>
 		<h1 class="simple-page-title">게시글</h1>
-		<div class="editDiv" th:if="${#strings.equals(board.member.email, member)}">
-			<span th:onclick="fnEdit()" id="edit">Edit</span>
-			<span th:onclick="fnEditComplete([[${board.id}]])" id="complete" class="is-hidden">Complete</span>
-			<br>
-			<span th:onclick="fnDelete([[${board.id}]])" id="delete">Delete</span>
-			<button type="button"
-					id="visibilityEditButton"
-					class="btn btn-outline-primary btn-sm"
-					th:text="${board.visibility.name() == 'PRIVATE' ? '공개 설정: 비공개' : '공개 설정: 공개'}"
-					onclick="fnVisibilityEdit()">공개 설정</button>
-			<div id="visibilityEditPanel" class="board-visibility-panel is-hidden">
-				<label for="editVisibility">공개 설정</label>
-				<select id="editVisibility" class="form-control">
-					<option value="PRIVATE" th:selected="${board.visibility.name() == 'PRIVATE'}">비공개</option>
-					<option value="PUBLIC" th:selected="${board.visibility.name() == 'PUBLIC'}">공개</option>
-				</select>
-				<div class="board-visibility-actions">
-					<button type="button"
-							id="visibilitySaveButton"
-							class="btn btn-primary btn-sm"
-							th:onclick="fnVisibilityComplete([[${board.id}]])">저장</button>
-					<button type="button"
-							id="visibilityCancelButton"
-							class="btn btn-outline-secondary btn-sm"
-							onclick="fnVisibilityCancel()">취소</button>
+		<header class="board-post-header">
+			<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
+				<img th:src="${board.member.profile}" class="profile-img">
+				<span th:text="${board.member.name}" class="name"></span>
+			</div>
+			<div class="board-owner-actions" th:if="${#strings.equals(board.member.email, member)}">
+				<button type="button" id="edit" class="board-owner-action" onclick="fnEdit()">Edit</button>
+				<button type="button" id="complete" class="board-owner-action is-hidden"
+						th:onclick="fnEditComplete([[${board.id}]])">Complete</button>
+				<button type="button" id="delete" class="board-owner-action"
+						th:onclick="fnDelete([[${board.id}]])">Delete</button>
+				<button type="button"
+						id="visibilityEditButton"
+						class="btn btn-outline-primary btn-sm"
+						th:text="${board.visibility.name() == 'PRIVATE' ? '공개 설정: 비공개' : '공개 설정: 공개'}"
+						onclick="fnVisibilityEdit()">공개 설정</button>
+				<div id="visibilityEditPanel" class="board-visibility-panel is-hidden">
+					<label for="editVisibility">공개 설정</label>
+					<select id="editVisibility" class="form-control">
+						<option value="PRIVATE" th:selected="${board.visibility.name() == 'PRIVATE'}">비공개</option>
+						<option value="PUBLIC" th:selected="${board.visibility.name() == 'PUBLIC'}">공개</option>
+					</select>
+					<div class="board-visibility-actions">
+						<button type="button"
+								id="visibilitySaveButton"
+								class="btn btn-primary btn-sm"
+								th:onclick="fnVisibilityComplete([[${board.id}]])">저장</button>
+						<button type="button"
+								id="visibilityCancelButton"
+								class="btn btn-outline-secondary btn-sm"
+								onclick="fnVisibilityCancel()">취소</button>
+					</div>
 				</div>
 			</div>
-		</div>
-		<div class="profile" th:onclick="fnProfile([[${board.member.email}]])">
-			<img th:src="${board.member.profile}" class="profile-img">
-			<span th:text="${board.member.name}" class="name"></span>
-		</div>
+		</header>
 		<div class="main-image-wrapper">
 			<button th:if="${board.img.size > 1}" type="button" class="arrow is-invisible" th:id="'left' + ${board.id}" th:onclick="fnLeft([[${board.id}]], [[${board.img}]])">‹</button>
 			<img th:if="${board.img.size == 0}" th:src="@{/img/} + 'IMG_0111.jpeg'" class="main-image" th:id="'main_img' + ${board.id}" th:ondblclick="fnOnlyLike([[${board.id}]])">
@@ -75,7 +78,7 @@
 			</div>
 			<div class="like" th:onclick="fnHref([[${board.id}]])">
 				<label class="form-label">좋아요</label>
-				<label class="form-label" th:id="'like_cnt' + ${board.id}" th:text="${board.favorites.size}"></label>
+				<label class="form-label" th:id="'like_cnt' + ${board.id}" th:text="${favoriteCount}"></label>
 				<label class="form-label">개</label>
 			</div>
 			<span th:text="${board.member.name}" class="name"></span>
@@ -83,7 +86,7 @@
 			<textarea th:text="${board.content}" class="form-control is-hidden" rows="5" cols="" id="editContent" name="content"></textarea>
 			<div class="comment" th:onclick="fnComment([[${board.id}]])">
 				<label class="form-label">댓글</label>
-				<label class="form-label" th:id="'comment_cnt' + ${board.id}" th:text="${board.comment.size}"></label>
+				<label class="form-label" th:id="'comment_cnt' + ${board.id}" th:text="${commentCount}"></label>
 				<label class="form-label">개 모두 보기</label>
 			</div>
 		</div>

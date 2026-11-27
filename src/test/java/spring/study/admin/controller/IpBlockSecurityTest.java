@@ -29,8 +29,8 @@ import spring.study.jwt.component.RefreshTokenRotation;
 import spring.study.jwt.service.JwtCookieService;
 import spring.study.jwt.service.MemberTokenCacheService;
 import spring.study.jwt.service.RefreshTokenService;
-import spring.study.mail.component.EmailVerificationGuard;
 import spring.study.mail.entity.EmailVerificationAttempt;
+import spring.study.mail.service.EmailVerificationService;
 import spring.study.member.entity.Member;
 import spring.study.member.entity.Role;
 import spring.study.member.service.MemberService;
@@ -52,15 +52,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebAppConfiguration
 class IpBlockSecurityTest {
     private static final String PAGE = "/admin/ip-blocks";
+    private static final String BLOCK_EMAIL = PAGE + "/email";
 
     @Autowired WebApplicationContext context;
     @Autowired IpBlockService blocks;
-    @Autowired EmailVerificationGuard emailVerificationGuard;
+    @Autowired EmailVerificationService emailVerificationService;
     MockMvc mvc;
 
     @BeforeEach
     void setUp() {
-        reset(blocks, emailVerificationGuard);
+        reset(blocks, emailVerificationService);
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
     }
 
@@ -94,6 +95,34 @@ class IpBlockSecurityTest {
     }
 
     @Test
+    void onlyAdministratorsWithCsrfCanBlockAnEmail() throws Exception {
+        String email = "blocked@example.test";
+        var admin = user(member(Role.ADMIN));
+        mvc.perform(withActualCsrf(post(BLOCK_EMAIL).param("email", email)))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(withActualCsrf(post(BLOCK_EMAIL).with(user(member(Role.USER))).param("email", email)))
+                .andExpect(status().isForbidden());
+        mvc.perform(post(BLOCK_EMAIL).with(admin).param("email", email))
+                .andExpect(status().isForbidden());
+        verify(emailVerificationService, never()).blockEmail(anyString());
+
+        mvc.perform(withActualCsrf(post(BLOCK_EMAIL).with(admin).param("email", email)))
+                .andExpect(redirectedUrl(PAGE + "#blocked-email-title"));
+        verify(emailVerificationService).blockEmail(email);
+    }
+
+    @Test
+    void invalidEmailReturnsTheBlockPageWithAnEmailError() throws Exception {
+        String message = "이메일을 확인해 주세요";
+        doThrow(new IllegalArgumentException(message)).when(emailVerificationService).blockEmail("invalid");
+
+        mvc.perform(withActualCsrf(post(BLOCK_EMAIL).with(user(member(Role.ADMIN))).param("email", "invalid")))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("admin/ip-blocks"))
+                .andExpect(model().attribute("emailError", message));
+    }
+
+    @Test
     void administratorPageShowsIpAndEmailBlocksWithTheirTimestamps() throws Exception {
         String email = "blocked@example.test";
         Instant blockedAt = Instant.parse("2026-11-26T02:03:04Z");
@@ -102,11 +131,11 @@ class IpBlockSecurityTest {
         when(emailBlock.getBlockedAt()).thenReturn(blockedAt);
         var legacyBlock = mock(EmailVerificationAttempt.class);
         when(legacyBlock.getBlockedAt()).thenReturn(blockedAt.minusSeconds(60));
-        when(emailVerificationGuard.listBlocked()).thenReturn(List.of(emailBlock, legacyBlock));
+        when(emailVerificationService.listBlockedEmails()).thenReturn(List.of(emailBlock, legacyBlock));
         when(blocks.list()).thenReturn(List.of(new BlockedIp("203.0.113.12", 7L)));
 
         mvc.perform(get(PAGE).with(user(member(Role.USER)))).andExpect(status().isForbidden());
-        verifyNoInteractions(emailVerificationGuard);
+        verifyNoInteractions(emailVerificationService);
 
         String html = mvc.perform(get(PAGE).with(user(member(Role.ADMIN))))
                 .andExpect(status().isOk())
@@ -114,7 +143,8 @@ class IpBlockSecurityTest {
                 .andReturn().getResponse().getContentAsString();
         String blockedTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 .withZone(ZoneId.systemDefault()).format(blockedAt);
-        assertThat(html).contains("IP·이메일 영구 차단", "203.0.113.12", email, blockedTime, "주소 미기록");
+        assertThat(html).contains("IP·이메일 영구 차단", "Blocked IP List", "Blocked Email List",
+                "action=\"/admin/ip-blocks/email\"", "203.0.113.12", email, blockedTime, "주소 미기록");
     }
 
     private MockHttpServletRequestBuilder withActualCsrf(MockHttpServletRequestBuilder request) throws Exception {
@@ -140,7 +170,7 @@ class IpBlockSecurityTest {
         IpBlockService blocks() { return mock(IpBlockService.class); }
 
         @Bean
-        EmailVerificationGuard emailVerificationGuard() { return mock(EmailVerificationGuard.class); }
+        EmailVerificationService emailVerificationService() { return mock(EmailVerificationService.class); }
 
         @Bean
         IpBlockClientAddress clientAddress() { return new IpBlockClientAddress(List.of()); }

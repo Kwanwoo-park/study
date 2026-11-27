@@ -1,5 +1,6 @@
 package spring.study.common.controller;
 
+import org.hibernate.collection.spi.PersistentBag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -27,6 +28,7 @@ import spring.study.board.facade.BoardViewFacade;
 import spring.study.board.service.BoardBookmarkService;
 import spring.study.board.service.BoardService;
 import spring.study.comment.controller.CommentViewController;
+import spring.study.comment.service.CommentService;
 import spring.study.common.component.MobileViewModelAdvice;
 import spring.study.common.service.JwtManager;
 import spring.study.common.service.VisibilityAccessPolicy;
@@ -67,6 +69,8 @@ class StandalonePageViewTest {
     @Autowired BoardService boards;
     @Autowired VisibilityAccessPolicy visibility;
     @Autowired BoardBookmarkService bookmarks;
+    @Autowired FavoriteService favorites;
+    @Autowired CommentService comments;
     @Autowired TodoService todos;
     @Autowired DiaryService diaries;
 
@@ -105,19 +109,46 @@ class StandalonePageViewTest {
     }
 
     @Test
+    void boardViewRendersCountsAfterThePersistenceSessionCloses() throws Exception {
+        Member owner = Member.builder().id(8L).email("owner@example.test").name("작성자")
+                .profile("/img/viewer.png").role(Role.USER).build();
+        Board board = Board.builder().id(43L).member(owner).content("게시글 본문").build();
+        board.setFavorites(new PersistentBag<>());
+        board.setComment(new PersistentBag<>());
+        when(jwtManager.getLoginMember(any())).thenReturn(owner);
+        when(boards.existBoard(43L)).thenReturn(true);
+        when(boards.findById(43L)).thenReturn(board);
+        when(boards.getBoardIdList(43L, owner, true)).thenReturn(new long[]{0, 0});
+        when(visibility.canViewBoard(board, owner, true)).thenReturn(true);
+        when(favorites.countFavorites(board)).thenReturn(3L);
+        when(comments.countComments(board)).thenReturn(7L);
+
+        MockMvcBuilders.webAppContextSetup(context).build().perform(get("/board/view").param("id", "43"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"like_cnt43\">3</label>")))
+                .andExpect(content().string(containsString("id=\"comment_cnt43\">7</label>")));
+    }
+
+    @Test
     void bookmarkAndWeekViewsRenderForTheViewerAndDraftsUseTheViewersId() throws Exception {
         Member viewer = Member.builder().id(7L).email("weekly@example.test").profile("/img/viewer.png").role(Role.USER).build();
         when(jwtManager.getLoginMember(any())).thenReturn(viewer);
-        when(bookmarks.list(viewer, 0)).thenReturn(new PageImpl<>(List.of(new BoardBookmarkDto(42L, "작성자", "저장한 글"))));
+        when(bookmarks.list(viewer, 0)).thenReturn(new PageImpl<>(List.of(
+                new BoardBookmarkDto(42L, "작성자", "저장한 글", "/img/first-photo.webp"),
+                new BoardBookmarkDto(43L, "작성자", "사진이 없는 글", null))));
         LocalDateTime today = LocalDateTime.now();
         when(todos.findCompletedForWeek(eq(viewer), any(), any())).thenReturn(new PageImpl<>(List.of(
                 new TodoResponseDto(1L, "이번 주 완료", true, today, today, null))));
         when(diaries.findForWeek(eq(viewer), any(), any())).thenReturn(Page.empty());
         MockMvc mvc = MockMvcBuilders.webAppContextSetup(context).build();
 
-        mvc.perform(get("/board/bookmarks")).andExpect(status().isOk())
+        String bookmarksHtml = mvc.perform(get("/board/bookmarks").header("User-Agent", "iPhone Mobile"))
+                .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "no-store"))
-                .andExpect(content().string(containsString("저장한 글")));
+                .andReturn().getResponse().getContentAsString();
+        assertThat(bookmarksHtml)
+                .contains("저장한 글", "사진이 없는 글", "src=\"/img/first-photo.webp\"")
+                .containsOnlyOnce("class=\"board-bookmark-thumbnail\"");
         mvc.perform(get("/todo/week")).andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(content().string(containsString("이번 주 완료")));
@@ -140,6 +171,7 @@ class StandalonePageViewTest {
         @Bean DiaryService diaries() { return mock(DiaryService.class); }
         @Bean DiaryFacade diaryFacade() { return mock(DiaryFacade.class); }
         @Bean FavoriteService favorites() { return mock(FavoriteService.class); }
+        @Bean CommentService comments() { return mock(CommentService.class); }
         @Bean FollowService follows() { return mock(FollowService.class); }
         @Bean VisibilityAccessPolicy visibility() { return mock(VisibilityAccessPolicy.class); }
 

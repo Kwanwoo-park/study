@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.server.ResponseStatusException;
 import spring.study.board.dto.BoardRequestDto;
 import spring.study.board.entity.Board;
+import spring.study.comment.service.CommentService;
 import spring.study.common.service.JwtManager;
 import spring.study.common.service.VisibilityAccessPolicy;
 import spring.study.favorite.service.FavoriteService;
@@ -25,6 +26,7 @@ public class BoardViewFacade {
     private final BoardService boardService;
     private final JwtManager jwtManager;
     private final FavoriteService favoriteService;
+    private final CommentService commentService;
     private final FollowService followService;
     private final VisibilityAccessPolicy visibilityAccessPolicy;
     private final BoardBookmarkService bookmarkService;
@@ -86,6 +88,8 @@ public class BoardViewFacade {
 
             model.addAttribute("board", board);
             model.addAttribute("like", favoriteService.existFavorite(member, board));
+            model.addAttribute("favoriteCount", favoriteService.countFavorites(board));
+            model.addAttribute("commentCount", commentService.countComments(board));
             model.addAttribute("bookmarked", bookmarkService.contains(member, board.getId()));
             model.addAttribute("member", member.getEmail());
             model.addAttribute("email", member.getEmail());

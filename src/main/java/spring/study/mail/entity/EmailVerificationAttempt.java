@@ -35,16 +35,18 @@ public class EmailVerificationAttempt {
     private String blockedEmail;
 
     public boolean allowRequest(Instant now, String emailAddress) {
-        if (blockedAt == null && previousRequestAt != null && !previousRequestAt.isBefore(now.minus(REQUEST_WINDOW))) {
-            blockedAt = now;
-        }
-        if (blockedAt != null) {
-            if (blockedEmail == null) blockedEmail = emailAddress;
+        if (blockedAt != null || (previousRequestAt != null && !previousRequestAt.isBefore(now.minus(REQUEST_WINDOW)))) {
+            block(now, emailAddress);
             return false;
         }
 
         previousRequestAt = lastRequestAt;
         lastRequestAt = now;
         return true;
+    }
+
+    public void block(Instant now, String emailAddress) {
+        if (blockedAt == null) blockedAt = now;
+        if (blockedEmail == null) blockedEmail = emailAddress;
     }
 }

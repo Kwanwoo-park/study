@@ -91,7 +91,7 @@ public class SystemDiagnosticsService {
                 throw new IllegalArgumentException("심볼릭 링크는 탐색할 수 없습니다.");
             }
         }
-        if (!Files.isDirectory(current, LinkOption.NOFOLLOW_LINKS)) {
+        if (!Files.isDirectory(current, LinkOption.NOFOLLOW_LINKS) || !Files.isReadable(current)) {
             throw new IllegalArgumentException("조회할 수 없는 디렉터리입니다.");
         }
         try (Stream<Path> stream = Files.list(current)) {
@@ -127,6 +127,7 @@ public class SystemDiagnosticsService {
     private List<SystemDiagnosticRootPath> availableRoots() {
         List<SystemDiagnosticRootPath> roots = new ArrayList<>();
         addRoot(roots, "project", "실행 프로젝트", Path.of(System.getProperty("user.dir")));
+        addRoot(roots, "filesystem", "파일시스템 루트 (/)", Path.of("/"));
         addRoot(roots, "commands", "설치된 실행 파일 (/usr/bin)", Path.of("/usr/bin"));
         addRoot(roots, "optional", "추가 설치 프로그램 (/opt)", Path.of("/opt"));
         addRoot(roots, "local", "로컬 설치 프로그램 (/usr/local/bin)", Path.of("/usr/local/bin"));
@@ -136,7 +137,9 @@ public class SystemDiagnosticsService {
 
     private void addRoot(List<SystemDiagnosticRootPath> roots, String id, String label, Path path) {
         try {
-            if (Files.isDirectory(path)) roots.add(new SystemDiagnosticRootPath(id, label, path.toRealPath()));
+            if (Files.isDirectory(path) && Files.isReadable(path)) {
+                roots.add(new SystemDiagnosticRootPath(id, label, path.toRealPath()));
+            }
         } catch (IOException | SecurityException ignored) {
             // Unavailable roots are not offered to the client.
         }
